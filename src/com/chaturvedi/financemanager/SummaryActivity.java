@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -65,8 +63,7 @@ public class SummaryActivity extends Activity
 	private Intent statisticsIntent;
 	private Intent settingsIntent;
 	private Intent helpIntent;
-	private Intent aboutIntent;
-	private Intent exportIntent;
+	private Intent extrasIntent;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -131,8 +128,7 @@ public class SummaryActivity extends Activity
 		statisticsIntent=new Intent(this, StatisticsActivity.class);
 		settingsIntent=new Intent(this, SettingsActivity.class);
 		helpIntent = new Intent(this, HelpActivity.class);
-		aboutIntent = new Intent(this, AboutActivity.class);
-		exportIntent=new Intent(this, ExportActivity.class);
+		extrasIntent = new Intent(this, ExtrasActivity.class);
 	}
 
 	@Override
@@ -171,26 +167,8 @@ public class SummaryActivity extends Activity
 				startActivity(helpIntent);
 				return true;
 				
-			case R.id.action_about:
-				startActivity(aboutIntent);
-				return true;
-				
-			case R.id.action_export:
-				startActivityForResult(exportIntent, 0);
-				return true;
-				
-			case R.id.action_backup:
-				new BackupData(SummaryActivity.this);
-				return true;
-				
-			case R.id.action_restore:
-				new RestoreData(SummaryActivity.this);
-				buildLayout();
-				setData();
-				return true;
-				
-			case R.id.action_clearData:
-				clearData();
+			case R.id.action_extras:
+				startActivityForResult(extrasIntent, 0);
 				return true;
 		}
 		return true;
@@ -203,13 +181,6 @@ public class SummaryActivity extends Activity
 		buildLayout();
 		setData();
 	}
-	
-	/*@Override
-	public void onPause()
-	{
-		super.onPause();
-		DatabaseManager.saveDatabase();
-	}*/
 	
 	private void buildLayout()
 	{
@@ -328,25 +299,6 @@ public class SummaryActivity extends Activity
 		{
 			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-	}
-	
-	private void clearData()
-	{
-		AlertDialog.Builder clearDialog = new AlertDialog.Builder(this);
-		clearDialog.setTitle("Clear All Data");
-		clearDialog.setMessage("Are You Sure To Delete All Your Transactions?");
-		clearDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
-		{
-			@Override
-			public void onClick(DialogInterface dialog, int which)
-			{
-				DatabaseManager.clearDatabase();
-				buildLayout();
-				setData();
-			}
-		});
-		clearDialog.setNegativeButton("Cancel", null);
-		clearDialog.show();
 	}
 	
 	private void runUpdateClasses(int oldVersionNo)
