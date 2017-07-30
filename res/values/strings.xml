@@ -23,6 +23,7 @@
     <string name="bankSms"> Messages From Banks</string>
     <string name="bankTransactions">Bank Transactions</string>
     <string name="clearData">Clear Data</string>
+    <string name="contactDeveloper">Contact Developer</string>
     <string name="currencySymbols">Currency Symbol</string>
     <string name="date">Date</string>
     <string name="export">Export Data To SD Card</string>
@@ -30,7 +31,9 @@
     <string name="editBanks">Edit Banks</string>
     <string name="editExpTypes">Edit Expenditure Types</string>
     <string name="expenditures">Expenditures</string>
+    <string name="FAQ">FAQs</string>
     <string name="transactionsDisplayInterval">Display Transactions By</string>
+    <string name="guide">Guide</string>
     <string name="finish">Finish</string>
     <string name="hint_bankAccNo">Account Number</string>
     <string name="hint_bankBalance">Balance</string>

@@ -1,12 +1,8 @@
 package com.chaturvedi.financemanager;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Build.VERSION;
@@ -14,13 +10,13 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class HelpActivity extends Activity
 {
-	private ArrayList<TextView> textViews;
-	private ArrayList<String> helpTexts;
+	private Intent guideIntent;
+	private Intent FAQIntent;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -37,9 +33,7 @@ public class HelpActivity extends Activity
 		{
 			// No Up Button in Action Bar
 		}
-		findViews();
-		readHelpFile();
-		setHelpText();
+		buildLayout();
 	}
 	
 	public boolean onOptionsItemSelected(MenuItem item)
@@ -53,7 +47,7 @@ public class HelpActivity extends Activity
 		return true;
 	}
 	
-	private void findViews()
+	private void buildLayout()
 	{
 		// If Release Version, Make Krishna TextView Invisible
 		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
@@ -61,50 +55,30 @@ public class HelpActivity extends Activity
 			TextView krishna = (TextView) findViewById(R.id.krishna);
 			krishna.setVisibility(View.INVISIBLE);
 		}
-		
-		textViews = new ArrayList<TextView>();
-		textViews.add((TextView) findViewById(R.id.heading_1));
-		textViews.add((TextView) findViewById(R.id.description_1));
-		textViews.add((TextView) findViewById(R.id.heading_2));
-		textViews.add((TextView) findViewById(R.id.description_2));
-		textViews.add((TextView) findViewById(R.id.heading_3));
-		textViews.add((TextView) findViewById(R.id.description_3));
-		textViews.add((TextView) findViewById(R.id.heading_4));
-		textViews.add((TextView) findViewById(R.id.description_4));
-		textViews.add((TextView) findViewById(R.id.heading_5));
-		textViews.add((TextView) findViewById(R.id.description_5));
-		textViews.add((TextView) findViewById(R.id.heading_6));
-		textViews.add((TextView) findViewById(R.id.description_6));
-		textViews.add((TextView) findViewById(R.id.heading_7));
-		textViews.add((TextView) findViewById(R.id.description_7));
-	}
-	
-	private void readHelpFile()
-	{
-		helpTexts=new ArrayList<String>();
-		InputStream textStream = getResources().openRawResource(R.raw.help);
-		BufferedReader helpReader = new BufferedReader(new InputStreamReader(textStream));
-		try
+
+		Button guideButton = (Button) findViewById(R.id.button_guide);
+		guideButton.setOnClickListener(new View.OnClickListener()
 		{
-			String line=helpReader.readLine();
-			while(line!=null)
+			
+			@Override
+			public void onClick(View v)
 			{
-				helpTexts.add(line);
-				line=helpReader.readLine();
+				guideIntent = new Intent(HelpActivity.this, GuideActivity.class);
+				startActivity(guideIntent);
 			}
-		}
-		catch(Exception e)
+		});
+
+		Button FAQButton = (Button) findViewById(R.id.button_FAQ);
+		FAQButton.setOnClickListener(new View.OnClickListener()
 		{
-			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-		}
-	}
-	
-	private void setHelpText()
-	{
-		for(int i=0; i<14; i++)
-		{
-			textViews.get(i).setText(helpTexts.get(i));
-		}
+			
+			@Override
+			public void onClick(View v)
+			{
+				FAQIntent = new Intent(HelpActivity.this, GuideActivity.class);
+				startActivity(FAQIntent);
+			}
+		});
 	}
 	
 	@Override

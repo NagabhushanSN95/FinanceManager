@@ -10,105 +10,47 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:text="@string/krishna" />
-    
-    <ScrollView
-        android:layout_width="match_parent"
+
+    <TextView
+        android:id="@+id/textView_help"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/krishna"
-        android:layout_marginTop="25dp" >
-        
-        <LinearLayout
-            android:id="@+id/layout_parent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:orientation="vertical" >
-            
-            <TextView
-                android:id="@+id/heading_1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="25sp" />
-            
-            <TextView
-                android:id="@+id/description_1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
-            <TextView
-                android:id="@+id/heading_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="25sp" />
-            
-            <TextView
-                android:id="@+id/description_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
-            <TextView
-                android:id="@+id/heading_3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="25sp" />
-            
-            <TextView
-                android:id="@+id/description_3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
-            <TextView
-                android:id="@+id/heading_4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="25sp" />
-            
-            <TextView
-                android:id="@+id/description_4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
-            <TextView
-                android:id="@+id/heading_5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="25sp" />
-            
-            <TextView
-                android:id="@+id/description_5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
-            <TextView
-                android:id="@+id/heading_6"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="25sp" />
-            
-            <TextView
-                android:id="@+id/description_6"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
-            <TextView
-                android:id="@+id/heading_7"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="25sp" />
-            
-            <TextView
-                android:id="@+id/description_7"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            
-        </LinearLayout>
-    </ScrollView>
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:text="@string/action_help"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <Button
+        android:id="@+id/button_guide"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:text="@string/guide" />
+
+    <Button
+        android:id="@+id/button_FAQ"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_guide"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:text="@string/FAQ" />
+
+    <Button
+        android:id="@+id/button_contactDeveloper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_FAQ"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:text="@string/contactDeveloper" />
+
 </RelativeLayout>
