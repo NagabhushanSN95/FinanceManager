@@ -22,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
@@ -79,10 +80,9 @@ public class TransactionsActivity extends Activity
 		
 		calculateDimensions();
 		readPreferences();
+		getTransactionsToDisplay();
 		buildTitleLayout();
-		readPreferences();
 		buildBodyLayout();
-		//buildButtonPanel();
 	}
 	
 	@Override
@@ -233,7 +233,8 @@ public class TransactionsActivity extends Activity
 			case Constants.REQUEST_CODE_EDIT_TRANSACTION:
 				if(resultCode == RESULT_OK)
 				{
-					editDisplayedTransaction(contextMenuTransactionNo, (Transaction) intent.getParcelableExtra(Constants.TRANSACTION));
+					editDisplayedTransaction(contextMenuTransactionNo, (Transaction) intent.getParcelableExtra(
+							Constants.TRANSACTION));
 					getTransactionsToDisplay();
 				}
 				break;
@@ -292,32 +293,11 @@ public class TransactionsActivity extends Activity
 	
 	private void readPreferences()
 	{
-		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
-		DecimalFormat formatter = new DecimalFormat("00");
 		SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 		
 		if (preferences.contains(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 		{
 			transactionsDisplayInterval = preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
-		}
-
-		if (transactionsDisplayInterval.equals("Month"))
-		{
-			Calendar calendar = Calendar.getInstance();
-			int year = calendar.get(Calendar.YEAR);
-			int month = calendar.get(Calendar.MONTH) + 1;
-			String currentMonth = String.valueOf(year) + "/" + formatter.format(month);
-			transactions = databaseAdapter.getMonthlyVisibleTransactions(currentMonth);
-		}
-		else if (transactionsDisplayInterval.equals("Year"))
-		{
-			Calendar calendar = Calendar.getInstance();
-			int year = calendar.get(Calendar.YEAR);
-			transactions = databaseAdapter.getYearlyVisibleTransactions(String.valueOf(year));
-		}
-		else
-		{
-			transactions = databaseAdapter.getAllVisibleTransactions();
 		}
 	}
 	
@@ -347,9 +327,6 @@ public class TransactionsActivity extends Activity
 	
 	private void buildTitleLayout()
 	{
-		// To be removed later
-		readPreferences();
-		
 		// If Release Version, Make Krishna TextView Invisible
 		if (0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
 		{
@@ -1088,7 +1065,7 @@ public class TransactionsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.deleteTransaction(TransactionsActivity.this, transactions.get(contextMenuTransactionNo));
+				DatabaseManager.deleteTransaction(TransactionsActivity.this, transactions.get(contextMenuTransactionNo), true);
 				deleteTransactionFromLayout(contextMenuTransactionNo);
 				getTransactionsToDisplay();
 			}
@@ -1963,7 +1940,6 @@ public class TransactionsActivity extends Activity
 								Transaction transaction = (Transaction) transactionMessage.obj;
 								transactions.add(transaction);
 								displayNewTransaction(transaction);
-								Log.d("SNB","Something Wrong. This shouldn't be executed");
 								break;
 
 							case DatabaseManager.ACTION_ALL_TRANSACTIONS_FOUND:

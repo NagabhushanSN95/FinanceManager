@@ -1487,7 +1487,6 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		long amountSpent = 0;
 		String countQuery = "SELECT sum(" + KEY_AMOUNT_SPENT + ") FROM " + TABLE_COUNTERS + " WHERE " +
 				KEY_DATE + " LIKE '" + month + "%'";
-		;
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
 		if(cursor.moveToFirst())

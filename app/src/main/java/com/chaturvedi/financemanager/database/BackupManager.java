@@ -5,9 +5,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.functions.Constants;
 
 import org.json.JSONException;
@@ -64,8 +62,15 @@ public class BackupManager
 		File backupFile = new File(financeFolder, backupFileName);
 		backupData(backupFile);
 	}
-	
-	private void backupData(File backupFile)
+
+	/**
+	 * Backs up the data
+	 * @param backupFile File object
+	 * @return  0 if backup is successful
+	 * 			1 if IOException
+	 * 			2 if Version Number cannot be retrieved properly
+	 */
+	private int backupData(File backupFile)
 	{
 		try
 		{
@@ -172,34 +177,44 @@ public class BackupManager
 			}
 
 			backupWriter.close();
-			
-			Toast.makeText(context, "Data Has Been Backed-Up Successfully", Toast.LENGTH_LONG).show();
+
+			return 0;
+			//Toast.makeText(context, "Data Has Been Backed-Up Successfully", Toast.LENGTH_LONG).show();
 		}
 		catch(IOException e)
 		{
-			Toast.makeText(context, "Error in Backing Up Data\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			Log.d("Backup Data", e.getMessage(), e.fillInStackTrace());
+			//Toast.makeText(context, "Error in Backing Up Data\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			return 1;
 		}
 		catch (NameNotFoundException e)
 		{
-			Toast.makeText(context, "Error in retrieving Version No\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			Log.d("Backup Data", e.getMessage(), e.fillInStackTrace());
+			//Toast.makeText(context, "Error in retrieving Version No\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			return 2;
 		}
 	}
 
-	public void backupSettings(File backupFile)
+	/**
+	 * Backs up Settings to file
+	 * @param backupFile File Object
+	 * @return  0 If backup is successful
+	 * 			1 If IOException
+	 * 			2 If JSONException
+	 */
+	public int backupSettings(File backupFile)
 	{
 		try
 		{
-
-			final int CURRENT_APP_VERSION_NO =
-					Integer.parseInt(context.getResources().getString(R.string.currentAppVersion));
-
 			SharedPreferences preferences = context.getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 			JSONObject jsonObject = new JSONObject();
-			jsonObject.put(Constants.KEY_APP_VERSION, preferences.getInt(Constants.KEY_APP_VERSION, CURRENT_APP_VERSION_NO));
+			jsonObject.put(Constants.KEY_APP_VERSION, preferences.getInt(Constants.KEY_APP_VERSION,
+					Constants.CURRENT_APP_VERSION_NO));
 			jsonObject.put(Constants.KEY_DATABASE_INITIALIZED, preferences.getBoolean(Constants.KEY_DATABASE_INITIALIZED, true));
 			jsonObject.put(Constants.KEY_SPLASH_DURATION, preferences.getInt(Constants.KEY_SPLASH_DURATION, 5000));
 			jsonObject.put(Constants.KEY_QUOTE_NO, preferences.getInt(Constants.KEY_QUOTE_NO, 0));
-			jsonObject.put(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month"));
+			jsonObject.put(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, preferences.getString(
+					Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month"));
 			jsonObject.put(Constants.KEY_CURRENCY_SYMBOL, preferences.getString(Constants.KEY_CURRENCY_SYMBOL, " "));
 			jsonObject.put(Constants.KEY_RESPOND_BANK_SMS, preferences.getString(Constants.KEY_RESPOND_BANK_SMS, "Popup"));
 			jsonObject.put(Constants.KEY_BANK_SMS_ARRIVED, preferences.getBoolean(Constants.KEY_BANK_SMS_ARRIVED, false));
@@ -208,15 +223,18 @@ public class BackupManager
 			backupWriter.write(jsonObject.toString(4));
 			backupWriter.close();
 
-			Toast.makeText(context, "Settings Has Been Backed-Up Successfully", Toast.LENGTH_LONG).show();
+			return 0;
+			//Toast.makeText(context, "Settings Has Been Backed-Up Successfully", Toast.LENGTH_LONG).show();
 		}
 		catch(IOException e)
 		{
 			Log.d("backupSettings()", e.getMessage(), e.fillInStackTrace());
+			return 1;
 		}
 		catch (JSONException e)
 		{
 			Log.d("backupSettings()", e.getMessage(), e.fillInStackTrace());
+			return 2;
 		}
 	}
 }

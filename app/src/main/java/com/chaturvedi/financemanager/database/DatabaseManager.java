@@ -1590,7 +1590,16 @@ public class DatabaseManager
 		}
 		return expType;
 	}*/
-	public static void addTransaction(Context context, Transaction transaction)
+
+	/**
+	 * Adds a transaction
+	 * @param context used to get instance of DatabaseAdapter
+	 * @param transaction Transaction to delete
+	 * @param addInDatabase If true, transaction will be added in TransactionsTable in database.
+	 *                         If false, wallets, banks and counters will be updated but transaction will not be added in
+	 *                         transactions table. This is used in DatabaseManager.editTransaction() method
+	 */
+	public static void addTransaction(Context context, Transaction transaction, boolean addInDatabase)
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
 		Counters counters = databaseAdapter.getCountersRow(transaction.getDate().getSavableDate());
@@ -1675,10 +1684,22 @@ public class DatabaseManager
 			}
 		}
 
-		databaseAdapter.addTransaction(transaction);
+		if(addInDatabase)
+		{
+			databaseAdapter.addTransaction(transaction);
+		}
 		databaseAdapter.updateCountersRow(counters);
 	}
-	public static void deleteTransaction(Context context, Transaction transaction)
+
+	/**
+	 * Deletes a transaction
+	 * @param context used to get instance of DatabaseAdapter
+	 * @param transaction Transaction to delete
+	 * @param deleteInDatabase If true, transaction will be deleted in TransactionsTable in database.
+	 *                         If false, wallets, banks and counters will be updated but transaction will not be deleted in
+	 *                         transactions table. This is used in DatabaseManager.editTransaction() method
+	 */
+	public static void deleteTransaction(Context context, Transaction transaction, boolean deleteInDatabase)
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
 		Counters counters = databaseAdapter.getCountersRow(transaction.getDate().getSavableDate());
@@ -1763,22 +1784,25 @@ public class DatabaseManager
 			}
 		}
 
-		databaseAdapter.deleteTransaction(transaction);
+		if(deleteInDatabase)
+		{
+			databaseAdapter.deleteTransaction(transaction);
+		}
 		databaseAdapter.updateCountersRow(counters);
 	}
 
 	public static void editTransaction(Context context, Transaction oldTransaction, Transaction newTransaction)
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+		databaseAdapter.updateTransaction(newTransaction);
 
 		if(oldTransaction.differOnlyInParticular(newTransaction))
 		{
-			databaseAdapter.updateTransaction(newTransaction);
 			return;
 		}
 
-		DatabaseManager.deleteTransaction(context, oldTransaction);
-		DatabaseManager.addTransaction(context, newTransaction);
+		DatabaseManager.deleteTransaction(context, oldTransaction, false);
+		DatabaseManager.addTransaction(context, newTransaction, false);
 	}
 	
 	// Static Methods to compare two objects like transactions, banks...

@@ -17,6 +17,7 @@ import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -144,7 +145,17 @@ public class SummaryActivity extends Activity
 			}
 			if(backup)
 			{
-				new BackupManager(this).autoBackup();	// Backs-Up Data to Auto Backup Folder
+				final Thread backupThread = new Thread(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						new BackupManager(SummaryActivity.this).autoBackup();	// Backs-Up Data to Auto Backup Folder
+//						backupThread.join();
+					}
+				});
+				backupThread.start();
+				//new BackupManager(this).autoBackup();	// Backs-Up Data to Auto Backup Folder
 			}
 
 			super.onBackPressed();
@@ -343,8 +354,10 @@ public class SummaryActivity extends Activity
 				int year = calendar.get(Calendar.YEAR);
 				int month = calendar.get(Calendar.MONTH) + 1;
 				String currentMonth = String.valueOf(year) + "/" + monthFormatter.format(month);
-				amountViews.get(numWallets+numBanks).setText(formatter.format(databaseAdapter.getMonthlyAmountSpent(currentMonth)));
-				amountViews.get(numWallets+numBanks+1).setText(formatter.format(databaseAdapter.getMonthlyIncome(currentMonth)));
+				double amountSpent = databaseAdapter.getMonthlyAmountSpent(currentMonth);
+				double income = databaseAdapter.getMonthlyIncome(currentMonth);
+				amountViews.get(numWallets+numBanks).setText(formatter.format(amountSpent));
+				amountViews.get(numWallets+numBanks+1).setText(formatter.format(income));
 			}
 			else if(transactionsDisplayInterval.equals("Year"))
 			{

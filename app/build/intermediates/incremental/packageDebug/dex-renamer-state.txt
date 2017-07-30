@@ -1,4 +1,4 @@
-#Fri Jan 13 21:59:53 IST 2017
+#Sat Jan 21 19:37:05 IST 2017
 base.0=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10\\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe
 renamed.1=classes.dex
 renamed.0=classes2.dex

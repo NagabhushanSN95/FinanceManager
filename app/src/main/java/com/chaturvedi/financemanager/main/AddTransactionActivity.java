@@ -359,15 +359,17 @@ public class AddTransactionActivity extends Activity
 
 		if(action.equals(Constants.ACTION_ADD))
 		{
-			DatabaseManager.addTransaction(AddTransactionActivity.this, transaction);
+			DatabaseManager.addTransaction(AddTransactionActivity.this, transaction, true);
 		}
 		else if(action.equals(Constants.ACTION_EDIT))
 		{
+			transaction.setID(oldTransaction.getID());
+			transaction.setCreatedTime(oldTransaction.getCreatedTime());
 			DatabaseManager.editTransaction(AddTransactionActivity.this, oldTransaction, transaction);
 		}
 		else if(action.equals(Constants.ACTION_BANK_SMS))
 		{
-			DatabaseManager.addTransaction(AddTransactionActivity.this, transaction);
+			DatabaseManager.addTransaction(AddTransactionActivity.this, transaction, true);
 		}
 		else
 		{
