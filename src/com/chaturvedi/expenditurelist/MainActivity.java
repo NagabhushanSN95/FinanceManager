@@ -26,13 +26,17 @@ public class MainActivity extends Activity
 	private static int numBanks;
 	private static ArrayList<String> bankNames;
 	private static ArrayList<Integer> bankBalances;
+	private static int numEntries;
 
 	private static String expenditureFolderName;
+	private static String prefFileName;
 	private static String walletFileName;
 	private static String bankFileName;
 	private static File expenditureFolder;
+	private static File prefFile;
 	private static File walletFile;
 	private static File bankFile;
+	private static BufferedReader prefReader;
 	private static BufferedReader walletReader;
 	private static BufferedReader bankReader;
 	
@@ -57,6 +61,7 @@ public class MainActivity extends Activity
 		setData();
 		
 		detailsIntent=new Intent(this, DetailsActivity.class);
+		detailsIntent.putExtra("Number Of Entries", numEntries);
 	}
 
 	@Override
@@ -86,14 +91,20 @@ public class MainActivity extends Activity
 		try
 		{
 			expenditureFolderName="Expenditure List/.temp";
+			prefFileName="preferences.txt";
 			walletFileName="wallet_info.txt";
 			bankFileName="bank_info.txt";
 			
 			expenditureFolder=new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
 			if(!expenditureFolder.exists())
 				expenditureFolder.mkdirs();
+			prefFile=new File(expenditureFolder, prefFileName);
 			walletFile=new File(expenditureFolder, walletFileName);
 			bankFile=new File(expenditureFolder, bankFileName);
+			
+			prefReader=new BufferedReader(new FileReader(prefFile));
+			numBanks=Integer.parseInt(prefReader.readLine());
+			numEntries=Integer.parseInt(prefReader.readLine());
 			
 			walletReader=new BufferedReader(new FileReader(walletFile));
 			line=walletReader.readLine();
@@ -102,7 +113,6 @@ public class MainActivity extends Activity
 			amountSpent=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			
 			bankReader=new BufferedReader(new FileReader(bankFile));
-			numBanks=2;
 			bankNames=new ArrayList<String>();
 			bankBalances=new ArrayList<Integer>();
 			for(int i=0; i<numBanks; i++)

@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Window;
@@ -44,8 +45,11 @@ public class DetailsActivity extends Activity
 	private BufferedReader particularsReader;
 	private BufferedReader amountReader;
 	
+	private int numEntries;
 	private ArrayList<String> particulars;
 	private ArrayList<String> amounts;
+	
+	private Intent detailsIntent;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -53,6 +57,8 @@ public class DetailsActivity extends Activity
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_details);
+		detailsIntent=getIntent();
+		numEntries=detailsIntent.getIntExtra("Number Of Entries", 0);
 		readFile();
 		buildTitleLayout();
 		buildBodyLayout();
@@ -75,7 +81,7 @@ public class DetailsActivity extends Activity
 			amountReader=new BufferedReader(new FileReader(amountFile));
 			particulars=new ArrayList<String>();
 			amounts=new ArrayList<String>();
-			for(int i=0; i<2; i++)
+			for(int i=0; i<numEntries; i++)
 			{
 				particulars.add(particularsReader.readLine());
 				amounts.add(amountReader.readLine());
@@ -124,7 +130,7 @@ public class DetailsActivity extends Activity
 			itemsLayout=new ArrayList<RelativeLayout>();
 			itemsView=new ArrayList<ArrayList<TextView>>();
 			itemsLayoutParams=new ArrayList<ArrayList<RelativeLayout.LayoutParams>>();
-			for(int i=0; i<2; i++)
+			for(int i=0; i<numEntries; i++)
 			{
 				itemsLayout.add(new RelativeLayout(this));
 				
