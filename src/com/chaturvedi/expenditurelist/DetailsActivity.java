@@ -13,6 +13,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Build.VERSION;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -29,9 +30,9 @@ public class DetailsActivity extends Activity
 {
 	private final int MARGIN_TOP=100;
 	private final int MARGIN_LEFT=50;
-	private final int MARGIN_LEFT_SLNO=10;
-	private final int MARGIN_LEFT_PARTICULARS=40;
-	private final int MARGIN_LEFT_AMOUNT=190;
+	private final int MARGIN_LEFT_SLNO=20;
+	private final int MARGIN_LEFT_PARTICULARS=160;
+	private final int MARGIN_LEFT_AMOUNT=350;
 
 	private int walletBalance;
 	private int amountSpent;
@@ -98,8 +99,17 @@ public class DetailsActivity extends Activity
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.activity_details);
+		if(VERSION.SDK_INT<=10)
+		{
+			requestWindowFeature(Window.FEATURE_NO_TITLE);
+			setContentView(R.layout.activity_details);
+		}
+		else
+		{
+			setContentView(R.layout.activity_details);
+			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
+			actionBar.setVisibility(View.GONE);
+		}
 		detailsIntent=getIntent();
 		numEntries=detailsIntent.getIntExtra("Number Of Entries", 0);
 		readFile();

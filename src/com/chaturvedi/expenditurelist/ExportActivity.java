@@ -8,9 +8,17 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
 import android.os.Environment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
-public class ExpenditureExporter
+public class ExportActivity extends Activity
 {
 	private String expenditureFolderName;
 	private String prefFileName;
@@ -33,6 +41,11 @@ public class ExpenditureExporter
 	private BufferedReader amountReader;
 	private BufferedWriter exportWriter;
 	
+	private TextView exportFileNameField;
+	private LayoutInflater exportDialogLayout;
+	private View exportDialogView;
+	private AlertDialog.Builder exportDialog;
+	
 	private int numBanks;
 	private int numEntries;
 	private int walletBalance;
@@ -48,14 +61,45 @@ public class ExpenditureExporter
 	private BufferedWriter prefWriter;
 	private BufferedWriter walletWriter;
 	
-	public void export()
+	public void onCreate(Bundle savedInstanceState)
 	{
+		super.onCreate(savedInstanceState);
+		
 		calendar=Calendar.getInstance();
 		currentMonth=getMonth(calendar.get(Calendar.MONTH));
 		currentYear=calendar.get(Calendar.YEAR)+"";
 		exportFileName=currentMonth+"-"+currentYear+".txt";
 		readFile();
-		saveData();
+		
+		exportDialogLayout=LayoutInflater.from(this);
+		exportDialogView=exportDialogLayout.inflate(R.layout.dialog_export, null);
+		exportFileNameField=(TextView)exportDialogView.findViewById(R.id.editText_export_fileName);
+		exportFileNameField.setText(exportFileName);
+		
+		exportDialog=new AlertDialog.Builder(this);
+		exportDialog.setTitle("Export Data");
+		exportDialog.setView(exportDialogView);
+		exportDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				exportFileName=exportFileNameField.getText().toString();
+				saveData();
+				finish();
+			}
+		});
+		exportDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				finish();
+			}
+		});
+		exportDialog.create();
+		exportDialog.show();
+		
 	}
 	
 	private String getMonth(int month)
@@ -215,10 +259,12 @@ public class ExpenditureExporter
 			walletWriter.write("amount_spent=Rs0"+"\n");
 			prefWriter.close();
 			walletWriter.close();
+			
+			Toast.makeText(getApplicationContext(), "Data Has Been Exported Successfully", Toast.LENGTH_LONG).show();
 		}
 		catch(Exception e)
 		{
-			//Toast.makeText(this, "Error In Saving To File", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Error In Saving To File", Toast.LENGTH_SHORT).show();
 		}
 	}
 }

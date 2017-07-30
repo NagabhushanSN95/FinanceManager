@@ -10,12 +10,14 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,13 +53,24 @@ public class MainActivity extends Activity
 	
 	private Intent detailsIntent;
 	private Intent advancedSettingsIntent;
+	private Intent exportIntent;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.activity_main);
+		if(VERSION.SDK_INT<=10)
+		{
+			requestWindowFeature(Window.FEATURE_NO_TITLE);
+			setContentView(R.layout.activity_main);
+		}
+		else
+		{
+			setContentView(R.layout.activity_main);
+			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
+			actionBar.setVisibility(View.GONE);
+		}
+		
 		readData();
 		setData();
 		
@@ -65,6 +78,7 @@ public class MainActivity extends Activity
 		detailsIntent.putExtra("Number Of Entries", numEntries);
 		detailsIntent.putExtra("Number Of Banks", numBanks);
 		advancedSettingsIntent=new Intent(this, AdvancedSettingsActivity.class);
+		exportIntent=new Intent(this, ExportActivity.class);
 	}
 
 	@Override
@@ -88,9 +102,7 @@ public class MainActivity extends Activity
 				return true;
 				
 			case R.id.action_export:
-				ExpenditureExporter exporter=new ExpenditureExporter();
-				exporter.export();
-				Toast.makeText(getApplicationContext(), "Data Has Been Exported Successfully", Toast.LENGTH_LONG).show();
+				startActivity(exportIntent);
 				refresh();
 		}
 		return true;
