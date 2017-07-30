@@ -832,4 +832,117 @@ public class DatabaseManager
 			counters.set(i, 0.0);
 		}
 	}
+	
+	public static void deleteTransaction(int transactionNo)
+	{
+		String type = DatabaseManager.types.get(transactionNo);
+		String particulars = DatabaseManager.particulars.get(transactionNo);
+		double amount = DatabaseManager.amounts.get(transactionNo);
+		if(type.equals("Income"))
+		{
+			DatabaseManager.decreamentIncome(amount);
+			DatabaseManager.decreamentWalletBalance(amount);
+		}
+		else if(type.equals("Income Bank"))
+		{
+			DatabaseManager.decreamentIncome(amount);
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.decreamentBankBalance(bankNo, amount);
+		}
+		else if(type.equals("Bank Savings"))
+		{
+			DatabaseManager.increamentWalletBalance(amount);
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.decreamentBankBalance(bankNo, amount);
+		}
+		else if(type.equals("Bank Withdraw"))
+		{
+			DatabaseManager.decreamentWalletBalance(amount);
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.increamentBankBalance(bankNo, amount);
+		}
+		else if(type.equals(expenditureTypes.get(0)))
+		{
+			DatabaseManager.increamentWalletBalance(amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(0, amount);
+		}
+		else if(type.equals(expenditureTypes.get(1)))
+		{
+			DatabaseManager.increamentWalletBalance(amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(1, amount);
+		}
+		else if(type.equals(expenditureTypes.get(2)))
+		{
+			DatabaseManager.increamentWalletBalance(amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(2, amount);
+		}
+		else if(type.equals(expenditureTypes.get(3)))
+		{
+			DatabaseManager.increamentWalletBalance(amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(3, amount);
+		}
+		else if(type.equals(expenditureTypes.get(4)))
+		{
+			DatabaseManager.increamentWalletBalance(amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(4, amount);
+		}
+		else if(type.equals(expenditureTypes.get(0) + " Bank"))
+		{
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.increamentBankBalance(bankNo, amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(0, amount);
+		}
+		else if(type.equals(expenditureTypes.get(1) + " Bank"))
+		{
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.increamentBankBalance(bankNo, amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(1, amount);
+		}
+		else if(type.equals(expenditureTypes.get(2) + " Bank"))
+		{
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.increamentBankBalance(bankNo, amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(2, amount);
+		}
+		else if(type.equals(expenditureTypes.get(3) + " Bank"))
+		{
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.increamentBankBalance(bankNo, amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(3, amount);
+		}
+		else if(type.equals(expenditureTypes.get(4) + " Bank"))
+		{
+			int bankNo = getBankNumber(particulars);
+			DatabaseManager.increamentBankBalance(bankNo, amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(4, amount);
+		}
+		
+		DatabaseManager.decreamentNumTransactions();
+		DatabaseManager.dates.remove(transactionNo);
+		DatabaseManager.types.remove(transactionNo);
+		DatabaseManager.particulars.remove(transactionNo);
+		DatabaseManager.rates.remove(transactionNo);
+		DatabaseManager.quantities.remove(transactionNo);
+		DatabaseManager.amounts.remove(transactionNo);
+	}
+
+	private static int getBankNumber(String particulars)
+	{
+		for(int i=0; i<numBanks; i++)
+		{
+			if(particulars.contains(bankNames.get(i)))
+				return i;
+		}
+		return 0;
+	}
 }

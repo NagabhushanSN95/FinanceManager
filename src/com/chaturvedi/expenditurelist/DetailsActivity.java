@@ -15,7 +15,10 @@ import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -76,6 +79,8 @@ public class DetailsActivity extends Activity
 	private ArrayList<RadioButton> banks;
 	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
 	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer", "Card Swipe"};
+	
+	private int contextMenuTransactionNo;
 	
 	private Intent smsIntent;
 	
@@ -154,6 +159,34 @@ public class DetailsActivity extends Activity
 		DatabaseManager.readDatabase();
 	}*/
 	
+	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
+	{
+		super.onCreateContextMenu(menu, view, menuInfo);
+		menu.setHeaderTitle("Options");
+		menu.add(0, view.getId(), 0, "Edit");
+		menu.add(0, view.getId(), 0, "Delete");
+		contextMenuTransactionNo = parentLayout.indexOfChild(view);
+		Toast.makeText(getApplicationContext(), "Transaction Number: "+contextMenuTransactionNo, Toast.LENGTH_LONG).show();
+	}
+	
+	public boolean onContextItemSelected(MenuItem item)
+	{
+		if(item.getTitle().equals("Edit"))
+		{
+			//contextFunction1(item.getItemId());
+		}
+		else if(item.getTitle().equals("Delete"))
+		{
+			DatabaseManager.deleteTransaction(contextMenuTransactionNo);
+			buildBodyLayout();
+		}
+		else
+		{
+			return false;
+		}
+		return true;
+	}
+	
 	private void buildTitleLayout()
 	{
 		//titleLayout=(LinearLayout)findViewById(R.id.layout_title);
@@ -214,6 +247,7 @@ public class DetailsActivity extends Activity
 
 				//itemsLayout.add(linearLayout);
 				parentLayout.addView(linearLayout);
+				registerForContextMenu(linearLayout);
 			}
 		}
 		catch(Exception e)
@@ -529,7 +563,7 @@ public class DetailsActivity extends Activity
 				
 				// Validate Data
 				String particular = particularsField.getText().toString();
-				String type = "Income";
+				String type = "Income Bank";
 				String amount = amountField.getText().toString();
 				boolean dataCorrect = false;
 				
@@ -553,14 +587,18 @@ public class DetailsActivity extends Activity
 					{
 						particular = DatabaseManager.getBankName(bankNo) + " Credit: " + particular;
 					}
-					
-					if(creditTypesList.getSelectedItemPosition()==1)
+
+					if(creditTypesList.getSelectedItemPosition()==0)
+					{
+						type = "Income Bank";
+						DatabaseManager.increamentIncome(amount);
+					}
+					else if(creditTypesList.getSelectedItemPosition()==1)
 					{
 						type = "Bank Savings";
 						DatabaseManager.decreamentWalletBalance(amount);
 					}
 					DatabaseManager.increamentBankBalance(bankNo, amount);
-					DatabaseManager.increamentIncome(amount);
 					DatabaseManager.increamentNumTransations();
 					DatabaseManager.addDate(dateField.getText().toString());
 					DatabaseManager.addType(type);
@@ -684,9 +722,9 @@ public class DetailsActivity extends Activity
 					}
 					else
 					{
-						type = (String) typesList.getSelectedItem();
+						type = (String) typesList.getSelectedItem() + " Bank";
 						DatabaseManager.increamentAmountSpent(amount);
-						DatabaseManager.increamentCounter(debitTypesList.getSelectedItemPosition(), amount);
+						DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amount);
 					}
 					
 					DatabaseManager.decreamentBankBalance(bankNo, amount);
