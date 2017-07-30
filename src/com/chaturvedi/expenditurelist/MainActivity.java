@@ -64,6 +64,7 @@ public class MainActivity extends Activity
 	private Intent detailsIntent;
 	private Intent editIntent;
 	private Intent exportIntent;
+	private Intent settingsIntent;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -98,6 +99,7 @@ public class MainActivity extends Activity
 		detailsIntent.putExtra("Number Of Banks", numBanks);
 		editIntent=new Intent(this, EditActivity.class);
 		exportIntent=new Intent(this, ExportActivity.class);
+		settingsIntent=new Intent(this, SettingsActivity.class);
 	}
 
 	@Override
@@ -122,6 +124,10 @@ public class MainActivity extends Activity
 				
 			case R.id.action_export:
 				startActivity(exportIntent);
+				refresh();
+				
+			case R.id.action_settings:
+				startActivity(settingsIntent);
 				refresh();
 		}
 		return true;

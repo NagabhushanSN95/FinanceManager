@@ -5,6 +5,7 @@ package com.chaturvedi.expenditurelist;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -26,6 +27,9 @@ import android.widget.Toast;
 
 public class SplashActivity extends Activity 
 {
+	private static boolean showSplash=true;
+	private static int splashTime=5000;
+	
 	private TextView quoteView;
 	private ArrayList<String> quoteStrings;
 	private String quoteText;
@@ -47,7 +51,13 @@ public class SplashActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash);
 		readFile();
+		startSplash();
 		
+		
+	}
+	
+	private void startSplash()
+	{
 		quoteView=(TextView)findViewById(R.id.quote);
 		quoteStrings=new ArrayList<String>();
 		quoteStream=getResources().openRawResource(R.raw.splash_screen_quotes);
@@ -78,7 +88,7 @@ public class SplashActivity extends Activity
 				startActivity(nextActivityIntent);
 				finish();
 			}
-		} ,5000);
+		} ,splashTime);
 		
 		progressLine=(View)findViewById(R.id.progress_line);
 		DisplayMetrics metrics = new DisplayMetrics();
@@ -98,11 +108,27 @@ public class SplashActivity extends Activity
 		try
 		{
 			String expenditureFolderName = "Expenditure List/.temp";
+			String settingsFileName="settings.txt";
 			String prefFileName = "preferences.txt";
 			
 			File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
 			if(!expenditureFolder.exists())
 				expenditureFolder.mkdirs();
+			
+			File settingsFile=new File(expenditureFolder, settingsFileName);
+			BufferedReader settingsReader=new BufferedReader(new FileReader(settingsFile));
+			String line=settingsReader.readLine();
+			if(line.contains("false"))
+			{
+				showSplash=false;
+				splashTime=0;
+			}
+			else
+			{
+				showSplash=true;
+				splashTime=5000;
+			}
+			settingsReader.close();
 			
 			File prefFile = new File(expenditureFolder, prefFileName);
 			if(prefFile.exists())
@@ -112,6 +138,7 @@ public class SplashActivity extends Activity
 		}
 		catch(Exception e)
 		{
+			showSplash=true;
 			Toast.makeText(this, "Error In Reading File", Toast.LENGTH_SHORT).show();
 		}
 	}

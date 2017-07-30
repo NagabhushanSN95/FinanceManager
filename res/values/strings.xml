@@ -18,5 +18,6 @@
     <string name="finish">Finish</string>
     <string name="hint_bank_name">Bank Name</string>
     <string name="hint_bank_balance">Balance</string>
+    <string name="checkBox_splash">Always Show Splash Screen At The Beginning</string>
 
 </resources>
