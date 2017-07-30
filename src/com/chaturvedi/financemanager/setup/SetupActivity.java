@@ -39,6 +39,7 @@ public class SetupActivity extends FragmentActivity
 	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
 	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
+	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -180,6 +181,7 @@ public class SetupActivity extends FragmentActivity
 		editor.putString(KEY_CURRENCY_SYMBOL, " ");
 		editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
 		editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
+		editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
 		editor.commit();
 		
 		Intent summaryIntent = new Intent(this, SummaryActivity.class);

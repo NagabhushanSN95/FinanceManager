@@ -13,3 +13,18 @@ Your SB A/c **********01342 is debited for Rs. 333 on 19-08-2014At Present  A/c 
 
 Karnataka Bank
 Your Account xxxxxxxx012543xx has been DEBITED for Rs.1000/ATM-CWDR/000000680659/06- Clear Balance is Rs.464.13-(2015-01-06 06:14:11)
+
+SBI
+
+Format D04
+Thank you for using your SBI Debit Card 459XXX2762 for a purchase worth Rs174 on POS 00007865 at FLIPKART.COM Banglore IN txn# 529009196923.  3:28 PM
+Thank you for using your SBI Debit Card 459XXX2762 for a purchase worth Rs654 on POS PU000084 at www.printvenue.com Mumbai IN txn# 527815607056.  3:34 PM, 05-Oct-2015
+
+Format D05
+Thank you for using State Bank Internet banking. Your Transaction Ref No IR74044526 for Rs.650 on 04-OCT-15 16:50  4:51 PM, 04-Oct-2015
+
+Format C01
+Your AC XXXXX570239 Credited INR 13,819.00 on 03/10/15 -Deposit through own cheque. . Avl Bal INR 13,819.00  2:08 PM, 03-Oct-2015
+
+Format O01
+Available Balance in your Account XXXXX570239 as on 09/11/15 is INR 22,652.10  4:50 PM

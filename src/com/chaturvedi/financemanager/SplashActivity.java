@@ -32,7 +32,7 @@ import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.setup.StartupActivity;
 import com.chaturvedi.financemanager.updates.Update68To88;
 import com.chaturvedi.financemanager.updates.Update88To89;
-import com.chaturvedi.financemanager.updates.Update89To95;
+import com.chaturvedi.financemanager.updates.Update89To96;
 //import android.view.ViewGroup.LayoutParams;
 
 public class SplashActivity extends Activity 
@@ -41,7 +41,7 @@ public class SplashActivity extends Activity
 	private static final String KEY_APP_VERSION = "AppVersionNo";
 	private static int APP_VERSION_NO_88;
 	private static int APP_VERSION_NO_89;
-	private static int APP_VERSION_NO_95;
+	private static int APP_VERSION_NO_96;
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
@@ -126,8 +126,8 @@ public class SplashActivity extends Activity
 		// Compare the version of current and previous App. If the previous app was of old version, 
 		// run the Update Classes
 		APP_VERSION_NO_88 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_88));
-		APP_VERSION_NO_89 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_88));
-		APP_VERSION_NO_95 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_88));
+		APP_VERSION_NO_89 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_89));
+		APP_VERSION_NO_96 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_96));
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if(canProceed && (previousVersionNo != currentVersionNo))
 		{
@@ -139,9 +139,9 @@ public class SplashActivity extends Activity
 			{
 				new Update88To89(SplashActivity.this);
 			}
-			if(previousVersionNo < APP_VERSION_NO_95)
+			if(previousVersionNo < APP_VERSION_NO_96)
 			{
-				new Update89To95(SplashActivity.this);
+				new Update89To96(SplashActivity.this);
 			}
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.commit();
@@ -370,7 +370,7 @@ public class SplashActivity extends Activity
 			{
 				DatabaseManager.readDatabase();
 				
-				if(autoRestoreManager.isAutomaticBackup())
+				//if(autoRestoreManager.isAutomaticBackup())
 				{
 					// Read the backups and see if there is any change
 					RestoreManager restoreManager = new RestoreManager(SplashActivity.this);

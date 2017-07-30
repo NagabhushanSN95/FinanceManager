@@ -4,13 +4,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.widget.Toast;
 
-public class Update89To95
+public class Update89To96
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	
 	
-	public Update89To95(Context context)
+	public Update89To96(Context context)
 	{
 		Toast.makeText(context, "Updating The App", Toast.LENGTH_LONG).show();
 		
