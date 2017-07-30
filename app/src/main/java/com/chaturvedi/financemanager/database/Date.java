@@ -44,7 +44,11 @@ public class Date
 		this.month = date1.getMonth();
 		this.date = date1.getDate();
 	}
-	
+
+	/**
+	 *
+	 * @return 01/11/2016
+	 */
 	public String getDisplayDate()
 	{
 		String date = this.date + "/" + month + "/" + year;

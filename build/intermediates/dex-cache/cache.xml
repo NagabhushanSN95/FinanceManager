@@ -1,3 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<items version="2" />
+<items version="2" >
 
+    <item
+        jar="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
+        jumboMode="true"
+        revision="23.0.2"
+        sha1="416601b4c8a7c32203f3b6f994c01b6878e84cff">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe.jar" />
+    </item>
+    <item
+        jar="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
+        jumboMode="true"
+        revision="23.0.2"
+        sha1="61589e29b7833691726c687241ec7102866d5612">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd.jar" />
+    </item>
+    <item
+        jar="C:\Program Files\Android\sdk\extras\android\m2repository\com\android\support\support-v4\19.1.0\support-v4-19.1.0.jar"
+        jumboMode="true"
+        revision="23.0.2"
+        sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\support-v4-19.1.0_25c31f909aefd2b01057c3020630746b92282e1d.jar" />
+    </item>
+
+</items>

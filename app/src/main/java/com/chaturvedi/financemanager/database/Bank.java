@@ -1,6 +1,8 @@
+// Shree KRISHNAya Namaha
+
 package com.chaturvedi.financemanager.database;
 
-public class Bank
+public class Bank implements MoneyStorage
 {
 	private int id;
 	private String name;
@@ -122,12 +124,12 @@ public class Bank
 		return balance;
 	}
 	
-	public void increamentBanlance(double amount)
+	public void incrementBalance(double amount)
 	{
 		balance += amount;
 	}
 	
-	public void decreamentBanlance(double amount)
+	public void decrementBalance(double amount)
 	{
 		balance -= amount;
 	}

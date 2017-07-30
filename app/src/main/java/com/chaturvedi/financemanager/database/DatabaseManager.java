@@ -31,13 +31,13 @@ public class DatabaseManager
 	public DatabaseManager(Context cxt)
 	{
 		context=cxt;
-		databaseAdapter = new DatabaseAdapter(context);
+		databaseAdapter = DatabaseAdapter.getInstance(context);
 	}
 	
 	public static void setContext(Context cxt)
 	{
 		context=cxt;
-		databaseAdapter = new DatabaseAdapter(context);
+		databaseAdapter = DatabaseAdapter.getInstance(context);
 	}
 	
 	public static void initialize(double walletBalance)
@@ -813,12 +813,12 @@ public class DatabaseManager
 	
 	public static void increamentBankBalance(int bankNum, double amount)
 	{
-		banks.get(bankNum).increamentBanlance(amount);
+		banks.get(bankNum).incrementBalance(amount);
 	}
 	
 	public static void decreamentBankBalance(int bankNum, double amount)
 	{
-		banks.get(bankNum).decreamentBanlance(amount);
+		banks.get(bankNum).decrementBalance(amount);
 	}
 	
 	public static int getNumExpTypes()

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<Spinner
+		android:id="@+id/spinner_expenseSource"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:layout_marginRight="10dp"
+		android:layout_marginEnd="10dp"/>
+
+	<Spinner
+		android:id="@+id/spinner_transferSource"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/spinner_expenseSource"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:layout_marginRight="10dp"
+		android:layout_marginEnd="10dp"/>
+
+	<EditText
+		android:id="@+id/editText_transferDestination"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/spinner_transferSource"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:layout_marginRight="10dp"
+		android:layout_marginEnd="10dp"
+		android:hint="@string/particulars"/>
+
+	<TextView
+		android:id="@+id/textView_rate"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/editText_transferDestination"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:text="@string/rate" />
+
+	<EditText
+		android:id="@+id/editText_rate"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_toRightOf="@+id/textView_rate"
+		android:layout_toEndOf="@+id/textView_rate"
+		android:layout_alignTop="@+id/textView_rate"
+		android:layout_marginLeft="30dp"
+		android:layout_marginStart="20dp"
+		android:inputType="numberDecimal"/>
+
+	<TextView
+		android:id="@+id/textView_quantity"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textView_rate"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:text="@string/quantity" />
+
+	<EditText
+		android:id="@+id/editText_quantity"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/editText_rate"
+		android:layout_alignTop="@+id/textView_quantity"
+		android:layout_alignLeft="@+id/editText_rate"
+		android:layout_alignStart="@+id/editText_rate"
+		android:inputType="numberDecimal"/>
+
+	<TextView
+		android:id="@+id/textView_amount"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textView_quantity"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:text="@string/amount" />
+
+	<EditText
+		android:id="@+id/editText_amount"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/editText_quantity"
+		android:layout_alignTop="@+id/textView_amount"
+		android:layout_alignLeft="@+id/editText_quantity"
+		android:layout_alignStart="@+id/editText_quantity"
+		android:inputType="numberDecimal"/>
+
+	<TextView
+		android:id="@+id/textView_date"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textView_amount"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"
+		android:text="@string/date" />
+
+	<EditText
+		android:id="@+id/editText_date"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/editText_amount"
+		android:layout_alignLeft="@+id/editText_amount"
+		android:layout_alignStart="@+id/editText_amount"
+		android:layout_alignTop="@+id/textView_date"
+		android:inputType="date"
+		android:enabled="false"/>
+
+	<CheckBox
+		android:id="@+id/checkBox_addTemplate"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/textView_date"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+		android:layout_marginTop="10dp"
+		android:layout_marginLeft="10dp"
+		android:layout_marginStart="10dp"/>
+
+</RelativeLayout>

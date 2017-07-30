@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.chaturvedi.financemanager"
-          android:versionCode="107"
-          android:versionName="4.0.0">
+          android:versionCode="108"
+          android:versionName="4.0.1">
 
 <uses-permission android:name="android.permission.RECEIVE_SMS"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -13,7 +13,7 @@
     android:label="@string/app_name"
     android:theme="@style/AppTheme">
     <activity
-        android:name="com.chaturvedi.financemanager.SplashActivity"
+        android:name=".main.SplashActivity"
         android:label="@string/app_name">
         <intent-filter>
             <action android:name="android.intent.action.MAIN"/>
@@ -24,32 +24,32 @@
     <activity android:name="com.chaturvedi.financemanager.setup.StartupActivity"></activity>
     <activity android:name="com.chaturvedi.financemanager.setup.SetupActivity"></activity>
     <activity
-        android:name="com.chaturvedi.financemanager.SummaryActivity"
+        android:name=".main.SummaryActivity"
         android:label="@string/app_name">
     </activity>
     <activity
-        android:name="com.chaturvedi.financemanager.TransactionsActivity"
+        android:name=".main.TransactionsActivity"
         android:label="@string/label_transactions"
-        android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+        android:parentActivityName=".main.SummaryActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
     <activity
-        android:name="com.chaturvedi.financemanager.TemplatesActivity"
+        android:name=".main.TemplatesActivity"
         android:label="@string/label_templates"
-        android:parentActivityName="com.chaturvedi.financemanager.TransactionsActivity">
+        android:parentActivityName=".main.TransactionsActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
     <activity
         android:name="com.chaturvedi.financemanager.edit.EditActivity"
         android:label="@string/label_edit"
-        android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+        android:parentActivityName=".main.SummaryActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
     <activity
         android:name="com.chaturvedi.financemanager.edit.EditWalletBalanceActivity"
@@ -76,28 +76,28 @@
             android:value="com.chaturvedi.financemanager.edit.EditActivity"/>
     </activity>
     <activity
-        android:name="com.chaturvedi.financemanager.StatisticsActivity"
+        android:name=".main.StatisticsActivity"
         android:label="@string/label_statistics"
-        android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+        android:parentActivityName=".main.SummaryActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
     <activity
-        android:name="com.chaturvedi.financemanager.SettingsActivity"
+        android:name=".main.SettingsActivity"
         android:label="@string/label_settings"
-        android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+        android:parentActivityName=".main.SummaryActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
     <activity
         android:name="com.chaturvedi.financemanager.help.HelpActivity"
         android:label="@string/label_help"
-        android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+        android:parentActivityName=".main.SummaryActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
     <activity
         android:name="com.chaturvedi.financemanager.help.GuideActivity"
@@ -126,20 +126,20 @@
     <activity
         android:name="com.chaturvedi.financemanager.help.AboutActivity"
         android:label="@string/label_aboutDeveloper"
-        android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+        android:parentActivityName=".main.SummaryActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
     <activity
-        android:name="com.chaturvedi.financemanager.ExtrasActivity"
+        android:name=".main.ExtrasActivity"
         android:label="@string/label_extras"
-        android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+        android:parentActivityName=".main.SummaryActivity">
         <meta-data
             android:name="android.support.PARENT_ACTIVITY"
-            android:value="com.chaturvedi.financemanager.SummaryActivity"/>
+            android:value=".main.SummaryActivity"/>
     </activity>
-    <receiver android:name="com.chaturvedi.financemanager.SmsReceiver">
+    <receiver android:name=".main.SmsReceiver">
         <intent-filter android:priority="100">
             <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
         </intent-filter>
