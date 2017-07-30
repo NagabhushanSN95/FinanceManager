@@ -39,7 +39,7 @@ public class EditActivity extends Activity
 		
 		buildLayout();
 		
-		editWalletBalanceIntent = new Intent(this, EditWalletBalanceActivity.class);
+		editWalletBalanceIntent = new Intent(this, EditWalletsActivity.class);
 		editBanksIntent = new Intent(this, EditBanksActivity.class);
 		editExpTypesIntent = new Intent(this, EditExpTypesActivity.class);
 	}

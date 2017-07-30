@@ -1,5 +1,6 @@
 package com.chaturvedi.financemanager.database;
 
+import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 
@@ -63,7 +64,8 @@ public class Date
 	
 	public String getSavableDate()
 	{
-		String date = year + "/" + month + "/" + this.date;
+		DecimalFormat formatter = new DecimalFormat("00");
+		String date = year + "/" + formatter.format(month) + "/" + formatter.format(this.date);
 		return date;
 	}
 	

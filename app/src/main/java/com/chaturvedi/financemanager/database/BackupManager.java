@@ -65,31 +65,40 @@ public class BackupManager
 		backupData(backupFile);
 	}
 	
-	public void backupData(File backupFile)
+	private void backupData(File backupFile)
 	{
 		try
 		{
+			DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
 			BufferedWriter backupWriter = new BufferedWriter(new FileWriter(backupFile));
 			
 			// Store The KEY DATA
 			backupWriter.write("---------------Key Data---------------\n");
 			int versionNo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
 			backupWriter.write(versionNo + "\n");
-			backupWriter.write(DatabaseManager.getNumBanks() + "\n");
-			backupWriter.write(DatabaseManager.getNumTransactions() + "\n");
-			backupWriter.write(DatabaseManager.getNumCountersRows() + "\n");
-			backupWriter.write(DatabaseManager.getAllExpenditureTypes().size() + "\n");
-			backupWriter.write(DatabaseManager.getAllTemplates().size() + "\n");
+			backupWriter.write(databaseAdapter.getNumWallets() + "\n");
+			backupWriter.write(databaseAdapter.getNumBanks() + "\n");
+			backupWriter.write(databaseAdapter.getNumTransactions() + "\n");
+			backupWriter.write(databaseAdapter.getNumCountersRows() + "\n");
+			backupWriter.write(databaseAdapter.getAllExpenditureTypes().size() + "\n");
+			backupWriter.write(databaseAdapter.getAllTemplates().size() + "\n");
 			backupWriter.write("\n");
 
-			// Write Wallet Balance
-			backupWriter.write("---------------Wallet---------------\n");
-			backupWriter.write(DatabaseManager.getWalletBalance() + "\n");
-			backupWriter.write("\n");
+			// Write Wallets Data
+			backupWriter.write("---------------Wallets---------------\n");
+			ArrayList<NewWallet> wallets = databaseAdapter.getAllWallets();
+			for(NewWallet wallet : wallets)
+			{
+				backupWriter.write(wallet.getID() + "\n");
+				backupWriter.write(wallet.getName() + "\n");
+				backupWriter.write(wallet.getBalance() + "\n");
+				backupWriter.write(wallet.isDeleted() + "\n");
+				backupWriter.write("\n");
+			}
 
 			// Backup Banks Data
 			backupWriter.write("---------------Banks---------------\n");
-			ArrayList<Bank> banks = DatabaseManager.getAllBanks();
+			ArrayList<Bank> banks = databaseAdapter.getAllBanks();
 			for(Bank bank : banks)
 			{
 				backupWriter.write(bank.getID() + "\n");
@@ -97,12 +106,13 @@ public class BackupManager
 				backupWriter.write(bank.getAccNo() + "\n");
 				backupWriter.write(bank.getBalance() + "\n");
 				backupWriter.write(bank.getSmsName() + "\n");
+				backupWriter.write(bank.isDeleted() + "\n");
 				backupWriter.write("\n");
 			}
 			
 			// Backup The Transactions
 			backupWriter.write("---------------Transactions---------------\n");
-			ArrayList<Transaction> transactions = DatabaseManager.getAllTransactions();
+			ArrayList<Transaction> transactions = databaseAdapter.getAllTransactions();
 			for(Transaction transaction : transactions)
 			{
 				backupWriter.write(transaction.getID() + "\n");
@@ -114,12 +124,13 @@ public class BackupManager
 				backupWriter.write(transaction.getRate() + "\n");
 				backupWriter.write(transaction.getQuantity() + "\n");
 				backupWriter.write(transaction.getAmount() + "\n");
+				backupWriter.write(transaction.isHidden() + "\n");
 				backupWriter.write("\n");
 			}
 
 			// Backup Counters Data
 			backupWriter.write("---------------Counters---------------\n");
-			ArrayList<Counters> counters = DatabaseManager.getAllCounters();
+			ArrayList<Counters> counters = databaseAdapter.getAllCountersRows();
 			for(Counters counter : counters)
 			{
 				backupWriter.write(counter.getID() + "\n");
@@ -138,22 +149,25 @@ public class BackupManager
 
 			// Backup Expenditure Types
 			backupWriter.write("---------------Expenditure Types---------------\n");
-			ArrayList<String> expTypes = DatabaseManager.getAllExpenditureTypes();
-			for(String expType : expTypes)
+			ArrayList<ExpenditureType> expTypes = databaseAdapter.getAllExpenditureTypes();
+			for(ExpenditureType expType : expTypes)
 			{
-				backupWriter.write(expType + "\n");
+				backupWriter.write(expType.getId() + "\n");
+				backupWriter.write(expType.getName() + "\n");
+				backupWriter.write(expType.isDeleted() + "\n");
+				backupWriter.write("\n");
 			}
-			backupWriter.write("\n");
 
 			// Backup The Templates
 			backupWriter.write("---------------Templates---------------\n");
-			ArrayList<Template> templates = DatabaseManager.getAllTemplates();
+			ArrayList<Template> templates = databaseAdapter.getAllTemplates();
 			for(Template template : templates)
 			{
 				backupWriter.write(template.getID() + "\n");
 				backupWriter.write(template.getParticular() + "\n");
 				backupWriter.write(template.getType() + "\n");
 				backupWriter.write(template.getAmount() + "\n");
+				backupWriter.write(template.isHidden() + "\n");
 				backupWriter.write("\n");
 			}
 

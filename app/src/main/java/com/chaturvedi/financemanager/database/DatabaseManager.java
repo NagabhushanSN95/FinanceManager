@@ -10,55 +10,49 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.chaturvedi.financemanager.functions.TransactionTypeParser;
+
+import static android.media.CamcorderProfile.get;
+
 public class DatabaseManager
 {
-	private static Context context;
-	private static DatabaseAdapter databaseAdapter;
-	
-	private static double walletBalance;
-	private static ArrayList<Bank> banks;
-	private static ArrayList<Transaction> transactions;
-	private static ArrayList<String> expenditureTypes;
-	private static ArrayList<Counters> counters;
-	private static ArrayList<Template> templates;
-
 	public static final int ACTION_DATABASE_READ_PROGRESS = 101;
 	public static final int ACTION_INITIALIZATION_COMPLETE = 102;
 	public static final int ACTION_NEW_TRANSACTION_FOUND = 103;
 	public static final int ACTION_ALL_TRANSACTIONS_FOUND = 104;
 	public static final int ACTION_TOAST_MESSAGE = 105;
 	
-	public DatabaseManager(Context cxt)
+	/*public DatabaseManager(Context cxt)
 	{
 		context=cxt;
 		databaseAdapter = DatabaseAdapter.getInstance(context);
-	}
+	}*/
 	
-	public static void setContext(Context cxt)
+	/*public static void setContext(Context cxt)
 	{
 		context=cxt;
 		databaseAdapter = DatabaseAdapter.getInstance(context);
-	}
+	}*/
 	
-	public static void initialize(double walletBalance)
+	/*public static void initialize(double walletBalance)
 	{
 		transactions = new ArrayList<Transaction>();
 		DatabaseManager.walletBalance = walletBalance;
 		databaseAdapter.initializeWalletTable(walletBalance);
 		counters = new ArrayList<Counters>();
 		templates = new ArrayList<Template>(); 
-	}
+	}*/
 	
-	public static void readDatabase()
+	/*public static void readDatabase()
 	{
-		try
+		*//*try
 		{
 			setWalletBalance(databaseAdapter.getWalletBalance());
 
 			int numBanks = databaseAdapter.getNumBanks();
 			if(numBanks>0)
 			{
-				banks = databaseAdapter.getAllBanks();
+				banks = databaseAdapter.getAllWallets();
 			}
 			else
 			{
@@ -100,17 +94,21 @@ public class DatabaseManager
 		catch(Exception e)
 		{
 			Toast.makeText(context, "Error In Reading Database\nDatabaseManager/readDatabase\n"+e.getMessage(), Toast.LENGTH_LONG).show();
-		}
-	}
+		}*//*
+	}*/
 	
-	/**
+	/* *
 	 * Reads the data from database. Also, it updates the progress.
 	 * @param databaseHandler: A handler to update the progress on Splash Screen
 	 * @param maxProgress: Maximum Progress to be displayed on Splash Screen after completion of Database Read Operation
 	 */
-	public static void readDatabase(Handler databaseHandler, int maxProgress)
+	/*public static void readDatabase(Handler databaseHandler, int maxProgress)
 	{
-		try
+		Message databaseMessage;
+		databaseMessage = databaseHandler.obtainMessage(ACTION_DATABASE_READ_PROGRESS,
+				100*maxProgress/100,0); // Database Reading 100% Complete
+		databaseMessage.sendToTarget();
+		*//*try
 		{
 			int numBanks = databaseAdapter.getNumBanks();
 			Message databaseMessage;
@@ -122,7 +120,7 @@ public class DatabaseManager
 			
 			if(numBanks>0)
 			{
-				banks = databaseAdapter.getAllBanks();
+				banks = databaseAdapter.getAllWallets();
 			}
 			else
 			{
@@ -179,55 +177,54 @@ public class DatabaseManager
 		catch(Exception e)
 		{
 			Toast.makeText(context, "Error In Reading Database\nDatabaseManager/readDatabase\n"+e.getMessage(), Toast.LENGTH_LONG).show();
-		}
-	}
+		}*//*
+	}*/
 	
-	public static void clearDatabase()
+	public static void clearDatabase(Context context)
 	{
-		transactions = new ArrayList<Transaction>();
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
 		databaseAdapter.deleteAllTransactions();
-		counters = new ArrayList<Counters>();
 		databaseAdapter.deleteAllCountersRows();
 	}
 
 	/**
 	 * @return the numTransactions
 	 */
-	public static int getNumTransactions()
+	/*public static int getNumTransactions()
 	{
 		return transactions.size();
-	}
+	}*/
 	
-	public static void addTransaction(Transaction transaction)
+	/*public static void addTransaction(Transaction transaction)
 	{
 		
 		if(transaction.getType().contains("Wallet Credit"))
 		{
-			DatabaseManager.increamentWalletBalance(transaction.getAmount());
-			DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmount());
+			DatabaseManager.increamentWalletBalance(transaction.getAmountText());
+			DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmountText());
 		}
 		else if(transaction.getType().contains("Wallet Debit"))
 		{
 			int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
 			
-			DatabaseManager.decreamentWalletBalance(transaction.getAmount());
-			DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmount());
-			DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmount());
+			DatabaseManager.decreamentWalletBalance(transaction.getAmountText());
+			DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmountText());
+			DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmountText());
 		}
 		else if(transaction.getType().contains("Bank Credit"))
 		{
 			int bankNo = Integer.parseInt(transaction.getType().substring(12, 14));    // Bank Credit 01 Income
 			if(transaction.getType().contains("Income"))   // Bank Credit 01 Income
 			{
-				DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmount());
+				DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmountText());
 			}
 			else if(transaction.getType().contains("Savings"))  // Bank Credit 01 Savings
 			{
-				DatabaseManager.decreamentWalletBalance(transaction.getAmount());
-				DatabaseManager.increamentSavings(transaction.getDate(), transaction.getAmount());
+				DatabaseManager.decreamentWalletBalance(transaction.getAmountText());
+				DatabaseManager.increamentSavings(transaction.getDate(), transaction.getAmountText());
 			}
 			
-			DatabaseManager.increamentBankBalance(bankNo, transaction.getAmount());
+			DatabaseManager.increamentBankBalance(bankNo, transaction.getAmountText());
 			
 			// Save the new Bank Balance in Database
 			Bank bank = banks.get(bankNo);
@@ -238,17 +235,17 @@ public class DatabaseManager
 			int bankNo = Integer.parseInt(transaction.getType().substring(11, 13));  // Bank Debit 01 Exp01
 			if(transaction.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
 			{
-				DatabaseManager.increamentWalletBalance(transaction.getAmount());
-				DatabaseManager.increamentWithdrawal(transaction.getDate(), transaction.getAmount());
+				DatabaseManager.increamentWalletBalance(transaction.getAmountText());
+				DatabaseManager.increamentWithdrawal(transaction.getDate(), transaction.getAmountText());
 			}
 			else if(transaction.getType().contains("Exp"))   // Bank Debit 01 Exp01
 			{
 				int expTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
-				DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmount());
-				DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmount());
+				DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmountText());
+				DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmountText());
 			}
 			
-			DatabaseManager.decreamentBankBalance(bankNo, transaction.getAmount());
+			DatabaseManager.decreamentBankBalance(bankNo, transaction.getAmountText());
 			
 			// Save the new Bank Balance in Database
 			Bank bank = banks.get(bankNo);
@@ -258,31 +255,31 @@ public class DatabaseManager
 		transaction.setID(transactions.size()+1);
 		DatabaseManager.transactions.add(transaction);
 		databaseAdapter.addTransaction(transaction);
-	}
+	}*/
 
-	public static void setAllTransactions(ArrayList<Transaction> transactions)
+	/*public static void setAllTransactions(ArrayList<Transaction> transactions)
 	{
 		DatabaseManager.transactions = transactions;
 		databaseAdapter.deleteAllTransactions();
 		databaseAdapter.addAllTransactions(transactions);
-	}
+	}*/
 	
 	/**
 	 * Edits an existing transaction
 	 * @param oldTransaction Transaction Object for Old Transaction
 	 * @param newTransaction Transaction Object for Edited Transaction
 	 */
-	public static void editTransaction(Transaction oldTransaction, Transaction newTransaction)
+	/*public static void editTransaction(Transaction oldTransaction, Transaction newTransaction)
 	{
 		int transactionNo = transactions.indexOf(oldTransaction);
 		
 		Date oldDate = oldTransaction.getDate();
 		String oldType = oldTransaction.getType();
-		double oldAmount = oldTransaction.getAmount();
+		double oldAmount = oldTransaction.getAmountText();
 
 		Date newDate = newTransaction.getDate();
 		String newType = newTransaction.getType();
-		double newAmount = newTransaction.getAmount();
+		double newAmount = newTransaction.getAmountText();
 		
 		if(newTransaction.getType().contains("Wallet Credit"))
 		{
@@ -310,7 +307,7 @@ public class DatabaseManager
 			// Determine Which Bank was previous Transaction
 			int oldBankNo=Integer.parseInt(oldType.substring(12, 14));    // Bank Credit 01 Income;
 			
-			/** Determine what type was previous Transaction and undo it. */
+			*//** Determine what type was previous Transaction and undo it. *//*
 			if(oldType.contains("Income"))   // Bank Credit 01 Income
 			{
 				DatabaseManager.decreamentBankBalance(oldBankNo, oldAmount);
@@ -345,7 +342,7 @@ public class DatabaseManager
 		}
 		else if(newTransaction.getType().contains("Bank Debit"))
 		{
-			/** Determine what type was previous Transaction and undo it. */
+			*//** Determine what type was previous Transaction and undo it. *//*
 			// Determine Which Bank
 			int oldBankNo=Integer.parseInt(oldType.substring(11, 13));  // Bank Debit 01 Exp01;
 			int oldExpTypeNo;
@@ -363,12 +360,12 @@ public class DatabaseManager
 				DatabaseManager.decreamentAmountSpent(oldDate, oldAmount);
 			}
 			
-			/** Make New Transaction*/
+			*//** Make New Transaction*//*
 			int newBankNo=Integer.parseInt(newType.substring(11, 13));  // Bank Debit 01 Exp01;
 			int newExpTypeNo;
 			if(newType.contains("Withdraw"))   // Bank Debit 01 Withdraw
 			{
-				DatabaseManager.increamentWalletBalance(newTransaction.getAmount());
+				DatabaseManager.increamentWalletBalance(newTransaction.getAmountText());
 				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
 				DatabaseManager.increamentWithdrawal(newDate, newAmount);
 			}
@@ -390,14 +387,14 @@ public class DatabaseManager
 		newTransaction.setCreatedTime(transactions.get(transactionNo).getCreatedTime());
 		transactions.set(transactionNo, newTransaction);
 		databaseAdapter.updateTransaction(newTransaction);
-	}
+	}*/
 	
-	public static void deleteTransaction(Transaction transaction)
+	/*public static void deleteTransaction(Transaction transaction)
 	{
 		int transactionNo = transactions.indexOf(transaction);
 		Date date = transactions.get(transactionNo).getDate();
 		String type = transactions.get(transactionNo).getType();
-		double amount = transactions.get(transactionNo).getAmount();
+		double amount = transactions.get(transactionNo).getAmountText();
 		if(type.contains("Wallet Credit"))
 		{
 			DatabaseManager.decreamentIncome(date, amount);
@@ -458,15 +455,15 @@ public class DatabaseManager
 		{
 			transactions.get(i).setID(transactions.get(i).getID()-1);
 		}
-	}
+	}*/
 	
-	public static ArrayList<Transaction> getAllTransactions()
+	/*public static ArrayList<Transaction> getAllTransactions()
 	{
 		return transactions;
-	}
+	}*/
 
 
-	public static ArrayList<Transaction> getYearlyTransactions(long year)
+	/*public static ArrayList<Transaction> getYearlyTransactions(long year)
 	{
 		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
 		
@@ -479,12 +476,12 @@ public class DatabaseManager
 			}
 		}
 		return transactions1;
-	}
+	}*/
 
 	/**
 	 * ToDo: To be Deprecated
 	 */
-	public static ArrayList<Transaction> getMonthlyTransactions(long month)
+	/*public static ArrayList<Transaction> getMonthlyTransactions(long month)
 	{
 		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
 		
@@ -497,16 +494,16 @@ public class DatabaseManager
 			}
 		}
 		return transactions1;
-	}
+	}*/
 	
-	/**
+	/* *
 	 * Returns transactions with the given parameters
 	 * @param interval: What is the interval of transactions e.g. year-2015 or month-201508
 	 * @param types: Types of transactions e.g. incomes or {bank savings, exp04}
 	 * @param sortOrder: Sorting Type and Order e.g. date-ascending or amount-descending
 	 * @return
 	 */
-	public static ArrayList<Transaction> getTransactions(String interval, ArrayList<String> types, String sortOrder)
+	/*public static ArrayList<Transaction> getTransactions(String interval, ArrayList<String> types, String sortOrder)
 	{
 		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
 
@@ -584,16 +581,17 @@ public class DatabaseManager
 			}
 		}
 		return transactions1;
-	}
+	}*/
 
-	/**
+	/* *
 	 * Returns transactions with the given parameters
+	 *
 	 * @param interval: What is the interval of transactions e.g. year-2015 or month-201508
-	 * @param types: Types of transactions e.g. incomes or {bank savings, exp04}
-	 * @param handler: Handler to send back matched Transactions
+	 * @param types:    Types of transactions e.g. incomes or {bank savings, exp04}
+	 * @param handler:  Handler to send back matched Transactions
 	 * @return
 	 */
-	public static void getTransactions(String interval, ArrayList<String> types, Handler handler)
+	/*public static void getTransactions(String interval, ArrayList<String> types, Handler handler)
 	{
 //		Toast.makeText(context, "Check-Point 01", Toast.LENGTH_SHORT).show();
 		StringTokenizer tokens = new StringTokenizer(interval, "-");
@@ -674,9 +672,9 @@ public class DatabaseManager
 		}
 		Message message = handler.obtainMessage(ACTION_TOAST_MESSAGE, "Filtering Finished");
 		message.sendToTarget();
-	}
+	}*/
 	
-	public static void addTemplate(Template template)
+	/*public static void addTemplate(Template template)
 	{
 		int numTemplates = templates.size();
 		if(numTemplates == 0)
@@ -742,16 +740,34 @@ public class DatabaseManager
 				databaseAdapter.insertTemplate(template);
 			}
 		}
+	}*/
+	public static void addTemplate(Context context, Template template)
+	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+		// ID of the template will not be set. It has to be set now
+		// Check if the template Exists
+		Template oldTemplate = databaseAdapter.getTemplate(template.getParticular(), template.getType());
+		if (oldTemplate == null)
+		{
+			int templateID = databaseAdapter.getIDforNextTemplate();
+			template.setID(templateID);
+			databaseAdapter.addTemplate(template);
+		}
+		else
+		{
+			template.setID(oldTemplate.getID());
+			databaseAdapter.updateTemplate(template);
+		}
 	}
 
-	public static void setAllTemplates(ArrayList<Template> templates)
+	/*public static void setAllTemplates(ArrayList<Template> templates)
 	{
 		DatabaseManager.templates = templates;
 		databaseAdapter.deleteAllTemplates();
 		databaseAdapter.addAllTemplates(templates);
-	}
+	}*/
 	
-	public static void deleteTemplate(Template template)
+	/*public static void deleteTemplate(Template template)
 	{
 		int templateNo = templates.indexOf(template);
 		DatabaseManager.templates.remove(templateNo);
@@ -761,77 +777,77 @@ public class DatabaseManager
 			templates.get(i).setID(templates.get(i).getID()-1);
 		}
 		databaseAdapter.deleteTemplate(template);
-	}
+	}*/
 	
-	public static ArrayList<Template> getAllTemplates()
+	/*public static ArrayList<Template> getAllTemplates()
 	{
 		return templates;
-	}
+	}*/
 
 	/**
 	 * @return the numBanks
 	 */
-	public static int getNumBanks()
+	/*public static int getNumBanks()
 	{
 		return banks.size();
-	}
+	}*/
 	
-	public static void addBank(Bank bank)
+	/*public static void addBank(Bank bank)
 	{
 		banks.add(bank);
 		databaseAdapter.addBank(bank);
-	}
+	}*/
 	
-	public static void setAllBanks(ArrayList<Bank> banks)
+	/*public static void setAllBanks(ArrayList<Bank> banks)
 	{
 		DatabaseManager.banks = banks;
 		databaseAdapter.deleteAllBanks();
 		databaseAdapter.addAllBanks(banks);
-	}
+	}*/
 	
-	public static void editBank(int bankNum, Bank bank)
+	/*public static void editBank(int bankNum, Bank bank)
 	{
 		banks.set(bankNum, bank);
 		databaseAdapter.updateBank(bank);
-	}
+	}*/
 	
-	public static Bank getBank(int bankNo)
+	/*public static Bank getBank(int bankNo)
 	{
 		return banks.get(bankNo);
-	}
+	}*/
 	
-	public static ArrayList<Bank> getAllBanks()
+	/*public static ArrayList<Bank> getAllWallets()
 	{
 		return banks;
-	}
+	}*/
 	
-	public static void deleteBank(int bankNum)
+	/*public static void deleteBank(int bankNum)
 	{
 		banks.remove(bankNum);
 		databaseAdapter.deleteBank(banks.get(bankNum));
-	}
+	}*/
 	
-	public static void increamentBankBalance(int bankNum, double amount)
+	/*public static void increamentBankBalance(int bankNum, double amount)
 	{
 		banks.get(bankNum).incrementBalance(amount);
-	}
+	}*/
 	
-	public static void decreamentBankBalance(int bankNum, double amount)
+	/*public static void decreamentBankBalance(int bankNum, double amount)
 	{
 		banks.get(bankNum).decrementBalance(amount);
-	}
+	}*/
 	
-	public static int getNumExpTypes()
+	/*public static int getNumExpTypes()
 	{
 		return expenditureTypes.size();
-	}
+	}*/
 	
 	/**
 	 * Adds a new Expenditure Type
 	 * @param expTypeName
 	 * @param position 1 for 1st position and so on
 	 */
-	public static void addExpType(String expTypeName, int position)
+	/*public static void addExpType(String expTypeName, int position)
 	{
 		position = position-1;	// Make it start from 0
 		expenditureTypes.add(position, expTypeName);
@@ -926,39 +942,39 @@ public class DatabaseManager
 		databaseAdapter.addAllExpenditureTypes(expenditureTypes);
 		databaseAdapter.readjustCountersTable();
 		databaseAdapter.addAllCountersRows(counters);
-	}
+	}*/
 	
-	public static void setExpenditureType(int expTypeNo, String expTypeName)
+	/*public static void setExpenditureType(int expTypeNo, String expTypeName)
 	{
 		DatabaseManager.expenditureTypes.set(expTypeNo, expTypeName);
 		databaseAdapter.updateExpenditureType(expTypeNo, expTypeName);
-	}
+	}*/
 	
-	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
+	/*public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
 	{
 		DatabaseManager.expenditureTypes=expTypes1;
 		databaseAdapter.deleteAllExpenditureTypes();
 		databaseAdapter.addAllExpenditureTypes(expTypes1);
-	}
+	}*/
 	
-	public static String getExpenditureType(int expTypeNo)
+	/*public static String getExpenditureType(int expTypeNo)
 	{
 		return DatabaseManager.expenditureTypes.get(expTypeNo);
-	}
+	}*/
 	
-	public static ArrayList<String> getAllExpenditureTypes()
+	/*public static ArrayList<String> getAllExpenditureTypes()
 	{
 		return DatabaseManager.expenditureTypes;
-	}
+	}*/
 	
 	/**
 	 * Deletes an existing Expenditure Type
 	 * @param position: 1 for 1st position and so on
 	 */
-	public static void deleteExpType(int position)
+	/*public static void deleteExpenditureType(int position)
 	{
 		position = position-1;	// Make it start from 0
-		Log.d("DatabaseManager/deleteExpType()", position + "|" + expenditureTypes.size());
+		Log.d("DatabaseManager/deleteExpenditureType()", position + "|" + expenditureTypes.size());
 		expenditureTypes.remove(position);
 		
 		DecimalFormat formatter = new DecimalFormat("00");
@@ -1071,31 +1087,31 @@ public class DatabaseManager
 		databaseAdapter.addAllExpenditureTypes(expenditureTypes);
 		databaseAdapter.readjustCountersTable();
 		databaseAdapter.addAllCountersRows(counters);
-	}
+	}*/
 	
-	public static void readjustCountersTable()
+	/*public static void readjustCountersTable()
 	{
 		databaseAdapter.readjustCountersTable();
-	}
+	}*/
 	
-	public static int getNumCountersRows()
+	/*public static int getNumCountersRows()
 	{
 		return counters.size();
-	}
+	}*/
 
-	public static void setAllCounters(ArrayList<Counters> counters)
+	/*public static void setAllCounters(ArrayList<Counters> counters)
 	{
 		DatabaseManager.counters = counters;
 		databaseAdapter.deleteAllCountersRows();
 		databaseAdapter.addAllCountersRows(counters);
-	}
+	}*/
 	
-	public static ArrayList<Counters> getAllCounters()
+	/*public static ArrayList<Counters> getAllCounters()
 	{
 		return DatabaseManager.counters;
-	}
+	}*/
 	
-	public static void increamentCounters(Date date, int expTypeNo, double amount)
+	/*public static void increamentCounters(Date date, int expTypeNo, double amount)
 	{
 		int numCountersRows = counters.size();
 		double[] exp = new double[expenditureTypes.size()+4];
@@ -1173,9 +1189,9 @@ public class DatabaseManager
 				databaseAdapter.insertCountersRow(counter);
 			}
 		}
-	}
+	}*/
 	
-	public static void decreamentCounters(Date date, int expTypeNo, double amount)
+	/*public static void decreamentCounters(Date date, int expTypeNo, double amount)
 	{
 		int numCountersRows = counters.size();
 		double[] exp = new double[expenditureTypes.size()+4];
@@ -1206,9 +1222,9 @@ public class DatabaseManager
 			}
 			middle = (first + last)/2;
 		}
-	}
+	}*/
 	
-	public static double[] getMonthlyCounters(long month)
+	/*public static double[] getMonthlyCounters(long month)
 	{
 		int numCountersRows = counters.size();
 		double[] monthlyCounters = new double[expenditureTypes.size()+4];
@@ -1242,11 +1258,11 @@ public class DatabaseManager
 				{
 					monthlyCounters[j] += allExpenditures[j];
 				}
-				/*monthlyCounters[0] += counter1.getExp01();
+				*//*monthlyCounters[0] += counter1.getExp01();
 				monthlyCounters[1] += counter1.getExp02();
 				monthlyCounters[2] += counter1.getExp03();
 				monthlyCounters[3] += counter1.getExp04();
-				monthlyCounters[4] += counter1.getExp05();*/
+				monthlyCounters[4] += counter1.getExp05();*//*
 				monthlyCounters[numExpTypes] += counter1.getAmountSpent();
 				monthlyCounters[numExpTypes+1] += counter1.getIncome();
 				monthlyCounters[numExpTypes+2] += counter1.getSavings();
@@ -1259,9 +1275,9 @@ public class DatabaseManager
 			}
 		}
 		return monthlyCounters;
-	}
+	}*/
 	
-	public static double[] getYearlyCounters(long year)
+	/*public static double[] getYearlyCounters(long year)
 	{
 		int numCountersRows = counters.size();
 		double[] yearlyCounters = new double[expenditureTypes.size()+4];
@@ -1295,11 +1311,11 @@ public class DatabaseManager
 				{
 					yearlyCounters[j] += allExpenditures[j];
 				}
-				/*yearlyCounters[0] += counter1.getExp01();
+				*//*yearlyCounters[0] += counter1.getExp01();
 				yearlyCounters[1] += counter1.getExp02();
 				yearlyCounters[2] += counter1.getExp03();
 				yearlyCounters[3] += counter1.getExp04();
-				yearlyCounters[4] += counter1.getExp05();*/
+				yearlyCounters[4] += counter1.getExp05();*//*
 				yearlyCounters[numExpTypes] += counter1.getAmountSpent();
 				yearlyCounters[numExpTypes+1] += counter1.getIncome();
 				yearlyCounters[numExpTypes+2] += counter1.getSavings();
@@ -1312,9 +1328,9 @@ public class DatabaseManager
 			}
 		}
 		return yearlyCounters;
-	}
+	}*/
 	
-	public static double[] getTotalCounters()
+	/*public static double[] getTotalCounters()
 	{
 		int numCountersRows = counters.size();
 		double[] totalCounters = new double[expenditureTypes.size()+4];
@@ -1327,199 +1343,200 @@ public class DatabaseManager
 			{
 				totalCounters[j] += allExpenditures[j];
 			}
-			/*totalCounters[0] += counter1.getExp01();
+			*//*totalCounters[0] += counter1.getExp01();
 			totalCounters[1] += counter1.getExp02();
 			totalCounters[2] += counter1.getExp03();
 			totalCounters[3] += counter1.getExp04();
-			totalCounters[4] += counter1.getExp05();*/
+			totalCounters[4] += counter1.getExp05();*//*
 			totalCounters[numExpTypes] += counter1.getAmountSpent();
 			totalCounters[numExpTypes+1] += counter1.getIncome();
 			totalCounters[numExpTypes+2] += counter1.getSavings();
 			totalCounters[numExpTypes+3] += counter1.getWithdrawal();
 		}
 		return totalCounters;
-	}
+	}*/
 
 	/**
 	 * @param walletBalance the walletBalance to set
 	 */
-	public static void setWalletBalance(double walletBalance)
+	/*public static void setWalletBalance(double walletBalance)
 	{
 		DatabaseManager.walletBalance = walletBalance;
 		databaseAdapter.setWalletBalance(walletBalance);
-	}
+	}*/
 
 	/**
 	 * @return the walletBalance
 	 */
-	public static double getWalletBalance()
+	/*public static double getWalletBalance()
 	{
 		return walletBalance;
-	}
+	}*/
 	
-	public static void increamentWalletBalance(double amount)
+	/*public static void increamentWalletBalance(double amount)
 	{
 		walletBalance+=amount;
 		databaseAdapter.setWalletBalance(walletBalance);
-	}
+	}*/
 	
-	public static void increamentWalletBalance(String amount)
+	/*public static void increamentWalletBalance(String amount)
 	{
 		walletBalance+=Double.parseDouble(amount);
 		databaseAdapter.setWalletBalance(walletBalance);
-	}
+	}*/
 	
-	public static void decreamentWalletBalance(double amount)
+	/*public static void decreamentWalletBalance(double amount)
 	{
 		walletBalance-=amount;
 		databaseAdapter.setWalletBalance(walletBalance);
-	}
+	}*/
 	
-	public static void decreamentWalletBalance(String amount)
+	/*public static void decreamentWalletBalance(String amount)
 	{
 		walletBalance-=Double.parseDouble(amount);
 		databaseAdapter.setWalletBalance(walletBalance);
-	}
+	}*/
 	
-	public static void increamentAmountSpent(Date date, double amount)
+	/*public static void increamentAmountSpent(Date date, double amount)
 	{
 		// Amount Spent is the (N+1)th column where N is numExpTypes
 		DatabaseManager.increamentCounters(date, expenditureTypes.size(), amount);
-	}
+	}*/
 	
-	public static void decreamentAmountSpent(Date date, double amount)
+	/*public static void decreamentAmountSpent(Date date, double amount)
 	{
 		// Amount Spent is the (N+1)th column where N is numExpTypes
 		DatabaseManager.decreamentCounters(date, expenditureTypes.size(), amount);
-	}
+	}*/
 	
-	public static double getMonthlyAmountSpent(long month)
+	/*public static double getMonthlyAmountSpent(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
 		// Amount Spent is the (N+1)th column where N is numExpTypes
 		return counters[expenditureTypes.size()];
-	}
+	}*/
 	
-	public static double getYearlyAmountSpent(long year)
+	/*public static double getYearlyAmountSpent(long year)
 	{
 		double counters[] = getYearlyCounters(year);
 		// Amount Spent is the (N+1)th column where N is numExpTypes
 		return counters[expenditureTypes.size()];
-	}
+	}*/
 	
-	public static double getTotalAmountSpent()
+	/*public static double getTotalAmountSpent()
 	{
 		double counters[] = getTotalCounters();
 		// Amount Spent is the (N+1)th column where N is numExpTypes
 		return counters[expenditureTypes.size()];
-	}
+	}*/
 	
-	public static void increamentIncome(Date date, double amount)
+	/*public static void increamentIncome(Date date, double amount)
 	{
 		// Income is the (N+2)th column where N is numExpTypes
 		DatabaseManager.increamentCounters(date, expenditureTypes.size()+1, amount);
-	}
+	}*/
 	
-	public static void decreamentIncome(Date date, double amount)
+	/*public static void decreamentIncome(Date date, double amount)
 	{
 		// Income is the (N+2)th column where N is numExpTypes
 		DatabaseManager.decreamentCounters(date, expenditureTypes.size()+1, amount);
-	}
+	}*/
 	
-	public static double getMonthlyIncome(long month)
+	/*public static double getMonthlyIncome(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
 		// Income is the (N+2)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+1];
-	}
+	}*/
 	
-	public static double getYearlyIncome(long year)
+	/*public static double getYearlyIncome(long year)
 	{
 		double counters[] = getYearlyCounters(year);
 		// Income is the (N+2)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+1];
-	}
+	}*/
 	
-	public static double getTotalIncome()
+	/*public static double getTotalIncome()
 	{
 		double counters[] = getTotalCounters();
 		// Income is the (N+2)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+1];
-	}
+	}*/
 	
-	public static void increamentSavings(Date date, double amount)
+	/*public static void increamentSavings(Date date, double amount)
 	{
 		// Savings is the (N+3)th column where N is numExpTypes
 		DatabaseManager.increamentCounters(date, expenditureTypes.size()+2, amount);
-	}
+	}*/
 	
-	public static void decreamentSavings(Date date, double amount)
+	/*public static void decreamentSavings(Date date, double amount)
 	{
 		// Savings is the (N+3)th column where N is numExpTypes
 		DatabaseManager.decreamentCounters(date, expenditureTypes.size()+2, amount);
-	}
+	}*/
 	
-	public static double getMonthlySavings(long month)
+	/*public static double getMonthlySavings(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
 		// Savings is the (N+3)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+2];
-	}
+	}*/
 	
-	public static double getYearlySavings(long year)
+	/*public static double getYearlySavings(long year)
 	{
 		double counters[] = getYearlyCounters(year);
 		// Savings is the (N+3)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+2];
-	}
+	}*/
 	
-	public static double getTotalSavings()
+	/*public static double getTotalSavings()
 	{
 		double counters[] = getTotalCounters();
 		// Savings is the (N+3)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+2];
-	}
+	}*/
 	
-	public static void increamentWithdrawal(Date date, double amount)
+	/*public static void increamentWithdrawal(Date date, double amount)
 	{
 		// Withdrawal is the (N+4)th column where N is numExpTypes
 		DatabaseManager.increamentCounters(date, expenditureTypes.size()+3, amount);
-	}
+	}*/
 	
-	public static void decreamentWithdrawal(Date date, double amount)
+	/*public static void decreamentWithdrawal(Date date, double amount)
 	{
 		// Withdrawal is the (N+4)th column where N is numExpTypes
 		DatabaseManager.decreamentCounters(date, expenditureTypes.size()+3, amount);
-	}
+	}*/
 	
-	public static double getMonthlyWithdrawal(long month)
+	/*public static double getMonthlyWithdrawal(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
 		// Withdrawal is the (N+4)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+3];
-	}
+	}*/
 	
-	public static double getYearlyWithdrawal(long year)
+	/*public static double getYearlyWithdrawal(long year)
 	{
 		double counters[] = getYearlyCounters(year);
 		// Withdrawal is the (N+4)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+3];
-	}
+	}*/
 	
-	public static double getTotalWithdrawal()
+	/*public static double getTotalWithdrawal()
 	{
 		double counters[] = getTotalCounters();
 		// Withdrawal is the (N+4)th column where N is numExpTypes
 		return counters[expenditureTypes.size()+3];
-	}
+	}*/
 	
 	/**
 	 * @return The months in which Transactions were made in the format
-	 * 		January - 2015
-	 * 		February - 2015 and so on
+	 * January - 2015
+	 * February - 2015 and so on
 	 */
-	public static ArrayList<String> getExportableMonths()
+	public static ArrayList<String> getExportableMonths(Context context)
 	{
+		ArrayList<Transaction> transactions = DatabaseAdapter.getInstance(context).getAllTransactions();
 		ArrayList<Long> longMonths = new ArrayList<Long>();		//201501, 201502,...
 		ArrayList<String> months = new ArrayList<String>();		//January - 2015, February - 2015
 		
@@ -1544,7 +1561,7 @@ public class DatabaseManager
 		return months;
 	}
 	
-	public static String getExactExpType(int transactionNo)
+	/*public static String getExactExpType(int transactionNo)
 	{
 		String type = transactions.get(transactionNo).getType();
 		String expType = "";
@@ -1577,140 +1594,364 @@ public class DatabaseManager
 			}
 		}
 		return expType;
+	}*/
+	public static void addTransaction(Context context, Transaction transaction)
+	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+		Counters counters = databaseAdapter.getCountersRow(transaction.getDate().getSavableDate());
+		int numExpenditureTypes = databaseAdapter.getNumExpenditureTypes();
+		double amount = transaction.getAmount();
+
+		TransactionTypeParser parser = new TransactionTypeParser(context, transaction.getType());
+		if (parser.isIncome())
+		{
+			// Counters: couneterForEachExpenseType[0-4], TotalExpense(5), TotalIncome(6), TotalSavings(7), TotalWithdrawal(8)
+			// Example Counter Numbers are assigned assuming numExpTypes = 5
+			counters.increamentCounter(numExpenditureTypes + 1, amount);
+
+			if (parser.isIncomeDestinationWallet())
+			{
+				NewWallet wallet = parser.getIncomeDestinationWallet();
+				wallet.incrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getIncomeDestinationBank();
+				bank.incrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+		}
+		else if (parser.isExpense())
+		{
+			counters.increamentCounter(parser.getExpenditureType().getId() - 1, amount);
+			counters.increamentCounter(numExpenditureTypes, amount);    // Increament Total Expense
+
+			if (parser.isExpenseSourceWallet())
+			{
+				NewWallet wallet = parser.getExpenseSourceWallet();
+				wallet.decrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getExpenseSourceBank();
+				bank.decrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+		}
+		else if (parser.isTransfer())
+		{
+			// Savings
+			if (parser.isTransferSourceWallet() && parser.isTransferDestinationBank())
+			{
+				counters.increamentCounter(numExpenditureTypes + 2, amount);
+			}
+			// Withdrawal
+			else if (parser.isTransferSourceBank() && parser.isTransferDestinationWallet())
+			{
+				counters.increamentCounter(numExpenditureTypes + 3, amount);
+			}
+
+			if (parser.isTransferSourceWallet())
+			{
+				NewWallet wallet = parser.getTransferSourceWallet();
+				wallet.decrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getTransferSourceBank();
+				bank.decrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+
+			if (parser.isTransferDestinationWallet())
+			{
+				NewWallet wallet = parser.getTransferDestinationWallet();
+				wallet.incrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getTransferDestinationBank();
+				bank.incrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+		}
+
+		databaseAdapter.addTransaction(transaction);
+		databaseAdapter.updateCountersRow(counters);
+	}
+	public static void deleteTransaction(Context context, Transaction transaction)
+	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+		Counters counters = databaseAdapter.getCountersRow(transaction.getDate().getSavableDate());
+		int numExpenditureTypes = databaseAdapter.getNumExpenditureTypes();
+		double amount = transaction.getAmount();
+
+		TransactionTypeParser parser = new TransactionTypeParser(context, transaction.getType());
+		if (parser.isIncome())
+		{
+			// Counters: couneterForEachExpenseType[0-4], TotalExpense(5), TotalIncome(6), TotalSavings(7), TotalWithdrawal(8)
+			// Example Counter Numbers are assigned assuming numExpTypes = 5
+			counters.decreamentCounter(numExpenditureTypes + 1, amount);
+
+			if (parser.isIncomeDestinationWallet())
+			{
+				NewWallet wallet = parser.getIncomeDestinationWallet();
+				wallet.decrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getIncomeDestinationBank();
+				bank.decrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+		}
+		else if (parser.isExpense())
+		{
+			counters.decreamentCounter(parser.getExpenditureType().getId() - 1, amount);
+			counters.decreamentCounter(numExpenditureTypes, amount);    // Increament Total Expense
+
+			if (parser.isExpenseSourceWallet())
+			{
+				NewWallet wallet = parser.getExpenseSourceWallet();
+				wallet.incrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getExpenseSourceBank();
+				bank.incrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+		}
+		else if (parser.isTransfer())
+		{
+			// Savings
+			if (parser.isTransferSourceWallet() && parser.isTransferDestinationBank())
+			{
+				counters.decreamentCounter(numExpenditureTypes + 2, amount);
+			}
+			// Withdrawal
+			else if (parser.isTransferSourceBank() && parser.isTransferDestinationWallet())
+			{
+				counters.decreamentCounter(numExpenditureTypes + 3, amount);
+			}
+
+			if (parser.isTransferSourceWallet())
+			{
+				NewWallet wallet = parser.getTransferSourceWallet();
+				wallet.incrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getTransferSourceBank();
+				bank.incrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+
+			if (parser.isTransferDestinationWallet())
+			{
+				NewWallet wallet = parser.getTransferDestinationWallet();
+				wallet.decrementBalance(amount);
+				databaseAdapter.updateWallet(wallet);
+			}
+			else
+			{
+				Bank bank = parser.getTransferDestinationBank();
+				bank.decrementBalance(amount);
+				databaseAdapter.updateBank(bank);
+			}
+		}
+
+		databaseAdapter.deleteTransaction(transaction);
+		databaseAdapter.updateCountersRow(counters);
+	}
+
+	public static void editTransaction(Context context, Transaction oldTransaction, Transaction newTransaction)
+	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+
+		if(oldTransaction.differOnlyInParticular(newTransaction))
+		{
+			databaseAdapter.updateTransaction(newTransaction);
+			return;
+		}
+
+		DatabaseManager.deleteTransaction(context, oldTransaction);
+		DatabaseManager.addTransaction(context, newTransaction);
 	}
 	
 	// Static Methods to compare two objects like transactions, banks...
-	public static boolean areEqualTransactions(ArrayList<Transaction> transactions1, 
-			ArrayList<Transaction> transactions2)
+	public static boolean areEqualTransactions(ArrayList<Transaction> transactions1,
+											   ArrayList<Transaction> transactions2)
 	{
 		//Toast.makeText(context, "Check-Point01", Toast.LENGTH_SHORT).show();
 		// Go on comparing every fields. Whenever you find a difference, return false;
-		if(transactions1.size() != transactions2.size())
+		if (transactions1.size() != transactions2.size())
 		{
-			Toast.makeText(context, "NumTransactions Mismatch", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, "NumTransactions Mismatch", Toast.LENGTH_SHORT).show();
+			Log.d("AreEqualTransactions()", "NumTransactions Mismatch");
 			return false;
 		}
 		
 		boolean isValid = true;
 		int numTransactions = transactions1.size(), i;
-		for(i=0; isValid && i<numTransactions; i++)
+		for (i = 0; isValid && i < numTransactions; i++)
 		{
 			Transaction transaction1 = transactions1.get(i);
 			Transaction transaction2 = transactions2.get(i);
-			if(transaction1.getID() != transaction2.getID())
+			if (transaction1.getID() != transaction2.getID())
 			{
-				Toast.makeText(context, "ID Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "ID Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(transaction1.getCreatedTime().isNotEqualTo(transaction2.getCreatedTime()))
+			if (transaction1.getCreatedTime().isNotEqualTo(transaction2.getCreatedTime()))
 			{
-				Toast.makeText(context, "02 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "02 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(transaction1.getModifiedTime().isNotEqualTo(transaction2.getModifiedTime()))
+			if (transaction1.getModifiedTime().isNotEqualTo(transaction2.getModifiedTime()))
 			{
-				Toast.makeText(context, "03 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "03 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(transaction1.getDate().isNotEqualTo(transaction2.getDate()))
+			if (transaction1.getDate().isNotEqualTo(transaction2.getDate()))
 			{
-				Toast.makeText(context, "04 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "04 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(!transaction1.getType().equals(transaction2.getType()))
+			if (!transaction1.getType().equals(transaction2.getType()))
 			{
-				Toast.makeText(context, "05 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "05 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(!transaction1.getParticular().equals(transaction2.getParticular()))
+			if (!transaction1.getParticular().equals(transaction2.getParticular()))
 			{
-				Toast.makeText(context, "06 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "06 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(transaction1.getRate() != transaction2.getRate())
+			if (transaction1.getRate() != transaction2.getRate())
 			{
-				Toast.makeText(context, "07 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "07 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(transaction1.getQuantity() != transaction2.getQuantity())
+			if (transaction1.getQuantity() != transaction2.getQuantity())
 			{
-				Toast.makeText(context, "08 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "08 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(transaction1.getAmount() != transaction2.getAmount())
+			if (transaction1.getAmount() != transaction2.getAmount())
 			{
-				Toast.makeText(context, "09 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(context, "09 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 		}
 		return isValid;
 	}
 	
-	public static boolean areEqualBanks(ArrayList<Bank> banks1, ArrayList<Bank> banks2)
+	public static boolean areEqualWallets(ArrayList<NewWallet> wallets1, ArrayList<NewWallet> wallets2)
 	{
-		if(banks1.size() != banks2.size())
+		if (wallets1.size() != wallets2.size())
 		{
-			Toast.makeText(context, "Error In NumBanks", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, "Error In NumWallets", Toast.LENGTH_SHORT).show();
 			return false;
 		}
 		
 		// Go on comparing every fields. Whenever you find a difference, set isValid to false;
 		boolean isValid = true;
-		int numBanks = banks1.size(), i=0;
-		for(i=0; isValid && i<numBanks; i++)
+		int numWallets = wallets1.size(), i = 0;
+		for (i = 0; isValid && i < numWallets; i++)
 		{
-			if(banks1.get(i).getID() != banks2.get(i).getID())
+			if (wallets1.get(i).getID() != wallets2.get(i).getID())
 			{
-				Toast.makeText(context, "01 Error: i="+i+", id1="+banks1.get(i).getID()+", id2="+banks2.get(i).getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(!banks1.get(i).getName().equals(banks2.get(i).getName()))
+			if (!wallets1.get(i).getName().equals(wallets2.get(i).getName()))
 			{
-				Toast.makeText(context, "02 Error: i="+i+", id1="+banks1.get(i).getName()+", id2="+banks2.get(i).getName(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
-			if(!banks1.get(i).getAccNo().equals(banks2.get(i).getAccNo()))
+			if (wallets1.get(i).getBalance() != wallets2.get(i).getBalance())
 			{
-				Toast.makeText(context, "03 Error: i="+i+", id1="+banks1.get(i).getAccNo()+", id2="+banks2.get(i).getAccNo(), Toast.LENGTH_SHORT).show();
-				isValid = false;
-			}
-			if(banks1.get(i).getBalance() != banks2.get(i).getBalance())
-			{
-				Toast.makeText(context, "04 Error: i="+i+", DB Balance="+banks1.get(i).getBalance()+", SD Balance="+banks2.get(i).getBalance(), Toast.LENGTH_SHORT).show();
-				isValid = false;
-			}
-			if(!banks1.get(i).getSmsName().equals(banks2.get(i).getSmsName()))
-			{
-				Toast.makeText(context, "05 Error: i="+i+", id1="+banks1.get(i).getSmsName()+", id2="+banks2.get(i).getSmsName(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 		}
-		if(!isValid)
+		if (!isValid)
 		{
-			Toast.makeText(context, "Error In " + i + "th Bank", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, "Error In " + i + "th Bank", Toast.LENGTH_SHORT).show();
+		}
+		return isValid;
+	}
+
+	public static boolean areEqualBanks(ArrayList<Bank> banks1, ArrayList<Bank> banks2)
+	{
+		if (banks1.size() != banks2.size())
+		{
+			//Toast.makeText(context, "Error In NumBanks", Toast.LENGTH_SHORT).show();
+			return false;
+		}
+
+		// Go on comparing every fields. Whenever you find a difference, set isValid to false;
+		boolean isValid = true;
+		int numBanks = banks1.size(), i = 0;
+		for (i = 0; isValid && i < numBanks; i++)
+		{
+			if (banks1.get(i).getID() != banks2.get(i).getID())
+			{
+				//Toast.makeText(context, "01 Error: i=" + i + ", id1=" + banks1.get(i).getID() + ", id2=" + banks2.get(i).getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
+			}
+			if (!banks1.get(i).getName().equals(banks2.get(i).getName()))
+			{
+				//Toast.makeText(context, "02 Error: i=" + i + ", id1=" + banks1.get(i).getName() + ", id2=" + banks2.get(i).getName(), Toast.LENGTH_SHORT).show();
+				isValid = false;
+			}
+			if (!banks1.get(i).getAccNo().equals(banks2.get(i).getAccNo()))
+			{
+				//Toast.makeText(context, "03 Error: i=" + i + ", id1=" + banks1.get(i).getAccNo() + ", id2=" + banks2.get(i).getAccNo(), Toast.LENGTH_SHORT).show();
+				isValid = false;
+			}
+			if (banks1.get(i).getBalance() != banks2.get(i).getBalance())
+			{
+				//Toast.makeText(context, "04 Error: i=" + i + ", DB Balance=" + banks1.get(i).getBalance() + ", SD Balance=" + banks2.get(i).getBalance(), Toast.LENGTH_SHORT).show();
+				isValid = false;
+			}
+			if (!banks1.get(i).getSmsName().equals(banks2.get(i).getSmsName()))
+			{
+				//Toast.makeText(context, "05 Error: i=" + i + ", id1=" + banks1.get(i).getSmsName() + ", id2=" + banks2.get(i).getSmsName(), Toast.LENGTH_SHORT).show();
+				isValid = false;
+			}
+		}
+		if (!isValid)
+		{
+			//Toast.makeText(context, "Error In " + i + "th Bank", Toast.LENGTH_SHORT).show();
 		}
 		return isValid;
 	}
 	
-	public static boolean areEqualCounters(ArrayList<Counters> counters1, ArrayList<Counters> counters2)
+	public static boolean areEqualCounters(ArrayList<Counters> counters1, ArrayList<Counters> counters2, int numExpenditureTypes)
 	{
 		// Go on comparing every fields. Whenever you find a difference, return false;
-		if(counters1.size() != counters2.size())
+		if (counters1.size() != counters2.size())
 		{
 			return false;
 		}
 		int numCountersRows = counters1.size();
-		for(int i=0; i<numCountersRows; i++)
+		for (int i = 0; i < numCountersRows; i++)
 		{
-			if(counters1.get(i).getID() != counters2.get(i).getID())
+			if (counters1.get(i).getID() != counters2.get(i).getID())
 			{
 				return false;
 			}
 			//Log.d("DatabaseManager/areEqualCounters()", "Check-Point 02:" + counters1.get(i).getAllExpenditures().length);
-			for(int j=0; j<expenditureTypes.size(); j++)
+			for (int j = 0; j < numExpenditureTypes; j++)
 			{
 				//Log.d("DatabaseManager/areEqualCounters(", "Check-Point 03:i=" + i + "|j=" + j);
-				if(counters1.get(i).getAllExpenditures()[j] != counters2.get(i).getAllExpenditures()[j])
+				if (counters1.get(i).getAllExpenditures()[j] != counters2.get(i).getAllExpenditures()[j])
 				{
 					return false;
 				}
@@ -1735,19 +1976,19 @@ public class DatabaseManager
 			{
 				return false;
 			}*/
-			if(counters1.get(i).getAmountSpent() != counters2.get(i).getAmountSpent())
+			if (counters1.get(i).getAmountSpent() != counters2.get(i).getAmountSpent())
 			{
 				return false;
 			}
-			if(counters1.get(i).getIncome() != counters2.get(i).getIncome())
+			if (counters1.get(i).getIncome() != counters2.get(i).getIncome())
 			{
 				return false;
 			}
-			if(counters1.get(i).getWithdrawal() != counters2.get(i).getWithdrawal())
+			if (counters1.get(i).getWithdrawal() != counters2.get(i).getWithdrawal())
 			{
 				return false;
 			}
-			if(counters1.get(i).getSavings() != counters2.get(i).getSavings())
+			if (counters1.get(i).getSavings() != counters2.get(i).getSavings())
 			{
 				return false;
 			}
@@ -1755,17 +1996,25 @@ public class DatabaseManager
 		return true;
 	}
 	
-	public static boolean areEqualExpTypes(ArrayList<String> expTypes1, ArrayList<String> expTypes2)
+	public static boolean areEqualExpTypes(ArrayList<ExpenditureType> expTypes1, ArrayList<ExpenditureType> expTypes2)
 	{
 		// Go on comparing every fields. Whenever you find a difference, return false;
-		if(expTypes1.size() != expTypes2.size())
+		if (expTypes1.size() != expTypes2.size())
 		{
 			return false;
 		}
 		int numExpTypes = expTypes1.size();
-		for(int i=0; i<numExpTypes; i++)
+		for (int i = 0; i < numExpTypes; i++)
 		{
-			if(!expTypes1.get(i).equals(expTypes2.get(i)))
+			if (expTypes1.get(i).getId() != expTypes2.get(i).getId())
+			{
+				return false;
+			}
+			if (!expTypes1.get(i).getName().equals(expTypes2.get(i).getName()))
+			{
+				return false;
+			}
+			if (expTypes1.get(i).isDeleted() != expTypes2.get(i).isDeleted())
 			{
 				return false;
 			}
@@ -1776,26 +2025,26 @@ public class DatabaseManager
 	public static boolean areEqualTemplates(ArrayList<Template> templates1, ArrayList<Template> templates2)
 	{
 		// Go on comparing every fields. Whenever you find a difference, return false;
-		if(templates1.size() != templates2.size())
+		if (templates1.size() != templates2.size())
 		{
 			return false;
 		}
 		int numTemplates = templates1.size();
-		for(int i=0; i<numTemplates; i++)
+		for (int i = 0; i < numTemplates; i++)
 		{
-			if(templates1.get(i).getID() != templates2.get(i).getID())
+			if (templates1.get(i).getID() != templates2.get(i).getID())
 			{
 				return false;
 			}
-			if(!(templates1.get(i).getParticular().equals(templates2.get(i).getParticular())))
+			if (!(templates1.get(i).getParticular().equals(templates2.get(i).getParticular())))
 			{
 				return false;
 			}
-			if(!(templates1.get(i).getType().equals(templates2.get(i).getType())))
+			if (!(templates1.get(i).getType().equals(templates2.get(i).getType())))
 			{
 				return false;
 			}
-			if(templates1.get(i).getAmount() != templates2.get(i).getAmount())
+			if (templates1.get(i).getAmount() != templates2.get(i).getAmount())
 			{
 				return false;
 			}
@@ -1803,10 +2052,10 @@ public class DatabaseManager
 		return true;
 	}
 
-	public static void updateTemplates()
+	/*public static void updateTemplates()
 	{
 		templates = new ArrayList<Template>();
 		databaseAdapter.deleteAllTemplates();
 		databaseAdapter.addAllTemplates(templates);
-	}
+	}*/
 }

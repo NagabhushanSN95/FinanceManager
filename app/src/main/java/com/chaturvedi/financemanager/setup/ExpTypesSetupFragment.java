@@ -1,6 +1,7 @@
 package com.chaturvedi.financemanager.setup;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -19,6 +20,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.database.ExpenditureType;
 
 public class ExpTypesSetupFragment extends Fragment
 {
@@ -43,9 +45,15 @@ public class ExpTypesSetupFragment extends Fragment
 		return f;
 	}
 	
-	public static ArrayList<String> getAllExpTypes()
+	public static ArrayList<ExpenditureType> getAllExpTypes()
 	{
-		return expTypes;
+		ArrayList<ExpenditureType> expenditureTypes = new ArrayList<ExpenditureType>(expTypes.size());
+		for(int i=0; i<expTypes.size(); i++)
+		{
+			ExpenditureType expenditureType = new ExpenditureType(i+1, expTypes.get(i), false);
+			expenditureTypes.add(expenditureType);
+		}
+		return expenditureTypes;
 	}
 	
 	private void buildLayout()
@@ -62,10 +70,11 @@ public class ExpTypesSetupFragment extends Fragment
 		
 		// Add all the hints for the ExpTypes i.e. default ExpTypes
 		expTypes = new ArrayList<String>(5);
-		for(int i=0; i<5; i++)
+		Collections.addAll(expTypes,hints);
+		/*for(int i=0; i<5; i++)
 		{
 			expTypes.add(hints[i]);
-		}
+		}*/
 		
 		// Add the four default Exp Types
 		for(int i=0; i<4; i++)

@@ -8,17 +8,9 @@
 package com.chaturvedi.financemanager.updates;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
-
-import com.chaturvedi.financemanager.database.Bank;
-import com.chaturvedi.financemanager.database.Counters;
-import com.chaturvedi.financemanager.database.Date;
-import com.chaturvedi.financemanager.database.Template;
-import com.chaturvedi.financemanager.database.Time;
-import com.chaturvedi.financemanager.database.Transaction;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,8 +22,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.StringTokenizer;
 
 public class Update96To107
 {
@@ -201,7 +195,7 @@ public class Update96To107
 
 			// Write Key Data
 			backupWriter.write("---------------Key Data---------------\n");
-			int versionNo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+			int versionNo = 107;
 			backupWriter.write(versionNo + "\n");
 			backupWriter.write(banks.size() + "\n");
 			backupWriter.write(transactions.size() + "\n");
@@ -326,13 +320,589 @@ public class Update96To107
 		{
 			Log.d("Update96To107", e.getMessage(), e.fillInStackTrace());
 		}
-		catch (PackageManager.NameNotFoundException e)
-		{
-			Log.d("Update96To107", e.getMessage(), e.fillInStackTrace());
-		}
 		catch (JSONException e)
 		{
 			Log.d("Update96To107", e.getMessage(), e.fillInStackTrace());
 		}
+	}
+
+	private class Bank
+	{
+		private int id;
+		private String name;
+		private String accNo;
+		private double balance;
+		private String smsName;
+
+		public Bank(int id, String name, String accNo, double balance, String smsName)
+		{
+			this.setID(id);
+			this.setName(name);
+			this.setAccNo(accNo);
+			this.setBalance(balance);
+			this.setSmsName(smsName);
+		}
+
+		public void setID(int id)
+		{
+			this.id = id;
+		}
+
+		/**
+		 * @return the id
+		 */
+		public int getID()
+		{
+			return id;
+		}
+
+		/**
+		 * @param name the name to set
+		 */
+		public void setName(String name)
+		{
+			this.name = name;
+		}
+
+		/**
+		 * @return the name
+		 */
+		public String getName()
+		{
+			return name;
+		}
+
+		/**
+		 * @param accNo the accNo to set
+		 */
+		void setAccNo(String accNo)
+		{
+			this.accNo = accNo;
+		}
+
+		/**
+		 * @return the accNo
+		 */
+		String getAccNo()
+		{
+			return accNo;
+		}
+
+		/**
+		 * @param balance the balance to set
+		 */
+		public void setBalance(double balance)
+		{
+			this.balance = balance;
+		}
+
+		/**
+		 * @return the balance
+		 */
+		public double getBalance()
+		{
+			return balance;
+		}
+
+		/**
+		 * @param smsName the smsName to set
+		 */
+		void setSmsName(String smsName)
+		{
+			this.smsName = smsName;
+		}
+
+		/**
+		 * @return the smsName
+		 */
+		String getSmsName()
+		{
+			return smsName;
+		}
+	}
+
+	private class Counters
+	{
+		private int id;
+		private Date date;
+		private double[] exp;
+		private double amountSpent;
+		private double income;
+		private double savings;
+		private double withdrawal;
+
+		// Constructor
+		public Counters(int id, Date date, double[] exp)
+		{
+			this.id = id;
+			this.date = date;
+			int numExpTypes = exp.length-4;
+			this.exp = new double[numExpTypes];
+			for(int i=0; i<numExpTypes; i++)
+			{
+				this.exp[i] = exp[i];
+			}
+			this.amountSpent = exp[numExpTypes];
+			this.income = exp[numExpTypes+1];
+			this.savings = exp[numExpTypes+2];
+			this.withdrawal = exp[numExpTypes+3];
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setID(int id)
+		{
+			this.id = id;
+		}
+
+		/**
+		 * @return the id
+		 */
+		public int getID()
+		{
+			return id;
+		}
+
+		/**
+		 * @param date the date to set
+		 */
+		public void setDate(Date date)
+		{
+			this.date = date;
+		}
+
+		/**
+		 * @return the date
+		 */
+		public Date getDate()
+		{
+			return date;
+		}
+
+		public void setExp(double[] exp)
+		{
+			int numExpTypes = exp.length-4;
+			for(int i=0; i<numExpTypes; i++)
+			{
+				this.exp[i] = exp[i];
+			}
+		}
+
+		double[] getAllExpenditures()
+		{
+			int numExpTypes = exp.length;
+			double[] exp1 = new double[numExpTypes];
+			for(int i=0; i<numExpTypes; i++)
+			{
+				exp1[i] = exp[i];
+			}
+			return exp1;
+		}
+
+		/**
+		 * @return the amountSpent
+		 */
+		double getAmountSpent() {
+			return amountSpent;
+		}
+
+		/**
+		 * @return the income
+		 */
+		public double getIncome() {
+			return income;
+		}
+
+		/**
+		 * @param income the income to set
+		 */
+		public void setIncome(double income) {
+			this.income = income;
+		}
+
+		/**
+		 * @return the savings
+		 */
+		double getSavings() {
+			return savings;
+		}
+
+		/**
+		 * @return the withdrawal
+		 */
+		double getWithdrawal() {
+			return withdrawal;
+		}
+	}
+
+	private class Date
+	{
+		private int year;
+		private int month;
+		private int date;
+
+		public Date(String date)
+		{
+			StringTokenizer tokens = new StringTokenizer(date,"/");
+			this.year = Integer.parseInt(tokens.nextToken());
+			this.month = Integer.parseInt(tokens.nextToken());
+			this.date = Integer.parseInt(tokens.nextToken());
+
+			if(this.year<this.date)
+			{
+				int temp = this.date;
+				this.date = this.year;
+				this.year = temp;
+			}
+		}
+
+		String getSavableDate()
+		{
+			String date = year + "/" + month + "/" + this.date;
+			return date;
+		}
+
+		public int getYear() {
+			return year;
+		}
+
+		public void setYear(int year) {
+			this.year = year;
+		}
+
+		public int getMonth() {
+			return month;
+		}
+
+		public void setMonth(int month) {
+			this.month = month;
+		}
+
+		public int getDate() {
+			return date;
+		}
+
+		public void setDate(int date) {
+			this.date = date;
+		}
+	}
+
+	private class Template
+	{
+		private int id;
+		private String particular;
+		private String type;
+		private double amount;
+
+		// Constructor
+		public Template(int id, String particular, String type, double amount)
+		{
+			this.id = id;
+			this.particular = particular;
+			this.type = type;
+			this.amount = amount;
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setID(int id)
+		{
+			this.id = id;
+		}
+
+		/**
+		 * @return the id
+		 */
+		public int getID()
+		{
+			return id;
+		}
+
+		/**
+		 * @return the particular
+		 */
+		public String getParticular()
+		{
+			return particular;
+		}
+
+		/**
+		 * @param type the type to set
+		 */
+		public void setType(String type)
+		{
+			this.type = type;
+		}
+
+		/**
+		 * @return the type
+		 */
+		public String getType()
+		{
+			return type;
+		}
+
+		/**
+		 * @param amount the amount to set
+		 */
+		public void setAmount(double amount)
+		{
+			this.amount = amount;
+		}
+
+		/**
+		 * @return the amount
+		 */
+		public double getAmount()
+		{
+			return amount;
+		}
+	}
+
+	private class Time
+	{
+		private int year;
+		private int month;
+		private int date;
+		private int hour;
+		private int minute;
+		private int second;
+		private int millis;
+
+		public Time(String time)
+		{
+			StringTokenizer tokens = new StringTokenizer(time,"/");
+			this.year = Integer.parseInt(tokens.nextToken());
+			this.month = Integer.parseInt(tokens.nextToken());
+			this.date = Integer.parseInt(tokens.nextToken());
+			this.hour = Integer.parseInt(tokens.nextToken());
+			this.minute = Integer.parseInt(tokens.nextToken());
+			this.second = Integer.parseInt(tokens.nextToken());
+			this.millis = Integer.parseInt(tokens.nextToken());
+		}
+
+		public Time(Calendar calendar)
+		{
+			this.year = calendar.get(Calendar.YEAR);
+			this.month = calendar.get(Calendar.MONTH) + 1;
+			this.date = calendar.get(Calendar.DATE);
+			this.hour = calendar.get(Calendar.HOUR);
+			this.minute = calendar.get(Calendar.MINUTE);
+			this.second = calendar.get(Calendar.SECOND);
+			this.millis = calendar.get(Calendar.MILLISECOND);
+		}
+
+		public String toString()
+		{
+			String time = year + "/" + month + "/" + date + "/" + hour + "/" + minute + "/" + second + "/" + millis;
+			return time;
+		}
+
+		public int getYear() {
+			return year;
+		}
+
+		public void setYear(int year) {
+			this.year = year;
+		}
+
+		public int getMonth() {
+			return month;
+		}
+
+		public void setMonth(int month) {
+			this.month = month;
+		}
+
+		public int getDate() {
+			return date;
+		}
+
+		public void setDate(int date) {
+			this.date = date;
+		}
+
+		String getTimeForFileName()
+		{
+			DecimalFormat formatter = new DecimalFormat("00");
+			return formatter.format(year) + "" + formatter.format(month) + "" + formatter.format(date) + "" +
+					formatter.format(hour) + "" + formatter.format(minute) + "" + formatter.format(second) + "" +
+					formatter.format(millis);
+		}
+	}
+
+	private class Transaction
+	{
+		private int id;
+		private Time createdTime; // The Time At Which The Transaction Is Created
+		private Time modifiedTime; // The Time At Which The Transaction Was Last Modified
+		private Date date; // The Date As Entered By The User
+		private String type;
+		private String particular;
+		private double rate;
+		private double quantity;
+		private double amount;
+
+		// Constructor
+		public Transaction(int id, Time createdTime, Time modifiedTime, Date date, String type, String particular, double rate, double quantity, double amount)
+		{
+			this.setID(id);
+			this.setCreatedTime(createdTime);
+			this.setModifiedTime(modifiedTime);
+			this.setDate(date);
+			this.setType(type);
+			this.setParticular(particular);
+			this.setRate(rate);
+			this.setQuantity(quantity);
+			this.setAmount(amount);
+		}
+
+		/**
+		 * @param id the id to set
+		 */
+		public void setID(int id)
+		{
+			this.id = id;
+		}
+
+		/**
+		 * @return the id
+		 */
+		public int getID()
+		{
+			return id;
+		}
+
+		/**
+		 * @param createdTime The Time at which the transaction is created
+		 */
+		void setCreatedTime(Time createdTime)
+		{
+			this.createdTime = createdTime;
+		}
+
+		/**
+		 * @return the time at which the transaction is created
+		 */
+		Time getCreatedTime()
+		{
+			return createdTime;
+		}
+
+		/**
+		 * @param modifiedTime The Time at which the transaction is modified
+		 */
+		void setModifiedTime(Time modifiedTime)
+		{
+			this.modifiedTime = modifiedTime;
+		}
+
+		/**
+		 * @return the time at which the transaction is created
+		 */
+		Time getModifiedTime()
+		{
+			return modifiedTime;
+		}
+
+		/**
+		 * @param date the date to set
+		 */
+		public void setDate(Date date)
+		{
+			this.date = date;
+		}
+
+		/**
+		 * @return the date
+		 */
+		public Date getDate()
+		{
+			return date;
+		}
+
+		/**
+		 * @param type the type to set
+		 */
+		public void setType(String type)
+		{
+			this.type = type;
+		}
+
+		/**
+		 * @return the type
+		 */
+		public String getType()
+		{
+			return type;
+		}
+
+		/**
+		 * @param particular the particular to set
+		 */
+		void setParticular(String particular)
+		{
+			this.particular = particular;
+		}
+
+		/**
+		 * @return the particular
+		 */
+		public String getParticular()
+		{
+			return particular;
+		}
+
+		/**
+		 * @param rate the rate to set
+		 */
+		public void setRate(double rate)
+		{
+			this.rate = rate;
+		}
+
+		/**
+		 * @return the rate
+		 */
+		public double getRate()
+		{
+			return rate;
+		}
+
+		/**
+		 * @param quantity the quantity to set
+		 */
+		public void setQuantity(double quantity)
+		{
+			this.quantity = quantity;
+		}
+
+		/**
+		 * @return the quantity
+		 */
+		public double getQuantity()
+		{
+			return quantity;
+		}
+
+		/**
+		 * @param amount the amount to set
+		 */
+		public void setAmount(double amount)
+		{
+			this.amount = amount;
+		}
+
+		/**
+		 * @return the amount
+		 */
+		public double getAmount()
+		{
+			return amount;
+		}
+
+
 	}
 }

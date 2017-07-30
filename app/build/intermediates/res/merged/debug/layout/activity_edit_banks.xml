@@ -42,11 +42,11 @@
                     android:background="#000000" />
                 
                 <TextView
-                    android:id="@+id/slno"
+                    android:id="@+id/titleBankName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="@string/slno"
+                    android:text="@string/bankName"
                     android:textColor="#FFFFFF"
                     android:textSize="15sp" />
                 
@@ -56,11 +56,11 @@
                     android:background="#000000" />
                 
                 <TextView
-                    android:id="@+id/date"
+                    android:id="@+id/titleBankBalance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="@string/date"
+                    android:text="@string/bankBalance"
                     android:textColor="#FFFFFF"
                     android:textSize="15sp" />
                 

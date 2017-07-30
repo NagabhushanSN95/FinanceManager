@@ -4,9 +4,12 @@ package com.chaturvedi.financemanager.main;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION;
@@ -27,14 +30,26 @@ import android.widget.Toast;
 import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.BackupManager;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.ExportManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
+import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.AboutActivity;
+import com.chaturvedi.financemanager.setup.StartupActivity;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import static com.chaturvedi.financemanager.functions.Constants.KEY_APP_VERSION;
+import static com.chaturvedi.financemanager.functions.Constants.KEY_BANK_SMS_ARRIVED;
+import static com.chaturvedi.financemanager.functions.Constants.KEY_CURRENCY_SYMBOL;
+import static com.chaturvedi.financemanager.functions.Constants.KEY_DATABASE_INITIALIZED;
+import static com.chaturvedi.financemanager.functions.Constants.KEY_QUOTE_NO;
+import static com.chaturvedi.financemanager.functions.Constants.KEY_RESPOND_BANK_SMS;
+import static com.chaturvedi.financemanager.functions.Constants.KEY_SPLASH_DURATION;
+import static com.chaturvedi.financemanager.functions.Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL;
 
 public class ExtrasActivity extends Activity
 {
@@ -91,6 +106,7 @@ public class ExtrasActivity extends Activity
 				{
 					// Get the Uri of the selected file
 					Uri uri = intent.getData();
+					// TODO: Doesn't work when Default File Chooser is used. Works with ES File Explorer
 					restoreData(uri.getPath());
 				}
 		}
@@ -133,7 +149,7 @@ public class ExtrasActivity extends Activity
 			{
 				// Start Activity to choose file
 				Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-				fileIntent.setType("file/*"); // intent type to filter application based on your requirement
+				fileIntent.setType("*/*"); // intent type to filter application based on your requirement
 				startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
 			}
 		});
@@ -172,7 +188,7 @@ public class ExtrasActivity extends Activity
 		exportFileNameField=(EditText)exportDialogView.findViewById(R.id.editText_export_fileName);
 		
 		monthsList = (Spinner) exportDialogView.findViewById(R.id.monthsList);
-		months = DatabaseManager.getExportableMonths(); // Assigned at the top
+		months = DatabaseManager.getExportableMonths(ExtrasActivity.this); // Assigned at the top
 		months.add(0, "Current Month");					// Insert The Current Month at the top of the list
 		monthsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, months));
 		monthsList.setSelection(0);
@@ -231,7 +247,7 @@ public class ExtrasActivity extends Activity
 	{
 		AlertDialog.Builder backupDialog = new AlertDialog.Builder(this);
 		backupDialog.setTitle("Back-Up Data");
-		backupDialog.setMessage("Are You Sure To Backup Data And Overwrite Previous Backup (If Any)?");
+		backupDialog.setMessage("Are You Sure To Backup Data?");
 		backupDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 		{
 			@Override
@@ -269,7 +285,7 @@ public class ExtrasActivity extends Activity
 						{
 							DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
 							DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-							DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+							DatabaseManager.setAllBanks(restoreManager.getAllWallets());
 							int numExpTypesInDatabase = DatabaseManager.getNumExpenditureTypes();
 							DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
 							if(restoreManager.getNumExpenditureTypes() != numExpTypesInDatabase)
@@ -330,35 +346,56 @@ public class ExtrasActivity extends Activity
 				int result = restoreManager.getResult();
 				if(result == 0)
 				{
-					DatabaseManager.initialize(restoreManager.getWalletBalance());
-					DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-					DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-					DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-					DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+					DatabaseManager.clearDatabase(ExtrasActivity.this);
+					DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(ExtrasActivity.this);
+					// Remove existing data
+					databaseAdapter.deleteAllWallets();
+					databaseAdapter.deleteAllBanks();
+					databaseAdapter.deleteAllTransactions();
+					databaseAdapter.deleteAllExpenditureTypes();
+					databaseAdapter.deleteAllCountersRows();
+					databaseAdapter.deleteAllTemplates();
+
+					// Add new data
+					databaseAdapter.addAllWallets(restoreManager.getAllWallets());
+					databaseAdapter.addAllBanks(restoreManager.getAllBanks());
+					databaseAdapter.addAllTransactions(restoreManager.getAllTransactions());
+					databaseAdapter.addAllExpenditureTypes(restoreManager.getAllExpTypes());
 					// Initially, in DatabaseAdapter, Counters Table is configured to have 5 Exp Types By Deafult
+					// If Number of Exp Types is not 5, then readjust it to have more columns
 					if(restoreManager.getNumExpTypes() != 5)
 					{
 						Log.d("restoreData()","Readjusting Counters Table");
-						DatabaseManager.readjustCountersTable();
+						databaseAdapter.readjustCountersTable();
 					}
-					DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-					DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+
+					databaseAdapter.addAllCountersRows(restoreManager.getAllCounters());
+					databaseAdapter.addAllTemplates(restoreManager.getAllTemplates());
+
+					// TODO: Restore Preferences also
 					restoreDialog.dismiss();
 				}
 				else if(result == 1)
 				{
-					Toast.makeText(getApplicationContext(), "No Backups Were Found.\nMake sure the Backup Files " +
-							"are located in\nChaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();
+					// TODO: Send these messages using a handler. Display Toast in that handler
+					/*Toast.makeText(getApplicationContext(), "No Backups Were Found.\nMake sure the Backup Files " +
+							"are located in\nChaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();*/
+					Log.d("restoreData()", "No Backups Were Found.\nPlease select a backup file created by Finance Manager App only");
+					restoreDialog.dismiss();
 				}
 				else if(result == 2)
 				{
-					Toast.makeText(getApplicationContext(), "Old Data. Cannot be Restored. Sorry!",
-							Toast.LENGTH_LONG).show();
+					/*Toast.makeText(getApplicationContext(), "Old Data. Cannot be Restored. Sorry!",
+							Toast.LENGTH_LONG).show();*/
+					Log.d("restoreData()", "Old Data. Cannot be Restored. Sorry!");
+					restoreDialog.dismiss();
 				}
 				else if(result == 3)
 				{
-					Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block",
-							Toast.LENGTH_LONG).show();
+					/*Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block",
+							Toast.LENGTH_LONG).show();*/
+					Log.d("restoreData()", "Error in Restoring Data\nControl Entered Catch Block");
+					restoreDialog.dismiss();
 				}
 			}
 		});
@@ -377,7 +414,7 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.clearDatabase();
+				DatabaseManager.clearDatabase(ExtrasActivity.this);
 			}
 		});
 		clearDialog.setNegativeButton("Cancel", null);

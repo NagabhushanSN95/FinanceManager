@@ -49,6 +49,74 @@ public class Counters
 		this.withdrawal = exp[numExpTypes+3];
 	}
 	
+	/**
+	 * Increament a single counter
+	 * @param counterNo starts with 0
+	 * @param amount amount to be added
+	 */
+	public void increamentCounter(int counterNo, double amount)
+	{
+		if(counterNo < exp.length)
+		{
+			exp[counterNo] += amount;
+		}
+		else
+		{
+			switch (counterNo-exp.length)
+			{
+				case 0:
+					amountSpent += amount;
+					break;
+				
+				case 1:
+					income += amount;
+					break;
+				
+				case 2:
+					savings += amount;
+					break;
+				
+				case 3:
+					withdrawal += amount;
+					break;
+			}
+		}
+	}
+	
+	/**
+	 * Decreament a single counter
+	 * @param counterNo starts with 0
+	 * @param amount amount to be subtracted
+	 */
+	public void decreamentCounter(int counterNo, double amount)
+	{
+		if(counterNo < exp.length)
+		{
+			exp[counterNo] -= amount;
+		}
+		else
+		{
+			switch (counterNo-exp.length)
+			{
+				case 0:
+					amountSpent -= amount;
+					break;
+				
+				case 1:
+					income -= amount;
+					break;
+				
+				case 2:
+					savings -= amount;
+					break;
+				
+				case 3:
+					withdrawal -= amount;
+					break;
+			}
+		}
+	}
+	
 	public void increamentCounters(double[] exp)
 	{
 		int numExpTypes = exp.length-4;

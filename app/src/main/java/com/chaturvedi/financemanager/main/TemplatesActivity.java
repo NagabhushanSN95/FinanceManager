@@ -1,8 +1,5 @@
 package com.chaturvedi.financemanager.main;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -24,8 +21,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.Template;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class TemplatesActivity extends Activity
 {
@@ -73,12 +73,12 @@ public class TemplatesActivity extends Activity
 	public void onResume()
 	{
 		super.onResume();
-		if(DatabaseManager.getNumTransactions()==0)
+		/*if(DatabaseManager.getNumTransactions()==0)
 		{
 			DatabaseManager.setContext(TemplatesActivity.this);
 			DatabaseManager.readDatabase();
 			buildBodyLayout();
-		}
+		}*/
 	}
 	
 	public boolean onOptionsItemSelected(MenuItem item)
@@ -144,7 +144,8 @@ public class TemplatesActivity extends Activity
 	
 	private void readTemplates()
 	{
-		templates = DatabaseManager.getAllTemplates();
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TemplatesActivity.this);
+		templates = databaseAdapter.getAllVisibleTemplates();
 		templateStrings = new ArrayList<String>();
 		for(int i=0; i<templates.size(); i++)
 		{
@@ -199,7 +200,7 @@ public class TemplatesActivity extends Activity
 				LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();
 				slnoParams.width = WIDTH_SLNO;
 				slnoView.setLayoutParams(slnoParams);
-				slnoView.setText(""+(i+1));
+				slnoView.setText(String.valueOf(i+1));
 				//slnoView.setMinLines(MIN_LINES);
 
 				TextView typeView = (TextView)linearLayout.findViewById(R.id.type);
@@ -239,7 +240,7 @@ public class TemplatesActivity extends Activity
 	
 	/**
 	 * Delete the transaction referred by transactionNo
-	 * @param transactionNo Number of the transaction to be deleted
+	 * @param templateNo Number of the transaction to be deleted
 	 */
 	private void deleteTemplate(int templateNo)
 	{
@@ -251,8 +252,9 @@ public class TemplatesActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.deleteTemplate(templates.get(contextMenuTemplateNo));
-				//transactions = DatabaseManager.getAllTransactions();
+				DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TemplatesActivity.this);
+				databaseAdapter.deleteTemplate(templates.get(contextMenuTemplateNo));
+				parentLayout.removeViewAt(contextMenuTemplateNo);
 				buildBodyLayout();
 			}
 		});

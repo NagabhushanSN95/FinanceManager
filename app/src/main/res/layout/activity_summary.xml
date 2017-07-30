@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_activity_summary"
-    tools:context=".MainActivity" >
+    tools:context=".main.SummaryActivity" >
 
     <TextView
         android:id="@+id/krishna"
@@ -37,44 +37,12 @@
         </LinearLayout>
     </ScrollView>
 
-    <LinearLayout
-        android:id="@+id/button_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="#CCCCCC" >
+	<com.chaturvedi.financemanager.main.TransactionButtonsLayout
+		android:id="@+id/button_layout"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true">
 
-        <ImageButton
-            android:id="@+id/button_wallet_credit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/wallet_credit"
-            android:background="#00000000"
-            android:text="@string/wallet_credit" />
-
-        <ImageButton
-            android:id="@+id/button_wallet_debit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/wallet_debit"
-            android:background="#00000000"
-            android:text="@string/wallet_debit" />
-
-        <ImageButton
-            android:id="@+id/button_bank_credit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/bank_credit"
-            android:background="#00000000"
-            android:text="@string/bank_credit" />
-
-        <ImageButton
-            android:id="@+id/button_bank_debit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/bank_debit"
-            android:background="#00000000"
-            android:text="@string/bank_debit" />
-    </LinearLayout>
+	</com.chaturvedi.financemanager.main.TransactionButtonsLayout>
     
 </RelativeLayout>

@@ -1,0 +1,343 @@
+// Shree KRISHNAya Namaha
+
+package com.chaturvedi.financemanager.main;
+
+import android.app.DatePickerDialog;
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.database.Date;
+import com.chaturvedi.financemanager.database.MoneyStorage;
+import com.chaturvedi.financemanager.database.Template;
+import com.chaturvedi.financemanager.database.Time;
+import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.functions.Constants;
+import com.chaturvedi.financemanager.functions.TransactionTypeParser;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+
+public class TransferLayout extends RelativeLayout
+{
+	private Spinner transferSourcesSpinner;
+	private Spinner transferDestinationsSpinner;
+	private EditText particularsEditText;
+	private EditText rateEditText;
+	private EditText quantityEditText;
+	private EditText amountEditText;
+	private EditText dateEditText;
+	private CheckBox addTemplateCheckBox;
+
+	public TransferLayout(Context context)
+	{
+		super(context);
+		buildLayout();
+	}
+
+	public TransferLayout(Context context, AttributeSet attrs)
+	{
+		super(context, attrs);
+		buildLayout();
+	}
+
+	public TransferLayout(Context context, AttributeSet attrs, int defStyle)
+	{
+		super(context, attrs, defStyle);
+		buildLayout();
+	}
+
+	private void buildLayout()
+	{
+		LayoutInflater.from(getContext()).inflate(R.layout.layout_transaction_transfer, this);
+
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
+
+		ArrayList<String> transferSourcesList = databaseAdapter.getAllVisibleWalletsNames();
+		transferSourcesList.addAll(databaseAdapter.getAllVisibleBanksNames());
+
+		ArrayList<String> transferDestinationsList = databaseAdapter.getAllVisibleWalletsNames();
+		transferDestinationsList.addAll(databaseAdapter.getAllVisibleBanksNames());
+
+		transferSourcesSpinner = (Spinner) findViewById(R.id.spinner_transferSource);
+		transferSourcesSpinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+				transferSourcesList));
+		transferDestinationsSpinner = (Spinner) findViewById(R.id.spinner_transferDestination);
+		transferDestinationsSpinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+				transferDestinationsList));
+		particularsEditText = (EditText) findViewById(R.id.editText_particulars);
+		rateEditText = (EditText) findViewById(R.id.editText_rate);
+		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
+		amountEditText = (EditText) findViewById(R.id.editText_amount);
+
+		final Calendar myCalendar = Calendar.getInstance();
+		final DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener() {
+
+			@Override
+			public void onDateSet(DatePicker view, int year, int monthOfYear,
+								  int dayOfMonth) {
+				myCalendar.set(Calendar.YEAR, year);
+				myCalendar.set(Calendar.MONTH, monthOfYear);
+				myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+				Date date1 = new Date(myCalendar);
+				dateEditText.setText(date1.getDisplayDate());
+			}
+		};
+		dateEditText = (EditText) findViewById(R.id.editText_date);
+		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
+		dateEditText.setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				new DatePickerDialog(getContext(), onDateSetListener, myCalendar.get(Calendar.YEAR),
+						myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+			}
+		});
+
+		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
+	}
+
+	public void setData(Transaction transaction)
+	{
+		String transactionType = transaction.getType();
+		TransactionTypeParser parser = new TransactionTypeParser(getContext(), transactionType);
+		if(!parser.isTransfer())
+		{
+			Toast.makeText(getContext(), "Transaction is not Transfer", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		int transferSourceNo;
+		if(parser.isTransferSourceWallet())
+		{
+			// IDs start with 1. Hence, 1 is subtracted
+			transferSourceNo = parser.getTransferSourceWallet().getID() - 1;
+		}
+		else
+		{
+			// Banks are displayed after wallets. Hence, numWallets is added
+			transferSourceNo = DatabaseAdapter.getInstance(getContext()).getNumVisibleWallets() +
+					parser.getTransferSourceBank().getID() - 1;
+		}
+		transferSourcesSpinner.setSelection(transferSourceNo);
+
+		int transferDestinationNo;
+		if(parser.isTransferDestinationWallet())
+		{
+			// IDs start with 1. Hence, 1 is subtracted
+			transferDestinationNo = parser.getTransferDestinationWallet().getID() - 1;
+		}
+		else
+		{
+			// Banks are displayed after wallets. Hence, numWallets is added
+			transferDestinationNo = DatabaseAdapter.getInstance(getContext()).getNumVisibleWallets() +
+					parser.getTransferDestinationBank().getID() - 1;
+		}
+		transferDestinationsSpinner.setSelection(transferDestinationNo);
+
+		particularsEditText.setText(transaction.getParticular());
+		rateEditText.setText(String.valueOf(transaction.getRate()));
+		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
+		amountEditText.setText(String.valueOf(transaction.getAmount()));
+		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate()));
+	}
+
+	public void setData(int transferSourceNo, int transferDestinationNo, String particulars, String rateText, String quantityText,
+						String amountText, String date, boolean addTemplate)
+	{
+		if(transferSourceNo != -1)
+		{
+			transferSourcesSpinner.setSelection(transferSourceNo);
+		}
+		if(transferDestinationNo != -1)
+		{
+			transferDestinationsSpinner.setSelection(transferDestinationNo);
+		}
+		particularsEditText.setText(particulars);
+		rateEditText.setText(rateText);
+		quantityEditText.setText(quantityText);
+		amountEditText.setText(amountText);
+		dateEditText.setText(date);
+		addTemplateCheckBox.setSelected(addTemplate);
+	}
+
+	public void setData(String transferType, int bankID, double amount)
+	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
+
+		// -1 because BankIDs start with 1 and index start with 0
+		int bankPosition = databaseAdapter.getNumVisibleWallets() + bankID-1;
+		if(transferType.equals(Constants.TRANSFER_PAY_IN))
+		{
+			transferDestinationsSpinner.setSelection(bankPosition);
+		}
+		else
+		{
+			transferSourcesSpinner.setSelection(bankPosition);
+		}
+
+		amountEditText.setText(String.valueOf(amount));
+		//dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
+	}
+
+	public Transaction submit()
+	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
+		DecimalFormat formatter = new DecimalFormat("00");
+
+		String rateString = rateEditText.getText().toString().trim();
+		String quantityString = quantityEditText.getText().toString().trim();
+		String amountString = amountEditText.getText().toString().trim();
+
+		if((rateString.length()==0) && (amountString.length()==0))
+		{
+			// Both rate and amount are empty
+			Toast.makeText(getContext(), "Please enter Rate or Amount", Toast.LENGTH_LONG).show();
+			return null;
+		}
+		if(transferSourcesSpinner.getSelectedItemPosition() == transferDestinationsSpinner.getSelectedItemPosition())
+		{
+			Toast.makeText(getContext(), "Please select different Source and Destination for Money Transfer", Toast.LENGTH_LONG)
+					.show();
+		}
+
+		// Calculate Rate, Quantity, Amount if not specified
+		double rate, quantity, amount;
+		if(quantityString.length() > 0)
+		{
+			quantity = Double.parseDouble(quantityString);
+		}
+		else
+		{
+			quantity = 1;
+		}
+		if(rateString.length() > 0)
+		{
+			rate = Double.parseDouble(rateString);
+
+			if(amountString.length() > 0)
+			{
+				amount = Double.parseDouble(amountString);
+			}
+			else
+			{
+				amount = rate*quantity;
+			}
+		}
+		else
+		{
+			amount = Double.parseDouble(amountString);
+			rate = amount/quantity;
+		}
+
+		int id = databaseAdapter.getIDforNextTransaction();
+		if(id == -1)
+		{
+			Toast.makeText(getContext(), "Failed due to some internal error. Please try again", Toast.LENGTH_LONG).show();
+			return null;
+		}
+
+		// Transfer Wallet01 Wallet02 or
+		// Transfer Wallet01 Bank01 or
+		// Transfer Bank01 Wallet01 or
+		// Transfer Bank01 Bank02
+		String code = "Transfer";
+		int transferSourcePosition = transferSourcesSpinner.getSelectedItemPosition();
+
+		if(transferSourcePosition < databaseAdapter.getNumVisibleWallets())
+		{
+			MoneyStorage transferSource = databaseAdapter.getWalletFromName((String) transferSourcesSpinner.getSelectedItem());
+			code += " Wallet" + formatter.format(transferSource.getID());
+		}
+		else
+		{
+			MoneyStorage transferSource = databaseAdapter.getBankFromName((String) transferSourcesSpinner.getSelectedItem());
+			code += " Bank" + formatter.format(transferSource.getID());
+		}
+
+		int transferDestinationPosition = transferDestinationsSpinner.getSelectedItemPosition();
+		if(transferDestinationPosition < databaseAdapter.getNumVisibleWallets())
+		{
+			MoneyStorage transferSource = databaseAdapter.getWalletFromName((String) transferDestinationsSpinner.getSelectedItem());
+			code += " Wallet" + formatter.format(transferSource.getID());
+		}
+		else
+		{
+			MoneyStorage transferSource = databaseAdapter.getBankFromName((String) transferDestinationsSpinner.getSelectedItem());
+			code += " Bank" + formatter.format(transferSource.getID());
+		}
+
+		String particulars = particularsEditText.getText().toString().trim();
+		Date date = new Date(dateEditText.getText().toString().trim());
+		Calendar now = Calendar.getInstance();
+		Time createdTime = new Time(now);
+		Time modifiedTime = new Time(now);
+
+		Transaction transaction = new Transaction(id, createdTime, modifiedTime, date, code, particulars, rate, quantity, amount,
+				false);
+//		addTransaction(transaction);
+
+		if(addTemplateCheckBox.isChecked())
+		{
+			// Here Template ID is not added. It has to be set in DatabaseManager
+			Template template = new Template(0, transaction.getParticular(), transaction.getType(),
+					transaction.getRate(), false);
+			DatabaseManager.addTemplate(getContext(), template);
+		}
+
+		return transaction;
+	}
+
+	public int getTransferSourcePosition()
+	{
+		return transferSourcesSpinner.getSelectedItemPosition();
+	}
+
+	public int getTransferDestinationPosition()
+	{
+		return transferDestinationsSpinner.getSelectedItemPosition();
+	}
+
+	public String getParticulars()
+	{
+		return particularsEditText.getText().toString().trim();
+	}
+
+	public String getRateText()
+	{
+		return rateEditText.getText().toString();
+	}
+
+	public String getQuantityText()
+	{
+		return quantityEditText.getText().toString();
+	}
+
+	public String getAmountText()
+	{
+		return amountEditText.getText().toString();
+	}
+
+	public String getDate()
+	{
+		return dateEditText.getText().toString();
+	}
+
+	public boolean isAddTemplateSelected()
+	{
+		return addTemplateCheckBox.isSelected();
+	}
+}

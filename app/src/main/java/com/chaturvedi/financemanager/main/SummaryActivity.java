@@ -10,9 +10,7 @@ import java.util.Calendar;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityOptions;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -20,34 +18,25 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.Spinner;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.BackupManager;
 import com.chaturvedi.financemanager.database.Bank;
-import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.database.Date;
-import com.chaturvedi.financemanager.database.Template;
-import com.chaturvedi.financemanager.database.Time;
-import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.database.NewWallet;
 import com.chaturvedi.financemanager.edit.EditActivity;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
+import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.HelpActivity;
 
 public class SummaryActivity extends Activity
@@ -70,6 +59,7 @@ public class SummaryActivity extends Activity
 	private int WIDTH_NAME_VIEWS;
 	private int WIDTH_AMOUNT_VIEWS;
 	private int MARGIN_LEFT_NAME_VIEWS;
+	private int HEIGHT_TRANSACTION_BUTTONS;
 	
 	private static LinearLayout parentLayout;
 	private static LayoutParams parentLayoutParams;
@@ -84,43 +74,8 @@ public class SummaryActivity extends Activity
 	private Intent helpIntent;
 	private Intent extrasIntent;
 	
-	// From Transactions Activity
-	private int WIDTH_TRANSACTION_BUTTON;
-	
-	private ImageButton walletCreditButton;
-	private ImageButton walletDebitButton;
-	private ImageButton bankCreditButton;
-	private ImageButton bankDebitButton;
-
-	private AlertDialog.Builder walletCreditDialog;
-	private AlertDialog.Builder walletDebitDialog;
-	private AlertDialog.Builder bankCreditDialog;
-	private AlertDialog.Builder bankDebitDialog;
-	private LayoutInflater walletCreditDialogLayout;
-	private LayoutInflater walletDebitDialogLayout;
-	private LayoutInflater bankCreditDialogLayout;
-	private LayoutInflater bankDebitDialogLayout;
-	private View walletCreditDialogView;
-	private View walletDebitDialogView;
-	private View bankCreditDialogView;
-	private View bankDebitDialogView;
-	
-	private MyAutoCompleteTextView particularsField;
-	private Spinner typesList;
-	private EditText rateField;
-	private EditText quantityField;
-	private EditText amountField;
-	private EditText dateField;
-	private CheckBox templateCheckBox;
-	private Spinner creditTypesList;
-	private Spinner debitTypesList;
-	private ArrayList<RadioButton> banks;
-	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
-	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
-	
 	private Intent smsIntent;
 	private DecimalFormat formatterTextFields;
-	private ArrayList<Template> templates;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -143,13 +98,13 @@ public class SummaryActivity extends Activity
 		
 		// Read SMS Intent. 
 		smsIntent = getIntent();
-		if(smsIntent.getBooleanExtra("Bank Sms", false))
+		if(smsIntent.getBooleanExtra(Constants.ACTION_BANK_SMS, false))
 		{
-			boolean newSmsArrived = preferences.getBoolean(KEY_BANK_SMS_ARRIVED, false);
+			boolean newSmsArrived = preferences.getBoolean(Constants.KEY_BANK_SMS_ARRIVED, false);
 			if(newSmsArrived)
 			{
 				SharedPreferences.Editor editor = preferences.edit();
-				editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
+				editor.putBoolean(Constants.KEY_BANK_SMS_ARRIVED, false);
 				editor.commit();
 				performSMSTransaction();
 			}
@@ -203,11 +158,11 @@ public class SummaryActivity extends Activity
 		switch(item.getItemId())
 		{
 			case R.id.action_transactions:
-				startActivityForResult(transactionsIntent, 0);
+				startActivityForResult(transactionsIntent, Constants.REQUEST_CODE_TRANSACTIONS_ACTIVITY);
 				return true;
 				
 			case R.id.action_edit:
-				startActivityForResult(editIntent, 0);
+				startActivityForResult(editIntent, Constants.REQUEST_CODE_EDIT_ACTIVITY);
 				return true;
 				
 			case R.id.action_statistics:
@@ -215,7 +170,7 @@ public class SummaryActivity extends Activity
 				return true;
 				
 			case R.id.action_settings:
-				startActivityForResult(settingsIntent, 0);
+				startActivityForResult(settingsIntent, Constants.REQUEST_CODE_SETTINGS_ACTIVITY);
 				return true;
 				
 			case R.id.action_help:
@@ -223,7 +178,7 @@ public class SummaryActivity extends Activity
 				return true;
 				
 			case R.id.action_extras:
-				startActivityForResult(extrasIntent, 0);
+				startActivityForResult(extrasIntent, Constants.REQUEST_CODE_EXTRAS_ACTIVITY);
 				return true;
 		}
 		return true;
@@ -232,9 +187,21 @@ public class SummaryActivity extends Activity
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
+		switch (requestCode)
+		{
+			case Constants.REQUEST_CODE_TRANSACTIONS_ACTIVITY:
+			case Constants.REQUEST_CODE_SETTINGS_ACTIVITY:
+			case Constants.REQUEST_CODE_ADD_TRANSACTION:
+				setData();
+				break;
+
+			case Constants.REQUEST_CODE_EDIT_ACTIVITY:
+			case Constants.REQUEST_CODE_EXTRAS_ACTIVITY:
+				buildBodyLayout();
+				setData();
+				break;
+		}
 		super.onActivityResult(requestCode, resultCode, data);
-		buildBodyLayout();
-		setData();
 	}
 	
 	/**
@@ -242,19 +209,19 @@ public class SummaryActivity extends Activity
 	 */
 	private void calculateDimensions()
 	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SummaryActivity.this);
+
 		displayMetrics=new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		screenWidth=displayMetrics.widthPixels;
 		screenHeight=displayMetrics.heightPixels;
-		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(DatabaseManager.getNumBanks()*100))/6;
+		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(databaseAdapter.getNumVisibleBanks()*100))/6;
 		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*5/100;
 		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*5/100;
 		WIDTH_NAME_VIEWS=screenWidth*55/100;
 		WIDTH_AMOUNT_VIEWS = screenWidth*35/100;
 		MARGIN_LEFT_NAME_VIEWS = 5;
-		
-		// Copied From Transactions Activity
-		WIDTH_TRANSACTION_BUTTON = screenWidth*25/100;
+		HEIGHT_TRANSACTION_BUTTONS = screenHeight/10;
 	}
 	
 	private void buildBodyLayout()
@@ -265,13 +232,16 @@ public class SummaryActivity extends Activity
 			TextView krishna = (TextView) findViewById(R.id.krishna);
 			krishna.setVisibility(View.INVISIBLE);
 		}
+
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SummaryActivity.this);
 		
 		if(preferences.contains(KEY_CURRENCY_SYMBOL))
 		{
 			currencySymbol = preferences.getString(KEY_CURRENCY_SYMBOL, " ");
 		}
-		
-		int numBanks = DatabaseManager.getNumBanks();
+
+		int numWallets = databaseAdapter.getNumVisibleWallets();
+		int numBanks = databaseAdapter.getNumVisibleBanks();
 		
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
 		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
@@ -284,10 +254,10 @@ public class SummaryActivity extends Activity
 		line.setLayoutParams(lineParams);
 		line.setBackgroundColor(Color.parseColor("#FFFFFF"));
 		
-		layouts=new ArrayList<LinearLayout>(numBanks+3);
-		nameViews=new ArrayList<TextView>(numBanks+3);
-		amountViews=new ArrayList<TextView>(numBanks+3);
-		for(int i=0; i<numBanks+3; i++)
+		layouts=new ArrayList<LinearLayout>(numWallets+numBanks+2);
+		nameViews=new ArrayList<TextView>(numWallets+numBanks+2);
+		amountViews=new ArrayList<TextView>(numWallets+numBanks+2);
+		for(int i=0; i<numWallets+numBanks+2; i++)
 		{
 			LayoutInflater layoutInflater = LayoutInflater.from(this);
 			LinearLayout summaryLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_summary, null);
@@ -319,26 +289,36 @@ public class SummaryActivity extends Activity
 		line.setLayoutParams(lineParams);
 		line.setBackgroundColor(Color.parseColor("#FFFFFF"));
 		parentLayout.addView(line);
-		
+
+
+		TransactionButtonsLayout buttonsLayout = (TransactionButtonsLayout) findViewById(R.id.button_layout);
+		RelativeLayout.LayoutParams buttonsLayoutParams = (RelativeLayout.LayoutParams) buttonsLayout.getLayoutParams();
+		buttonsLayoutParams.height = HEIGHT_TRANSACTION_BUTTONS;
 	}
 	
 	private void setData()
 	{
-		int numBanks = DatabaseManager.getNumBanks();
-		ArrayList<Bank> banks = DatabaseManager.getAllBanks();
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SummaryActivity.this);
+		int numWallets = databaseAdapter.getNumVisibleWallets();
+		int numBanks = databaseAdapter.getNumVisibleBanks();
+		ArrayList<NewWallet> wallets = databaseAdapter.getAllVisibleWallets();
+		ArrayList<Bank> banks = databaseAdapter.getAllVisibleBanks();
 		DecimalFormat formatter = new DecimalFormat("###,##0.##");
 		try
 		{
 			// Set The Data
-			for(int i=0; i<numBanks; i++)
+			for(int i=0; i<numWallets; i++)
 			{
-				nameViews.get(i).setText(banks.get(i).getName());
-				amountViews.get(i).setText(""+formatter.format(banks.get(i).getBalance()));
+				nameViews.get(i).setText(wallets.get(i).getName());
+				amountViews.get(i).setText(formatter.format(wallets.get(i).getBalance()));
 			}
-			nameViews.get(numBanks).setText("Wallet");
-			nameViews.get(numBanks+1).setText("Amount Spent");
-			nameViews.get(numBanks+2).setText("Income");
-			amountViews.get(numBanks).setText(""+formatter.format(DatabaseManager.getWalletBalance()));
+			for(int i=numWallets, j=0; j<numBanks; i++, j++)
+			{
+				nameViews.get(i).setText(banks.get(j).getName());
+				amountViews.get(i).setText(formatter.format(banks.get(j).getBalance()));
+			}
+			nameViews.get(numWallets+numBanks).setText("Amount Spent");
+			nameViews.get(numWallets+numBanks+1).setText("Income");
 			
 			if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 			{
@@ -347,28 +327,30 @@ public class SummaryActivity extends Activity
 			
 			if(transactionsDisplayInterval.equals("Month"))
 			{
+				DecimalFormat monthFormatter = new DecimalFormat("00");
 				Calendar calendar = Calendar.getInstance();
 				int year = calendar.get(Calendar.YEAR);
 				int month = calendar.get(Calendar.MONTH) + 1;
-				long currentMonth = year*100+month;
-				amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getMonthlyAmountSpent(currentMonth)));
-				amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getMonthlyIncome(currentMonth)));
+				String currentMonth = String.valueOf(year) + "/" + monthFormatter.format(month);
+				amountViews.get(numWallets+numBanks).setText(formatter.format(databaseAdapter.getMonthlyAmountSpent(currentMonth)));
+				amountViews.get(numWallets+numBanks+1).setText(formatter.format(databaseAdapter.getMonthlyIncome(currentMonth)));
 			}
 			else if(transactionsDisplayInterval.equals("Year"))
 			{
 				Calendar calendar = Calendar.getInstance();
-				int year = calendar.get(Calendar.YEAR);
-				amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getYearlyAmountSpent(year)));
-				amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getYearlyIncome(year)));
+				String year = String.valueOf(calendar.get(Calendar.YEAR));
+				amountViews.get(numWallets+numBanks).setText(formatter.format(databaseAdapter.getYearlyAmountSpent(year)));
+				amountViews.get(numWallets+numBanks+1).setText(formatter.format(databaseAdapter.getYearlyIncome(year)));
 			}
 			else
 			{
-				amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getTotalAmountSpent()));
-				amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getTotalIncome()));
+				amountViews.get(numWallets+numBanks).setText(formatter.format(databaseAdapter.getTotalAmountSpent()));
+				amountViews.get(numWallets+numBanks+1).setText(formatter.format(databaseAdapter.getTotalIncome()));
 			}
 		}
 		catch(Exception e)
 		{
+			Log.d("SetData()", e.getMessage(), e.fillInStackTrace());
 			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), 
 					Toast.LENGTH_LONG).show();
 		}
@@ -390,42 +372,27 @@ public class SummaryActivity extends Activity
 			startActivity(helpIntent, animationBundle);
 		}
 	}
-	
+
+	// TODO: Update AddTransactionsActivity to accomodate this
 	/**
 	 * Takes the details of the sms from the intent and performs the necessary transaction
 	 */
 	private void performSMSTransaction()
 	{
-		int bankNo = smsIntent.getIntExtra("Bank Number", 0);
-		String type = smsIntent.getStringExtra("Type");
-		double amount = smsIntent.getDoubleExtra("Amount", 0);
-		formatterTextFields = new DecimalFormat("##0.##");
-		
-		if(type.contains("credit"))
+		Intent addTransactionIntent = new Intent(SummaryActivity.this, AddTransactionActivity.class);
+		addTransactionIntent.putExtra(Constants.ACTION, Constants.ACTION_BANK_SMS);
+		int bankID = smsIntent.getIntExtra(Constants.KEY_BANK_ID, 1);
+		addTransactionIntent.putExtra(Constants.KEY_BANK_ID, bankID);
+		String transactionType = smsIntent.getStringExtra(Constants.TRANSACTION_TYPE);
+		addTransactionIntent.putExtra(Constants.TRANSACTION_TYPE, transactionType);
+		if(transactionType.equals(Constants.TRANSACTION_TRANSFER))
 		{
-			buildBankCreditDialog();
-			banks.get(bankNo).setChecked(true);
-			amountField.setText(formatterTextFields.format(amount));
-			bankCreditDialog.setCancelable(false);
-			bankCreditDialog.show();
+			String transferType = smsIntent.getStringExtra(Constants.TRANSFER_TYPE);
+			addTransactionIntent.putExtra(Constants.TRANSFER_TYPE, transferType);
 		}
-		else
-		{
-			buildBankDebitDialog();
-			banks.get(bankNo).setChecked(true);
-			amountField.setText(formatterTextFields.format(amount));
-			bankDebitDialog.setCancelable(false);
-
-			if(type.contains("Wallet"))
-			{
-				debitTypesList.setSelection(0);
-			}
-			else
-			{
-				debitTypesList.setSelection(1);
-			}
-			bankDebitDialog.show();
-		}
+		double amount = smsIntent.getDoubleExtra(Constants.KEY_AMOUNT, 0);
+		addTransactionIntent.putExtra(Constants.KEY_AMOUNT, amount);
+		startActivityForResult(addTransactionIntent, Constants.REQUEST_CODE_ADD_TRANSACTION);
 	}
 	
 	// Copied from Transactions Activity
@@ -433,13 +400,13 @@ public class SummaryActivity extends Activity
 	
 	private void doTransactionsActivityOperations()
 	{
-		buildButtonPanel();
+		//buildButtonPanel();
 	}
 	
 	/**
 	 * Set the LayoutParams, OnClickListeners to the buttons in ButtonPanel
 	 */
-	private void buildButtonPanel()
+	/*private void buildButtonPanel()
 	{
 		walletCreditButton=(ImageButton)findViewById(R.id.button_wallet_credit);
 		LayoutParams walletCreditButtonParams = (LayoutParams) walletCreditButton.getLayoutParams();
@@ -550,9 +517,9 @@ public class SummaryActivity extends Activity
 				return true;
 			}
 		});
-	}
+	}*/
 	
-	private void buildWalletCreditDialog()
+	/*private void buildWalletCreditDialog()
 	{
 		walletCreditDialog=new AlertDialog.Builder(this);
 		walletCreditDialog.setTitle("Add An Income");
@@ -583,7 +550,7 @@ public class SummaryActivity extends Activity
 					if(saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getAmount());
+								transaction.getAmountText());
 						DatabaseManager.addTemplate(template);
 					}
 				}
@@ -627,12 +594,12 @@ public class SummaryActivity extends Activity
 					}
 				}
 				Template selectedTemplate = templates.get(selectedTemplateNo);
-				amountField.setText("" + selectedTemplate.getAmount());
+				amountField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
-	}
+	}*/
 
-	private void buildWalletDebitDialog()
+	/*private void buildWalletDebitDialog()
 	{
 		walletDebitDialog=new AlertDialog.Builder(this);
 		walletDebitDialog.setTitle("Add Expenditure");
@@ -667,7 +634,7 @@ public class SummaryActivity extends Activity
 					if(saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getRate());
+								transaction.getRateText());
 						DatabaseManager.addTemplate(template);
 					}
 				}
@@ -723,12 +690,12 @@ public class SummaryActivity extends Activity
 				// Wallet Debit Exp01
 				int expTypeNo = Integer.parseInt(selectedTemplate.getType().substring(16, 18));
 				typesList.setSelection(expTypeNo);
-				rateField.setText("" + selectedTemplate.getAmount());
+				rateField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
-	}
+	}*/
 
-	private void buildBankCreditDialog()
+	/*private void buildBankCreditDialog()
 	{
 		bankCreditDialogLayout=LayoutInflater.from(this);
 		bankCreditDialogView=bankCreditDialogLayout.inflate(R.layout.dialog_bank_credit, null);
@@ -784,7 +751,7 @@ public class SummaryActivity extends Activity
 				{
 					creditTypesList.setSelection(1);
 				}
-				amountField.setText("" + selectedTemplate.getAmount());
+				amountField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
 
@@ -834,7 +801,7 @@ public class SummaryActivity extends Activity
 					if(saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getAmount());
+								transaction.getAmountText());
 						DatabaseManager.addTemplate(template);
 					}
 				}
@@ -853,9 +820,9 @@ public class SummaryActivity extends Activity
 			}
 		});
 		bankCreditDialog.setNegativeButton("Cancel", null);
-	}
+	}*/
 
-	private void buildBankDebitDialog()
+	/*private void buildBankDebitDialog()
 	{
 		bankDebitDialogLayout=LayoutInflater.from(this);
 		bankDebitDialogView=bankDebitDialogLayout.inflate(R.layout.dialog_bank_debit, null);
@@ -916,7 +883,7 @@ public class SummaryActivity extends Activity
 					int expTypeNo = Integer.parseInt(selectedTemplate.getType().substring(17, 19)); // Bank Debit 01 Exp01
 					typesList.setSelection(expTypeNo);
 				}
-				amountField.setText("" + selectedTemplate.getAmount());
+				amountField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
 
@@ -990,7 +957,7 @@ public class SummaryActivity extends Activity
 					if(saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getAmount());
+								transaction.getAmountText());
 						DatabaseManager.addTemplate(template);
 					}
 				}
@@ -1011,7 +978,7 @@ public class SummaryActivity extends Activity
 			}
 		});
 		bankDebitDialog.setNegativeButton("Cancel", null);
-	}
+	}*/
 	
 	// Do this in TransactionsActivity only
 	/**
@@ -1026,7 +993,7 @@ public class SummaryActivity extends Activity
 	 * @param data[6] date
 	 * @return true if data is valid, else false
 	 */
-	private boolean isValidData(Object[] data)
+	/*private boolean isValidData(Object[] data)
 	{
 		//int id = Integer.parseInt((String) data[0]);
 		//Time createdTime = (Time) data[1];
@@ -1144,9 +1111,9 @@ public class SummaryActivity extends Activity
 			Toast.makeText(getApplicationContext(), "An Error Has Ocurred in \nDetailsActivity/isValidData()\nWrong Credit/Debit Type", Toast.LENGTH_LONG).show();
 		}
 		return validData;
-	}
+	}*/
 	
-	private Transaction completeData(Object[] data)
+	/*private Transaction completeData(Object[] data)
 	{
 		int id = Integer.parseInt((String) data[0]);
 		Time createdTime = (Time) data[1];
@@ -1239,9 +1206,9 @@ public class SummaryActivity extends Activity
 		}
 		
 		return transaction;	
-	}
+	}*/
 	
-	private ArrayList<String> getTemplateStrings(String type)
+	/*private ArrayList<String> getTemplateStrings(String type)
 	{
 		templates = DatabaseManager.getAllTemplates();
 		ArrayList<String> templateStrings = new ArrayList<String>();
@@ -1264,5 +1231,5 @@ public class SummaryActivity extends Activity
 		}
 		
 		return templateStrings;
-	}
+	}*/
 }

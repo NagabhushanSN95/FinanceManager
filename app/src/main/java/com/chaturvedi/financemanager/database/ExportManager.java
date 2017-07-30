@@ -1,15 +1,14 @@
 package com.chaturvedi.financemanager.database;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Environment;
+import android.widget.Toast;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.os.Environment;
-import android.widget.Toast;
 
 public class ExportManager
 {
@@ -53,6 +52,7 @@ public class ExportManager
 	
 	private void writeToSDCard()
 	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
 		try
 		{
 			String expenditureFolderName = "Finance Manager";
@@ -77,15 +77,15 @@ public class ExportManager
 			exportWriter.write("\t<td>"+"Quantity"+"</td>");
 			exportWriter.write("\t<td>"+"Amount"+"</td>");
 			exportWriter.write("</tr>\n");
-			
-			ArrayList<Transaction> transactions = DatabaseManager.getMonthlyTransactions(exportLongMonth);
+
+			String month = (exportLongMonth/100) + "/" + (exportLongMonth%100);
+			ArrayList<Transaction> transactions = databaseAdapter.getMonthlyVisibleTransactions(month);
 			for(int i=0; i<transactions.size(); i++)
 			{
 				Transaction transaction = transactions.get(i);
-				int transactionNo = DatabaseManager.getAllTransactions().indexOf(transaction);
 
 				// Set the colour
-				String colour = "black";
+				String colour;
 				if (transaction.getType().contains("Debit"))
 				{
 					colour = "red";
@@ -94,7 +94,7 @@ public class ExportManager
 				{
 					colour = "green";
 				}
-				else if (transaction.getType().contains("Withdraw") || transaction.getType().contains("Savings"))
+				else if (transaction.getType().contains("Transfer"))
 				{
 					colour = "blue";
 				}
@@ -107,7 +107,8 @@ public class ExportManager
 				exportWriter.write("<font color=\"" + colour + "\">");
 				exportWriter.write("\t<td>"+(i+1)+"</td>");
 				exportWriter.write("\t<td>"+transaction.getDate().getDisplayDate()+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getExactExpType(transactionNo)+"</td>");
+				//exportWriter.write("\t<td>"+DatabaseManager.getExactExpType(transactionNo)+"</td>");
+				exportWriter.write("\t<td>"+transaction.getType()+"</td>");
 				exportWriter.write("\t<td>"+transaction.getParticular()+"</td>");
 				exportWriter.write("\t<td>"+transaction.getRate()+"</td>");
 				exportWriter.write("\t<td>"+transaction.getQuantity()+"</td>");
@@ -120,15 +121,15 @@ public class ExportManager
 			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Total Income In This Month"+"</td>");
-			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getMonthlyIncome(exportLongMonth)+"</td>");
+			exportWriter.write("\t<td>"+currencySymbol+databaseAdapter.getMonthlyIncome(month)+"</td>");
 			exportWriter.write("</tr>\n");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Total Amount Spent In This Month"+"</td>");
-			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getMonthlyAmountSpent(exportLongMonth)+"</td>");
+			exportWriter.write("\t<td>"+currencySymbol+databaseAdapter.getMonthlyAmountSpent(month)+"</td>");
 			exportWriter.write("</tr>\n");
-			exportWriter.write("<tr>\n");
+			/*exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Amount In wallet"+"</td>");
-			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getWalletBalance()+"</td>");
+			exportWriter.write("\t<td>"+currencySymbol+databaseAdapter.getWalletBalance()+"</td>");
 			exportWriter.write("</tr>\n");
 			ArrayList<Bank> banks = DatabaseManager.getAllBanks();
 			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
@@ -137,7 +138,7 @@ public class ExportManager
 				exportWriter.write("\t<td>"+"Amount In "+banks.get(i).getName()+"</td>");
 				exportWriter.write("\t<td>"+currencySymbol+banks.get(i).getBalance()+"</td>");
 				exportWriter.write("</tr>\n");
-			}
+			}*/
 			exportWriter.write("</table>");
 			
 			exportWriter.write("</html>\n</body>");

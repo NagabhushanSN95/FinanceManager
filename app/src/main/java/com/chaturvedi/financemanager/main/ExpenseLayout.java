@@ -5,6 +5,8 @@ package com.chaturvedi.financemanager.main;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
@@ -15,14 +17,15 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.ExpenditureType;
 import com.chaturvedi.financemanager.database.MoneyStorage;
-import com.chaturvedi.financemanager.database.NewWallet;
+import com.chaturvedi.financemanager.database.Template;
 import com.chaturvedi.financemanager.database.Time;
 import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -30,9 +33,6 @@ import java.util.Calendar;
 
 public class ExpenseLayout extends RelativeLayout
 {
-	private ArrayList<NewWallet> wallets;
-	private ArrayList<Bank> banks;
-
 	private Spinner expenseSourcesSpinner;
 	private EditText particularsEditText;
 	private Spinner expenseTypeSpinner;
@@ -45,36 +45,29 @@ public class ExpenseLayout extends RelativeLayout
 	public ExpenseLayout(Context context)
 	{
 		super(context);
+		buildLayout();
 	}
 
 	public ExpenseLayout(Context context, AttributeSet attrs)
 	{
 		super(context, attrs);
+		buildLayout();
 	}
 
 	public ExpenseLayout(Context context, AttributeSet attrs, int defStyle)
 	{
 		super(context, attrs, defStyle);
+		buildLayout();
 	}
 
 	private void buildLayout()
 	{
+		LayoutInflater.from(getContext()).inflate(R.layout.layout_transaction_expense, this);
+
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
 
-		/*ArrayList<NewWallet> wallets = databaseAdapter.getAllWalletsNames();
-		ArrayList<Bank> banks = databaseAdapter.getAllBanksNames();
-		ArrayList<String> expenseSourcesList = new ArrayList<String>(wallets.size() + banks.size());
-		for(NewWallet wallet : wallets)
-		{
-			expenseSourcesList.add(wallet.getName());
-		}
-		for(Bank bank : banks)
-		{
-			expenseSourcesList.add(bank.getName());
-		}*/
-
-		ArrayList<String> expenseSourcesList = databaseAdapter.getAllWalletsNames();
-		expenseSourcesList.addAll(databaseAdapter.getAllBanksNames());
+		ArrayList<String> expenseSourcesList = databaseAdapter.getAllVisibleWalletsNames();
+		expenseSourcesList.addAll(databaseAdapter.getAllVisibleBanksNames());
 		ArrayList<String> expenditureTypesList = databaseAdapter.getAllVisibleExpenditureTypeNames();
 
 		expenseSourcesSpinner = (Spinner) findViewById(R.id.spinner_expenseSource);
@@ -86,14 +79,16 @@ public class ExpenseLayout extends RelativeLayout
 				expenditureTypesList));
 		rateEditText = (EditText) findViewById(R.id.editText_rate);
 		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
-		amountEditText = (EditText) findViewById(R.id.edit_amount);
+		amountEditText = (EditText) findViewById(R.id.editText_amount);
 
 		final Calendar myCalendar = Calendar.getInstance();
-		final DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener() {
+		final DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener()
+		{
 
 			@Override
 			public void onDateSet(DatePicker view, int year, int monthOfYear,
-								  int dayOfMonth) {
+								  int dayOfMonth)
+			{
 				myCalendar.set(Calendar.YEAR, year);
 				myCalendar.set(Calendar.MONTH, monthOfYear);
 				myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
@@ -102,20 +97,76 @@ public class ExpenseLayout extends RelativeLayout
 			}
 		};
 		dateEditText = (EditText) findViewById(R.id.editText_date);
+		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
 		dateEditText.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
 				new DatePickerDialog(getContext(), onDateSetListener, myCalendar.get(Calendar.YEAR),
-						myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH));
+						myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
 			}
 		});
 
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
 	}
 
-	public boolean submit()
+	public void setData(Transaction transaction)
+	{
+		String transactionType = transaction.getType();
+		TransactionTypeParser parser = new TransactionTypeParser(getContext(), transactionType);
+		if (!parser.isExpense())
+		{
+			Toast.makeText(getContext(), "Transaction is not Expense", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		int expenseSourceNo;
+		if (parser.isExpenseSourceWallet())
+		{
+			// IDs start with 1. Hence, 1 is subtracted
+			expenseSourceNo = parser.getExpenseSourceWallet().getID() - 1;
+		}
+		else
+		{
+			// Banks are displayed after wallets. Hence, numWallets is added
+			expenseSourceNo = DatabaseAdapter.getInstance(getContext()).getNumVisibleWallets() +
+					parser.getExpenseSourceBank().getID() - 1;
+		}
+		expenseSourcesSpinner.setSelection(expenseSourceNo);
+
+		particularsEditText.setText(transaction.getParticular());
+		expenseTypeSpinner.setSelection(parser.getExpenditureType().getId() - 1); // -1 Since IDs start with 1
+		rateEditText.setText(String.valueOf(transaction.getRate()));
+		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
+		amountEditText.setText(String.valueOf(transaction.getAmount()));
+		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate()));
+	}
+
+	public void setData(int expenseSourceNo, String particulars, String rateText, String quantityText, String amountText,
+						String date, boolean addTemplate)
+	{
+		expenseSourcesSpinner.setSelection(expenseSourceNo);
+		particularsEditText.setText(particulars);
+		rateEditText.setText(rateText);
+		quantityEditText.setText(quantityText);
+		amountEditText.setText(amountText);
+		dateEditText.setText(date);
+		addTemplateCheckBox.setSelected(addTemplate);
+	}
+
+	public void setData(int bankID, double amount)
+	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
+
+		// -1 because BankIDs start with 1 and index start with 0
+		int expenseSourceNo = databaseAdapter.getNumVisibleWallets() + bankID - 1;
+		expenseSourcesSpinner.setSelection(expenseSourceNo);
+
+		amountEditText.setText(String.valueOf(amount));
+		//dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
+	}
+
+	public Transaction submit()
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
 		DecimalFormat formatter = new DecimalFormat("00");
@@ -124,53 +175,55 @@ public class ExpenseLayout extends RelativeLayout
 		String quantityString = quantityEditText.getText().toString().trim();
 		String amountString = amountEditText.getText().toString().trim();
 
-		if((rateString.length()==0) && (amountString.length()==0))
+		if ((rateString.length() == 0) && (amountString.length() == 0))
 		{
 			// Both rate and amount are empty
-			Toast.makeText(getContext(), "Please enter Rate or Amount", Toast.LENGTH_LONG);
-			return false;
+			Toast.makeText(getContext(), "Please enter Rate or Amount", Toast.LENGTH_LONG).show();
+			return null;
 		}
 
 		// Calculate Rate, Quantity, Amount if not specified
 		double rate, quantity, amount;
-		if(quantityString.length() > 0)
+		if (quantityString.length() > 0)
 		{
-			quantity = Integer.parseInt(quantityString);
+			quantity = Double.parseDouble(quantityString);
 		}
 		else
 		{
 			quantity = 1;
 		}
-		if(rateString.length() > 0)
+		if (rateString.length() > 0)
 		{
-			rate = Integer.parseInt(rateString);
+			rate = Double.parseDouble(rateString);
 
-			if(amountString.length() > 0)
+			if (amountString.length() > 0)
 			{
-				amount = Integer.parseInt(amountString);
+				amount = Double.parseDouble(amountString);
 			}
 			else
 			{
-				amount = rate*quantity;
+				amount = rate * quantity;
 			}
 		}
 		else
 		{
-			amount = Integer.parseInt(amountString);
-			rate = amount/quantity;
+			amount = Double.parseDouble(amountString);
+			rate = amount / quantity;
 		}
 
 		int id = databaseAdapter.getIDforNextTransaction();
-		if(id == -1)
+		if (id == -1)
 		{
 			Toast.makeText(getContext(), "Failed due to some internal error. Please try again", Toast.LENGTH_LONG).show();
-			return false;
+			return null;
 		}
 
 		String code;
 		int expenseSourcePosition = expenseSourcesSpinner.getSelectedItemPosition();
 		MoneyStorage expSource;
-		if(expenseSourcePosition < wallets.size())
+		// Debit Wallet01 Exp01 or
+		// Debit Bank01 Exp01
+		if (expenseSourcePosition < databaseAdapter.getNumVisibleWallets())
 		{
 			expSource = databaseAdapter.getWalletFromName((String) expenseSourcesSpinner.getSelectedItem());
 			code = "Debit Wallet" + formatter.format(expSource.getID());
@@ -190,30 +243,54 @@ public class ExpenseLayout extends RelativeLayout
 		Time createdTime = new Time(now);
 		Time modifiedTime = new Time(now);
 
-		Transaction transaction = new Transaction(id, createdTime, modifiedTime, date, code, particulars, rate, quantity, amount);
-		addTransaction(transaction);
+		Transaction transaction = new Transaction(id, createdTime, modifiedTime, date, code, particulars, rate, quantity, amount,
+				false);
+//		addTransaction(transaction);
 
-		if(addTemplateCheckBox.isChecked())
+		if (addTemplateCheckBox.isChecked())
 		{
-
+			// Here Template ID is not added. It has to be set in DatabaseManager
+			Template template = new Template(0, transaction.getParticular(), transaction.getType(),
+					transaction.getRate(), false);
+			DatabaseManager.addTemplate(getContext(), template);
 		}
 
-		return true;
+		return transaction;
 	}
 
-	private boolean addTransaction(Transaction transaction)
+	public int getExpenseSourcePosition()
 	{
-		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
-
-		databaseAdapter.addTransaction(transaction);
-		if(transaction.getType().contains("Wallet"))
-		{
-			int walletID = Integer.parseInt(transaction.getType().substring(12,14));
-
-		}
-		/*DatabaseManager.decreamentWalletBalance(transaction.getAmount());
-		DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmount());
-		DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmount());*/
-		return true;
+		return expenseSourcesSpinner.getSelectedItemPosition();
 	}
+
+	public String getParticulars()
+	{
+		return particularsEditText.getText().toString().trim();
+	}
+
+	public String getRateText()
+	{
+		return rateEditText.getText().toString();
+	}
+
+	public String getQuantityText()
+	{
+		return quantityEditText.getText().toString();
+	}
+
+	public String getAmountText()
+	{
+		return amountEditText.getText().toString();
+	}
+
+	public String getDate()
+	{
+		return dateEditText.getText().toString();
+	}
+
+	public boolean isAddTemplateSelected()
+	{
+		return addTemplateCheckBox.isSelected();
+	}
+
 }

@@ -21,10 +21,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.setup.StartupActivity;
+import com.chaturvedi.financemanager.updates.Update107To110;
 import com.chaturvedi.financemanager.updates.Update68To88;
 import com.chaturvedi.financemanager.updates.Update88To89;
 import com.chaturvedi.financemanager.updates.Update89To96;
@@ -47,6 +49,7 @@ public class SplashActivity extends Activity
 	private static int APP_VERSION_NO_89;
 	private static int APP_VERSION_NO_96;
 	private static int APP_VERSION_NO_107;
+	private static int APP_VERSION_NO_110;
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
@@ -68,10 +71,6 @@ public class SplashActivity extends Activity
 	private int quotesNo = 0;
 	private int NUM_TIPS = 0;
 	private int NUM_TOTAL_QUOTES = 0;
-	/*private int NUM_QUOTES = 0;
-	private int NUM_FACTS = 0;
-	private int NUM_CRICKET_QUOTES = 0;
-	private int NUM_MOVIE_QUOTES = 0;*/
 	
 	private Handler databaseHandler;
 	private Intent nextActivityIntent;
@@ -84,12 +83,11 @@ public class SplashActivity extends Activity
 
 		checkForUpdates();
 		readPreferences();
-		new DatabaseManager(this);
 		readQuotes();
 		startSplash();
 		defineHandler();
 		
-		// Read the database in a seperate (non-ui) thread
+		// Read the database in a separate (non-ui) thread
 		Thread databaseReaderThread = new Thread(new DatabaseReaderRunnable());
 		databaseReaderThread.start();
 	}
@@ -139,6 +137,7 @@ public class SplashActivity extends Activity
 		APP_VERSION_NO_89 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_89));
 		APP_VERSION_NO_96 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_96));
 		APP_VERSION_NO_107 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_107));
+		APP_VERSION_NO_110 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_110));
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if (canProceed && (previousVersionNo != currentVersionNo))
 		{
@@ -157,6 +156,10 @@ public class SplashActivity extends Activity
 			if (previousVersionNo < APP_VERSION_NO_107)
 			{
 				new Update96To107(SplashActivity.this);
+			}
+			if(previousVersionNo < APP_VERSION_NO_110)
+			{
+				new Update107To110(SplashActivity.this);
 			}
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.commit();
@@ -440,9 +443,6 @@ public class SplashActivity extends Activity
 			
 			if (databaseInitialized)
 			{
-				int databaseReadingMaxProgress = autoRestoreManager.getDatabaseReadingMaxProgress();
-				DatabaseManager.readDatabase(databaseHandler, databaseReadingMaxProgress);
-				
 				if (autoRestoreManager.getValue() > 1)
 				{
 					// Read the backups and see if there is any change
@@ -453,53 +453,36 @@ public class SplashActivity extends Activity
 					// If read backups, proceed
 					if (restoreResult == 0)
 					{
+						DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SplashActivity.this);
 						//If found any error, restore
 						
 						// Wallet Balance
-						if (DatabaseManager.getWalletBalance() != restoreManager.getWalletBalance())
+						if (!DatabaseManager.areEqualWallets(databaseAdapter.getAllWallets(), restoreManager.getAllWallets()))
 						{
 							if (autoRestoreManager.isAutomaticRestore())
 							{
-								DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
+								databaseAdapter.deleteAllWallets();
+								databaseAdapter.addAllWallets(restoreManager.getAllWallets());
 								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
-										"Error Found In Wallet Balance. Data Recovered");
+										"Error Found In Wallets. Data Recovered");
 								databaseMessage.sendToTarget();
 							}
 							else
 							{
 								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
-										"Error Found In Wallet Balance. Data Not Recovered");
+										"Error Found In Wallets. Data Not Recovered");
 								databaseMessage.sendToTarget();
 							}
 						}
 						databaseReadProgress = 55;
-						// Transactions
-						if (!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(),
-								restoreManager.getAllTransactions()))
-						{
-							if (autoRestoreManager.isAutomaticRestore())
-							{
-								DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
-										"Error Found In Transactions. Data Recovered");
-								databaseMessage.sendToTarget();
-							}
-							else
-							{
-								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
-										"Error Found In Transactions. Data Not Recovered");
-								databaseMessage.sendToTarget();
-							}
-						}
-						databaseReadProgress = 70;
-						
+
 						// Banks
-						if (!DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(),
-								restoreManager.getAllBanks()))
+						if (!DatabaseManager.areEqualBanks(databaseAdapter.getAllBanks(), restoreManager.getAllBanks()))
 						{
 							if (autoRestoreManager.isAutomaticRestore())
 							{
-								DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+								databaseAdapter.deleteAllBanks();
+								databaseAdapter.addAllBanks(restoreManager.getAllBanks());
 								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Banks. Data Recovered");
 								databaseMessage.sendToTarget();
@@ -511,15 +494,37 @@ public class SplashActivity extends Activity
 								databaseMessage.sendToTarget();
 							}
 						}
+						databaseReadProgress = 60;
+
+						// Transactions
+						if (!DatabaseManager.areEqualTransactions(databaseAdapter.getAllTransactions(),
+								restoreManager.getAllTransactions()))
+						{
+							if (autoRestoreManager.isAutomaticRestore())
+							{
+								databaseAdapter.deleteAllTransactions();
+								databaseAdapter.addAllTransactions(restoreManager.getAllTransactions());
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
+										"Error Found In Transactions. Data Recovered");
+								databaseMessage.sendToTarget();
+							}
+							else
+							{
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
+										"Error Found In Transactions. Data Not Recovered");
+								databaseMessage.sendToTarget();
+							}
+						}
 						databaseReadProgress = 75;
 						
 						// Expenditure Types
-						if (!DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(),
+						if (!DatabaseManager.areEqualExpTypes(databaseAdapter.getAllExpenditureTypes(),
 								restoreManager.getAllExpTypes()))
 						{
 							if (autoRestoreManager.isAutomaticRestore())
 							{
-								DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+								databaseAdapter.deleteAllExpenditureTypes();
+								databaseAdapter.addAllExpenditureTypes(restoreManager.getAllExpTypes());
 								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Exp Types. Data Recovered");
 								databaseMessage.sendToTarget();
@@ -534,12 +539,13 @@ public class SplashActivity extends Activity
 						databaseReadProgress = 80;
 						
 						// Counters
-						if (!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(),
-								restoreManager.getAllCounters()))
+						if (!DatabaseManager.areEqualCounters(databaseAdapter.getAllCountersRows(),
+								restoreManager.getAllCounters(), databaseAdapter.getNumExpenditureTypes()))
 						{
 							if (autoRestoreManager.isAutomaticRestore())
 							{
-								DatabaseManager.setAllCounters(restoreManager.getAllCounters());
+								databaseAdapter.deleteAllCountersRows();
+								databaseAdapter.addAllCountersRows(restoreManager.getAllCounters());
 								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Counters. Data Recovered");
 								databaseMessage.sendToTarget();
@@ -554,12 +560,13 @@ public class SplashActivity extends Activity
 						databaseReadProgress = 90;
 						
 						// Templates
-						if (!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(),
+						if (!DatabaseManager.areEqualTemplates(databaseAdapter.getAllTemplates(),
 								restoreManager.getAllTemplates()))
 						{
 							if (autoRestoreManager.isAutomaticRestore())
 							{
-								DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+								databaseAdapter.deleteAllTemplates();
+								databaseAdapter.addAllTemplates(restoreManager.getAllTemplates());
 								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Templates. Data Recovered");
 								databaseMessage.sendToTarget();

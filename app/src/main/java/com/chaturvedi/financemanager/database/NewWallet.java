@@ -2,6 +2,8 @@
 
 package com.chaturvedi.financemanager.database;
 
+import android.util.Log;
+
 public class NewWallet implements MoneyStorage
 {
 	private int id;
@@ -36,6 +38,7 @@ public class NewWallet implements MoneyStorage
 		this.id=Integer.parseInt(id);
 		this.name=name;
 		this.balance=Double.parseDouble(balance);
+		//this.deleted = deleted.equals("1");
 		this.deleted = Boolean.parseBoolean(deleted);
 	}
 

@@ -20,9 +20,14 @@ import android.widget.RelativeLayout.LayoutParams;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.database.ExpenditureType;
+import com.chaturvedi.financemanager.database.NewWallet;
 import com.chaturvedi.financemanager.main.SummaryActivity;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseManager;
+
+import static com.chaturvedi.financemanager.R.string.walletBalance;
 
 public class SetupActivity extends FragmentActivity
 {
@@ -53,8 +58,7 @@ public class SetupActivity extends FragmentActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_setup);
-		
-		
+
 		calculateDimensions();
 		buildLayout();
 		
@@ -148,14 +152,15 @@ public class SetupActivity extends FragmentActivity
 	
 	private void finishSetup()
 	{
-		double walletBalance = WalletSetupFragment.getWalletBalance();
+		ArrayList<NewWallet> wallets = WalletsSetupFragment.getAllWallets();
 		ArrayList<Bank> banks = BanksSetupFragment.getAllBanks();
-		ArrayList<String> expTypes = ExpTypesSetupFragment.getAllExpTypes();
-		
-		DatabaseManager.initialize(walletBalance);
-		DatabaseManager.setAllBanks(banks);
-		DatabaseManager.setAllExpenditureTypes(expTypes);
-		DatabaseManager.readjustCountersTable();
+		ArrayList<ExpenditureType> expTypes = ExpTypesSetupFragment.getAllExpTypes();
+
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SetupActivity.this);
+		databaseAdapter.addAllWallets(wallets);
+		databaseAdapter.addAllBanks(banks);
+		databaseAdapter.addAllExpenditureTypes(expTypes);
+		databaseAdapter.readjustCountersTable();
 		
 		// Store Default Preferences
 		CURRENT_APP_VERSION_NO = Integer.parseInt(getResources().getString(R.string.currentAppVersion));
@@ -181,7 +186,7 @@ public class SetupActivity extends FragmentActivity
 		editor.putString(KEY_CURRENCY_SYMBOL, " ");
 		editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
 		editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
-		editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+		editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 4);
 		editor.commit();
 		
 		Intent summaryIntent = new Intent(this, SummaryActivity.class);
@@ -201,10 +206,10 @@ public class SetupActivity extends FragmentActivity
 		{
 			switch(pos)
 			{
-				case 0: return WalletSetupFragment.newInstance();
+				case 0: return WalletsSetupFragment.newInstance();
 				case 1: return BanksSetupFragment.newInstance();
 				case 2: return ExpTypesSetupFragment.newInstance("Rama");
-				default: return WalletSetupFragment.newInstance();
+				default: return WalletsSetupFragment.newInstance();
 			}
 		}
 		

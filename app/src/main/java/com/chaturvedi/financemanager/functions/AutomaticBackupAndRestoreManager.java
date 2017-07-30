@@ -37,7 +37,7 @@ public class AutomaticBackupAndRestoreManager
 	
 	/**
 	 * Returns the percentage of progress that has to be allotted to Database Reading Process
-	 * @return
+	 * @return Eg 60%
 	 */
 	public int getDatabaseReadingMaxProgress()
 	{

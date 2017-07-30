@@ -20,6 +20,7 @@ import android.widget.TableRow.LayoutParams;
 import android.widget.TextView;
 
 import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
 
@@ -83,7 +84,8 @@ public class StatisticsActivity extends Activity
 			TextView krishna = (TextView) findViewById(R.id.krishna);
 			krishna.setVisibility(View.INVISIBLE);
 		}
-		
+
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(StatisticsActivity.this);
 		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		if(preferences.contains(KEY_CURRENCY_SYMBOL))
 		{
@@ -108,11 +110,11 @@ public class StatisticsActivity extends Activity
 		monthsTitleView.setText("Months");
 		monthsTitleView.setBackgroundResource(R.drawable.border_black_2dp);
 		titleRow.addView(monthsTitleView);
-		for(int i=0; i<DatabaseManager.getNumExpTypes(); i++)
+		for(int i=0; i<databaseAdapter.getNumVisibleExpenditureTypes(); i++)
 		{
 			TextView expTypeTitleView = new TextView(this);
 			expTypeTitleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
-			expTypeTitleView.setText(DatabaseManager.getAllExpenditureTypes().get(i));
+			expTypeTitleView.setText(databaseAdapter.getAllVisibleExpenditureTypes().get(i).getName());
 			expTypeTitleView.setBackgroundResource(R.drawable.border_black_2dp);
 			titleRow.addView(expTypeTitleView);
 		}
@@ -138,7 +140,7 @@ public class StatisticsActivity extends Activity
 		titleRow.addView(withdrawTitleView);
 		statLayout.addView(titleRow);
 		
-		ArrayList<String> months = DatabaseManager.getExportableMonths();
+		ArrayList<String> months = DatabaseManager.getExportableMonths(StatisticsActivity.this);
 		for(int i=0; i<months.size(); i++)
 		{
 			TableRow monthRow = new TableRow(this);
@@ -151,13 +153,15 @@ public class StatisticsActivity extends Activity
 			monthView.setText(months.get(i));
 			monthView.setBackgroundResource(R.drawable.border_black_1dp);
 			monthRow.addView(monthView);
-			long month = Date.getLongMonth(months.get(i));
+			long longMonth = Date.getLongMonth(months.get(i));
+			String month = (longMonth/100) + "/" + (longMonth%100);
+			double[] monthlyCounters = databaseAdapter.getMonthlyCounters(month);
 			
-			for(int j=0; j<DatabaseManager.getNumExpTypes()+4; j++)//+4 for Total Expenses,Incomes,Savings and Withdrawals
+			for(int j=0; j<databaseAdapter.getNumVisibleExpenditureTypes()+4; j++)//+4 for Total Expenses,Incomes,Savings and Withdrawals
 			{
 				TextView expValueView = new TextView(this);
 				expValueView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
-				expValueView.setText(currencySymbol + formatter.format(DatabaseManager.getMonthlyCounters(month)[j]));
+				expValueView.setText(currencySymbol + formatter.format(monthlyCounters[j]));
 				expValueView.setBackgroundResource(R.drawable.border_black_1dp);
 				monthRow.addView(expValueView);
 			}
@@ -173,12 +177,13 @@ public class StatisticsActivity extends Activity
 		totalView.setText("Total");
 		totalView.setBackgroundResource(R.drawable.border_black_1dp);
 		totalsRow.addView(totalView);
-		
-		for(int j=0; j<DatabaseManager.getNumExpTypes()+4; j++)//+4 for Total Expenses,Incomes,Savings and Withdrawals
+
+		double[] totalCounters = databaseAdapter.getTotalCounters();
+		for(int j=0; j<databaseAdapter.getNumVisibleExpenditureTypes()+4; j++)//+4 for Total Expenses,Incomes,Savings and Withdrawals
 		{
 			TextView expValueView = new TextView(this);
 			expValueView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
-			expValueView.setText(currencySymbol + formatter.format(DatabaseManager.getTotalCounters()[j]));
+			expValueView.setText(currencySymbol + formatter.format(totalCounters[j]));
 			expValueView.setBackgroundResource(R.drawable.border_black_1dp);
 			totalsRow.addView(expValueView);
 		}

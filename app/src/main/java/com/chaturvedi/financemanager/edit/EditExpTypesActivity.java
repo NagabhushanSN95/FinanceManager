@@ -1,11 +1,10 @@
 package com.chaturvedi.financemanager.edit;
 
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -18,17 +17,21 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.chaturvedi.financemanager.R;
-import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.customviews.InputDialog;
-import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.database.ExpenditureType;
+
+import java.util.ArrayList;
+
+import static com.chaturvedi.financemanager.R.id.expType;
 
 public class EditExpTypesActivity extends Activity
 {
 	private LinearLayout parentLayout;
 	private int contextMenuExpTypeNo;
 	
-	private static ArrayList<String> expTypes;
+	private static ArrayList<ExpenditureType> expTypes;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -41,7 +44,8 @@ public class EditExpTypesActivity extends Activity
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
 	{
 		super.onCreateContextMenu(menu, view, menuInfo);
-		contextMenuExpTypeNo = parentLayout.indexOfChild(view);
+		// -1 because there is an additional TextView child
+		contextMenuExpTypeNo = parentLayout.indexOfChild(view) - 1;
 		menu.setHeaderTitle("Options For Expenditure Type "+(contextMenuExpTypeNo));
 		menu.add(0, view.getId(), 0, "Edit");
 		menu.add(0, view.getId(), 0, "Delete");
@@ -76,12 +80,13 @@ public class EditExpTypesActivity extends Activity
 
 	private void buildLayout()
 	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(EditExpTypesActivity.this);
 		parentLayout = (LinearLayout) findViewById(R.id.parentLayout);
 		
-		expTypes = DatabaseManager.getAllExpenditureTypes();
+		expTypes = databaseAdapter.getAllVisibleExpenditureTypes();
 		for(int i=0; i<expTypes.size(); i++)
 		{
-			addNewExpTypeToLayout(expTypes.get(i),i);
+			addNewExpTypeToLayout(expTypes.get(i).getName(),i);
 		}
 		
 		buildAddExpButton();
@@ -131,19 +136,22 @@ public class EditExpTypesActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
+				final DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(EditExpTypesActivity.this);
+
 				LayoutInflater inflater = LayoutInflater.from(EditExpTypesActivity.this);
 				LinearLayout addExpTypeLayout = (LinearLayout) inflater.inflate(R.layout.dialog_add_exp_type, null);
 				final EditText expTypeNameField = (EditText) addExpTypeLayout.findViewById(R.id.editText_expTypeName);
 				final Spinner positionList = (Spinner) addExpTypeLayout.findViewById(R.id.spinner_position);
-				int numExpTypes = DatabaseManager.getNumExpTypes();
+				int numExpTypes = databaseAdapter.getNumVisibleExpenditureTypes();
 				String[] positions = new String[numExpTypes];
 				for(int i=0; i<numExpTypes; i++)
 				{
-					positions[i] = ""+(i+1);
+					positions[i] = String.valueOf(i+1);
 				}
 				positionList.setAdapter(new ArrayAdapter<String>(EditExpTypesActivity.this, 
 						android.R.layout.simple_spinner_item, positions));
 				positionList.setSelection(numExpTypes-1);
+				positionList.setVisibility(View.GONE);
 				
 				AlertDialog.Builder addExpTypeBuilder = new AlertDialog.Builder(EditExpTypesActivity.this);
 				addExpTypeBuilder.setTitle("Enter New Expenditure Type:");
@@ -153,25 +161,13 @@ public class EditExpTypesActivity extends Activity
 					@Override
 					public void onClick(DialogInterface dialog, int which)
 					{
-						final String expTypeName = expTypeNameField.getText().toString().trim();
-						final int position = Integer.parseInt(positionList.getSelectedItem().toString());
+						int expTypeID = databaseAdapter.getIDforNextExpenditureType();
+						String expTypeName = expTypeNameField.getText().toString().trim();
+						ExpenditureType expenditureType = new ExpenditureType(expTypeID, expTypeName, false);
+						int position = Integer.parseInt(positionList.getSelectedItem().toString());
 						addNewExpTypeToLayout(expTypeName, position-1);
-						
-						IndefiniteWaitDialog waitDialogBuilder = new IndefiniteWaitDialog(EditExpTypesActivity.this);
-						waitDialogBuilder.setWaitText("Please Wait While Your Expenditure Type Is Added " + 
-								"And The App Is Configured For The Changes");
-						final AlertDialog waitDialog = waitDialogBuilder.show();
-						/** Add Exp Type in a seperate (non-ui) thread */
-						Thread addExpTypeThread = new Thread(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								DatabaseManager.addExpType(expTypeName, position);
-								waitDialog.dismiss();
-							}
-						});
-						addExpTypeThread.start();
+						databaseAdapter.addExpenditureType(expenditureType);
+						databaseAdapter.readjustCountersTable();
 					}
 				});
 				addExpTypeBuilder.setNegativeButton("Cancel", null);
@@ -185,7 +181,7 @@ public class EditExpTypesActivity extends Activity
 		//Toast.makeText(getApplicationContext(), "Coming Soon", Toast.LENGTH_SHORT).show();
 		AlertDialog.Builder deleteDialog= new AlertDialog.Builder(this);
 		deleteDialog.setTitle("Delete Expenditure Type " + expTypeNo);
-		deleteDialog.setMessage("Are you sure you want to delete this Expenditure Type?1 " + 
+		deleteDialog.setMessage("Are you sure you want to delete this Expenditure Type? " +
 				"Please do not proceed if you don't know what you are doing. The effects are irreversible. " + 
 				"Please read FAQs for more information");
 		deleteDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
@@ -193,23 +189,10 @@ public class EditExpTypesActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				
-				IndefiniteWaitDialog waitDialogBuilder = new IndefiniteWaitDialog(EditExpTypesActivity.this);
-				waitDialogBuilder.setWaitText("Please Wait While Your Expenditure Type Is Removed " + 
-						"And The App Is Configured For The Changes");
-				final AlertDialog waitDialog = waitDialogBuilder.show();
-				/** Remove Exp Type in a seperate (non-ui) thread */
-				Thread deleteExpTypeThread = new Thread(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						DatabaseManager.deleteExpType(expTypeNo);
-						waitDialog.dismiss();
-					}
-				});
-				deleteExpTypeThread.start();
-				parentLayout.removeViewAt(expTypeNo);
+				int expTypeID = expTypes.get(expTypeNo).getId();
+				DatabaseAdapter.getInstance(EditExpTypesActivity.this).deleteExpenditureType(expTypeID);
+				// +1 becuase there is additional textview child
+				parentLayout.removeViewAt(expTypeNo+1);
 			}
 		});
 		deleteDialog.setNegativeButton("Cancel", null);
@@ -218,21 +201,24 @@ public class EditExpTypesActivity extends Activity
 
 	private void editExpType(final int expTypeNo)
 	{
+		final ExpenditureType expenditureType = expTypes.get(expTypeNo);
 		final InputDialog editDialog = new InputDialog(this);
-		editDialog.setTitle("Edit Expenditure Type " + (expTypeNo-1));
+		editDialog.setTitle("Edit Expenditure Type '" + expenditureType.getName() + "'");
 		editDialog.setInstruction("Enter The New Name For The Expenditure Type");
-		editDialog.setHint("Exp Type Name");
-		editDialog.setInputText(DatabaseManager.getExpenditureType(expTypeNo-1));
+		editDialog.setHint("Expenditure Type Name");
+		editDialog.setInputText(expenditureType.getName());
 		editDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 		{
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				String newExpType = editDialog.getInput();
-				DatabaseManager.setExpenditureType(expTypeNo-1, newExpType);
-				TextView expTypeView = (TextView) parentLayout.getChildAt(expTypeNo).findViewById(R.id.textView_expType);
-				expTypeView.setText(newExpType);
+				String newExpTypeName = editDialog.getInput();
+				expenditureType.setName(newExpTypeName);
+				DatabaseAdapter.getInstance(EditExpTypesActivity.this).updateExpenditureType(expenditureType);
+				// +1 becuase there is additional textview child
+				TextView expTypeView = (TextView) parentLayout.getChildAt(expTypeNo+1).findViewById(R.id.textView_expType);
+				expTypeView.setText(newExpTypeName);
 			}
 		});
 		editDialog.setNegativeButton("Cancel", null);

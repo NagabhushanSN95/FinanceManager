@@ -16,36 +16,32 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static com.chaturvedi.financemanager.R.string.APP_VERSION_107;
+import static com.chaturvedi.financemanager.R.string.walletBalance;
+
 public class RestoreManager
 {
 	private Context context;
-	/*//Backup Data introduced in v3.0.0(56)
-	private int APP_VERSION_NO_56;
-	//While Backing Up in v3.0.0(56), Wallet Balance was not Backed-Up. v3.0.2(58) onwards, Wallet Balance 
-	//Will Also Be Saved
-	private int APP_VERSION_NO_58;
-	//In Version 88, backup and restore for Templates was enabled
-	private int APP_VERSION_NO_88;
-	
-	private File backupFolder;
-	private String extension;*/
 
 	// In version 107, all backup files were clubbed into a single file. Settings was saved as a JSON Object
-	private static final int APP_VERSION_107 = 107;
+	// In version 110, wallets were introduced along with hidden/delete attributes
+
+	private static final int APP_VERSION_110 = 110;
 	private int result;
 
 	private int appVersionNo;
-	private int numTransactions;
+	private int numWallets;
 	private int numBanks;
+	private int numTransactions;
 	private int numCountersRows;
 	private int numExpTypes;
 	private int numTemplates;
 
+	private ArrayList<NewWallet> wallets;
 	private ArrayList<Bank> banks;
 	private ArrayList<Transaction> transactions;
 	private ArrayList<Counters> counters;
-	private ArrayList<String> expTypes;
-	private double walletBalance;
+	private ArrayList<ExpenditureType> expTypes;
 	private ArrayList<Template> templates;
 
 	private boolean databaseInitialized;
@@ -55,14 +51,6 @@ public class RestoreManager
 	private String currencySymbol;
 	private String respondBankSms;
 	private boolean hasBankSmsArrived;
-	
-	/*public RestoreManager(Context cxt)
-	{
-		context = cxt;
-		APP_VERSION_NO_56 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_56));
-		APP_VERSION_NO_58 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_58));
-		APP_VERSION_NO_88 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_88));
-	}*/
 
 	/**
 	 *
@@ -94,7 +82,7 @@ public class RestoreManager
 	 * 		2 Old Data
 	 * 		3 Error in Catch Block
 	 */
-	public int readDataBackup(String path)
+	private int readDataBackup(String path)
 	{
 		File backupFile = new File(path);
 
@@ -102,7 +90,6 @@ public class RestoreManager
 		{
 			return 1;
 		}
-		
 		try
 		{
 			BufferedReader backupReader = new BufferedReader(new FileReader(backupFile));
@@ -111,10 +98,12 @@ public class RestoreManager
 			backupReader.readLine();
 			appVersionNo = Integer.parseInt(backupReader.readLine().trim());
 
-			if(appVersionNo < APP_VERSION_107)
+			if(appVersionNo < APP_VERSION_110)
 			{
 				return 2;
 			}
+
+			numWallets = Integer.parseInt(backupReader.readLine().trim());
 			numBanks = Integer.parseInt(backupReader.readLine().trim());
 			numTransactions = Integer.parseInt(backupReader.readLine().trim());
 			numCountersRows = Integer.parseInt(backupReader.readLine().trim());
@@ -122,10 +111,16 @@ public class RestoreManager
 			numTemplates = Integer.parseInt(backupReader.readLine().trim());
 			backupReader.readLine();
 
-			// Read Wallet Balance
+			// Read Wallets Data
 			backupReader.readLine();
-			walletBalance = Double.parseDouble(backupReader.readLine());
-			backupReader.readLine();
+			wallets = new ArrayList<NewWallet>(numWallets);
+			for(int i=0; i<numWallets; i++)
+			{
+				NewWallet wallet = new NewWallet(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
+						backupReader.readLine());
+				wallets.add(wallet);
+				backupReader.readLine();
+			}
 
 			// Read Bank Details
 			backupReader.readLine();
@@ -133,7 +128,7 @@ public class RestoreManager
 			for(int i=0; i<numBanks; i++)
 			{
 				Bank bank = new Bank(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
-						backupReader.readLine(),backupReader.readLine());
+						backupReader.readLine(),backupReader.readLine(),backupReader.readLine());
 				banks.add(bank);
 				backupReader.readLine();
 			}
@@ -145,7 +140,7 @@ public class RestoreManager
 			{
 				Transaction transaction = new Transaction(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
 						backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),backupReader.readLine()
-						,backupReader.readLine(),backupReader.readLine());
+						,backupReader.readLine(),backupReader.readLine(),backupReader.readLine());
 				transactions.add(transaction);
 				backupReader.readLine();
 			}
@@ -169,24 +164,23 @@ public class RestoreManager
 
 			// Read Expenditure Types
 			backupReader.readLine();
-			expTypes = new ArrayList<String>(numExpTypes);
+			expTypes = new ArrayList<ExpenditureType>(numExpTypes);
 			for(int i=0; i<numExpTypes ; i++)
 			{
-				expTypes.add(backupReader.readLine().trim());
+				ExpenditureType expenditureType = new ExpenditureType(backupReader.readLine(),backupReader.readLine(),
+						backupReader.readLine());
+				backupReader.readLine();
+				expTypes.add(expenditureType);
 			}
-			backupReader.readLine();
 
 			// Read templates
 			backupReader.readLine();
 			templates = new ArrayList<Template>();
 			for(int i=0; i<numTemplates; i++)
 			{
-				int ID = Integer.parseInt(backupReader.readLine().trim());
-				String particulars = backupReader.readLine().trim();
-				String type = backupReader.readLine().trim();
-				double amount = Double.parseDouble(backupReader.readLine().trim());
+				Template template = new Template(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
+						backupReader.readLine(),backupReader.readLine());
 				backupReader.readLine();
-				Template template = new Template(ID, particulars, type, amount);
 				templates.add(template);
 			}
 			backupReader.close();
@@ -270,14 +264,19 @@ public class RestoreManager
 		return appVersionNo;
 	}
 
-	public int getNumTransactions()
+	public int getNumWallets()
 	{
-		return numTransactions;
+		return numWallets;
 	}
 
 	public int getNumBanks()
 	{
 		return numBanks;
+	}
+
+	public int getNumTransactions()
+	{
+		return numTransactions;
 	}
 
 	public int getNumCountersRows()
@@ -295,9 +294,9 @@ public class RestoreManager
 		return numTemplates;
 	}
 
-	public ArrayList<Transaction> getAllTransactions()
+	public ArrayList<NewWallet> getAllWallets()
 	{
-		return transactions;
+		return wallets;
 	}
 
 	public ArrayList<Bank> getAllBanks()
@@ -305,12 +304,17 @@ public class RestoreManager
 		return banks;
 	}
 
+	public ArrayList<Transaction> getAllTransactions()
+	{
+		return transactions;
+	}
+
 	public ArrayList<Counters> getAllCounters()
 	{
 		return counters;
 	}
 
-	public ArrayList<String> getAllExpTypes()
+	public ArrayList<ExpenditureType> getAllExpTypes()
 	{
 		return expTypes;
 	}

@@ -1,6 +1,16 @@
 package com.chaturvedi.financemanager.database;
 
-public class Transaction
+import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.chaturvedi.financemanager.functions.TransactionTypeParser;
+
+import java.util.ArrayList;
+
+public class Transaction implements Parcelable
 {
 	private int id;
 	private Time createdTime; // The Time At Which The Transaction Is Created
@@ -59,6 +69,7 @@ public class Transaction
 
 	/**
 	 * Clone a Transaction
+	 *
 	 * @param transaction
 	 */
 	public Transaction(Transaction transaction)
@@ -172,6 +183,36 @@ public class Transaction
 	}
 
 	/**
+	 * @return the particular in the format
+	 * Credit to State Bank Of India: MHRD Scholarship for BE 1st year
+	 * Debit from HDFC Bank: Fruits
+	 * Transfer from HDFC Bank to Wallet:
+	 */
+	public String getDisplayParticular(Context context)
+	{
+		TransactionTypeParser parser = new TransactionTypeParser(context, type);
+		String fullParticular = "";
+		if(parser.isIncome())
+		{
+			fullParticular += "Credit to " + parser.getIncomeDestinationName();
+		}
+		else if(parser.isExpense())
+		{
+			fullParticular += "Debit from " + parser.getExpenseSourceName();
+		}
+		else if(parser.isTransfer())
+		{
+			fullParticular += "Transfer from " + parser.getTransferSourceName() + " to " + parser.getTransferDestinationName();
+		}
+		else
+		{
+			Toast.makeText(context, "Unknown Transaction Type\nTransaction/getDisplayParticular()", Toast.LENGTH_LONG).show();
+		}
+		fullParticular += ": " + particular;
+		return fullParticular;
+	}
+
+	/**
 	 * @param rate the rate to set
 	 */
 	public void setRate(double rate)
@@ -228,4 +269,107 @@ public class Transaction
 	{
 		return hidden;
 	}
+
+	/**
+	 * Checks if the passed transaction is equal to this transaction except Modified Time, Particulars and Hidden
+	 * This is used while editing a transaction. If these are the only changes, only transaction needs to be updated and
+	 * nothing else
+	 * @param transaction2 Transaction to compare
+	 * @return true if this transaction differs only in Particulars
+	 * 			false otherwise
+	 */
+	public boolean differOnlyInParticular(Transaction transaction2)
+	{
+		if(id != transaction2.id)
+		{
+			return false;
+		}
+		if(!createdTime.isEqualTo(transaction2.getCreatedTime()))
+		{
+			return false;
+		}
+		if(!modifiedTime.isEqualTo(transaction2.modifiedTime))
+		{
+			return false;
+		}
+		if(date.isNotEqualTo(transaction2.date))
+		{
+			return false;
+		}
+		if(!type.equalsIgnoreCase(transaction2.type))
+		{
+			return false;
+		}
+		if(rate != transaction2.rate)
+		{
+			return false;
+		}
+		if(quantity != transaction2.quantity)
+		{
+			return false;
+		}
+		if(amount != transaction2.amount)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+
+	// Parcelable Part
+	public Transaction(Parcel in)
+	{
+		String[] data = new String[10];
+		in.readStringArray(data);
+		id = Integer.parseInt(data[0]);
+		createdTime = new Time(data[1]);
+		modifiedTime = new Time(data[2]);
+		date = new Date(data[3]);
+		type = data[4];
+		particular = data[5];
+		rate = Double.parseDouble(data[6]);
+		quantity = Double.parseDouble(data[7]);
+		amount = Double.parseDouble(data[8]);
+		hidden = Boolean.parseBoolean(data[9]);
+	}
+
+	@Override
+	public int describeContents()
+	{
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags)
+	{
+		String[] data = {String.valueOf(id), createdTime.toString(), modifiedTime.toString(), date.getSavableDate(), type,
+				particular, String.valueOf(rate), String.valueOf(quantity), String.valueOf(amount), String.valueOf(hidden)};
+		dest.writeStringArray(data);
+		/*
+		dest.writeInt(id);
+		dest.writeString(type);
+		dest.writeString(particular);
+		dest.writeDouble(rate);
+		dest.writeDouble(quantity);
+		dest.writeDouble(amount);
+		dest.writeByte((byte) (hidden ? 1 : 0));
+		*/
+	}
+
+	public static final Parcelable.Creator<Transaction> CREATOR = new Parcelable.Creator<Transaction>()
+	{
+		@Override
+		public Transaction createFromParcel(Parcel in)
+		{
+			return new Transaction(in);
+		}
+
+		@Override
+		public Transaction[] newArray(int size)
+		{
+			return new Transaction[size];
+		}
+	};
+
 }

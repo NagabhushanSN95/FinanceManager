@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.Bank;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
 
 public class BanksSetupFragment extends Fragment
 {
@@ -240,7 +241,7 @@ public class BanksSetupFragment extends Fragment
 		bankNameField.setAdapter(bankNameSuggestionAdapter);
 		bankNameField.setThreshold(1);
 		
-		bankAccNoField = (EditText) addBankLayout.findViewById(R.id.bankAccNo);
+		bankAccNoField = (EditText) addBankLayout.findViewById(R.id.walletAccNo);
 		bankBalanceField = (EditText) addBankLayout.findViewById(R.id.bankBalance);
 		
 		bankSmsNameField = (AutoCompleteTextView) addBankLayout.findViewById(R.id.bankSmsName);
@@ -268,7 +269,7 @@ public class BanksSetupFragment extends Fragment
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				int id = banks.size() + 1;
+				int id = banks.size()+1;
 				String bankName = bankNameField.getText().toString().trim();
 				String bankAccNo = bankAccNoField.getText().toString().trim();
 				String bankBalance = bankBalanceField.getText().toString().trim();
@@ -280,7 +281,7 @@ public class BanksSetupFragment extends Fragment
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					Bank bank = new Bank(id, bankName, bankAccNo, bankBalance, bankSmsName);
+					Bank bank = new Bank(""+id, bankName, bankAccNo, bankBalance, bankSmsName, ""+false);
 					banks.add(bank);
 					
 					buildLayout();
@@ -354,7 +355,7 @@ public class BanksSetupFragment extends Fragment
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				int id = bankNo + 1;	// IDs start with 1 but array indexes start with 0
+				int id = banks.size()+1;	// IDs start with 1 but array indexes start with 0
 				String bankName = bankNameField.getText().toString().trim();
 				String bankAccNo = bankAccNoField.getText().toString().trim();
 				String bankBalance = bankBalanceField.getText().toString().trim();
@@ -366,7 +367,7 @@ public class BanksSetupFragment extends Fragment
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					Bank bank = new Bank(id, bankName, bankAccNo, bankBalance, bankSmsName);
+					Bank bank = new Bank(String.valueOf(id), bankName, bankAccNo, bankBalance, bankSmsName, String.valueOf(false));
 					banks.set(bankNo, bank);
 					
 					buildLayout();

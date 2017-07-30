@@ -50,7 +50,9 @@ public class Time
 	
 	public String toString()
 	{
-		String time = year + "/" + month + "/" + date + "/" + hour + "/" + minute + "/" + second + "/" + millis;
+		DecimalFormat formatter = new DecimalFormat("00");
+		String time = year + "/" + formatter.format(month) + "/" + formatter.format(date) + "/" + formatter.format(hour) + "/" +
+				formatter.format(minute) + "/" + formatter.format(second) + "/" + millis;
 		return time;
 	}
 
@@ -145,10 +147,7 @@ public class Time
 	
 	public boolean isNotEqualTo(Time time2)
 	{
-		if(!this.isEqualTo(time2))
-			return true;
-		else
-			return false;
+		return (!this.isEqualTo(time2));
 	}
 
 	public String getTimeForFileName()

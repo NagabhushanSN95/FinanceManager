@@ -2,25 +2,40 @@
 <items version="2" >
 
     <item
+        is-multidex="true"
         jar="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
         jumboMode="true"
+        optimize="true"
         revision="23.0.2"
-        sha1="416601b4c8a7c32203f3b6f994c01b6878e84cff">
-        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe.jar" />
+        sha1="55ecccaa729d693dd60ce6f15a2b39c4d58d6662">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe\classes.dex" />
     </item>
     <item
+        is-multidex="true"
         jar="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
         jumboMode="true"
+        optimize="true"
         revision="23.0.2"
-        sha1="61589e29b7833691726c687241ec7102866d5612">
-        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd.jar" />
+        sha1="d5567fd36761af57bbcc49930c150c5a6ba51008">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd\classes.dex" />
     </item>
     <item
+        is-multidex="false"
         jar="C:\Program Files\Android\sdk\extras\android\m2repository\com\android\support\support-v4\19.1.0\support-v4-19.1.0.jar"
-        jumboMode="true"
+        jumboMode="false"
+        optimize="true"
         revision="23.0.2"
         sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67">
         <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\support-v4-19.1.0_25c31f909aefd2b01057c3020630746b92282e1d.jar" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="C:\Program Files\Android\sdk\extras\android\m2repository\com\android\support\support-v4\19.1.0\support-v4-19.1.0.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="23.0.2"
+        sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\support-v4-19.1.0_25c31f909aefd2b01057c3020630746b92282e1d\classes.dex" />
     </item>
 
 </items>

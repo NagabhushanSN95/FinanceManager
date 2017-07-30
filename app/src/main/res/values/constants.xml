@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="currentAppVersion">88</string>
+    <string name="currentAppVersion">110</string>
     <string name="APP_VERSION_56">56</string>
     <string name="APP_VERSION_58">58</string>
     <string name="APP_VERSION_64">64</string>
@@ -9,5 +9,6 @@
     <string name="APP_VERSION_89">89</string>
     <string name="APP_VERSION_96">96</string>
     <string name="APP_VERSION_107">107</string>
+    <string name="APP_VERSION_110">110</string>
     
 </resources>

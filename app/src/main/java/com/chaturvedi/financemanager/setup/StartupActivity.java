@@ -24,10 +24,11 @@ import android.widget.Toast;
 
 import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.main.SummaryActivity;
-import com.chaturvedi.financemanager.database.Bank;
-import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.database.ExpenditureType;
+import com.chaturvedi.financemanager.database.NewWallet;
 import com.chaturvedi.financemanager.database.RestoreManager;
+import com.chaturvedi.financemanager.main.SummaryActivity;
 
 import java.util.ArrayList;
 
@@ -179,7 +180,7 @@ public class StartupActivity extends FragmentActivity
 			public void onClick(View v)
 			{
 				Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-				fileIntent.setType("file/*"); // intent type to filter application based on your requirement
+				fileIntent.setType("*/*"); // intent type to filter application based on your requirement
 				startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
 			}
 		});
@@ -374,19 +375,21 @@ public class StartupActivity extends FragmentActivity
 				int result = restoreManager.getResult();
 				if(result == 0)
 				{
-					DatabaseManager.initialize(restoreManager.getWalletBalance());
-					DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-					DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-					DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-					DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+					DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(StartupActivity.this);
+					databaseAdapter.addAllWallets(restoreManager.getAllWallets());
+					databaseAdapter.addAllBanks(restoreManager.getAllBanks());
+					databaseAdapter.addAllTransactions(restoreManager.getAllTransactions());
+					databaseAdapter.addAllExpenditureTypes(restoreManager.getAllExpTypes());
 					// Initially, in DatabaseAdapter, Counters Table is configured to have 5 Exp Types By Deafult
+					// If Number of Exp Types is not 5, then readjust it to have more columns
 					if(restoreManager.getNumExpTypes() != 5)
 					{
 						Log.d("restoreData()","Readjusting Counters Table");
-						DatabaseManager.readjustCountersTable();
+						databaseAdapter.readjustCountersTable();
 					}
-					DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-					DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+
+					databaseAdapter.addAllCountersRows(restoreManager.getAllCounters());
+					databaseAdapter.addAllTemplates(restoreManager.getAllTemplates());
 
 					// Store Default Preferences
 					SharedPreferences.Editor editor = preferences.edit();
@@ -421,18 +424,25 @@ public class StartupActivity extends FragmentActivity
 				}
 				else if(result == 1)
 				{
-					Toast.makeText(getApplicationContext(), "No Backups Were Found.\nMake sure the Backup Files " + 
-							"are located in\nChaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();
+					// TODO: Send these messages using a handler. Display Toast in that handler
+					/*Toast.makeText(getApplicationContext(), "No Backups Were Found.\nMake sure the Backup Files " +
+							"are located in\nChaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();*/
+					Log.d("restoreData()", "No Backups Were Found.\nPlease select a backup file created by Finance Manager App only");
+					restoreDialog.dismiss();
 				}
 				else if(result == 2)
 				{
-					Toast.makeText(getApplicationContext(), "Old Data. Cannot be Restored. Sorry!", 
-							Toast.LENGTH_LONG).show();
+					/*Toast.makeText(getApplicationContext(), "Old Data. Cannot be Restored. Sorry!",
+							Toast.LENGTH_LONG).show();*/
+					Log.d("restoreData()", "Old Data. Cannot be Restored. Sorry!");
+					restoreDialog.dismiss();
 				}
 				else if(result == 3)
 				{
-					Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block", 
-							Toast.LENGTH_LONG).show();
+					/*Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block",
+							Toast.LENGTH_LONG).show();*/
+					Log.d("restoreData()", "Error in Restoring Data\nControl Entered Catch Block");
+					restoreDialog.dismiss();
 				}
 			}
 		});
@@ -443,18 +453,18 @@ public class StartupActivity extends FragmentActivity
 	
 	private void skipSetup()
 	{
-		double walletBalance = 0;
-		ArrayList<Bank> banks = new ArrayList<Bank>();
-		DatabaseManager.initialize(walletBalance);
-		DatabaseManager.setAllBanks(banks);
-		
-		ArrayList<String> expTypes = new ArrayList<String>(NUM_EXP_TYPES);
-		expTypes.add(getResources().getString(R.string.hint_exp01));
-		expTypes.add(getResources().getString(R.string.hint_exp02));
-		expTypes.add(getResources().getString(R.string.hint_exp03));
-		expTypes.add(getResources().getString(R.string.hint_exp04));
-		expTypes.add(getResources().getString(R.string.hint_exp05));
-		DatabaseManager.setAllExpenditureTypes(expTypes);
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(StartupActivity.this);
+
+		NewWallet wallet = new NewWallet(1, "Wallet01", 0, false);
+		databaseAdapter.addWallet(wallet);
+
+		ArrayList<ExpenditureType> expTypes = new ArrayList<ExpenditureType>(NUM_EXP_TYPES);
+		expTypes.add(new ExpenditureType(1, getResources().getString(R.string.hint_exp01), false));
+		expTypes.add(new ExpenditureType(2, getResources().getString(R.string.hint_exp02), false));
+		expTypes.add(new ExpenditureType(3, getResources().getString(R.string.hint_exp03), false));
+		expTypes.add(new ExpenditureType(4, getResources().getString(R.string.hint_exp04), false));
+		expTypes.add(new ExpenditureType(5, getResources().getString(R.string.hint_exp05), false));
+		databaseAdapter.addAllExpenditureTypes(expTypes);
 		
 		// Store Default Preferences
 		SharedPreferences.Editor editor = preferences.edit();

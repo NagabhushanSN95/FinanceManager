@@ -342,7 +342,7 @@ public class SettingsActivity extends Activity
 		}
 	}
 	
-	private int getCurrencySymbolPosition(String currencySymbolSelected2)
+	private int getCurrencySymbolPosition(String currencySymbolSelected)
 	{
 		int position = 0;
 		if(currencySymbolSelected.equalsIgnoreCase(" "))

@@ -1,11 +1,5 @@
 package com.chaturvedi.financemanager.edit;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -20,7 +14,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -31,7 +24,13 @@ import android.widget.Toast;
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.Bank;
-import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class EditBanksActivity extends Activity
 {
@@ -56,7 +55,7 @@ public class EditBanksActivity extends Activity
 	private EditText bankBalanceField;
 	private MyAutoCompleteTextView bankSmsNameField;
 
-	//private static ArrayList<Bank> banks;
+	private static ArrayList<Bank> banks;
 	
 	private ArrayList<String> bankNameSuggestions;
 	private ArrayList<String> predictionSmsNames;
@@ -103,7 +102,8 @@ public class EditBanksActivity extends Activity
 		}
 		else if(item.getTitle().equals("Delete"))
 		{
-			DatabaseManager.deleteBank(contextMenuBankNo);
+			int bankID = banks.get(contextMenuBankNo).getID();
+			DatabaseAdapter.getInstance(EditBanksActivity.this).deleteBank(bankID);
 			buildLayout();
 		}
 		else
@@ -124,7 +124,8 @@ public class EditBanksActivity extends Activity
 		
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
 		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
-		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT, MARGIN_BOTTOM_PARENT_LAYOUT);
+		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT,
+				MARGIN_BOTTOM_PARENT_LAYOUT);
 		parentLayout.setLayoutParams(parentLayoutParams);
 		parentLayout.removeAllViews();
 		
@@ -138,10 +139,11 @@ public class EditBanksActivity extends Activity
 				addBankDialog.show();
 			}
 		});
-		
+
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(EditBanksActivity.this);
 		DecimalFormat formatter = new DecimalFormat("#,##0.##");
-		int numBanks = DatabaseManager.getNumBanks();
-		ArrayList<Bank> banks = DatabaseManager.getAllBanks();
+		int numBanks = databaseAdapter.getNumVisibleBanks();
+		banks = databaseAdapter.getAllVisibleBanks();
 		
 		for(int i=0; i<numBanks; i++)
 		{
@@ -159,7 +161,7 @@ public class EditBanksActivity extends Activity
 			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_BALANCE_VIEWS, 0, 0, 0);
 			bankBalanceView.setLayoutParams(balanceViewParams);
-			bankBalanceView.setGravity(Gravity.RIGHT);
+			bankBalanceView.setGravity(Gravity.END);
 			
 			parentLayout.addView(layout);
 			registerForContextMenu(layout);
@@ -180,7 +182,7 @@ public class EditBanksActivity extends Activity
 		bankNameField.setAdapter(bankNameSuggestionAdapter);
 		bankNameField.setThreshold(1);
 		
-		bankAccNoField = (EditText) addBankLayout.findViewById(R.id.bankAccNo);
+		bankAccNoField = (EditText) addBankLayout.findViewById(R.id.walletAccNo);
 		bankBalanceField = (EditText) addBankLayout.findViewById(R.id.bankBalance);
 		
 		bankSmsNameField = (MyAutoCompleteTextView) addBankLayout.findViewById(R.id.bankSmsName);
@@ -208,20 +210,21 @@ public class EditBanksActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				int id = DatabaseManager.getNumBanks() + 1;
+				DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(EditBanksActivity.this);
+				int id = databaseAdapter.getIDforNextBank();
 				String bankName = bankNameField.getText().toString().trim();
 				String bankAccNo = bankAccNoField.getText().toString().trim();
 				String bankBalance = bankBalanceField.getText().toString().trim();
 				String bankSmsName = bankSmsNameField.getText().toString().trim();
-				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName);
+				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName, null);
 				
 				if(dataCorrect)
 				{
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					Bank bank = new Bank(id, bankName, bankAccNo, bankBalance, bankSmsName);
-					DatabaseManager.addBank(bank);
+					Bank bank = new Bank(id, bankName, bankAccNo, Double.parseDouble(bankBalance), bankSmsName, false);
+					databaseAdapter.addBank(bank);
 				}
 				else
 				{
@@ -275,33 +278,34 @@ public class EditBanksActivity extends Activity
 	
 	private void editBank(final int bankNo)
 	{
-		ArrayList<Bank> banks = DatabaseManager.getAllBanks();
-		
+		//ArrayList<Bank> banks = DatabaseManager.getAllBanks();
+		final Bank bank = banks.get(bankNo);
 		buildAddBankDialog();
-		bankNameField.setText(banks.get(bankNo).getName());
-		bankAccNoField.setText(""+banks.get(bankNo).getAccNo());
-		bankBalanceField.setText(""+banks.get(bankNo).getBalance());
-		bankSmsNameField.setText(banks.get(bankNo).getSmsName());
+		bankNameField.setText(bank.getName());
+		bankAccNoField.setText(bank.getAccNo());
+		bankBalanceField.setText(String.valueOf(bank.getBalance()));
+		bankSmsNameField.setText(bank.getSmsName());
 		
 		addBankDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 		{
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				int id = bankNo + 1;	// IDs start with 1 but array indexes start with 0
+				int id = bank.getID();
 				String bankName = bankNameField.getText().toString().trim();
 				String bankAccNo = bankAccNoField.getText().toString().trim();
 				String bankBalance = bankBalanceField.getText().toString().trim();
 				String bankSmsName = bankSmsNameField.getText().toString().trim();
-				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName);
+				boolean isDeleted = bank.isDeleted();
+				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName, null);
 				
 				if(dataCorrect)
 				{
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					Bank bank = new Bank(id, bankName, bankAccNo, bankBalance, bankSmsName);
-					DatabaseManager.editBank(bankNo, bank);
+					Bank bank = new Bank(id, bankName, bankAccNo, Double.parseDouble(bankBalance), bankSmsName, isDeleted);
+					DatabaseAdapter.getInstance(EditBanksActivity.this).updateBank(bank);
 					buildLayout();
 				}
 				else
@@ -318,9 +322,9 @@ public class EditBanksActivity extends Activity
 		addBankDialog.show();
 	}
 	
-	private boolean verifyData(String bankName, String bankBalance, String bankSmsName)
+	private boolean verifyData(String bankName, String bankBalance, String bankSmsName, String origBankName)
 	{
-		boolean dataCorrect = false;
+		boolean dataCorrect;
 		if(bankName.length()==0)
 		{
 			Toast.makeText(getApplicationContext(), "Please Enter The Bank Name", Toast.LENGTH_LONG).show();
@@ -334,6 +338,15 @@ public class EditBanksActivity extends Activity
 		else if(bankSmsName.length()==0)
 		{
 			Toast.makeText(getApplicationContext(), "Please Enter The Bank Sms Name", Toast.LENGTH_LONG).show();
+			dataCorrect = false;
+		}
+		else if(origBankName!=null && bankName.equals(origBankName))
+		{
+			dataCorrect = true;
+		}
+		else if(DatabaseAdapter.getInstance(EditBanksActivity.this).getBankFromName(bankName) != null)
+		{
+			Toast.makeText(getApplicationContext(), "Please Enter A Unique Bank Name", Toast.LENGTH_LONG).show();
 			dataCorrect = false;
 		}
 		else

@@ -3,26 +3,16 @@
 
 package com.chaturvedi.financemanager.main;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -32,45 +22,27 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.RelativeLayout;
-import android.widget.SearchView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.chaturvedi.customviews.InputDialog;
-import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.Template;
-import com.chaturvedi.financemanager.database.Time;
 import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.functions.Constants;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 public class TransactionsActivity extends Activity
 {
-	private static final String ALL_PREFERENCES = "AllPreferences";
-	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
 	private String transactionsDisplayInterval = "Month";
 	private boolean filteredState = false;    // true if Filtering and Search is applied. Else false.
 	// This is used in onBackPressed() method.
-	
-	/*private final int DISPLAY_TRANSACTIONS_ALL = 0;
-	private final int DISPLAY_TRANSACTIONS_YEAR = 1;
-	private final int DISPLAY_TRANSACTIONS_MONTH = 2;
-	private int displayTransactions;*/
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -79,40 +51,8 @@ public class TransactionsActivity extends Activity
 	private int WIDTH_DATE;
 	private int WIDTH_PARTICULARS;
 	private int WIDTH_AMOUNT;
-	private int WIDTH_TRANSACTION_BUTTON;
 	
 	private LinearLayout parentLayout;
-	
-	private ImageButton walletCreditButton;
-	private ImageButton walletDebitButton;
-	private ImageButton bankCreditButton;
-	private ImageButton bankDebitButton;
-
-	private AlertDialog.Builder walletCreditDialog;
-	private AlertDialog.Builder walletDebitDialog;
-	private AlertDialog.Builder bankCreditDialog;
-	private AlertDialog.Builder bankDebitDialog;
-	private LayoutInflater walletCreditDialogLayout;
-	private LayoutInflater walletDebitDialogLayout;
-	private LayoutInflater bankCreditDialogLayout;
-	private LayoutInflater bankDebitDialogLayout;
-	private View walletCreditDialogView;
-	private View walletDebitDialogView;
-	private View bankCreditDialogView;
-	private View bankDebitDialogView;
-	
-	private MyAutoCompleteTextView particularsField;
-	private Spinner typesList;
-	private EditText rateField;
-	private EditText quantityField;
-	private EditText amountField;
-	private EditText dateField;
-	private CheckBox templateCheckBox;
-	private Spinner creditTypesList;
-	private Spinner debitTypesList;
-	private ArrayList<RadioButton> banks;
-	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
-	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
 	
 	private ArrayList<Transaction> transactions;
 	private ArrayList<Template> templates;
@@ -122,7 +62,6 @@ public class TransactionsActivity extends Activity
 	private Intent templatesIntent;
 	private Thread searchThread;
 	
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -143,14 +82,14 @@ public class TransactionsActivity extends Activity
 		buildTitleLayout();
 		readPreferences();
 		buildBodyLayout();
-		buildButtonPanel();
+		//buildButtonPanel();
 	}
 	
 	@Override
 	public void onResume()
 	{
 		super.onResume();
-		if (DatabaseManager.getNumTransactions() == 0)
+		/*if (DatabaseManager.getNumTransactions() == 0)
 		{
 			DatabaseManager.setContext(TransactionsActivity.this);
 			DatabaseManager.readDatabase();
@@ -158,7 +97,7 @@ public class TransactionsActivity extends Activity
 			{
 				refreshBodyLayout();
 			}
-		}
+		}*/
 
 		// When screen orientation is changed, onCreate() is called. It builds titleLayout and bodyLayout.
 		// Then, some unknown code is executed which changes the text of the particularsTitleView and the
@@ -166,8 +105,8 @@ public class TransactionsActivity extends Activity
 		// After that, onResume is called. So here, I'm setting back the text of the particularsTitleView and
 		// the particularView of all transactionLayouts to their original value
 		// Todo: This is a bug. It needs to be fixed by determining which code is causing this problem and removing it.
-		((TextView) findViewById(R.id.particulars)).setText("Particulars");
-		buildBodyLayout();
+		//((TextView) findViewById(R.id.particulars)).setText("Particulars");
+		//buildBodyLayout();
 	}
 
 	@Override
@@ -193,6 +132,9 @@ public class TransactionsActivity extends Activity
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_transactions, menu);
 
+		// TODO: Quick Search button to be implemented Here
+		// TODO: Full Quick to be embedded into filters
+		/*
 		// Associate searchable configuration with the SearchView
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
 		{
@@ -213,7 +155,7 @@ public class TransactionsActivity extends Activity
 						}
 						startSearchTransaction(newText.trim());
 						searchView.requestFocus();
-					}*/
+					}* /
 					return false;
 				}
 
@@ -226,6 +168,7 @@ public class TransactionsActivity extends Activity
 				}
 			});
 		}
+		*/
 
 		return true;
 	}
@@ -240,14 +183,16 @@ public class TransactionsActivity extends Activity
 
 			case R.id.action_templates:
 				templatesIntent = new Intent(TransactionsActivity.this, TemplatesActivity.class);
-				startActivityForResult(templatesIntent, 0);
+				startActivity(templatesIntent);
 				return true;
 
 			case R.id.action_transactionsDisplayOptions:
-//				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
-				displayFilterOptions();
+				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
+//	TODO:			displayFilterOptions();
 				return true;
 
+			// TODO: To be put as Quick Search Dialog
+			/*
 			case R.id.action_search:
 				if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)
 				{
@@ -267,19 +212,33 @@ public class TransactionsActivity extends Activity
 					searchDialog.show();
 				}
 				return true;
+			*/
 		}
 		return true;
 	}
 
 	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data)
+	public void onActivityResult(int requestCode, int resultCode, Intent intent)
 	{
-		super.onActivityResult(requestCode, resultCode, data);
-		calculateDimensions();
-		readPreferences();
-		buildTitleLayout();
-		refreshBodyLayout();
-		buildButtonPanel();
+		switch (requestCode)
+		{
+			case Constants.REQUEST_CODE_ADD_TRANSACTION:
+				if(resultCode == RESULT_OK)
+				{
+					displayNewTransaction((Transaction)intent.getParcelableExtra(Constants.TRANSACTION));
+					getTransactionsToDisplay();
+				}
+				break;
+
+			case Constants.REQUEST_CODE_EDIT_TRANSACTION:
+				if(resultCode == RESULT_OK)
+				{
+					editDisplayedTransaction(contextMenuTransactionNo, (Transaction) intent.getParcelableExtra(Constants.TRANSACTION));
+					getTransactionsToDisplay();
+				}
+				break;
+		}
+		super.onActivityResult(requestCode, resultCode, intent);
 	}
 	
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
@@ -287,8 +246,8 @@ public class TransactionsActivity extends Activity
 		super.onCreateContextMenu(menu, view, menuInfo);
 		contextMenuTransactionNo = parentLayout.indexOfChild(view);
 		menu.setHeaderTitle("Options For Transaction " + (contextMenuTransactionNo + 1));
-		menu.add(0, view.getId(), 0, "Edit");
-		menu.add(0, view.getId(), 0, "Delete");
+		menu.add(Menu.NONE, view.getId(), Menu.NONE, "Edit");
+		menu.add(Menu.NONE, view.getId(), Menu.NONE, "Delete");
 	}
 	
 	public boolean onContextItemSelected(MenuItem item)
@@ -329,16 +288,17 @@ public class TransactionsActivity extends Activity
 		WIDTH_SLNO = 10 * screenWidth / 100;
 		WIDTH_PARTICULARS = 45 * screenWidth / 100;
 		WIDTH_AMOUNT = 20 * screenWidth / 100;
-		WIDTH_TRANSACTION_BUTTON = screenWidth * 25 / 100;
 	}
 	
 	private void readPreferences()
 	{
-		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
+		DecimalFormat formatter = new DecimalFormat("00");
+		SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 		
-		if (preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
+		if (preferences.contains(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 		{
-			transactionsDisplayInterval = preferences.getString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+			transactionsDisplayInterval = preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		}
 		
 		if (transactionsDisplayInterval.equals("Month"))
@@ -346,40 +306,43 @@ public class TransactionsActivity extends Activity
 			Calendar calendar = Calendar.getInstance();
 			int year = calendar.get(Calendar.YEAR);
 			int month = calendar.get(Calendar.MONTH) + 1;
-			long currentMonth = year * 100 + month;
-			transactions = DatabaseManager.getMonthlyTransactions(currentMonth);
+			String currentMonth = String.valueOf(year) + "/" + formatter.format(month);
+			transactions = databaseAdapter.getMonthlyVisibleTransactions(currentMonth);
 		}
 		else if (transactionsDisplayInterval.equals("Year"))
 		{
 			Calendar calendar = Calendar.getInstance();
 			int year = calendar.get(Calendar.YEAR);
-			transactions = DatabaseManager.getYearlyTransactions(year);
+			transactions = databaseAdapter.getYearlyVisibleTransactions(String.valueOf(year));
 		}
 		else
 		{
-			transactions = DatabaseManager.getAllTransactions();
+			transactions = databaseAdapter.getAllVisibleTransactions();
+			Log.d("SNB", "CP01: " + transactions.size());
 		}
 	}
 	
 	private void getTransactionsToDisplay()
 	{
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
+		DecimalFormat formatter = new DecimalFormat("00");
 		if (transactionsDisplayInterval.equals("Month"))
 		{
 			Calendar calendar = Calendar.getInstance();
 			int year = calendar.get(Calendar.YEAR);
 			int month = calendar.get(Calendar.MONTH) + 1;
-			long currentMonth = year * 100 + month;
-			transactions = DatabaseManager.getMonthlyTransactions(currentMonth);
+			String currentMonth = String.valueOf(year) + "/" + formatter.format(month);
+			transactions = databaseAdapter.getMonthlyVisibleTransactions(currentMonth);
 		}
 		else if (transactionsDisplayInterval.equals("Year"))
 		{
 			Calendar calendar = Calendar.getInstance();
 			int year = calendar.get(Calendar.YEAR);
-			transactions = DatabaseManager.getYearlyTransactions(year);
+			transactions = databaseAdapter.getYearlyVisibleTransactions(String.valueOf(year));
 		}
 		else
 		{
-			transactions = DatabaseManager.getAllTransactions();
+			transactions = databaseAdapter.getAllVisibleTransactions();
 		}
 	}
 	
@@ -446,6 +409,7 @@ public class TransactionsActivity extends Activity
 		catch (Exception e)
 		{
 			Toast.makeText(this, "Error In Building Body Layout\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			Log.d("buildBodyLayout()", e.getMessage(), e.fillInStackTrace());
 		}
 	}
 	
@@ -465,12 +429,6 @@ public class TransactionsActivity extends Activity
 			colour = Color.BLUE;
 		}
 		
-		if (transaction.getType().contains("Withdraw") || transaction.getType().contains("Savings"))
-		{
-			colour = Color.BLUE;
-		}
-		
-		
 		LayoutInflater layoutInflater = LayoutInflater.from(this);
 		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
 
@@ -478,7 +436,7 @@ public class TransactionsActivity extends Activity
 		LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();
 		slnoParams.width = WIDTH_SLNO;
 		slnoView.setLayoutParams(slnoParams);
-		slnoView.setText("" + slNo);
+		slnoView.setText(String.valueOf(slNo));
 		
 		TextView dateView = (TextView) linearLayout.findViewById(R.id.date);
 		LayoutParams dateParams = (LayoutParams) dateView.getLayoutParams();
@@ -490,7 +448,7 @@ public class TransactionsActivity extends Activity
 		LayoutParams particularsParams = (LayoutParams) particularsView.getLayoutParams();
 		particularsParams.width = WIDTH_PARTICULARS;
 		particularsView.setLayoutParams(particularsParams);
-		particularsView.setText(transaction.getParticular());
+		particularsView.setText(transaction.getDisplayParticular(TransactionsActivity.this));
 		particularsView.setTextColor(colour);
 		
 		TextView amountView = (TextView) linearLayout.findViewById(R.id.amount);
@@ -518,7 +476,7 @@ public class TransactionsActivity extends Activity
 		for (int i = transactionNo; i < parentLayout.getChildCount(); i++)
 		{
 			TextView slnoView = (TextView) parentLayout.getChildAt(i).findViewById(R.id.slno);
-			slnoView.setText("" + (i + 1));
+			slnoView.setText(String.valueOf(i + 1));
 		}
 	}
 	
@@ -530,15 +488,15 @@ public class TransactionsActivity extends Activity
 		dateView.setText(transaction.getDate().getDisplayDate());
 		
 		TextView particularsView = (TextView) layout.findViewById(R.id.particulars);
-		particularsView.setText(transaction.getParticular());
+		particularsView.setText(transaction.getDisplayParticular(TransactionsActivity.this));
 		
 		TextView amountView = (TextView) layout.findViewById(R.id.amount);
 		amountView.setText(formatterDisplay.format(transaction.getAmount()));
 	}
 	
-	/**
+	/* *
 	 * Set the LayoutParams, OnClickListeners to the buttons in ButtonPanel
-	 */
+	 * /
 	private void buildButtonPanel()
 	{
 		walletCreditButton = (ImageButton) findViewById(R.id.button_wallet_credit);
@@ -650,9 +608,9 @@ public class TransactionsActivity extends Activity
 				return true;
 			}
 		});
-	}
+	}*/
 	
-	private void buildWalletCreditDialog()
+	/*private void buildWalletCreditDialog()
 	{
 		walletCreditDialog = new AlertDialog.Builder(this);
 		walletCreditDialog.setTitle("Add An Income");
@@ -683,7 +641,7 @@ public class TransactionsActivity extends Activity
 					if (saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getAmount());
+								transaction.getAmountText());
 						DatabaseManager.addTemplate(template);
 					}
 					displayNewTransaction(transaction);
@@ -727,12 +685,12 @@ public class TransactionsActivity extends Activity
 					}
 				}
 				Template selectedTemplate = templates.get(selectedTemplateNo);
-				amountField.setText("" + selectedTemplate.getAmount());
+				amountField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
-	}
+	}*/
 	
-	private void buildWalletDebitDialog()
+	/*private void buildWalletDebitDialog()
 	{
 		walletDebitDialog = new AlertDialog.Builder(this);
 		walletDebitDialog.setTitle("Add Expenditure");
@@ -767,7 +725,7 @@ public class TransactionsActivity extends Activity
 					if (saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getRate());
+								transaction.getRateText());
 						DatabaseManager.addTemplate(template);
 					}
 					displayNewTransaction(transaction);
@@ -823,12 +781,12 @@ public class TransactionsActivity extends Activity
 				// Wallet Debit Exp01
 				int expTypeNo = Integer.parseInt(selectedTemplate.getType().substring(16, 18));
 				typesList.setSelection(expTypeNo);
-				rateField.setText("" + selectedTemplate.getAmount());
+				rateField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
-	}
+	}*/
 	
-	private void buildBankCreditDialog()
+	/*private void buildBankCreditDialog()
 	{
 		bankCreditDialogLayout = LayoutInflater.from(this);
 		bankCreditDialogView = bankCreditDialogLayout.inflate(R.layout.dialog_bank_credit, null);
@@ -884,7 +842,7 @@ public class TransactionsActivity extends Activity
 				{
 					creditTypesList.setSelection(1);
 				}
-				amountField.setText("" + selectedTemplate.getAmount());
+				amountField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
 		
@@ -936,7 +894,7 @@ public class TransactionsActivity extends Activity
 					if (saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getAmount());
+								transaction.getAmountText());
 						DatabaseManager.addTemplate(template);
 					}
 					displayNewTransaction(transaction);
@@ -955,9 +913,9 @@ public class TransactionsActivity extends Activity
 			}
 		});
 		bankCreditDialog.setNegativeButton("Cancel", null);
-	}
+	}*/
 	
-	private void buildBankDebitDialog()
+	/*private void buildBankDebitDialog()
 	{
 		bankDebitDialogLayout = LayoutInflater.from(this);
 		bankDebitDialogView = bankDebitDialogLayout.inflate(R.layout.dialog_bank_debit, null);
@@ -1018,7 +976,7 @@ public class TransactionsActivity extends Activity
 					int expTypeNo = Integer.parseInt(selectedTemplate.getType().substring(17, 19)); // Bank Debit 01 Exp01
 					typesList.setSelection(expTypeNo);
 				}
-				amountField.setText("" + selectedTemplate.getAmount());
+				amountField.setText("" + selectedTemplate.getAmountText());
 			}
 		});
 		
@@ -1094,7 +1052,7 @@ public class TransactionsActivity extends Activity
 					if (saveAsTemplate)
 					{
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(),
-								transaction.getAmount());
+								transaction.getAmountText());
 						DatabaseManager.addTemplate(template);
 					}
 					displayNewTransaction(transaction);
@@ -1114,7 +1072,7 @@ public class TransactionsActivity extends Activity
 			}
 		});
 		bankDebitDialog.setNegativeButton("Cancel", null);
-	}
+	}*/
 	
 	/**
 	 * Delete the transaction referred by transactionNo
@@ -1131,7 +1089,7 @@ public class TransactionsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.deleteTransaction(transactions.get(contextMenuTransactionNo));
+				DatabaseManager.deleteTransaction(TransactionsActivity.this, transactions.get(contextMenuTransactionNo));
 				deleteTransactionFromLayout(contextMenuTransactionNo);
 				getTransactionsToDisplay();
 			}
@@ -1140,14 +1098,20 @@ public class TransactionsActivity extends Activity
 		deleteDialog.show();
 	}
 
-	private void editTransaction(final int transactionNo)
+	private void editTransaction(int transactionNo)
 	{
-		final Transaction oldTransaction = transactions.get(transactionNo);
+		Transaction oldTransaction = transactions.get(transactionNo);
+		Intent editIntent = new Intent(TransactionsActivity.this, AddTransactionActivity.class);
+		editIntent.putExtra(Constants.ACTION, Constants.ACTION_EDIT);
+		editIntent.putExtra(Constants.TRANSACTION, oldTransaction);
+		startActivityForResult(editIntent, Constants.REQUEST_CODE_EDIT_TRANSACTION);
+
+		/*
 		String expType = oldTransaction.getType();
 		
 		if (expType.contains("Wallet Credit"))
 		{
-			final double backupAmount = oldTransaction.getAmount();
+			final double backupAmount = oldTransaction.getAmountText();
 			buildWalletCreditDialog();
 			walletCreditDialog.setTitle("Edit Transaction: Income");
 			particularsField.setText(oldTransaction.getParticular());
@@ -1176,7 +1140,7 @@ public class TransactionsActivity extends Activity
 						if (saveAsTemplate)
 						{
 							Template template = new Template(0, newTransaction.getParticular(),
-									newTransaction.getType(), newTransaction.getAmount());
+									newTransaction.getType(), newTransaction.getAmountText());
 							DatabaseManager.addTemplate(template);
 						}
 						editDisplayedTransaction(transactionNo, newTransaction);
@@ -1201,9 +1165,9 @@ public class TransactionsActivity extends Activity
 			walletDebitDialog.setTitle("Edit Transaction: Expenditure");
 			particularsField.setText(oldTransaction.getParticular());
 			typesList.setSelection(oldExpTypeNo);
-			rateField.setText(formatterTextFields.format(oldTransaction.getRate()));
-			quantityField.setText(formatterTextFields.format(oldTransaction.getQuantity()));
-			amountField.setText(formatterTextFields.format(oldTransaction.getAmount()));
+			rateField.setText(formatterTextFields.format(oldTransaction.getRateText()));
+			quantityField.setText(formatterTextFields.format(oldTransaction.getQuantityText()));
+			amountField.setText(formatterTextFields.format(oldTransaction.getAmountText()));
 			dateField.setText(oldTransaction.getDate().getDisplayDate());
 			
 			walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
@@ -1233,7 +1197,7 @@ public class TransactionsActivity extends Activity
 						if (saveAsTemplate)
 						{
 							Template template = new Template(0, newTransaction.getParticular(),
-									newTransaction.getType(), newTransaction.getRate());
+									newTransaction.getType(), newTransaction.getRateText());
 							DatabaseManager.addTemplate(template);
 						}
 						editDisplayedTransaction(transactionNo, newTransaction);
@@ -1257,7 +1221,7 @@ public class TransactionsActivity extends Activity
 		else if (expType.contains("Bank Credit"))
 		{
 			String oldParticulars = oldTransaction.getParticular();
-			final double oldAmount = oldTransaction.getAmount();
+			final double oldAmount = oldTransaction.getAmountText();
 			buildBankCreditDialog();
 			bankCreditDialog.setTitle("Edit Transaction: Bank Credit");
 			String creditType = creditTypes[0];
@@ -1325,7 +1289,7 @@ public class TransactionsActivity extends Activity
 						if (saveAsTemplate)
 						{
 							Template template = new Template(0, newTransaction.getParticular(),
-									newTransaction.getType(), newTransaction.getAmount());
+									newTransaction.getType(), newTransaction.getAmountText());
 							DatabaseManager.addTemplate(template);
 						}
 						editDisplayedTransaction(transactionNo, newTransaction);
@@ -1350,7 +1314,7 @@ public class TransactionsActivity extends Activity
 		{
 			int oldBankNo = Integer.parseInt(expType.substring(11, 13));  // Bank Debit 01 Withdraw
 			String oldParticulars = oldTransaction.getParticular();
-			final double oldAmount = oldTransaction.getAmount();
+			final double oldAmount = oldTransaction.getAmountText();
 			buildBankDebitDialog();
 			bankDebitDialog.setTitle("Edit Transaction: Bank Debit");
 			String debitType = debitTypes[0];
@@ -1444,7 +1408,7 @@ public class TransactionsActivity extends Activity
 						if (saveAsTemplate)
 						{
 							Template template = new Template(0, newTransaction.getParticular(), newTransaction.getType(),
-									newTransaction.getAmount());
+									newTransaction.getAmountText());
 							DatabaseManager.addTemplate(template);
 						}
 						editDisplayedTransaction(transactionNo, newTransaction);
@@ -1464,10 +1428,11 @@ public class TransactionsActivity extends Activity
 				}
 			});
 			bankDebitDialog.show();
-		}
+
+		}*/
 	}
 	
-	/**
+	/* *
 	 * Checks if the data provided by the user is valid
 	 *
 	 * @param data    An array of String holding all data
@@ -1479,7 +1444,7 @@ public class TransactionsActivity extends Activity
 	 * @param data[5] amount
 	 * @param data[6] date
 	 * @return true if data is valid, else false
-	 */
+	 * /
 	private boolean isValidData(Object[] data)
 	{
 		//int id = Integer.parseInt((String) data[0]);
@@ -1598,9 +1563,9 @@ public class TransactionsActivity extends Activity
 			Toast.makeText(getApplicationContext(), "An Error Has Ocurred in \nDetailsActivity/isValidData()\nWrong Credit/Debit Type", Toast.LENGTH_LONG).show();
 		}
 		return validData;
-	}
+	}*/
 	
-	private Transaction completeData(Object[] data)
+	/*private Transaction completeData(Object[] data)
 	{
 		int id = Integer.parseInt((String) data[0]);
 		Time createdTime = (Time) data[1];
@@ -1693,9 +1658,9 @@ public class TransactionsActivity extends Activity
 		}
 		
 		return transaction;
-	}
+	}*/
 	
-	private ArrayList<String> getTemplateStrings(String type)
+	/*private ArrayList<String> getTemplateStrings(String type)
 	{
 		templates = DatabaseManager.getAllTemplates();
 		ArrayList<String> templateStrings = new ArrayList<String>();
@@ -1718,9 +1683,10 @@ public class TransactionsActivity extends Activity
 		}
 		
 		return templateStrings;
-	}
-	
-	private void displayFilterOptions()
+	}*/
+
+	// TODO: Add Filters
+	/*private void displayFilterOptions()
 	{
 		final ArrayList<String> expTypes = DatabaseManager.getAllExpenditureTypes();
 		
@@ -2029,9 +1995,10 @@ public class TransactionsActivity extends Activity
 		});
 		filterDialogBuilder.setNegativeButton("Cancel", null);
 		filterDialogBuilder.show();
-	}
+	}*/
 
-	private void startSearchTransaction(final String query)
+	// TODO: Implement Quick Search
+	/*private void startSearchTransaction(final String query)
 	{
 		filteredState = true;
 		parentLayout.removeAllViews();
@@ -2087,5 +2054,5 @@ public class TransactionsActivity extends Activity
 			}
 		});
 		searchThread.start();
-	}
+	}*/
 }
