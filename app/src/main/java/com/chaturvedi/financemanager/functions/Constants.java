@@ -3,8 +3,10 @@ package com.chaturvedi.financemanager.functions;
 
 public class Constants
 {
+	public static final int APP_VERSION_107 = 107;
 	public static final int APP_VERSION_111 = 111;
-	public static final int CURRENT_APP_VERSION_NO = 115;
+	public static final int APP_VERSION_124 = 124; // In this version, includeInCounters field was added for transactions
+	public static final int CURRENT_APP_VERSION_NO = 124;
 
 	public static final String ALL_PREFERENCES = "AllPreferences";
 	public static final String KEY_APP_VERSION = "AppVersionNo";

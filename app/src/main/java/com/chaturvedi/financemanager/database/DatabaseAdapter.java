@@ -49,6 +49,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	private static final String KEY_QUANTITY = "quantity";
 	private static final String KEY_AMOUNT = "amount";
 	private static final String KEY_HIDDEN = "hidden";
+	private static final String KEY_INCLUDE_IN_COUNTERS = "include_in_counters";
 	
 	// Banks Table Column Names
 	private static final String KEY_NAME = "name";
@@ -93,7 +94,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			KEY_RATE + " DOUBLE," +
 			KEY_QUANTITY + " DOUBLE," +
 			KEY_AMOUNT + " DOUBLE," +
-			KEY_HIDDEN + " BOOLEAN" + ")";
+			KEY_HIDDEN + " BOOLEAN," +
+			KEY_INCLUDE_IN_COUNTERS + " BOOLEAN" + ")";
 	
 	private static String CREATE_EXPENDITURE_TYPES_TABLE = "CREATE TABLE " + TABLE_EXPENDITURE_TYPES + "(" +
 			KEY_ID + " INTEGER PRIMARY KEY," +
@@ -618,6 +620,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		values.put(KEY_QUANTITY, transaction.getQuantity());
 		values.put(KEY_AMOUNT, transaction.getAmount());
 		values.put(KEY_HIDDEN, transaction.isHidden());
+		values.put(KEY_INCLUDE_IN_COUNTERS, transaction.isIncludeInCounters());
 		
 		// Inserting Row
 		db.insert(TABLE_TRANSACTIONS, null, values);
@@ -641,6 +644,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			values.put(KEY_QUANTITY, transaction.getQuantity());
 			values.put(KEY_AMOUNT, transaction.getAmount());
 			values.put(KEY_HIDDEN, transaction.isHidden());
+			values.put(KEY_INCLUDE_IN_COUNTERS, transaction.isIncludeInCounters());
 			
 			db.insert(TABLE_TRANSACTIONS, null, values);
 		}
@@ -653,13 +657,13 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		Transaction transaction = null;
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.query(TABLE_TRANSACTIONS, new String[]{KEY_ID, KEY_CREATED_TIME, KEY_MODIFIED_TIME, KEY_DATE,
-						KEY_TYPE, KEY_PARTICULARS, KEY_RATE, KEY_QUANTITY, KEY_AMOUNT, KEY_HIDDEN}, KEY_ID + "=?",
-				new String[]{String.valueOf(id)}, null, null, null, null);
+						KEY_TYPE, KEY_PARTICULARS, KEY_RATE, KEY_QUANTITY, KEY_AMOUNT, KEY_HIDDEN, KEY_INCLUDE_IN_COUNTERS},
+				KEY_ID + "=?", new String[]{String.valueOf(id)}, null, null, null, null);
 		if (cursor != null && cursor.moveToFirst())
 		{
 			transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)), new Time(cursor.getString(2)),
 					new Date(cursor.getString(3)), cursor.getString(4), cursor.getString(5), cursor.getDouble(6),
-					cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"));
+					cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"), cursor.getString(10).equals("1"));
 			cursor.close();
 		}
 
@@ -680,7 +684,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)),
 						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), cursor.getString(5),
-						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"));
+						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"),
+						cursor.getString(10).equals("1"));
 				transactionList.add(transaction);
 			}
 			while (cursor.moveToNext());
@@ -703,7 +708,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)),
 						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), cursor.getString(5),
-						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"));
+						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"),
+						cursor.getString(10).equals("1"));
 				transactionList.add(transaction);
 			}
 			while (cursor.moveToNext());
@@ -732,7 +738,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)),
 						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), cursor.getString(5),
-						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"));
+						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"),
+						cursor.getString(10).equals("1"));
 				transactionList.add(transaction);
 			}
 			while (cursor.moveToNext());
@@ -761,7 +768,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)),
 						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), cursor.getString(5),
-						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"));
+						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"),
+						cursor.getString(10).equals("1"));
 				transactionList.add(transaction);
 			}
 			while (cursor.moveToNext());
@@ -862,7 +870,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)),
 						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), cursor.getString(5),
-						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"));
+						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"),
+						cursor.getString(10).equals("1"));
 				transactionList.add(transaction);
 			}
 			while (cursor.moveToNext());
@@ -886,6 +895,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		values.put(KEY_QUANTITY, transaction.getQuantity());
 		values.put(KEY_AMOUNT, transaction.getAmount());
 		values.put(KEY_HIDDEN, transaction.isHidden());
+		values.put(KEY_INCLUDE_IN_COUNTERS, transaction.isIncludeInCounters());
 
 		// updating row
 		db.update(TABLE_TRANSACTIONS, values, KEY_ID + " = ?",

@@ -43,3 +43,11 @@ Bug Fix: In TransactionsActivity, after adding a transaction, if that transactio
 4.2.3 (123)
  - .gitignore generated from .gitignore plugin. Now, only recommended files are ignored. 
  - Some files which were wrongly removed in v4.2.1 added back to GIT
+
+4.3.0 (124)
+ - Option to include or exclude the transaction in counters added
+ - Bug Fix: While displaying templates (auto-complete) for Transfer Transactions, Income Templates were retrived. Fixed.
+ - Bug Fix: When opening TransactionsActivity, if the number of transactions to be shown is less than 50
+ - Removed unused commented code in DatabaseManager.java
+ - Old Backup reader methods in RestoreManager.java, which were not used and commented have been removed
+ - WalletSetupFragment.java class, which is not used anymore has been removed

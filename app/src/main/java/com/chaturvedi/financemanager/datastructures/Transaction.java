@@ -19,8 +19,9 @@ public class Transaction implements Parcelable
 	private double quantity;
 	private double amount;
 	private boolean hidden;
-
-	public Transaction(int id, Time createdTime, Time modifiedTime, Date date, String type, String particular, double rate, double quantity, double amount, boolean hidden)
+	private boolean includeInCounters;
+	
+	public Transaction(int id, Time createdTime, Time modifiedTime, Date date, String type, String particular, double rate, double quantity, double amount, boolean hidden, boolean includeInCounters)
 	{
 		this.id = id;
 		this.createdTime = createdTime;
@@ -32,25 +33,12 @@ public class Transaction implements Parcelable
 		this.quantity = quantity;
 		this.amount = amount;
 		this.hidden = hidden;
+		this.includeInCounters = includeInCounters;
 	}
-	
-	/*// Constructor
-	public Transaction(String id, Time createdTime, Time modifiedTime, Date date, String type, String particular, String rate, String quantity, String amount)
-	{
-		this.setID(Integer.parseInt(id));
-		this.setCreatedTime(createdTime);
-		this.setModifiedTime(modifiedTime);
-		this.setDate(date);
-		this.setType(type);
-		this.setParticular(particular);
-		this.setRate(Double.parseDouble(rate));
-		this.setQuantity(Double.parseDouble(quantity));
-		this.setAmount(Double.parseDouble(amount));
-	}*/
 
 	// Constructor
 	public Transaction(String id, String createdTime, String modifiedTime, String date, String type, String particular,
-					   String rate, String quantity, String amount, String hidden)
+					   String rate, String quantity, String amount, String hidden, String includeInCounters)
 	{
 		this.setID(Integer.parseInt(id));
 		this.setCreatedTime(new Time(createdTime));
@@ -62,6 +50,7 @@ public class Transaction implements Parcelable
 		this.setQuantity(Double.parseDouble(quantity));
 		this.setAmount(Double.parseDouble(amount));
 		this.hidden = Boolean.parseBoolean(hidden);
+		this.includeInCounters = Boolean.parseBoolean(includeInCounters);
 	}
 
 	/**
@@ -81,6 +70,7 @@ public class Transaction implements Parcelable
 		this.quantity = transaction.quantity;
 		this.amount = transaction.amount;
 		this.hidden = transaction.hidden;
+		this.includeInCounters = transaction.includeInCounters;
 	}
 
 	/**
@@ -275,7 +265,17 @@ public class Transaction implements Parcelable
 	{
 		return hidden;
 	}
-
+	
+	public void setIncludeInCounters(boolean includeInCounters)
+	{
+		this.includeInCounters = includeInCounters;
+	}
+	
+	public boolean isIncludeInCounters()
+	{
+		return includeInCounters;
+	}
+	
 	/**
 	 * Checks if the passed transaction is equal to this transaction except Modified Time, Particulars and Hidden
 	 * This is used while editing a transaction. If these are the only changes, only transaction needs to be updated and
@@ -318,6 +318,14 @@ public class Transaction implements Parcelable
 		{
 			return false;
 		}
+		if(hidden != transaction2.hidden)
+		{
+			return false;
+		}
+		if(includeInCounters != transaction2.includeInCounters)
+		{
+			return false;
+		}
 
 		return true;
 	}
@@ -330,7 +338,7 @@ public class Transaction implements Parcelable
 	// Parcelable Part
 	public Transaction(Parcel in)
 	{
-		String[] data = new String[10];
+		String[] data = new String[11];
 		in.readStringArray(data);
 		id = Integer.parseInt(data[0]);
 		createdTime = new Time(data[1]);
@@ -342,6 +350,7 @@ public class Transaction implements Parcelable
 		quantity = Double.parseDouble(data[7]);
 		amount = Double.parseDouble(data[8]);
 		hidden = Boolean.parseBoolean(data[9]);
+		includeInCounters = Boolean.parseBoolean(data[10]);
 	}
 
 	@Override
@@ -354,17 +363,9 @@ public class Transaction implements Parcelable
 	public void writeToParcel(Parcel dest, int flags)
 	{
 		String[] data = {String.valueOf(id), createdTime.toString(), modifiedTime.toString(), date.getSavableDate(), type,
-				particular, String.valueOf(rate), String.valueOf(quantity), String.valueOf(amount), String.valueOf(hidden)};
+				particular, String.valueOf(rate), String.valueOf(quantity), String.valueOf(amount), String.valueOf(hidden),
+				String.valueOf(includeInCounters)};
 		dest.writeStringArray(data);
-		/*
-		dest.writeInt(id);
-		dest.writeString(type);
-		dest.writeString(particular);
-		dest.writeDouble(rate);
-		dest.writeDouble(quantity);
-		dest.writeDouble(amount);
-		dest.writeByte((byte) (hidden ? 1 : 0));
-		*/
 	}
 
 	public static final Parcelable.Creator<Transaction> CREATOR = new Parcelable.Creator<Transaction>()

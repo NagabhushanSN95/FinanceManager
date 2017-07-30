@@ -64,7 +64,7 @@ public class AddTransactionActivity extends Activity
 
 		transactionTypeSpinner = (Spinner) findViewById(R.id.spinner_transactionType);
 		transactionTypeSpinnerPosition = 0;
-		String[] transactionTypes = {"Income", "Expense", "Transfer"};
+		String[] transactionTypes = {Constants.TRANSACTION_INCOME, Constants.TRANSACTION_EXPENSE, Constants.TRANSACTION_TRANSFER};
 		transactionTypeSpinner.setAdapter(new ArrayAdapter<String>(AddTransactionActivity.this,
 				android.R.layout.simple_spinner_item, transactionTypes));
 		transactionTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
@@ -125,7 +125,6 @@ public class AddTransactionActivity extends Activity
 						expenseLayout.setData(oldTransaction);
 					}
 				}, 300);
-				//expenseLayout.setData(oldTransaction);
 			}
 			else if(oldTransaction.getType().contains("Transfer"))
 			{
@@ -138,7 +137,6 @@ public class AddTransactionActivity extends Activity
 						transferLayout.setData(oldTransaction);
 					}
 				}, 300);
-				//transferLayout.setData(oldTransaction);
 			}
 			else
 			{
@@ -216,7 +214,7 @@ public class AddTransactionActivity extends Activity
 
 		int position;
 		String particulars, rate, quantity, amount, date;
-		boolean addTemplate;
+		boolean addTemplate, includeInCounters;
 		
 		switch (previousPosition)
 		{
@@ -227,16 +225,17 @@ public class AddTransactionActivity extends Activity
 				amount = incomeLayout.getAmountText();
 				date = incomeLayout.getDate();
 				addTemplate = incomeLayout.isAddTemplateSelected();
+				includeInCounters = incomeLayout.isIncludeInCounters();
 
 				position = incomeLayout.getIncomeDestinationPosition();
 				switch (currentPosition)
 				{
 					case 1:
-						expenseLayout.setData(position,particulars,rate,quantity,amount,date,addTemplate);
+						expenseLayout.setData(position, particulars, rate, quantity, amount, date, addTemplate, includeInCounters);
 						break;
 
 					case 2:
-						transferLayout.setData(-1,position,particulars,rate,quantity,amount,date,addTemplate);
+						transferLayout.setData(-1,position,particulars,rate,quantity,amount,date,addTemplate, includeInCounters);
 						break;
 				}
 				break;
@@ -248,16 +247,19 @@ public class AddTransactionActivity extends Activity
 				amount = expenseLayout.getAmountText();
 				date = expenseLayout.getDate();
 				addTemplate = expenseLayout.isAddTemplateSelected();
+				includeInCounters = expenseLayout.isIncludeInCounters();
 
 				position = expenseLayout.getExpenseSourcePosition();
 				switch (currentPosition)
 				{
 					case 0:
-						incomeLayout.setData(position,particulars,rate,quantity,amount,date,addTemplate);
+						incomeLayout.setData(position, particulars, rate, quantity, amount, date,
+								addTemplate, includeInCounters);
 						break;
 
 					case 2:
-						transferLayout.setData(position,-1,particulars,rate,quantity,amount,date,addTemplate);
+						transferLayout.setData(position, -1, particulars, rate, quantity, amount,
+								date, addTemplate, includeInCounters);
 						break;
 				}
 				break;
@@ -269,17 +271,20 @@ public class AddTransactionActivity extends Activity
 				amount = transferLayout.getAmountText();
 				date = transferLayout.getDate();
 				addTemplate = transferLayout.isAddTemplateSelected();
+				includeInCounters = transferLayout.isIncludeInCounters();
 
 				switch (currentPosition)
 				{
 					case 0:
 						int destinationPosition = transferLayout.getTransferDestinationPosition();
-						incomeLayout.setData(destinationPosition,particulars,rate,quantity,amount,date,addTemplate);
+						incomeLayout.setData(destinationPosition, particulars, rate, quantity,
+								amount, date, addTemplate, includeInCounters);
 						break;
 
 					case 1:
 						int sourcePosition = transferLayout.getTransferSourcePosition();
-						expenseLayout.setData(sourcePosition,particulars,rate,quantity,amount,date,addTemplate);
+						expenseLayout.setData(sourcePosition, particulars, rate, quantity, amount,
+								date, addTemplate, includeInCounters);
 						break;
 				}
 				break;

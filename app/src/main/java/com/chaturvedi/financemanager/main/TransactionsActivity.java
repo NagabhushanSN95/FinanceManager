@@ -345,7 +345,6 @@ public class TransactionsActivity extends Activity
 		numTransactionsToRetrieve = Math.max(numTransactionsToRetrieve, minNumTransactions);
 
 		int offset = 0;
-		Log.d("SNB", "CP01: " + numTransactionsToRetrieve);
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
 		transactions = databaseAdapter.getTransactions(transactionsDisplayIntervalMonthYear,
 				transactionsDisplayIntervalStartDate, transactionsDisplayIntervalEndDate, allowedTransactionTypes, searchKeyword,
@@ -354,7 +353,10 @@ public class TransactionsActivity extends Activity
 		if (transactions.size() < numTransactionsToRetrieve)
 		{
 			// This implies, there are no more transactions to show. Hence, remove the button
-			showMoreButton.setVisibility(View.GONE);
+			if (showMoreButton != null)
+			{
+				showMoreButton.setVisibility(View.GONE);
+			}
 		}
 		else
 		{
@@ -362,35 +364,13 @@ public class TransactionsActivity extends Activity
 			{
 				showMoreButton.setVisibility(View.VISIBLE);
 			}
-
 		}
-		Log.d("SNB", "CP02: " + transactions.size());
-		/*DecimalFormat formatter = new DecimalFormat("00");
-		if (transactionsDisplayInterval.equals("Month"))
-		{
-			Calendar calendar = Calendar.getInstance();
-			int year = calendar.get(Calendar.YEAR);
-			int month = calendar.get(Calendar.MONTH) + 1;
-			String currentMonth = String.valueOf(year) + "/" + formatter.format(month);
-			transactions = databaseAdapter.getMonthlyVisibleTransactions(currentMonth);
-		}
-		else if (transactionsDisplayInterval.equals("Year"))
-		{
-			Calendar calendar = Calendar.getInstance();
-			int year = calendar.get(Calendar.YEAR);
-			transactions = databaseAdapter.getYearlyVisibleTransactions(String.valueOf(year));
-		}
-		else
-		{
-			transactions = databaseAdapter.getAllVisibleTransactions();
-		}*/
 	}
 
 	private ArrayList<Transaction> getMoreTransactionsToDisplay()
 	{
 		int numTransactionsToRetrieve = Constants.MIN_TRANSACTIONS_TO_DISPLAY;
 		int offset = parentLayout.getChildCount();
-		Log.d("SNB", "CP03: " + numTransactionsToRetrieve);
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
 		ArrayList<Transaction> newTransactions = databaseAdapter.getTransactions(transactionsDisplayIntervalMonthYear,
 				transactionsDisplayIntervalStartDate, transactionsDisplayIntervalEndDate, allowedTransactionTypes, searchKeyword,
@@ -402,7 +382,6 @@ public class TransactionsActivity extends Activity
 			// This implies, there are no more transactions to show. Hence, remove the button
 			showMoreButton.setVisibility(View.GONE);
 		}
-		Log.d("SNB", "CP04: " + transactions.size());
 		return newTransactions;
 	}
 	
@@ -1584,7 +1563,6 @@ public class TransactionsActivity extends Activity
 
 		// Send current filter state
 		filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE, transactionsDisplayIntervalType);
-		Log.d("SNB", "CP05: " + transactionsDisplayIntervalType);
 		if (transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
 		{
 			filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE_MONTH, transactionsDisplayIntervalMonthYear);

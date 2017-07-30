@@ -42,6 +42,7 @@ public class TransferLayout extends RelativeLayout
 	private EditText amountEditText;
 	private EditText dateEditText;
 	private CheckBox addTemplateCheckBox;
+	private CheckBox includeInCountersCheckBox;
 
 	public TransferLayout(Context context)
 	{
@@ -113,9 +114,10 @@ public class TransferLayout extends RelativeLayout
 			}
 		});
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
+		includeInCountersCheckBox = (CheckBox) findViewById(R.id.checkBox_includeInCounters);
 
 		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(getContext(),
-				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleCreditTemplatesNames());
+				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleTransferTemplatesNames());
 		particularsEditText.setAdapter(templatesAdapter);
 		particularsEditText.setThreshold(1);
 		particularsEditText.setDropDownWidth(-1);	// To set drop down width to Match Parent
@@ -180,10 +182,11 @@ public class TransferLayout extends RelativeLayout
 		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
 		amountEditText.setText(String.valueOf(transaction.getAmount()));
 		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate()));
+		includeInCountersCheckBox.setChecked(transaction.isIncludeInCounters());
 	}
 
 	public void setData(int transferSourceNo, int transferDestinationNo, String particulars, String rateText, String quantityText,
-						String amountText, String date, boolean addTemplate)
+						String amountText, String date, boolean addTemplate, boolean includeInCounters)
 	{
 		if(transferSourceNo != -1)
 		{
@@ -199,6 +202,7 @@ public class TransferLayout extends RelativeLayout
 		amountEditText.setText(amountText);
 		dateEditText.setText(date);
 		addTemplateCheckBox.setSelected(addTemplate);
+		includeInCountersCheckBox.setChecked(includeInCounters);
 	}
 
 	public void setData(String transferType, int bankID, double amount)
@@ -312,9 +316,10 @@ public class TransferLayout extends RelativeLayout
 		Calendar now = Calendar.getInstance();
 		Time createdTime = new Time(now);
 		Time modifiedTime = new Time(now);
+		boolean includeInCounters = includeInCountersCheckBox.isChecked();
 
 		Transaction transaction = new Transaction(id, createdTime, modifiedTime, date, code, particulars, rate, quantity, amount,
-				false);
+				false, includeInCounters);
 //		addTransaction(transaction);
 
 		if(addTemplateCheckBox.isChecked())
@@ -365,6 +370,11 @@ public class TransferLayout extends RelativeLayout
 
 	public boolean isAddTemplateSelected()
 	{
-		return addTemplateCheckBox.isSelected();
+		return addTemplateCheckBox.isChecked();
+	}
+	
+	public boolean isIncludeInCounters()
+	{
+		return includeInCountersCheckBox.isChecked();
 	}
 }

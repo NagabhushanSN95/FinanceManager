@@ -138,6 +138,7 @@ public class BackupManager
 				backupWriter.write(transaction.getQuantity() + "\n");
 				backupWriter.write(transaction.getAmount() + "\n");
 				backupWriter.write(transaction.isHidden() + "\n");
+				backupWriter.write(transaction.isIncludeInCounters() + "\n");
 				backupWriter.write("\n");
 			}
 

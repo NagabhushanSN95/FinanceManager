@@ -32,6 +32,7 @@ import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.setup.StartupActivity;
 import com.chaturvedi.financemanager.updates.Update107To110;
 import com.chaturvedi.financemanager.updates.Update110To111;
+import com.chaturvedi.financemanager.updates.Update111to124;
 import com.chaturvedi.financemanager.updates.Update68To88;
 import com.chaturvedi.financemanager.updates.Update88To89;
 import com.chaturvedi.financemanager.updates.Update89To96;
@@ -171,6 +172,11 @@ public class SplashActivity extends Activity
 			{
 				new Update110To111(SplashActivity.this);
 			}
+			if (previousVersionNo < Constants.APP_VERSION_124)
+			{
+				new Update111to124(SplashActivity.this);
+			}
+			
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.commit();
 		}
