@@ -1,6 +1,7 @@
 package com.chaturvedi.expenditurelist.database;
 
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.widget.Toast;
@@ -1097,6 +1098,289 @@ public class DatabaseManager
 				return i;
 		}
 		return 0;
+	}
+	
+	/**
+	 * Adds a Transaction to the Database
+	 * @param data An array of String holding all data
+	 * @param data[0] credit/debit
+	 * @param data[1] particulars
+	 * @param data[2] type
+	 * @param data[3] rate
+	 * @param data[4] quantity
+	 * @param data[5] amount
+	 * @param data[6] date
+	 */
+	public static void addTransaction(String[] data)
+	{
+		String particulars = data[1];
+		String type = data[2];
+		String rate = data[3];
+		//Toast.makeText(context, "Rate: "+rate, Toast.LENGTH_SHORT).show();
+		String quantity = data[4];
+		String amount = data[5];
+		String date = data[6];
+		
+		if(data[0].equalsIgnoreCase("Wallet Credit"))
+		{
+			DatabaseManager.increamentNumTransations();
+			DatabaseManager.increamentWalletBalance(amount);
+			DatabaseManager.increamentIncome(amount);
+			DatabaseManager.addDate(date);
+			DatabaseManager.addType("Income");
+			DatabaseManager.addParticular(particulars);
+			DatabaseManager.addRate(amount);
+			DatabaseManager.addQuantity(1);
+			DatabaseManager.addAmount(amount);
+		}
+		else if(data[0].equals("Wallet Debit"))
+		{
+			int expTypeNo = Integer.parseInt(type);
+			
+			// Add the Transaction
+			DatabaseManager.increamentNumTransations();
+			DatabaseManager.decreamentWalletBalance(amount);
+			DatabaseManager.increamentAmountSpent(amount);
+			DatabaseManager.addDate(date);
+			DatabaseManager.addType(expTypeNo);
+			DatabaseManager.addParticular(particulars);
+			DatabaseManager.addRate(rate);
+			DatabaseManager.addQuantity(quantity);
+			DatabaseManager.addAmount(amount);
+			DatabaseManager.increamentCounter(expTypeNo, amount);
+		}
+		else if(data[0].equalsIgnoreCase("Bank Credit"))
+		{
+			// Calculate Blank Fields
+			// BankNo and creditTypesNo both will be sent in types in the form bankNo/creditTypesNo like 2/1
+			String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
+			StringTokenizer tokens = new StringTokenizer(type,"/");
+			int bankNo = Integer.parseInt(tokens.nextToken());
+			int creditTypesNo = Integer.parseInt(tokens.nextToken());
+			
+			if(creditTypesNo==0)
+			{
+				type = "Income Bank";
+				DatabaseManager.increamentIncome(amount);
+			}
+			else if(creditTypesNo==1)
+			{
+				type = "Bank Savings";
+				DatabaseManager.decreamentWalletBalance(amount);
+			}
+			DatabaseManager.increamentBankBalance(bankNo, amount);
+			DatabaseManager.increamentNumTransations();
+			DatabaseManager.addDate(date);
+			DatabaseManager.addType(type);
+			DatabaseManager.addParticular(particulars);
+			DatabaseManager.addRate(amount);
+			DatabaseManager.addQuantity(1);
+			DatabaseManager.addAmount(amount);
+		}
+		else if(data[0].equalsIgnoreCase("Bank Debit"))
+		{
+			// Calculate Blank Fields
+			// BankNo and debitTypesNo both will be sent in types in the form bankNo/debitTypesNo like 2/1
+			String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
+			StringTokenizer tokens = new StringTokenizer(type,"/");
+			int bankNo = Integer.parseInt(tokens.nextToken());
+			int debitTypesNo = Integer.parseInt(tokens.nextToken());
+			
+			if(debitTypesNo==0)
+			{
+				type = "Bank Withdraw";
+				DatabaseManager.increamentWalletBalance(amount);
+			}
+			else if(debitTypesNo==1)
+			{
+				// In this case expTypeNo is concatenated with data[2]
+				int expTypeNo = Integer.parseInt(tokens.nextToken());
+				type = DatabaseManager.getExpenditureTypes().get(expTypeNo) + " Bank";
+				DatabaseManager.increamentAmountSpent(amount);
+				DatabaseManager.increamentCounter(expTypeNo, amount);
+			}
+			
+			DatabaseManager.decreamentBankBalance(bankNo, amount);
+			DatabaseManager.increamentNumTransations();
+			DatabaseManager.addDate(date);
+			DatabaseManager.addType(type);
+			DatabaseManager.addParticular(particulars);
+			DatabaseManager.addRate(amount);
+			DatabaseManager.addQuantity(1);
+			DatabaseManager.addAmount(amount);
+		}
+	}
+	
+	/**
+	 * Edits an existing transaction
+	 * @param transactionNo Number of the transaction
+	 * @param data New data for the transaction
+	 */
+	public static void editTransaction(int transactionNo, String[] data)
+	{
+		String oldParticulars = DatabaseManager.getParticular(transactionNo);
+		String oldType = DatabaseManager.getType(transactionNo);
+		double oldRate = DatabaseManager.getRate(transactionNo);
+		int oldQuantity = DatabaseManager.getQuantity(transactionNo);
+		double oldAmount = DatabaseManager.getAmount(transactionNo);
+		String oldDate = DatabaseManager.getDate(transactionNo);
+		
+		String newParticulars = data[1];
+		String newType = data[2];
+		double newRate = Double.parseDouble(data[3]);
+		int newQuantity = Integer.parseInt(data[4]);
+		double newAmount = Double.parseDouble(data[5]);
+		String newDate = data[6];
+		
+		if(data[0].equalsIgnoreCase("Wallet Credit"))
+		{
+			DatabaseManager.setParticular(transactionNo, newParticulars);
+			DatabaseManager.setDate(transactionNo, newDate);
+			double netAmount = newAmount-oldAmount;
+			if(newAmount!=DatabaseManager.getAmount(transactionNo))
+			{
+				DatabaseManager.increamentIncome(netAmount);
+				DatabaseManager.increamentWalletBalance(netAmount);
+				DatabaseManager.setRate(transactionNo, newAmount);
+				DatabaseManager.setAmount(transactionNo, newAmount);
+			}
+		}
+		else if(data[0].equalsIgnoreCase("Wallet Debit"))
+		{
+			int oldExpTypeNo = DatabaseManager.getExpenditureTypes().indexOf(oldType);
+			int newExpTypeNo = Integer.parseInt(newType);
+			if(newExpTypeNo!=oldExpTypeNo || newAmount!=oldAmount)
+			{
+				double netAmount = newAmount - oldAmount;
+				DatabaseManager.decreamentCounter(oldExpTypeNo, oldAmount);
+				DatabaseManager.increamentCounter(newExpTypeNo, newAmount);
+				DatabaseManager.increamentAmountSpent(netAmount);
+				DatabaseManager.decreamentWalletBalance(netAmount);
+			}
+			DatabaseManager.setParticular(transactionNo, newParticulars);
+			DatabaseManager.setType(transactionNo, newExpTypeNo);
+			DatabaseManager.setRate(transactionNo, newRate);
+			DatabaseManager.setQuantity(transactionNo, newQuantity);
+			DatabaseManager.setAmount(transactionNo, newAmount);
+			DatabaseManager.setDate(transactionNo, newDate);
+		}
+		else if(data[0].equalsIgnoreCase("Bank Credit"))
+		{
+			// Determine Which Bank was previous Transaction
+			int oldBankNo=0;
+			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+			{
+				if(oldParticulars.contains(DatabaseManager.getBankName(i)))
+				{
+					oldBankNo = i;
+					break;
+				}
+			}
+			// Determine what type was previous Transaction and undo it.
+			int oldCreditsTypeNo;
+			if(oldType.equalsIgnoreCase("Income Bank"))
+			{
+				oldCreditsTypeNo = 0;
+				DatabaseManager.decreamentBankBalance(oldBankNo, oldAmount);
+				DatabaseManager.decreamentIncome(oldAmount);
+			}
+			else if(oldType.equalsIgnoreCase("Bank Savings"))
+			{
+				oldCreditsTypeNo = 1;
+				DatabaseManager.decreamentBankBalance(oldBankNo, oldAmount);
+				DatabaseManager.increamentWalletBalance(oldAmount);
+			}
+			
+			// BankNo and creditTypesNo both will be sent in types in the form bankNo/creditTypesNo like 2/1
+			String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
+			StringTokenizer tokens = new StringTokenizer(newType,"/");
+			int newBankNo = Integer.parseInt(tokens.nextToken());
+			int newCreditTypesNo = Integer.parseInt(tokens.nextToken());
+			
+			// Make the transaction
+			if(newCreditTypesNo==0)
+			{
+				newType = "Income Bank";
+				DatabaseManager.increamentIncome(newAmount);
+			}
+			else if(newCreditTypesNo==1)
+			{
+				newType = "Bank Savings";
+				DatabaseManager.decreamentWalletBalance(newAmount);
+			}
+			DatabaseManager.increamentBankBalance(newBankNo, newAmount);
+			DatabaseManager.setParticular(transactionNo, newParticulars);
+			DatabaseManager.setType(transactionNo, newType);
+			DatabaseManager.setRate(transactionNo, newAmount);
+			DatabaseManager.setQuantity(transactionNo, 1);
+			DatabaseManager.setAmount(transactionNo, newAmount);
+			DatabaseManager.setDate(transactionNo, newDate);
+		}
+		else if(data[0].equalsIgnoreCase("Bank Debit"))
+		{
+			// Determine Which Bank
+			int oldBankNo=0;
+			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+			{
+				if(oldParticulars.contains(DatabaseManager.getBankName(i)))
+				{
+					oldBankNo = i;
+					break;
+				}
+			}
+			// Determine what type was previous Transaction and undo it.
+			int oldDebitsTypeNo, oldExpTypeNo;
+			if(oldType.equals("Bank Withdraw"))
+			{
+				oldDebitsTypeNo = 0;
+				DatabaseManager.increamentBankBalance(oldBankNo, oldAmount);
+				DatabaseManager.decreamentWalletBalance(oldAmount);
+			}
+			else if(oldType.contains("Bank")) // Bank Expenditure
+			{
+				oldDebitsTypeNo = 1;
+				for(int i=0; i<5; i++)
+				{
+					if(oldType.equals(DatabaseManager.getExpenditureTypes().get(i) + " Bank"))
+					{
+						 oldExpTypeNo = i;
+						 DatabaseManager.decreamentCounter(oldExpTypeNo, oldAmount);
+					}
+				}
+				DatabaseManager.increamentBankBalance(oldBankNo, oldAmount);
+				DatabaseManager.decreamentAmountSpent(oldAmount);
+			}
+			
+			// Make the Transaction
+			// Calculate Blank Fields
+			// BankNo and debitTypesNo both will be sent in types in the form bankNo/debitTypesNo like 2/1
+			String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
+			StringTokenizer tokens = new StringTokenizer(newType,"/");
+			int bankNo = Integer.parseInt(tokens.nextToken());
+			int debitTypesNo = Integer.parseInt(tokens.nextToken());
+			
+			if(debitTypesNo==0)
+			{
+				newType = "Bank Withdraw";
+				DatabaseManager.increamentWalletBalance(newAmount);
+				DatabaseManager.decreamentBankBalance(bankNo, newAmount);
+			}
+			else if(debitTypesNo==1)
+			{
+				// In this case expTypeNo is concatenated with data[2]
+				int expTypeNo = Integer.parseInt(tokens.nextToken());
+				newType = DatabaseManager.getExpenditureTypes().get(expTypeNo) + " Bank";
+				DatabaseManager.increamentAmountSpent(newAmount);
+				DatabaseManager.increamentCounter(expTypeNo, newAmount);
+				DatabaseManager.decreamentBankBalance(bankNo, newAmount);
+			}
+			DatabaseManager.setParticular(transactionNo, newParticulars);
+			DatabaseManager.setType(transactionNo, newType);
+			DatabaseManager.setRate(transactionNo, newAmount);
+			DatabaseManager.setQuantity(transactionNo, 1);
+			DatabaseManager.setAmount(transactionNo, newAmount);
+			DatabaseManager.setDate(transactionNo, newDate);
+		}
 	}
 	
 	public static void addBank(String bankName, String bankAccNo, String bankBalance, String bankSmsName)

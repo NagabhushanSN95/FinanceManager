@@ -39,6 +39,12 @@
         android:layout_below="@+id/action_bar"
         android:layout_centerHorizontal="true"
         android:text="@string/krishna" />
+    
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_below="@+id/krishna"
+        android:background="#000000" />
 
     <ScrollView
         android:id="@+id/details_scroll"
