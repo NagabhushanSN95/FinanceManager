@@ -19,6 +19,7 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -43,6 +44,7 @@ public class DetailsActivity extends Activity
 	
 	private RelativeLayout titleLayout;
 	private ArrayList<RelativeLayout> itemsLayout;
+	private LinearLayout scrollLayout;
 	
 	private TextView slnoTitleView;
 	private TextView particularsTitleView;
@@ -251,6 +253,8 @@ public class DetailsActivity extends Activity
 	{
 		try
 		{
+			scrollLayout=(LinearLayout)findViewById(R.id.scroll_layout);
+			
 			itemsLayout=new ArrayList<RelativeLayout>();
 			itemsView=new ArrayList<ArrayList<TextView>>();
 			itemsLayoutParams=new ArrayList<ArrayList<RelativeLayout.LayoutParams>>();
@@ -270,14 +274,14 @@ public class DetailsActivity extends Activity
 				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
 				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
 				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, MARGIN_TOP+20+(20*i), 30, 30);
-				itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, MARGIN_TOP+20+(20*i), 30, 30);
-				itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, MARGIN_TOP+20+(20*i), 30, 30);
+				itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, 20, 30, 30);
+				itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, 20, 30, 30);
+				itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, 20, 30, 30);
 				
 				itemsLayout.get(i).addView(itemsView.get(i).get(0), itemsLayoutParams.get(i).get(0));
 				itemsLayout.get(i).addView(itemsView.get(i).get(1), itemsLayoutParams.get(i).get(1));
 				itemsLayout.get(i).addView(itemsView.get(i).get(2), itemsLayoutParams.get(i).get(2));
-				this.addContentView(itemsLayout.get(i), titleLayoutParams);
+				scrollLayout.addView(itemsLayout.get(i), titleLayoutParams);
 			}
 		}
 		catch(Exception e)
@@ -291,8 +295,10 @@ public class DetailsActivity extends Activity
 	{
 		debitButton=(Button)findViewById(R.id.button_debit);
 		debitButton.setOnClickListener(new DebitListener());
+		debitButton.bringToFront();
 		creditButton=(Button)findViewById(R.id.button_atm_withdrawal);
 		creditButton.setOnClickListener(new CreditListener());
+		creditButton.bringToFront();
 	}
 	
 	private void buildExpenditureDialog()

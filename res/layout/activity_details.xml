@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-    
+
     <RelativeLayout
         android:id="@+id/relativeLayout1"
         android:layout_width="match_parent"
@@ -29,7 +29,6 @@
             android:text="@string/title_details"
             android:textColor="#FFFFFF"
             android:textSize="20sp" />
-
     </RelativeLayout>
 
     <TextView
@@ -40,14 +39,33 @@
         android:layout_centerHorizontal="true"
         android:text="@string/krishna" />
 
+    <ScrollView
+        android:id="@+id/details_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/krishna"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="60dp"
+        android:layout_marginBottom="70dp" >
+
+        <LinearLayout
+            android:id="@+id/scroll_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+        </LinearLayout>
+    </ScrollView>
+
     <LinearLayout
+        android:id="@+id/button_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
+        android:layout_marginBottom="10dp"
         android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="10dp" >
+        android:layout_marginRight="10dp" >
 
         <Button
             android:id="@+id/button_debit"
@@ -61,7 +79,6 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:text="@string/credit" />
-
     </LinearLayout>
-    
+
 </RelativeLayout>
