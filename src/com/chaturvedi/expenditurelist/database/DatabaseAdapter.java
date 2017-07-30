@@ -36,6 +36,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		
 		// Banks Table Column Names
 		private static final String KEY_NAME="name";
+		private static final String KEY_ACC_NO="account_number";
 		private static final String KEY_BALANCE="balance";
 		private static final String KEY_SMS_NAME="sms_name";
 		
@@ -55,6 +56,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		private static String CREATE_BANKS_TABLE = "CREATE TABLE " + TABLE_BANKS + "("+ 
 				KEY_ID + " INTEGER PRIMARY KEY," + 
 				KEY_NAME + " TEXT," + 
+				KEY_ACC_NO + " INTEGER," + 
 				KEY_BALANCE + " DOUBLE," +
 				KEY_SMS_NAME + " TEXT" + ")";
 		
@@ -237,6 +239,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			
 			ContentValues values = new ContentValues();
 			values.put(KEY_NAME, bank.getName());
+			values.put(KEY_ACC_NO, bank.getAccNo());
 			values.put(KEY_BALANCE, bank.getBalance());
 			values.put(KEY_SMS_NAME, bank.getSmsName());
 			
@@ -255,6 +258,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				ContentValues values = new ContentValues();
 				values.put(KEY_ID, i);
 				values.put(KEY_NAME, bank.getName());
+				values.put(KEY_ACC_NO, bank.getAccNo());
 				values.put(KEY_BALANCE, bank.getBalance());
 				values.put(KEY_SMS_NAME, bank.getSmsName());
 				
@@ -266,12 +270,12 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		public Bank getBank(int id)
 		{
 			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_BANKS, new String[] { KEY_ID, KEY_NAME, KEY_BALANCE, KEY_SMS_NAME }
+			Cursor cursor = db.query(TABLE_BANKS, new String[] { KEY_ID, KEY_NAME, KEY_ACC_NO, KEY_BALANCE, KEY_SMS_NAME }
 					, KEY_ID + "=?", new String[] { String.valueOf(id) }, null, null, null, null);
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+			Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
 			Toast.makeText(context, bank.toString(), Toast.LENGTH_LONG).show();
 			db.close();
 			return bank;
@@ -287,7 +291,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				do
 				{
-					Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+					Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
 					bankList.add(bank);
 				}
 				while (cursor.moveToNext());
@@ -301,6 +305,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			SQLiteDatabase db = this.getWritableDatabase();
 			ContentValues values = new ContentValues();
 			values.put(KEY_NAME, bank.getName());
+			values.put(KEY_ACC_NO, bank.getAccNo());
 			values.put(KEY_BALANCE, bank.getBalance());
 			values.put(KEY_SMS_NAME, bank.getSmsName());
 			db.update(TABLE_BANKS, values, KEY_ID + " = ?", new String[] { String.valueOf(bank.getID()) });

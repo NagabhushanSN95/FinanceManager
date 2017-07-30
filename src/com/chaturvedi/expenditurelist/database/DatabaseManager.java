@@ -3,7 +3,6 @@ package com.chaturvedi.expenditurelist.database;
 import java.util.ArrayList;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.Toast;
 
 
@@ -20,6 +19,7 @@ public class DatabaseManager
 	private static double income;
 	
 	private static ArrayList<String> bankNames;
+	private static ArrayList<Integer> bankAccNos;
 	private static ArrayList<Double> bankBalances;
 	private static ArrayList<String> bankSmsNames;
 	
@@ -78,12 +78,14 @@ public class DatabaseManager
 			if(numBanks>0)
 			{
 				bankNames = new ArrayList<String>();
+				bankAccNos = new ArrayList<Integer>();
 				bankBalances = new ArrayList<Double>();
 				bankSmsNames = new ArrayList<String>();
 				ArrayList<Bank> banks = databaseAdapter.getAllBanks();
 				for(Bank bank:banks)
 				{
 					bankNames.add(bank.getName());
+					bankAccNos.add(bank.getAccNo());
 					bankBalances.add(bank.getBalance());
 					bankSmsNames.add(bank.getSmsName());
 				}
@@ -120,7 +122,7 @@ public class DatabaseManager
 		}
 		catch(Exception e)
 		{
-			//Toast.makeText(context, "Error In Reading Database\n"+e.getMessage(), Toast.LENGTH_LONG).show();
+			Toast.makeText(context, "Error In Reading Database\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 		
 		/*DatabaseManager.numBanks = databaseAdapter.getNumBanks();
@@ -171,7 +173,7 @@ public class DatabaseManager
 				ArrayList<Bank> banks = new ArrayList<Bank>();
 				for(int i=0; i<numBanks; i++)
 				{
-					Bank bank = new Bank(i, bankNames.get(i), bankBalances.get(i), bankSmsNames.get(i));
+					Bank bank = new Bank(i, bankNames.get(i), bankAccNos.get(i), bankBalances.get(i), bankSmsNames.get(i));
 					banks.add(bank);
 				}
 				databaseAdapter.addAllBanks(banks);
@@ -179,9 +181,9 @@ public class DatabaseManager
 		}
 		catch(Exception e)
 		{
-			Toast.makeText(context, ""+bankNames.size(), Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, ""+bankBalances.size(), Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, ""+bankSmsNames.size(), Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, ""+bankNames.size(), Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, ""+bankBalances.size(), Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, ""+bankSmsNames.size(), Toast.LENGTH_SHORT).show();
 			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 		
@@ -238,7 +240,7 @@ public class DatabaseManager
 			ArrayList<Bank> banks = new ArrayList<Bank>();
 			for(int i=0; i<numBanks; i++)
 			{
-				Bank bank = new Bank(i, bankNames.get(i), bankBalances.get(i), bankSmsNames.get(i));
+				Bank bank = new Bank(i, bankNames.get(i), bankAccNos.get(i), bankBalances.get(i), bankSmsNames.get(i));
 				banks.add(bank);
 			}
 			databaseAdapter.deleteAllBanks();
@@ -482,6 +484,62 @@ public class DatabaseManager
 	{
 		return DatabaseManager.bankNames.get(bankNum);
 	}
+	
+	public static void addBankName(String bankName)
+	{
+		DatabaseManager.bankNames.add(bankName);
+	}
+	
+	public static void deleteBankName(int bankNum)
+	{
+		DatabaseManager.bankNames.remove(bankNum);
+	}
+
+	/**
+	 * @param bankAccNos the Bank Account Numbers to set
+	 */
+	public static void setAllBankAccNos(ArrayList<Integer> bankAccNos)
+	{
+		DatabaseManager.bankAccNos = bankAccNos;
+	}
+
+	/**
+	 * @return the Bank Account Numbers
+	 */
+	public static ArrayList<Integer> getAllBankAccNos()
+	{
+		return DatabaseManager.bankAccNos;
+	}
+	
+	public static void setBankAccNo(int bankNum, int bankAccNo)
+	{
+		DatabaseManager.bankAccNos.set(bankNum, bankAccNo);
+	}
+	
+	public static void setBankAccNo(int bankNum, String bankAccNo)
+	{
+		DatabaseManager.bankAccNos.set(bankNum, Integer.parseInt(bankAccNo));
+	}
+	
+	public static int getBankAccNo(int bankNum)
+	{
+		return DatabaseManager.bankAccNos.get(bankNum);
+	}
+	
+	public static void addBankAccNo(int bankAccNo)
+	{
+		DatabaseManager.bankAccNos.add(bankAccNo);
+	}
+	
+	public static void addBankAccNo(String bankAccNo)
+	{
+		DatabaseManager.bankAccNos.add(Integer.parseInt(bankAccNo));
+	}
+	
+	public static void deleteBankAccNo(int bankNum)
+	{
+		DatabaseManager.bankAccNos.remove(bankNum);
+	}
 
 	/**
 	 * @param bankBalances the bankBalances to set
@@ -533,6 +591,21 @@ public class DatabaseManager
 	{
 		DatabaseManager.bankBalances.set(bankNum, DatabaseManager.bankBalances.get(bankNum)-Double.parseDouble(amount));
 	}
+	
+	public static void addBankBalance(double balance)
+	{
+		DatabaseManager.bankBalances.add(balance);
+	}
+	
+	public static void addBankBalance(String balance)
+	{
+		DatabaseManager.bankBalances.add(Double.parseDouble(balance));
+	}
+	
+	public static void deleteBankBalance(int bankNum)
+	{
+		DatabaseManager.bankBalances.remove(bankNum);
+	}
 
 	/**
 	 * @param bankSmsNames the bankSmsNames to set
@@ -558,6 +631,16 @@ public class DatabaseManager
 	public static String getBankSmsName(int bankNo)
 	{
 		return DatabaseManager.bankSmsNames.get(bankNo);
+	}
+	
+	public static void addBankSmsName(String smsName)
+	{
+		DatabaseManager.bankSmsNames.add(smsName);
+	}
+	
+	public static void deleteBankSmsName(int bankNum)
+	{
+		DatabaseManager.bankSmsNames.remove(bankNum);
 	}
 
 	/**
@@ -1024,5 +1107,13 @@ public class DatabaseManager
 				return i;
 		}
 		return 0;
+	}
+	
+	public static void deleteBank(int bankNum)
+	{
+		DatabaseManager.deleteBankName(bankNum);
+		DatabaseManager.deleteBankAccNo(bankNum);
+		DatabaseManager.deleteBankBalance(bankNum);
+		DatabaseManager.deleteBankSmsName(bankNum);
 	}
 }

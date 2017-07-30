@@ -11,7 +11,7 @@
         android:layout_weight="1"
         android:textSize="13sp"
         android:inputType="textPersonName"
-        android:hint="@string/hint_bank_name"
+        android:hint="@string/hint_bankName"
         android:ems="10"
         android:nextFocusDown="@+id/bankBalance" >
 
@@ -40,7 +40,7 @@
         android:textSize="13sp"
         android:inputType="numberDecimal"
         android:singleLine="true"
-        android:hint="@string/hint_bank_balance"
+        android:hint="@string/hint_bankBalance"
         android:ems="5"
         android:nextFocusDown="@+id/bankSmsName" />
 
@@ -52,7 +52,7 @@
         android:textSize="13sp"
         android:inputType="textPersonName"
         android:singleLine="true"
-        android:hint="@string/hint_bank_sms_name"
+        android:hint="@string/hint_bankSmsName"
         android:ems="5" />
     
     <ImageButton

@@ -21,9 +21,10 @@
     <string name="currencySymbols">Currency Symbol</string>
     <string name="date">Date</string>
     <string name="finish">Finish</string>
-    <string name="hint_bank_balance">Balance</string>
-    <string name="hint_bank_name">Bank Name</string>
-    <string name="hint_bank_sms_name">Sms</string>
+    <string name="hint_bankAccNo">Account Number</string>
+    <string name="hint_bankBalance">Balance</string>
+    <string name="hint_bankName">Bank Name</string>
+    <string name="hint_bankSmsName">Sms</string>
     <string name="instruction_expenditure_types">Enter Five Different Types Of Expenditures</string>
     <string name="next">Next</string>
     <string name="particulars">Particulars</string>
