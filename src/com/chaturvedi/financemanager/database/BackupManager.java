@@ -1,4 +1,4 @@
-package com.chaturvedi.financemanager;
+package com.chaturvedi.financemanager.database;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,11 +16,11 @@ import com.chaturvedi.financemanager.database.Counters;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Transaction;
 
-public class BackupData
+public class BackupManager
 {
 	private Context context;
 	
-	public BackupData(Context cxt)
+	public BackupManager(Context cxt)
 	{
 		context = cxt;
 		

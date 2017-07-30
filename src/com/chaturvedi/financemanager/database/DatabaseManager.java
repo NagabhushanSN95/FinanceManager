@@ -606,72 +606,35 @@ public class DatabaseManager
 		return totalCounters;
 	}
 	
+	/**
+	 * @return The months in which Transactions were made in the format
+	 * 		January - 2015
+	 * 		February - 2015 and so on
+	 */
 	public static ArrayList<String> getExportableMonths()
 	{
-		ArrayList<Long> months1 = new ArrayList<Long>();
-		ArrayList<String> months = new ArrayList<String>();
+		ArrayList<Long> longMonths = new ArrayList<Long>();		//201501, 201502,...
+		ArrayList<String> months = new ArrayList<String>();		//January - 2015, February - 2015
 		
+		// Gets All the months(In which transactions were made) in the format 201501, 201502, 201503,....
 		for(int i=0; i<numTransactions; i++)
 		{
-			long month1 = (long) transactions.get(i).getDate().getLongDate()/100;
-			if(!months1.contains(month1))
+			long longMonth = (long) transactions.get(i).getDate().getLongDate()/100;	//201501
+			if(!longMonths.contains(longMonth))
 			{
-				months1.add(month1);
+				longMonths.add(longMonth);
 			}
 		}
 		
-		for(int i=0; i<months1.size(); i++)
+		// Convert the months format from long (201501) to words (January - 2015)
+		for(int i=0; i<longMonths.size(); i++)
 		{
-			months.add(getMonth(months1.get(i)));
+			int month = (int) (longMonths.get(i) % 100);
+			int year = (int) (longMonths.get(i)/100);
+			String monthName = Date.getMonthName(month);
+			months.add(monthName + " - " + year);			//"January" + " - " + 2015 = "January - 2015"
 		}
 		return months;
-	}
-	
-	private static String getMonth(long fullMonth)
-	{
-		int month = (int) (fullMonth % 100);
-		int year = (int) (fullMonth/100);
-		switch(month)
-		{
-			case 1:
-				return "January - " + year;
-				
-			case 2:
-				return "February - " + year;
-				
-			case 3:
-				return "March - " + year;
-				
-			case 4:
-				return "April - " + year;
-				
-			case 5:
-				return "May - " + year;
-				
-			case 6:
-				return "June - " + year;
-				
-			case 7:
-				return "July - " + year;
-				
-			case 8:
-				return "August - " + year;
-				
-			case 9:
-				return "September - " + year;
-				
-			case 10:
-				return "October - " + year;
-				
-			case 11:
-				return "November - " + year;
-				
-			case 12:
-				return "December - " + year;
-				
-			default:
-				return (fullMonth + "");
-		}
 	}
 	
 	public static String getExactExpType(int transactionNo)

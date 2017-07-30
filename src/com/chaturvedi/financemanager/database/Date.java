@@ -85,6 +85,30 @@ public class Date
 		else
 			return false;
 	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getMonth() {
+		return month;
+	}
+
+	public void setMonth(int month) {
+		this.month = month;
+	}
+
+	public int getDate() {
+		return date;
+	}
+
+	public void setDate(int date) {
+		this.date = date;
+	}
 	
 	public static boolean isValidDate(String dateString)
 	{
@@ -134,28 +158,123 @@ public class Date
 		}
 		return validDate;
 	}
-
-	public int getYear() {
-		return year;
+	
+	/**
+	 * @param monthNo
+	 * 		1 for January
+	 * 		2 for February and so on
+	 * @return The month name (January, February,..)
+	 */
+	public static String getMonthName(int monthNo)
+	{
+		switch(monthNo)
+		{
+			case 1:
+				return "January";
+				
+			case 2:
+				return "February";
+				
+			case 3:
+				return "March";
+				
+			case 4:
+				return "April";
+				
+			case 5:
+				return "May";
+				
+			case 6:
+				return "June";
+				
+			case 7:
+				return "July";
+				
+			case 8:
+				return "August";
+				
+			case 9:
+				return "September";
+				
+			case 10:
+				return "October";
+				
+			case 11:
+				return "November";
+				
+			case 12:
+				return "December";
+				
+			default:
+				return "";
+		}
 	}
-
-	public void setYear(int year) {
-		this.year = year;
-	}
-
-	public int getMonth() {
-		return month;
-	}
-
-	public void setMonth(int month) {
-		this.month = month;
-	}
-
-	public int getDate() {
-		return date;
-	}
-
-	public void setDate(int date) {
-		this.date = date;
+	
+	/**
+	 * @return The month in the format 
+	 * 		201501 (For January 2015)
+	 * 		201502 (For February 2015) and so on
+	 */
+	public static long getLongMonth(String fullMonth)
+	{
+		StringTokenizer tokens = new StringTokenizer(fullMonth, "-");
+		String month = tokens.nextToken();
+		int month1;
+		int year = Integer.parseInt(tokens.nextToken().trim());
+		
+		if(month.contains("January"))
+		{
+			month1 = 01;
+		}
+		else if(month.contains("February"))
+		{
+			month1 = 02;
+		}
+		else if(month.contains("March"))
+		{
+			month1 = 03;
+		}
+		else if(month.contains("April"))
+		{
+			month1 = 04;
+		}
+		else if(month.contains("May"))
+		{
+			month1 = 05;
+		}
+		else if(month.contains("June"))
+		{
+			month1 = 06;
+		}
+		else if(month.contains("July"))
+		{
+			month1 = 07;
+		}
+		else if(month.contains("August"))
+		{
+			month1 = 8;
+		}
+		else if(month.contains("September"))
+		{
+			month1 = 9;
+		}
+		else if(month.contains("October"))
+		{
+			month1 = 10;
+		}
+		else if(month.contains("November"))
+		{
+			month1 = 11;
+		}
+		else if(month.contains("December"))
+		{
+			month1 = 12;
+		}
+		else
+		{
+			month1 = 01;
+		}
+		long longMonth = year*100 + month1;
+		return longMonth;
 	}
 }
