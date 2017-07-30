@@ -23,9 +23,20 @@ public class BackupManager
 	public BackupManager(Context cxt)
 	{
 		context = cxt;
-		
-		String backupFolderName = "Finance Manager/Backups";
-		
+	}
+	
+	public void autoBackup()
+	{
+		backup("Finance Manager/Auto Backup");
+	}
+	
+	public void manualBackup()
+	{
+		backup("Finance Manager/Backups");
+	}
+	
+	public void backup(String backupFolderName)
+	{
 		File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), backupFolderName);
 		if(!expenditureFolder.exists())
 			expenditureFolder.mkdirs();

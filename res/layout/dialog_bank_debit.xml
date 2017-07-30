@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
         
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/field_particulars"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -60,6 +60,18 @@
                 android:singleLine="true"
                 android:hint="@string/date"
                 android:ems="6" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" >
+            
+            <CheckBox
+                android:id="@+id/checkBox_template"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/addTemplate" />
         </LinearLayout>
 
 </LinearLayout>

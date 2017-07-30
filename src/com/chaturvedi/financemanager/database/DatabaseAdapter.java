@@ -22,6 +22,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	private static final String TABLE_WALLET = "wallet";
 	private static final String TABLE_EXPENDITURE_TYPES = "expenditure_types";
 	private static final String TABLE_COUNTERS = "counters";
+	private static final String TABLE_TEMPLATES = "templates";
 	
 	// Common Column Names
 	private static final String KEY_ID = "id";
@@ -96,6 +97,12 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			KEY_SAVINGS + " DOUBLE," + 
 			KEY_WITHDRAWAL + " DOUBLE" + ")";
 	
+	private static String CREATE_TEMPLATES_TABLE = "CREATE TABLE " + TABLE_TEMPLATES + "(" + 
+			KEY_ID + " INTEGER PRIMARY KEY," + 
+			KEY_PARTICULARS + " TEXT,"+ 
+			KEY_TYPE + " STRING," +
+			KEY_AMOUNT + " TEXT" + ")";
+	
 	public DatabaseAdapter(Context context)
 	{
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -111,6 +118,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		db.execSQL(CREATE_WALLET_TABLE);
 		db.execSQL(CREATE_EXPENDITURE_TYPES_TABLE);
 		db.execSQL(CREATE_COUNTERS_TABLE);
+		db.execSQL(CREATE_TEMPLATES_TABLE);
 	}
 	
 	// Upgrading database
@@ -123,6 +131,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET);
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENDITURE_TYPES);
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_COUNTERS);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TEMPLATES);
 		// Create tables again
 		onCreate(db);
 	}
@@ -558,10 +567,12 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			}
 			
 			// Add an extra Row and shift rows down
-			addCountersRow(getCountersRow(numRows));
-			for(int i=numRows; i>(position-1); i--)
+			Counters tempCounter = getCountersRow(numRows);		// Will retrieve based on ID which starts from 1
+			tempCounter.setID(tempCounter.getID() + 1);			// and not 0
+			addCountersRow(tempCounter);
+			for(int i=numRows-1; i>(position-1); i--)
 			{
-				Counters tempCounter = getCountersRow(i);
+				tempCounter = getCountersRow(i);
 				tempCounter.setID(tempCounter.getID() + 1);
 				updateCountersRow(tempCounter);
 			}
@@ -686,5 +697,153 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			cursor.close();
 			db.close();
 			return numRows;
+		}
+		
+		// Getting Number Of Template
+		public int getNumTemplates()
+		{
+			String countQuery = "SELECT * FROM " + TABLE_TEMPLATES;
+			SQLiteDatabase db = this.getReadableDatabase();
+			Cursor cursor = db.rawQuery(countQuery, null);
+			int numTemplates = cursor.getCount();
+			cursor.close();
+			db.close();
+			return numTemplates;
+		}
+		
+		/**
+		* Adds A New Template
+		* 
+		*/
+		public void addTemplate(Template template)
+		{
+			SQLiteDatabase db = this.getWritableDatabase();
+			
+			ContentValues values = new ContentValues();
+			values.put(KEY_ID, template.getID());
+			values.put(KEY_PARTICULARS, template.getParticular());
+			values.put(KEY_TYPE, template.getType());
+			values.put(KEY_AMOUNT, template.getAmount());
+			
+			// Inserting Row
+			db.insert(TABLE_TEMPLATES, null, values);
+			db.close(); // Closing database connection
+		}
+		
+		public void addAllTemplates(ArrayList<Template> templates)
+		{
+			SQLiteDatabase db = this.getWritableDatabase();
+			
+			for(Template template: templates)
+			{
+				ContentValues values = new ContentValues();
+				values.put(KEY_ID, template.getID());
+				values.put(KEY_PARTICULARS, template.getParticular());
+				values.put(KEY_TYPE, template.getType());
+				values.put(KEY_AMOUNT, template.getAmount());
+				
+				// Inserting Row
+				db.insert(TABLE_TEMPLATES, null, values);
+			}
+			db.close();
+		}
+		
+		// Getting single Template
+		public Template getTemplate(int id)
+		{
+			SQLiteDatabase db = this.getReadableDatabase();
+			Cursor cursor = db.query(TABLE_TEMPLATES, new String[] { KEY_ID, KEY_PARTICULARS, KEY_TYPE, 
+					KEY_AMOUNT }, KEY_ID + "=?",new String[] { String.valueOf(id) }, null, null, null, null);
+			if (cursor != null)
+				cursor.moveToFirst();
+			
+			Template template = new Template(cursor.getString(0), cursor.getString(1), 
+					cursor.getString(2), cursor.getString(3));
+			db.close();
+			return template;
+		}
+		
+		// Getting All Templates
+		public ArrayList<Template> getAllTemplates()
+		{
+			ArrayList<Template> templatesList = new ArrayList<Template>();
+			// Select All Query
+			String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES;
+			SQLiteDatabase db = this.getWritableDatabase();
+			Cursor cursor = db.rawQuery(selectQuery, null);
+			// looping through all rows and adding to list
+			if (cursor.moveToFirst())
+			{
+				do
+				{
+					Template template = new Template(cursor.getString(0), cursor.getString(1), cursor.getString(2),
+							cursor.getString(3));
+					templatesList.add(template);
+				}
+				while (cursor.moveToNext());
+			}
+			db.close();
+			return templatesList;
+		}
+		
+		// Updating single Template
+		public void updateTemplate(Template template)
+		{
+			SQLiteDatabase db = this.getWritableDatabase();
+			ContentValues values = new ContentValues();
+			values.put(KEY_PARTICULARS, template.getParticular());
+			values.put(KEY_TYPE, template.getType());
+			values.put(KEY_AMOUNT, template.getAmount());
+			// updating row
+			db.update(TABLE_TEMPLATES, values, KEY_ID + " = ?", 
+					new String[] { String.valueOf(template.getID()) });
+			db.close();
+		}
+		
+		// Deleting single Template
+		public void deleteTemplate(Template template)
+		{
+			SQLiteDatabase db = this.getWritableDatabase();
+			db.delete(TABLE_TEMPLATES, KEY_ID + " = ?", new String[] { String.valueOf(template.getID()) });
+			db.close();
+		}
+		
+		/**
+		 * Deletes All The Templates Along With The Table. Then recreate the Table.
+		 */
+		public void deleteAllTemplates()
+		{
+			SQLiteDatabase db = this.getWritableDatabase();
+			db.execSQL("DROP TABLE IF EXISTS " + TABLE_TEMPLATES);
+			db.execSQL(CREATE_TEMPLATES_TABLE);
+			db.close();
+		}
+		
+		/**
+		 * Inserts the Template at the position specified by the ID
+		 * @param template
+		 */
+		public void insertTemplate(Template template)
+		{
+			int position = template.getID();
+			int numTemplates = getNumTemplates();
+			if(position>numTemplates)
+			{
+				addTemplate(template);
+			}
+			
+			// Add an extra Row and shift rows down
+			Template tempTemplate = getTemplate(numTemplates);		// Template will be retrieved based on Id 
+			tempTemplate.setID(tempTemplate.getID() + 1);			// Which starts from 1 and not 0
+			addTemplate(tempTemplate);
+			for(int i=numTemplates-1; i>(position-1); i--)
+			{
+				tempTemplate = getTemplate(i);
+				tempTemplate.setID(tempTemplate.getID() + 1);
+				updateTemplate(tempTemplate);
+			}
+			
+			// Insert i.e. update the Template
+			updateTemplate(template);
 		}
 }

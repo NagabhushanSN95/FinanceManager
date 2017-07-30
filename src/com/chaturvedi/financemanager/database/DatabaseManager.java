@@ -19,6 +19,7 @@ public class DatabaseManager
 	private static ArrayList<Transaction> transactions;
 	private static ArrayList<String> expenditureTypes;
 	private static ArrayList<Counters> counters;
+	private static ArrayList<Template> templates;
 	
 	/*private static boolean transactionsTableEdited;
 	private static boolean transactionTableAdded;
@@ -42,12 +43,9 @@ public class DatabaseManager
 	{
 		try
 		{
-			setNumBanks(databaseAdapter.getNumBanks());
-			setNumTransactions(databaseAdapter.getNumTransactions());
-			DatabaseManager.numCountersRows = databaseAdapter.getNumCountersRows();
-			
 			setWalletBalance(databaseAdapter.getWalletBalance());
-			
+
+			setNumBanks(databaseAdapter.getNumBanks());
 			if(numBanks>0)
 			{
 				banks = databaseAdapter.getAllBanks();
@@ -56,7 +54,8 @@ public class DatabaseManager
 			{
 				banks = new ArrayList<Bank>();
 			}
-			
+
+			setNumTransactions(databaseAdapter.getNumTransactions());
 			if(numTransactions>0)
 			{
 				transactions = databaseAdapter.getAllTransactions();
@@ -72,7 +71,8 @@ public class DatabaseManager
 			{
 				expenditureTypes.add(expType.getExpenditureTypeName());
 			}
-			
+
+			DatabaseManager.numCountersRows = databaseAdapter.getNumCountersRows();
 			if(numCountersRows>0)
 			{
 				counters = databaseAdapter.getAllCountersRows();
@@ -80,6 +80,16 @@ public class DatabaseManager
 			else
 			{
 				counters = new ArrayList<Counters>();
+			}
+			
+			int numTemplates = databaseAdapter.getNumTemplates();
+			if(numTemplates>0)
+			{
+				templates = databaseAdapter.getAllTemplates();
+			}
+			else
+			{
+				templates = new ArrayList<Template>();
 			}
 		}
 		catch(Exception e)
@@ -98,6 +108,8 @@ public class DatabaseManager
 		
 		numCountersRows = 0;
 		counters = new ArrayList<Counters>();
+		
+		templates = new ArrayList<Template>(); 
 	}
 	
 	public static void saveDatabase()
@@ -142,6 +154,17 @@ public class DatabaseManager
 			databaseAdapter.deleteAllCountersRows();
 		}
 		
+		if(templates.size() > 0)
+		{
+			databaseAdapter.deleteAllTemplates();
+			databaseAdapter.addAllTemplates(templates);
+		}
+		else
+		{
+			databaseAdapter.deleteAllTemplates();
+		}
+		
+		// Check this and remove
 		databaseAdapter.close();
 	}
 	
@@ -699,6 +722,74 @@ public class DatabaseManager
 		}
 		return expType;
 	}
+	
+	public static void addTemplate(Template template)
+	{
+		int numTemplates = templates.size();
+		if(numTemplates == 0)
+		{
+			templates = new ArrayList<Template>();
+			template.setID(1);
+			templates.add(template);
+			databaseAdapter.addTemplate(template);
+		}
+		else if(template.getParticular().compareTo(templates.get(0).getParticular()) < 0)
+		{
+			template.setID(1);
+			templates.add(0, template);
+			databaseAdapter.insertTemplate(template);
+		}
+		else if(template.getParticular().compareTo(templates.get(0).getParticular()) > 0)
+		{
+			template.setID(numTemplates+1);
+			templates.add(template);
+			databaseAdapter.addTemplate(template);
+		}
+		else
+		{
+			// Search For The Template Within
+			int first = 0;
+			int last = numTemplates-1;
+			int middle = (first+last)/2;
+			while(first<=last)
+			{
+				if(templates.get(middle).getParticular().compareTo(template.getParticular()) < 0)
+				{
+					first = middle+1;
+				}
+				else if(templates.get(middle).getParticular().compareTo(template.getParticular()) > 0)
+				{
+					last = middle-1;
+				}
+				else
+				{
+					template.setID(middle+1);
+					templates.set(middle, template);
+					databaseAdapter.updateTemplate(template);
+					break;
+				}
+				middle = (first + last)/2;
+			}
+			if(first>last)
+			{
+				templates.add(middle+1, template);		   // Insert The New Counters Row.
+				template.setID(middle+2);
+				databaseAdapter.insertTemplate(template);
+			}
+		}
+	}
+	
+	public static void deleteTemplate(Template template)
+	{
+		int templateNo = templates.indexOf(template);
+		DatabaseManager.templates.remove(templateNo);
+		databaseAdapter.deleteTemplate(template);
+	}
+	
+	public static ArrayList<Template> getAllTemplates()
+	{
+		return templates;
+	}
 
 	/**
 	 * @param numBanks the numBanks to set
@@ -970,5 +1061,179 @@ public class DatabaseManager
 	public static String getExpenditureType(int expTypeNo)
 	{
 		return DatabaseManager.expenditureTypes.get(expTypeNo);
+	}
+	
+	// Static Methods to compare two objects like transactions, banks...
+	public static boolean areEqualTransactions(ArrayList<Transaction> transactions1, 
+			ArrayList<Transaction> transactions2)
+	{
+		// Go on comparing every fields. Whenever you find a difference, return false;
+		if(transactions1.size() != transactions2.size())
+		{
+			return false;
+		}
+		
+		int numTransactions = transactions1.size();
+		for(int i=0; i<numTransactions; i++)
+		{
+			if(transactions1.get(i).getID() != transactions2.get(i).getID())
+			{
+				//return false;
+				//Toast.makeText(context, "Transaction No " + i + "has different IDs", Toast.LENGTH_SHORT).show();
+			}
+			if(transactions1.get(i).getCreatedTime() != transactions2.get(i).getCreatedTime())
+			{
+				return false;
+			}
+			if(transactions1.get(i).getModifiedTime() != transactions2.get(i).getModifiedTime())
+			{
+				return false;
+			}
+			if(transactions1.get(i).getDate() != transactions2.get(i).getDate())
+			{
+				return false;
+			}
+			if(transactions1.get(i).getType() != transactions2.get(i).getType())
+			{
+				return false;
+			}
+			if(transactions1.get(i).getParticular() != transactions2.get(i).getParticular())
+			{
+				return false;
+			}
+			if(transactions1.get(i).getRate() != transactions2.get(i).getRate())
+			{
+				return false;
+			}
+			if(transactions1.get(i).getQuantity() != transactions2.get(i).getQuantity())
+			{
+				return false;
+			}
+			if(transactions1.get(i).getAmount() != transactions2.get(i).getAmount())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public static boolean areEqualBanks(ArrayList<Bank> banks1, ArrayList<Bank> banks2)
+	{
+		// Go on comparing every fields. Whenever you find a difference, return false;
+		if(banks1.size() != banks2.size())
+		{
+			return false;
+		}
+		int numBanks = banks1.size();
+		for(int i=0; i<numBanks; i++)
+		{
+			if(banks1.get(i).getID() != banks2.get(i).getID())
+			{
+				//Toast.makeText(context, "Bank No " + i + "has different IDs", Toast.LENGTH_SHORT).show();
+				//return false;
+			}
+			if(banks1.get(i).getName() != banks2.get(i).getName())
+			{
+				return false;
+			}
+			if(banks1.get(i).getAccNo() != banks2.get(i).getAccNo())
+			{
+				return false;
+			}
+			if(banks1.get(i).getBalance() != banks2.get(i).getBalance())
+			{
+				return false;
+			}
+			if(banks1.get(i).getSmsName() != banks2.get(i).getSmsName())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public static boolean areEqualCounters(ArrayList<Counters> counters1, ArrayList<Counters> counters2)
+	{
+		// Go on comparing every fields. Whenever you find a difference, return false;
+		if(counters1.size() != counters2.size())
+		{
+			return false;
+		}
+		int numCountersRows = counters1.size();
+		for(int i=0; i<numCountersRows; i++)
+		{
+			if(counters1.get(i).getID() != counters2.get(i).getID())
+			{
+				//Toast.makeText(context, "Counter No " + i + " has different IDs", Toast.LENGTH_SHORT).show();
+				//return false;
+			}
+			if(counters1.get(i).getExp01() != counters2.get(i).getExp01())
+			{
+				return false;
+			}
+			if(counters1.get(i).getExp02() != counters2.get(i).getExp02())
+			{
+				return false;
+			}
+			if(counters1.get(i).getExp03() != counters2.get(i).getExp03())
+			{
+				return false;
+			}
+			if(counters1.get(i).getExp04() != counters2.get(i).getExp04())
+			{
+				return false;
+			}
+			if(counters1.get(i).getExp05() != counters2.get(i).getExp05())
+			{
+				return false;
+			}
+			if(counters1.get(i).getAmountSpent() != counters2.get(i).getAmountSpent())
+			{
+				return false;
+			}
+			if(counters1.get(i).getIncome() != counters2.get(i).getIncome())
+			{
+				return false;
+			}
+			if(counters1.get(i).getWithdrawal() != counters2.get(i).getWithdrawal())
+			{
+				return false;
+			}
+			if(counters1.get(i).getSavings() != counters2.get(i).getSavings())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public static boolean areEqualExpTypes(ArrayList<String> expTypes1, ArrayList<String> expTypes2)
+	{
+		// Go on comparing every fields. Whenever you find a difference, return false;
+		if(expTypes1.size() != expTypes2.size())
+		{
+			return false;
+		}
+		int numExpTypes = expTypes1.size();
+		for(int i=0; i<numExpTypes; i++)
+		{
+			/*if(expTypes1.get(i).getID() != expTypes2.get(i).getID())
+			{
+				Toast.makeText(context, "ExpTypes No " + i + "has different IDs", Toast.LENGTH_SHORT).show();
+				//return false;
+			}*/
+			if(expTypes1.get(i) != expTypes2.get(i))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static void updateTemplates()
+	{
+		templates = new ArrayList<Template>();
+		databaseAdapter.deleteAllTemplates();
+		databaseAdapter.addAllTemplates(templates);
 	}
 }

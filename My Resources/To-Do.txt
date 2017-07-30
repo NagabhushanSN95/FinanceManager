@@ -2,17 +2,22 @@ Crucial:
 While editing a bank transaction (Bank Credit), type is not getting saved properly. Check it out.
 If you edit a transaction from UBI to SBI, when app is closed and opened, the transaction will have reverted back to UBI. (Only typeNo, nothing else. Amount will not be transferred or name will not be changed)
 
-Read from database onResume if data is lost (numTransactions==0).
-Done: Need to be verified
-Add activity stack to TransactionsActivity for Sms reading
-Done: Need to be verified
+Add aaditya's name in About Developer Page
+While displaying autoComplete options, display only related ones. Don't show income options during wallet debit
+while displaying autoComplete options for banks, remove banks header
+Edit Template
+Backup Templates
+Backup IDs
+Display Indian Flag and App icon in Splash Activity
+In settings activity, chanhe showSplash to minTime, 5s, 10s, etc
+In settings, give an option for automatic backup and restore
+Release App
+
 Settings Activity - Make it neat
-Add 4 buttons (in TransactionsActivity) in SummaryActivity itself
 Help: Guide/Demo/FAQs/Mail
 In Displaying Banks, display bank name and balance only
 Release App
 
-Add predictions (Templates, AutoCompleteTextView) while adding transactions
 ViewPager for banks/expenditure setup/edit activities
 Start up Page: Initialize/ Restore/ Skip
 Animations

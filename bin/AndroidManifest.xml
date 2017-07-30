@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.chaturvedi.financemanager"
-    android:versionCode="69"
-    android:versionName="3.1.4" >
+    android:versionCode="70"
+    android:versionName="3.1.6" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -29,6 +29,7 @@
         <activity android:name="com.chaturvedi.financemanager.ExpenditureSetupActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.SummaryActivity" android:label="@string/app_name" ></activity>
         <activity android:name="com.chaturvedi.financemanager.TransactionsActivity"></activity>
+        <activity android:name="com.chaturvedi.financemanager.TemplatesActivity"></activity>
         <activity android:name="com.chaturvedi.financemanager.EditBanksActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.EditExpenditureTypesActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.StatisticsActivity"> </activity>

@@ -180,7 +180,7 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				new BackupManager(ExtrasActivity.this);
+				new BackupManager(ExtrasActivity.this).manualBackup();	// Backs Up Data to Backups Folder
 			}
 		});
 		backupDialog.setNegativeButton("Cancel", null);

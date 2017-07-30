@@ -148,11 +148,11 @@ public class StartupActivity extends FragmentActivity
 	
 	private void restoreData()
 	{
-		RestoreManager restoreManager = new RestoreManager(StartupActivity.this);
-		int result = restoreManager.restore();
+		RestoreManager restore = new RestoreManager(StartupActivity.this);
+		int result = restore.restore();
 		if(result==1)
 		{
-			restoreManager.restoreDefaultPreferences();
+			restore.restoreDefaultPreferences();
 			startActivity(summaryIntent);
 			super.onBackPressed();
 		}

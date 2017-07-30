@@ -11,19 +11,21 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.chaturvedi.financemanager.database.DatabaseManager;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.database.RestoreManager;
 //import android.view.ViewGroup.LayoutParams;
 
 public class SplashActivity extends Activity 
@@ -38,6 +40,7 @@ public class SplashActivity extends Activity
 	
 	private static boolean showSplash=true;
 	private static int splashTime=5000;
+	private boolean databaseInitialized = true;
 	
 	private TextView quoteView;
 	private String quoteText;
@@ -61,21 +64,14 @@ public class SplashActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash);
 
-		new DatabaseManager(this);
 		readPreferences();
+		new DatabaseManager(this);
+		readQuotes();
+		startSplash();
 		
-		// If Splash Screen is enabled by the user, read the quotes and start the Splash Screen
-		// Else, start the NextActivity
-		if(showSplash)
-		{
-			readQuotes();
-			startSplash();
-		}
-		else
-		{
-			startActivity(nextActivityIntent);
-			finish();
-		}
+		// Read the database in a seperate (non-ui) thread
+		Thread databaseReaderThread = new Thread(new DatabaseReaderRunnable());
+		databaseReaderThread.start();
 	}
 	
 	private void readPreferences()
@@ -97,7 +93,8 @@ public class SplashActivity extends Activity
 		{
 			// Since Database Is Initialized, Read the Database And start The SummaryActivity 
 			//(Home Screen Of The App)
-			DatabaseManager.readDatabase();
+			//DatabaseManager.readDatabase();
+			databaseInitialized = true;
 			nextActivityIntent = new Intent(this, SummaryActivity.class);
 		}
 		else
@@ -110,7 +107,8 @@ public class SplashActivity extends Activity
 			{
 				// Since Database Is Initialized, Read the Database And start The SummaryActivity 
 				//(Home Screen Of The App) and save it in Database Preferences File
-				DatabaseManager.readDatabase();
+				//DatabaseManager.readDatabase();
+				databaseInitialized = true;
 				nextActivityIntent = new Intent(this, SummaryActivity.class);
 				SharedPreferences.Editor editor = preferences.edit();
 				editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
@@ -119,7 +117,8 @@ public class SplashActivity extends Activity
 			else
 			{
 				// Since Database is not Initialized, Start the Setup
-				nextActivityIntent = new Intent(this, BanksSetupActivity.class);
+				databaseInitialized = false;
+				nextActivityIntent = new Intent(this, StartupActivity.class);
 			}
 		}
 		
@@ -219,7 +218,7 @@ public class SplashActivity extends Activity
 			quotesNumReads += NUM_TIPS;
 		}	
 				
-		int NUM_TOTAL_QUOTES = NUM_QUOTES + NUM_FACTS + NUM_CRICKET_QUOTES;
+		int NUM_TOTAL_QUOTES = NUM_QUOTES + NUM_FACTS + NUM_CRICKET_QUOTES + NUM_MOVIE_QUOTES;
 		// Select A Random Quote depending on Number Of Quote Reads
 		if(quotesNumReads<=NUM_TIPS)
 		{
@@ -248,15 +247,18 @@ public class SplashActivity extends Activity
 		quoteView.setText(quoteText);
 		
 		// Schedule to start the NextActivity after the specified time (splashTime)
-		new Handler().postDelayed(new Runnable() 
+		if(showSplash)
 		{
-			@Override
-			public void run()
+			new Handler().postDelayed(new Runnable() 
 			{
-				startActivity(nextActivityIntent);
-				finish();
-			}
-		} ,splashTime);
+				@Override
+				public void run()
+				{
+					startActivity(nextActivityIntent);
+					finish();
+				}
+			} ,splashTime);
+		}
 		
 		// Get a reference to Progress Line View
 		progressLine=(View)findViewById(R.id.progress_line);
@@ -297,5 +299,65 @@ public class SplashActivity extends Activity
 	public void onBackPressed()
 	{
 		
+	}
+	
+	private class DatabaseReaderRunnable implements Runnable
+	{
+		@Override
+		public void run()
+		{
+			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+			Looper.prepare();
+			
+			if(databaseInitialized)
+			{
+				DatabaseManager.readDatabase();
+				
+				// Read the backups and see if there is any change
+				RestoreManager restoreManager = new RestoreManager(SplashActivity.this);
+				int restoreResult = restoreManager.readBackups("Finance Manager/Auto Backup");
+				// If read backups, proceed
+				if(restoreResult == 1)
+				{
+					//If found any error, restore
+					if(DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
+							restoreManager.getAllTransactions()))
+					{
+						DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
+						Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
+								Toast.LENGTH_SHORT).show();
+					}
+					if(DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(), 
+							restoreManager.getAllBanks()))
+					{
+						DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+						Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Recovered", 
+								Toast.LENGTH_SHORT).show();
+					}
+					if(DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
+							restoreManager.getAllCounters()))
+					{
+						DatabaseManager.setAllCounters(restoreManager.getAllCounters());
+						Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
+								Toast.LENGTH_SHORT).show();
+					}
+					if(DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
+							restoreManager.getAllExpTypes()))
+					{
+						DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+						Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Recovered",
+								Toast.LENGTH_SHORT).show();
+					}
+				}
+			}
+			if(!showSplash)
+			{
+				startActivity(nextActivityIntent);
+				finish();
+			}
+			Looper.loop();
+			Looper.myLooper().quit();
+			//new Looper().quit();
+		}
 	}
 }
