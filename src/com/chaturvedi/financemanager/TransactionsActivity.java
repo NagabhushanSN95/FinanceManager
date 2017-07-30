@@ -173,7 +173,8 @@ public class TransactionsActivity extends Activity
 				return true;
 				
 			case R.id.action_transactionsDisplayOptions:
-				displayOptions();
+				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
+				//displayOptions();
 				return true;
 		}
 		return true;

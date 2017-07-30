@@ -22,7 +22,7 @@ public class RestoreManager
 	//Will Also Be Saved
 	private int APP_VERSION_NO_58;
 	//In Version 77, backup and restore for Templates was enables
-	private int APP_VERSION_NO_77;
+	private int APP_VERSION_NO_88;
 	
 	private File backupFolder;
 	private String extension;
@@ -46,7 +46,7 @@ public class RestoreManager
 		context = cxt;
 		APP_VERSION_NO_56 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_56));
 		APP_VERSION_NO_58 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_58));
-		APP_VERSION_NO_77 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_77));
+		APP_VERSION_NO_88 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_88));
 	}
 	
 	/**
@@ -95,7 +95,7 @@ public class RestoreManager
 				walletBalance = 0;						// Since Wallet Balance was not backed up in that version
 				templates = new ArrayList<Template>();	// Same explanation as above
 			}
-			else if(appVersionNo < APP_VERSION_NO_77)
+			else if(appVersionNo < APP_VERSION_NO_88)
 			{
 				readKeyData();
 				readTransactions();

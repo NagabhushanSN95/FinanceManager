@@ -318,7 +318,7 @@ public final class R {
         public static final int APP_VERSION_58=0x7f060002;
         public static final int APP_VERSION_64=0x7f060003;
         public static final int APP_VERSION_68=0x7f060004;
-        public static final int APP_VERSION_77=0x7f060005;
+        public static final int APP_VERSION_88=0x7f060005;
         public static final int FAQ=0x7f060024;
         public static final int aboutUs=0x7f060009;
         public static final int action_edit=0x7f06000a;

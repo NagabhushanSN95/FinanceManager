@@ -80,7 +80,7 @@ public class ExpTypesSetupFragment extends Fragment
 				{
 					String expType = expTypeField.getText().toString();
 					int position = parentLayout.indexOfChild(expTypeLayout)-1;
-					Toast.makeText(getActivity(), "Krishna:"+position, Toast.LENGTH_SHORT).show();
+					//Toast.makeText(getActivity(), "Krishna:"+position, Toast.LENGTH_SHORT).show();
 					expTypes.set(position, expType);
 				}
 

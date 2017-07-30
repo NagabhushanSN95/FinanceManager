@@ -19,14 +19,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.widget.Toast;
 
-public class Update68To76 extends SQLiteOpenHelper		// To create Templates Table
+public class Update68To88 extends SQLiteOpenHelper		// To create Templates Table
 {
 	private Context context;
 	private int CURRENT_APP_VERSION_NO;
 
 	private static final int DATABASE_VERSION = 1;
 	private static final String DATABASE_NAME = "expenditureManager";
-	public Update68To76(Context cxt)
+	public Update68To88(Context cxt)
 	{
 		super(cxt, DATABASE_NAME, null, DATABASE_VERSION);
 		context = cxt;

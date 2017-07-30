@@ -20,5 +20,6 @@
         android:layout_marginRight="20dp"
         android:layout_alignTop="@+id/expType"
         android:layout_alignBottom="@+id/expType"
-        android:src="@android:drawable/ic_menu_delete" />
+        android:src="@android:drawable/ic_menu_delete"
+        android:visibility="invisible" />
 </RelativeLayout>

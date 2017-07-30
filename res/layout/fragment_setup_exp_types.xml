@@ -57,6 +57,7 @@
                     android:layout_marginRight="20dp"
                     android:layout_alignTop="@+id/expTypeOther"
                     android:layout_alignBottom="@+id/expTypeOther"
+                    android:visibility="invisible"
                     android:src="@android:drawable/ic_menu_edit" />
                 
             </RelativeLayout>

@@ -28,14 +28,14 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
-import com.chaturvedi.financemanager.updates.Update68To76;
+import com.chaturvedi.financemanager.updates.Update68To88;
 //import android.view.ViewGroup.LayoutParams;
 
 public class SplashActivity extends Activity 
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
-	private static int APP_VERSION_NO_77;
+	private static int APP_VERSION_NO_88;
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
@@ -80,7 +80,7 @@ public class SplashActivity extends Activity
 	{
 		int currentVersionNo = 0, previousVersionNo = 0;
 		
-		// Get the Current Version No Of The App
+		// Get the Current Version No Of The Current App
 		try
 		{
 			currentVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
@@ -92,7 +92,7 @@ public class SplashActivity extends Activity
 		}
 		
 		// Get the version no stored in the preferences. This contains the version no of the app, when it was 
-		// previously opened. So, it the app is updated now, this field contains version no of old app.
+		// previously opened. So, if the app is updated now, this field contains version no of old app.
 		// So, update classes can be run
 		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = preferences.edit();
@@ -115,13 +115,15 @@ public class SplashActivity extends Activity
 			}
 		}
 		
-		APP_VERSION_NO_77 = Integer.parseInt(getResources().getString(R.string.currentAppVersion));
+		// Compare the version of current and previous App. If the previous app was of old version, 
+		// run the Update Classes
+		APP_VERSION_NO_88 = Integer.parseInt(getResources().getString(R.string.currentAppVersion));
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if(canProceed && (previousVersionNo != currentVersionNo))
 		{
-			if(previousVersionNo < APP_VERSION_NO_77)
+			if(previousVersionNo < APP_VERSION_NO_88)
 			{
-				new Update68To76(SplashActivity.this);
+				new Update68To88(SplashActivity.this);
 			}
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.commit();
@@ -246,7 +248,7 @@ public class SplashActivity extends Activity
 		// If Debug Version, Don't display Tips
 		if(0 != (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
 		{
-			quotesNo += NUM_TIPS;
+			quotesNo += NUM_TIPS*2;
 		}	
 				
 		// Select A Random Quote depending on Number Of Quote Number To Be Displayed
@@ -398,7 +400,7 @@ public class SplashActivity extends Activity
 					if(!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(), 
 							restoreManager.getAllTemplates()))
 					{
-						//DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+						DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
 						Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
 								Toast.LENGTH_SHORT).show();
 					}
