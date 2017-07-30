@@ -16,10 +16,11 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.chaturvedi.financemanager.customviews.SettingsLayout;
+import com.chaturvedi.financemanager.customviews.SettingsLayout.OnSettingChangedListener;
 
 public class SettingsActivity extends Activity
 {
@@ -40,22 +41,18 @@ public class SettingsActivity extends Activity
 	private final int TRANSACTIONS_MONTHLY  = 0;
 	private final int TRANSACTIONS_YEARLY   = 1;
 	private final int TRANSACTIONS_ALL      = 2;
-	
-	private Spinner splashDurationSpinner;
+
+	private SettingsLayout splashDurationSetting;
 	private int splashDuration = SPLASH_DURATION_5000;
-	//private CheckBox splashCheckBox;
-	//private static boolean enableSplash=true;
-	private Spinner bankSmsSpinner;
+	private SettingsLayout bankSmsSetting;
 	private int bankSmsResponse = BANK_SMS_POPUP;
-	//private CheckBox bankSmsCheckBox;
-	//private static boolean respondBankMessages = true;
-	private Spinner currencySymbolsSpinner;
+	private SettingsLayout currencySymbolSetting;
 	private ArrayList<String> currencySymbols;
 	private String currencySymbolSelected = "Rs ";
 	private final int NUM_CURRENCY_SYMBOLS=3;
-	private Spinner transactionsDisplayIntervalSpinner;
+	private SettingsLayout transactionsDisplayIntervalSetting;
 	private int transactionsDisplayInterval = TRANSACTIONS_MONTHLY;
-	private Spinner autoBackupRestoreSpinner;
+	private SettingsLayout autoBackupRestoreSetting;
 	private int autoBackupRestoreValue;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -79,13 +76,6 @@ public class SettingsActivity extends Activity
 		buildLayout();
 		
 	}
-
-	@Override
-	public void onPause()
-	{
-		super.onPause();
-		savePreferences();
-	}
 	
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
@@ -107,33 +97,146 @@ public class SettingsActivity extends Activity
 			krishna.setVisibility(View.INVISIBLE);
 		}
 		
-		splashDurationSpinner=(Spinner)findViewById(R.id.spinner_splashDuration);
-		Integer[] splashDurationsList = {0,5000,10000,15000};
-		splashDurationSpinner.setAdapter(new ArrayAdapter<Integer>(this, android.R.layout.simple_spinner_item,
-				splashDurationsList));
-		splashDurationSpinner.setSelection(splashDuration);
+		splashDurationSetting = (SettingsLayout) findViewById(R.id.splashDuration);
+		splashDurationSetting.setSettingName("Splash Duration");
+		String[] splashDurationOptions = {"Minimum", "5 seconds", "10 seconds", "15 seconds"};
+		splashDurationSetting.setOptions(splashDurationOptions);
+		splashDurationSetting.setSelection(splashDuration);
+		splashDurationSetting.setSettingChangedListener(new OnSettingChangedListener()
+		{
+			@Override
+			public void onSettingChanged()
+			{
+				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences.Editor editor = preferences.edit();
+				splashDuration = splashDurationSetting.getSelectedOptionNo()*5000;
+				editor.putInt(KEY_SPLASH_DURATION, splashDuration);
+				editor.commit();
+			}
+		});
 		
-		bankSmsSpinner = (Spinner)findViewById(R.id.spinner_bankSms);
-		String[] bankSmsOptionsList = {"Don't Respond", "Show Pop-up", "Automatic Transaction"};
-		bankSmsSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item,
-				bankSmsOptionsList));
-		bankSmsSpinner.setSelection(bankSmsResponse);
+		bankSmsSetting = (SettingsLayout) findViewById(R.id.bankSms);
+		bankSmsSetting.setSettingName("Action For Bank Messages");
+		String[] bankSmsOptions = {"Don't Respond", "Show Pop-up", "Automatic Transaction"};
+		bankSmsSetting.setOptions(bankSmsOptions);
+		bankSmsSetting.setSelection(bankSmsResponse);
+		bankSmsSetting.setSettingChangedListener(new OnSettingChangedListener()
+		{
+			@Override
+			public void onSettingChanged()
+			{
+				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences.Editor editor = preferences.edit();
+				
+				bankSmsResponse = bankSmsSetting.getSelectedOptionNo();
+				switch(bankSmsResponse)
+				{
+					case 0:
+						editor.putString(KEY_RESPOND_BANK_SMS, "NoResponse");
+						break;
+						
+					case 1:
+						editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
+						break;
+						
+					case 2:
+						editor.putString(KEY_RESPOND_BANK_SMS, "Automatic");
+						break;
+						
+					default:
+						editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
+						break;
+				}
+				editor.commit();
+			}
+		});
 		
-		currencySymbolsSpinner = (Spinner)findViewById(R.id.spinner_currencySymbols);
-		currencySymbolsSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, currencySymbols));
-		currencySymbolsSpinner.setSelection(getCurrencySymbolPosition(currencySymbolSelected));
+		currencySymbolSetting = (SettingsLayout) findViewById(R.id.currencySymbols);
+		currencySymbolSetting.setSettingName("Currency Symbol");
+		currencySymbolSetting.setOptions(currencySymbols);
+		currencySymbolSetting.setSelection(getCurrencySymbolPosition(currencySymbolSelected));
+		currencySymbolSetting.setSettingChangedListener(new OnSettingChangedListener()
+		{
+			@Override
+			public void onSettingChanged()
+			{
+				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences.Editor editor = preferences.edit();
+				currencySymbolSelected = (String) currencySymbolSetting.getSelectedOption();
+				if(currencySymbolSelected.equalsIgnoreCase("None"))
+					currencySymbolSelected = " ";
+				editor.putString(KEY_CURRENCY_SYMBOL, currencySymbolSelected);
+				editor.commit();
+			}
+		});
 		
-		transactionsDisplayIntervalSpinner = (Spinner)findViewById(R.id.spinner_transactionsDisplayInterval);
-		String[] transactionsDisplayOptions = { "Month", "Year", "All" };
-		//String[] transactionsDisplayOptions = { "Month", "All" };
-		transactionsDisplayIntervalSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, transactionsDisplayOptions));
-		transactionsDisplayIntervalSpinner.setSelection(transactionsDisplayInterval);
+		transactionsDisplayIntervalSetting = (SettingsLayout) findViewById(R.id.transactionsDisplayInterval);
+		transactionsDisplayIntervalSetting.setSettingName("Transactions Display Interval");
+		String[] transactionsDisplayIntervalOptions = {"Month", "Year", "All"};
+		transactionsDisplayIntervalSetting.setOptions(transactionsDisplayIntervalOptions);
+		transactionsDisplayIntervalSetting.setSelection(transactionsDisplayInterval);
+		transactionsDisplayIntervalSetting.setSettingChangedListener(new OnSettingChangedListener()
+		{
+			@Override
+			public void onSettingChanged()
+			{
+				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences.Editor editor = preferences.edit();
+				transactionsDisplayInterval = transactionsDisplayIntervalSetting.getSelectedOptionNo();
+				switch(transactionsDisplayInterval)
+				{
+					case 0:
+						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+						break;
+						
+					case 1:
+						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Year");
+						break;
+						
+					case 2:
+						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "All");
+						break;
+						
+					default:
+						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "All");
+						break;
+				}
+				editor.commit();
+			}
+		});
 		
-		autoBackupRestoreSpinner = (Spinner)findViewById(R.id.spinner_autoBackupRestore);
+		autoBackupRestoreSetting = (SettingsLayout) findViewById(R.id.autoBackupRestore);
+		autoBackupRestoreSetting.setSettingName("Auto Backup & Restore");
 		String[] autoBackupRestoreOptions = { "No Auto Backup", "Auto Backup Only", "Auto Backup And Restore" };
-		//String[] transactionsDisplayOptions = { "Month", "All" };
-		autoBackupRestoreSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, autoBackupRestoreOptions));
-		autoBackupRestoreSpinner.setSelection(autoBackupRestoreValue);
+		autoBackupRestoreSetting.setOptions(autoBackupRestoreOptions);
+		autoBackupRestoreSetting.setSelection(autoBackupRestoreValue);
+		autoBackupRestoreSetting.setSettingChangedListener(new OnSettingChangedListener()
+		{
+			@Override
+			public void onSettingChanged()
+			{
+				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences.Editor editor = preferences.edit();
+				
+				autoBackupRestoreValue = autoBackupRestoreSetting.getSelectedOptionNo();
+				switch(autoBackupRestoreValue)
+				{
+					case 0:
+						autoBackupRestoreValue = 0;
+						break;
+						
+					case 1:
+						autoBackupRestoreValue = 1;
+						break;
+						
+					case 2:
+						autoBackupRestoreValue = 4;
+						break;
+				}
+				editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, autoBackupRestoreValue);
+				editor.commit();
+			}
+		});
 	}
 	
 	private void readPreferences()
@@ -216,100 +319,6 @@ public class SettingsActivity extends Activity
 			autoBackupRestoreValue = 2;
 			break;
 		}
-		
-	}
-	
-	private void savePreferences()
-	{
-		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, 0);
-		SharedPreferences.Editor editor = preferences.edit();
-		
-		splashDuration = splashDurationSpinner.getSelectedItemPosition();
-		switch(splashDuration)
-		{
-			case 0:
-				editor.putInt(KEY_SPLASH_DURATION, 0);
-				break;
-				
-			case 1:
-				editor.putInt(KEY_SPLASH_DURATION, 5000);
-				break;
-				
-			case 2:
-				editor.putInt(KEY_SPLASH_DURATION, 10000);
-				break;
-				
-			case 3:
-				editor.putInt(KEY_SPLASH_DURATION, 15000);
-				break;
-				
-			default:
-				editor.putInt(KEY_SPLASH_DURATION, 5000);
-				break;
-		}
-		
-		bankSmsResponse = bankSmsSpinner.getSelectedItemPosition();
-		switch(bankSmsResponse)
-		{
-			case 0:
-				editor.putString(KEY_RESPOND_BANK_SMS, "NoResponse");
-				break;
-				
-			case 1:
-				editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
-				break;
-				
-			case 2:
-				editor.putString(KEY_RESPOND_BANK_SMS, "Automatic");
-				break;
-				
-			default:
-				editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
-				break;
-		}
-		currencySymbolSelected = (String) currencySymbolsSpinner.getSelectedItem();
-		if(currencySymbolSelected.equalsIgnoreCase("None"))
-			currencySymbolSelected = " ";
-		editor.putString(KEY_CURRENCY_SYMBOL, currencySymbolSelected);
-		
-		transactionsDisplayInterval = transactionsDisplayIntervalSpinner.getSelectedItemPosition();
-		switch(transactionsDisplayInterval)
-		{
-			case 0:
-				editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
-				break;
-				
-			case 1:
-				editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Year");
-				break;
-				
-			case 2:
-				editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "All");
-				break;
-				
-			default:
-				editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
-				break;
-		}
-		
-		autoBackupRestoreValue = autoBackupRestoreSpinner.getSelectedItemPosition();
-		switch(autoBackupRestoreValue)
-		{
-			case 0:
-				autoBackupRestoreValue = 0;
-				break;
-				
-			case 1:
-				autoBackupRestoreValue = 1;
-				break;
-				
-			case 2:
-				autoBackupRestoreValue = 4;
-				break;
-		}
-		editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, autoBackupRestoreValue);
-		
-		editor.commit();
 	}
 	
 	private void readCurrencySymbolsFile()
