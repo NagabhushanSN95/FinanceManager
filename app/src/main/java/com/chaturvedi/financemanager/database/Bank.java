@@ -9,56 +9,36 @@ public class Bank implements MoneyStorage
 	private String accNo;
 	private double balance;
 	private String smsName;
-	
-	public Bank()
+	private boolean deleted;
+
+	public Bank(int id, String name, String accNo, double balance, String smsName, boolean deleted)
 	{
-		
+		this.id = id;
+		this.name = name;
+		this.accNo = accNo;
+		this.balance = balance;
+		this.smsName = smsName;
+		this.deleted = deleted;
 	}
 	
-	public Bank(int id, String name, String accNo, double balance, String smsName)
-	{
-		this.setID(id);
-		this.setName(name);
-		this.setAccNo(accNo);
-		this.setBalance(balance);
-		this.setSmsName(smsName);
-	}
-	
-	/*public Bank(String id, String name, String balance, String smsName)
-	{
-		this.id=Integer.parseInt(id);
-		this.name=name;
-		this.accNo="0000";
-		this.balance=Double.parseDouble(balance);
-		this.smsName=smsName;
-	}*/
-	
-	public Bank(int id, String name, String accNo, String balance, String smsName)
+	/*public Bank(int id, String name, String accNo, String balance, String smsName)
 	{
 		this.id=id;
 		this.name=name;
 		this.accNo=accNo;
 		this.balance=Double.parseDouble(balance);
 		this.smsName=smsName;
-	}
+	}*/
 	
-	public Bank(String id, String name, String accNo, String balance, String smsName)
+	public Bank(String id, String name, String accNo, String balance, String smsName, String deleted)
 	{
 		this.id=Integer.parseInt(id);
 		this.name=name;
 		this.accNo=accNo;
 		this.balance=Double.parseDouble(balance);
 		this.smsName=smsName;
+		this.deleted = Boolean.parseBoolean(deleted);
 	}
-	
-	/*public Bank(String name, String accNo, String balance, String smsName)
-	{
-		this.id=0;
-		this.name=name;
-		this.accNo=accNo;
-		this.balance=Double.parseDouble(balance);
-		this.smsName=smsName;
-	}*/
 
 	/**
 	 * @param id the id to set
@@ -148,5 +128,15 @@ public class Bank implements MoneyStorage
 	public String getSmsName()
 	{
 		return smsName;
+	}
+
+	public void setDeleted(boolean deleted)
+	{
+		this.deleted = deleted;
+	}
+
+	public boolean isDeleted()
+	{
+		return deleted;
 	}
 }

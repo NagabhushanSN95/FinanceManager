@@ -11,22 +11,23 @@ public class Transaction
 	private double rate;
 	private double quantity;
 	private double amount;
-	
-	// Constructor
-	public Transaction(int id, Time createdTime, Time modifiedTime, Date date, String type, String particular, double rate, double quantity, double amount)
+	private boolean hidden;
+
+	public Transaction(int id, Time createdTime, Time modifiedTime, Date date, String type, String particular, double rate, double quantity, double amount, boolean hidden)
 	{
-		this.setID(id);
-		this.setCreatedTime(createdTime);
-		this.setModifiedTime(modifiedTime);
-		this.setDate(date);
-		this.setType(type);
-		this.setParticular(particular);
-		this.setRate(rate);
-		this.setQuantity(quantity);
-		this.setAmount(amount);
+		this.id = id;
+		this.createdTime = createdTime;
+		this.modifiedTime = modifiedTime;
+		this.date = date;
+		this.type = type;
+		this.particular = particular;
+		this.rate = rate;
+		this.quantity = quantity;
+		this.amount = amount;
+		this.hidden = hidden;
 	}
 	
-	// Constructor
+	/*// Constructor
 	public Transaction(String id, Time createdTime, Time modifiedTime, Date date, String type, String particular, String rate, String quantity, String amount)
 	{
 		this.setID(Integer.parseInt(id));
@@ -38,10 +39,11 @@ public class Transaction
 		this.setRate(Double.parseDouble(rate));
 		this.setQuantity(Double.parseDouble(quantity));
 		this.setAmount(Double.parseDouble(amount));
-	}
+	}*/
 
 	// Constructor
-	public Transaction(String id, String createdTime, String modifiedTime, String date, String type, String particular, String rate, String quantity, String amount)
+	public Transaction(String id, String createdTime, String modifiedTime, String date, String type, String particular,
+					   String rate, String quantity, String amount, String hidden)
 	{
 		this.setID(Integer.parseInt(id));
 		this.setCreatedTime(new Time(createdTime));
@@ -52,6 +54,7 @@ public class Transaction
 		this.setRate(Double.parseDouble(rate));
 		this.setQuantity(Double.parseDouble(quantity));
 		this.setAmount(Double.parseDouble(amount));
+		this.hidden = Boolean.parseBoolean(hidden);
 	}
 
 	/**
@@ -69,6 +72,7 @@ public class Transaction
 		this.rate = transaction.rate;
 		this.quantity = transaction.quantity;
 		this.amount = transaction.amount;
+		this.hidden = transaction.hidden;
 	}
 
 	/**
@@ -215,5 +219,13 @@ public class Transaction
 		return amount;
 	}
 	
-	
+	public void setHidden(boolean hidden)
+	{
+		this.hidden = hidden;
+	}
+
+	public boolean isHidden()
+	{
+		return hidden;
+	}
 }

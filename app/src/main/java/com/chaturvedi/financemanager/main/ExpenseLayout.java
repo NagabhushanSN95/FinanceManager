@@ -5,7 +5,6 @@ package com.chaturvedi.financemanager.main;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
@@ -18,7 +17,6 @@ import android.widget.Toast;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.ExpenditureType;
 import com.chaturvedi.financemanager.database.MoneyStorage;
@@ -77,7 +75,7 @@ public class ExpenseLayout extends RelativeLayout
 
 		ArrayList<String> expenseSourcesList = databaseAdapter.getAllWalletsNames();
 		expenseSourcesList.addAll(databaseAdapter.getAllBanksNames());
-		ArrayList<String> expenditureTypesList = databaseAdapter.getAllVisibleExpTypeNames();
+		ArrayList<String> expenditureTypesList = databaseAdapter.getAllVisibleExpenditureTypeNames();
 
 		expenseSourcesSpinner = (Spinner) findViewById(R.id.spinner_expenseSource);
 		expenseSourcesSpinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
@@ -162,15 +160,10 @@ public class ExpenseLayout extends RelativeLayout
 			rate = amount/quantity;
 		}
 
-		int id;
-		try
-		{
-			id = databaseAdapter.getIDforNextTransaction();
-		}
-		catch (Exception e)
+		int id = databaseAdapter.getIDforNextTransaction();
+		if(id == -1)
 		{
 			Toast.makeText(getContext(), "Failed due to some internal error. Please try again", Toast.LENGTH_LONG).show();
-			Log.d("ExpenseLayout/submit()", e.getMessage(), e.fillInStackTrace());
 			return false;
 		}
 
@@ -188,7 +181,7 @@ public class ExpenseLayout extends RelativeLayout
 			code = "Debit Bank" + formatter.format(expSource.getID());
 		}
 
-		ExpenditureType expenditureType = databaseAdapter.getExpTypeFromName((String) expenseTypeSpinner.getSelectedItem());
+		ExpenditureType expenditureType = databaseAdapter.getExpenditureTypeFromName((String) expenseTypeSpinner.getSelectedItem());
 		code += " Exp" + formatter.format(expenditureType.getId());
 
 		String particulars = particularsEditText.getText().toString().trim();

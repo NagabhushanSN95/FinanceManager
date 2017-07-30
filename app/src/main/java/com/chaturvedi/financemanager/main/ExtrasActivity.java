@@ -270,12 +270,12 @@ public class ExtrasActivity extends Activity
 							DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
 							DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 							DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-							int numExpTypesInDatabase = DatabaseManager.getNumExpTypes();
+							int numExpTypesInDatabase = DatabaseManager.getNumExpenditureTypes();
 							DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
-							if(restoreManager.getNumExpTypes() != numExpTypesInDatabase)
+							if(restoreManager.getNumExpenditureTypes() != numExpTypesInDatabase)
 							{
 								Log.d("ExtrasActivity/restoreData()","Readjusting Counters Table: SD Card: " + 
-										restoreManager.getNumExpTypes() + "|Database: " + numExpTypesInDatabase);
+										restoreManager.getNumExpenditureTypes() + "|Database: " + numExpTypesInDatabase);
 								DatabaseManager.readjustCountersTable();
 							}
 							DatabaseManager.setAllCounters(restoreManager.getAllCounters());

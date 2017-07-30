@@ -7,38 +7,36 @@ public class NewWallet implements MoneyStorage
 	private int id;
 	private String name;
 	private double balance;
+	private boolean deleted;
 
-	public NewWallet()
-	{
-
-	}
-
-	public NewWallet(int id, String name, double balance)
+	public NewWallet(int id, String name, double balance, boolean deleted)
 	{
 		this.id = id;
 		this.name = name;
 		this.balance = balance;
+		this.deleted = deleted;
 	}
 
-	/*public NewWallet(String id, String name, String balance)
+//	public NewWallet(String id, String name, String balance)
+//	{
+//		this.id=Integer.parseInt(id);
+//		this.name=name;
+//		this.balance=Double.parseDouble(balance);
+//	}
+//
+//	public NewWallet(int id, String name, String balance)
+//	{
+//		this.id=id;
+//		this.name=name;
+//		this.balance=Double.parseDouble(balance);
+//	}
+
+	public NewWallet(String id, String name, String balance, String deleted)
 	{
 		this.id=Integer.parseInt(id);
 		this.name=name;
 		this.balance=Double.parseDouble(balance);
-	}*/
-
-	public NewWallet(int id, String name, String balance)
-	{
-		this.id=id;
-		this.name=name;
-		this.balance=Double.parseDouble(balance);
-	}
-
-	public NewWallet(String id, String name, String balance)
-	{
-		this.id=Integer.parseInt(id);
-		this.name=name;
-		this.balance=Double.parseDouble(balance);
+		this.deleted = Boolean.parseBoolean(deleted);
 	}
 
 	/**
@@ -97,5 +95,15 @@ public class NewWallet implements MoneyStorage
 	public void decrementBalance(double amount)
 	{
 		balance -= amount;
+	}
+
+	public void setDeleted(boolean deleted)
+	{
+		this.deleted = deleted;
+	}
+
+	public boolean isDeleted()
+	{
+		return deleted;
 	}
 }

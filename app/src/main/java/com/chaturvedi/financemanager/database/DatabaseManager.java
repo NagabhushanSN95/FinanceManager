@@ -922,8 +922,8 @@ public class DatabaseManager
 		databaseAdapter.addAllTransactions(transactions);
 		databaseAdapter.deleteAllTemplates();
 		databaseAdapter.addAllTemplates(templates);
-		databaseAdapter.deleteAllExpTypes();
-		databaseAdapter.addAllExpTypes(expenditureTypes);
+		databaseAdapter.deleteAllExpenditureTypes();
+		databaseAdapter.addAllExpenditureTypes(expenditureTypes);
 		databaseAdapter.readjustCountersTable();
 		databaseAdapter.addAllCountersRows(counters);
 	}
@@ -931,14 +931,14 @@ public class DatabaseManager
 	public static void setExpenditureType(int expTypeNo, String expTypeName)
 	{
 		DatabaseManager.expenditureTypes.set(expTypeNo, expTypeName);
-		databaseAdapter.updateExpType(expTypeNo, expTypeName);
+		databaseAdapter.updateExpenditureType(expTypeNo, expTypeName);
 	}
 	
 	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
 	{
 		DatabaseManager.expenditureTypes=expTypes1;
-		databaseAdapter.deleteAllExpTypes();
-		databaseAdapter.addAllExpTypes(expTypes1);
+		databaseAdapter.deleteAllExpenditureTypes();
+		databaseAdapter.addAllExpenditureTypes(expTypes1);
 	}
 	
 	public static String getExpenditureType(int expTypeNo)
@@ -1067,8 +1067,8 @@ public class DatabaseManager
 		databaseAdapter.addAllTransactions(transactions);
 		databaseAdapter.deleteAllTemplates();
 		databaseAdapter.addAllTemplates(templates);
-		databaseAdapter.deleteAllExpTypes();
-		databaseAdapter.addAllExpTypes(expenditureTypes);
+		databaseAdapter.deleteAllExpenditureTypes();
+		databaseAdapter.addAllExpenditureTypes(expenditureTypes);
 		databaseAdapter.readjustCountersTable();
 		databaseAdapter.addAllCountersRows(counters);
 	}

@@ -6,22 +6,25 @@ public class Template
 	private String particular;
 	private String type;
 	private double amount;
+	private boolean hidden;
 	
 	// Constructor
-	public Template(int id, String particular, String type, double amount)
+	public Template(int id, String particular, String type, double amount, boolean hidden)
 	{
 		this.id = id;
 		this.particular = particular;
 		this.type = type;
 		this.amount = amount;
+		this.hidden = hidden;
 	}
 	
-	public Template(String id, String particular, String type, String amount)
+	public Template(String id, String particular, String type, String amount, String hidden)
 	{
 		this.id = Integer.parseInt(id);
 		this.particular = particular;
 		this.type = type;
 		this.amount = Double.parseDouble(amount);
+		this.hidden = Boolean.parseBoolean(hidden);
 	}
 
 	/**
@@ -86,5 +89,15 @@ public class Template
 	public double getAmount()
 	{
 		return amount;
+	}
+
+	public void setHidden(boolean hidden)
+	{
+		this.hidden = hidden;
+	}
+
+	public boolean isHidden()
+	{
+		return hidden;
 	}
 }

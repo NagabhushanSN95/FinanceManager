@@ -112,7 +112,7 @@
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseManager.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="1097" column="23" selection-start-line="1097" selection-start-column="23" selection-end-line="1097" selection-end-column="23" />
+              <caret line="807" column="28" selection-start-line="807" selection-start-column="28" selection-end-line="807" selection-end-column="28" />
               <folding>
                 <element signature="docComment;method#getTransactions#0;class#DatabaseManager#0" expanded="false" />
               </folding>
@@ -120,48 +120,85 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="AddTransactionActivity.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/AddTransactionActivity.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="15" column="54" selection-start-line="15" selection-start-column="54" selection-end-line="15" selection-end-column="54" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ExpenseLayout.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/ExpenseLayout.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="223" column="20" selection-start-line="223" selection-start-column="20" selection-end-line="223" selection-end-column="20" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AndroidManifest.xml" pinned="false" current-in-tab="true">
+      <file leaf-file-name="AndroidManifest.xml" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.20058997">
+            <state vertical-scroll-proportion="-2.6153846">
               <caret line="4" column="36" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DatabaseAdapter.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java">
+      <file leaf-file-name="Update107To109.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update107To109.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="629" column="90" selection-start-line="629" selection-start-column="90" selection-end-line="629" selection-end-column="90" />
+              <caret line="81" column="21" selection-start-line="81" selection-start-column="21" selection-end-line="81" selection-end-column="21" />
               <folding>
-                <element signature="method#getInstance#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="e#5513#5534#0" expanded="false" />
+                <element signature="e#11019#11040#0" expanded="false" />
+                <element signature="e#13038#13133#0" expanded="false" />
+                <element signature="method#getNumExpTypes#0;class#Update107To109#0" expanded="false" />
+                <element signature="method#getNumBanks#0;class#Update107To109#0" expanded="false" />
+                <element signature="method#getAllBanksNames#0;class#Update107To109#0" expanded="false" />
+                <element signature="method#onCreate#0;class#Update107To109#0" expanded="false" />
+                <element signature="e#14474#14557#0" expanded="false" />
+                <element signature="method#onUpgrade#0;class#Update107To109#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Update68To88.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update68To88.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="441" column="5" selection-start-line="423" selection-start-column="4" selection-end-line="441" selection-end-column="5" />
+              <folding>
+                <element signature="method#Update68To88#0;class#Update68To88#0" expanded="false" />
+                <element signature="method#updateDatabase#0;class#Update68To88#0" expanded="false" />
+                <element signature="method#updateSharedPreferences#0;class#Update68To88#0" expanded="false" />
+                <element signature="e#3881#3973#0" expanded="false" />
+                <element signature="e#5348#5445#0" expanded="false" />
+                <element signature="e#5848#5915#0" expanded="false" />
+                <element signature="e#6402#6501#0" expanded="false" />
+                <element signature="e#6935#7037#0" expanded="false" />
+                <element signature="e#7690#7792#0" expanded="false" />
+                <element signature="method#updateBackups#0;class#Update68To88#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DatabaseAdapter.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.33691755">
+              <caret line="345" column="68" selection-start-line="345" selection-start-column="68" selection-end-line="345" selection-end-column="68" />
+              <folding>
                 <element signature="method#DatabaseAdapter#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#onCreate#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#onUpgrade#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="e#5900#5958#0" expanded="false" />
+                <element signature="method#addWallet#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#addAllWallets#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getWallet#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getWalletFromName#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getAllWalletsNames#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="e#9933#9989#0" expanded="false" />
+                <element signature="method#updateWallet#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getNumWallets#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getIDforNextWallet#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#addBank#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#addAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getBank#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getBankFromName#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getAllBanksNames#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#updateBank#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getNumBanks#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getIDforNextBank#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="docComment;method#addTransaction#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#addTransaction#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#addAllTransactions#0;class#DatabaseAdapter#0" expanded="false" />
@@ -172,53 +209,34 @@
                 <element signature="docComment;method#deleteAllTransactions#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#deleteAllTransactions#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#getNumTransactions#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getWalletFromName#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#addBank#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#addAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getBank#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getBankFromName#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getAllBanksNames#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#updateBank#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#deleteBank#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#deleteAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getNumBanks#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#initializeWalletTable#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#setWalletBalance#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getWalletBalance#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#addExpType#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#addAllExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getExpType#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getAllExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getAllVisibleExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getAllVisibleExpTypeNames#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#updateExpType#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#deleteExpType#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#deleteAllExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getNumExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getIDforNextTransaction#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#addExpenditureType#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#addAllExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getExpenditureType#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getExpenditureTypeFromName#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getAllExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getAllVisibleExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getAllVisibleExpenditureTypeNames#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#updateExpenditureType#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#deleteAllExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="method#getNumExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="docComment;method#addCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#addCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="docComment;method#insertCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#insertCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="docComment;method#addAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#addAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#getCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#getAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#updateCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#deleteCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="docComment;method#deleteAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#deleteAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#getNumCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="docComment;method#readjustCountersTable#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#readjustCountersTable#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="docComment;method#getIDforNextCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#getNumTemplates#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="docComment;method#addTemplate#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#addTemplate#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#addAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="docComment;method#insertTemplate#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#insertTemplate#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#updateTemplate#0;class#DatabaseAdapter#0" expanded="false" />
+                <element signature="docComment;method#updateTemplate#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#getTemplate#0;class#DatabaseAdapter#0" expanded="false" />
-                <element signature="method#getAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#deleteTemplate#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="docComment;method#deleteAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
                 <element signature="method#deleteAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
@@ -1789,7 +1807,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/app/src/main/res/menu/activity_transactions.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/activity_search.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/SearchActivity.java" />
         <option value="$PROJECT_DIR$/app/build.gradle" />
@@ -1815,7 +1832,6 @@
         <option value="$PROJECT_DIR$/app/src/main/res/values/constants.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Time.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Counters.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Transaction.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/setup/StartupActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/ExtrasActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/functions/Constants.java" />
@@ -1826,18 +1842,22 @@
         <option value="$PROJECT_DIR$/app/src/main/res/layout/dialog_add_transaction.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TransactionsActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/AddTransactionActivity.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Bank.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/NewWallet.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/MoneyStorage.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseManager.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/ExpenditureType.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Date.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/layout_transaction_expense.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/layout_transaction_income.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/layout_transaction_transfer.xml" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/ExpenseLayout.java" />
         <option value="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update107To110.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/ExpenditureType.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/NewWallet.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Bank.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Template.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Transaction.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update107To109.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/ExpenseLayout.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java" />
       </list>
     </option>
   </component>
@@ -1990,6 +2010,58 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="financemanager" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="updates" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FinanceManager" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="app" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidSourceTypeNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="chaturvedi" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="financemanager" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="FinanceManager" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="app" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidSourceTypeNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="chaturvedi" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="financemanager" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="database" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -2336,14 +2408,15 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32935154" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32935154" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33788395" sideWeight="0.50907713" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" x="92" y="92" width="1182" height="544" />
       <window_info id="Android Monitor" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33788395" sideWeight="0.49092284" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -2354,6 +2427,7 @@
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24962178" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32935154" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32980332" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Android Model" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
@@ -2364,9 +2438,7 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" x="92" y="92" width="1182" height="544" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32935154" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -2382,33 +2454,11 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="3" />
+      <option name="time" value="4" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/dialog_bank_debit.xml">
-      <provider editor-type-id="android-designer">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4642857">
-          <caret line="19" column="58" selection-start-line="19" selection-start-column="58" selection-end-line="19" selection-end-column="58" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/dialog_bank_credit.xml">
-      <provider editor-type-id="android-designer">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.39030612">
-          <caret line="19" column="62" selection-start-line="19" selection-start-column="62" selection-end-line="19" selection-end-column="62" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/dialog_add_bank.xml">
       <provider editor-type-id="android-designer">
         <state />
@@ -2434,13 +2484,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.30425057">
           <caret line="8" column="23" selection-start-line="8" selection-start-column="23" selection-end-line="8" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/edit/EditBanksActivity.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="185" column="8" selection-start-line="185" selection-start-column="8" selection-end-line="185" selection-end-column="8" />
         </state>
       </provider>
     </entry>
@@ -2506,25 +2549,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update68To88.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Time.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.33333334">
           <caret line="27" column="11" selection-start-line="27" selection-start-column="11" selection-end-line="27" selection-end-column="11" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Counters.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.8111111">
-          <caret line="32" column="5" selection-start-line="15" selection-start-column="30" selection-end-line="32" selection-end-column="5" />
           <folding />
         </state>
       </provider>
@@ -2540,13 +2568,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="13" column="13" selection-start-line="13" selection-start-column="13" selection-end-line="13" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update96To107.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3861111">
-          <caret line="43" column="55" selection-start-line="43" selection-start-column="55" selection-end-line="43" selection-end-column="55" />
         </state>
       </provider>
     </entry>
@@ -2703,33 +2724,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Wallet.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="25" column="22" selection-start-line="25" selection-start-column="22" selection-end-line="25" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Bank.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-3.9666667">
-          <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/MoneyStorage.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.56666666">
           <caret line="12" column="14" selection-start-line="12" selection-start-column="14" selection-end-line="12" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/ExpenditureType.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.7111111">
-          <caret line="17" column="38" selection-start-line="17" selection-start-column="38" selection-end-line="17" selection-end-column="38" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2738,24 +2736,6 @@
         <state vertical-scroll-proportion="0.42777777">
           <caret line="49" column="25" selection-start-line="49" selection-start-column="25" selection-end-line="49" selection-end-column="25" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/NewWallet.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0027777778">
-          <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="10" selection-end-column="11" />
-          <folding>
-            <element signature="method#NewWallet#1;class#NewWallet#0" expanded="false" />
-            <element signature="method#NewWallet#2;class#NewWallet#0" expanded="false" />
-            <element signature="method#NewWallet#3;class#NewWallet#0" expanded="false" />
-            <element signature="docComment;method#setID#0;class#NewWallet#0" expanded="false" />
-            <element signature="docComment;method#getID#0;class#NewWallet#0" expanded="false" />
-            <element signature="docComment;method#setName#0;class#NewWallet#0" expanded="false" />
-            <element signature="docComment;method#getName#0;class#NewWallet#0" expanded="false" />
-            <element signature="docComment;method#setBalance#0;class#NewWallet#0" expanded="false" />
-            <element signature="docComment;method#getBalance#0;class#NewWallet#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2781,14 +2761,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="15" column="54" selection-start-line="15" selection-start-column="54" selection-end-line="15" selection-end-column="54" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Transaction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="15" column="11" selection-start-line="15" selection-start-column="11" selection-end-line="15" selection-end-column="11" />
           <folding />
         </state>
       </provider>
@@ -2895,15 +2867,194 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java">
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update96To107.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.38630137">
+          <caret line="43" column="55" selection-start-line="43" selection-start-column="55" selection-end-line="43" selection-end-column="55" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Bank.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="4.7506847">
+          <caret line="138" column="5" selection-start-line="138" selection-start-column="5" selection-end-line="138" selection-end-column="5" />
+          <folding>
+            <element signature="e#2138#2139#0" expanded="true" />
+            <element signature="e#2167#2168#0" expanded="true" />
+            <element signature="e#2220#2221#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/ExpenditureType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.024657534">
+          <caret line="21" column="53" selection-start-line="21" selection-start-column="53" selection-end-line="21" selection-end-column="53" />
+          <folding>
+            <element signature="method#isDeleted#0;class#ExpenditureType#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/NewWallet.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.8849315">
+          <caret line="31" column="5" selection-start-line="31" selection-start-column="5" selection-end-line="31" selection-end-column="5" />
+          <folding>
+            <element signature="e#383#442#0" expanded="false" />
+            <element signature="docComment;method#getID#0;class#NewWallet#0" expanded="false" />
+            <element signature="docComment;method#setName#0;class#NewWallet#0" expanded="false" />
+            <element signature="docComment;method#getName#0;class#NewWallet#0" expanded="false" />
+            <element signature="docComment;method#setBalance#0;class#NewWallet#0" expanded="false" />
+            <element signature="docComment;method#getBalance#0;class#NewWallet#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Template.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.6739726">
+          <caret line="99" column="5" selection-start-line="99" selection-start-column="5" selection-end-line="99" selection-end-column="5" />
+          <folding>
+            <element signature="e#1504#1505#0" expanded="true" />
+            <element signature="e#1531#1532#0" expanded="true" />
+            <element signature="e#1582#1583#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Transaction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.6739726">
+          <caret line="227" column="5" selection-start-line="227" selection-start-column="5" selection-end-line="227" selection-end-column="5" />
+          <folding>
+            <element signature="e#4465#4466#0" expanded="true" />
+            <element signature="e#4492#4493#0" expanded="true" />
+            <element signature="e#4543#4544#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Wallet.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.49041095">
+          <caret line="25" column="22" selection-start-line="25" selection-start-column="22" selection-end-line="25" selection-end-column="22" />
+          <folding>
+            <element signature="e#394#395#0" expanded="true" />
+            <element signature="e#410#411#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/edit/EditBanksActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.4712329">
+          <caret line="108" column="12" selection-start-line="108" selection-start-column="12" selection-end-line="108" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update107To109.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="629" column="90" selection-start-line="629" selection-start-column="90" selection-end-line="629" selection-end-column="90" />
+          <caret line="81" column="21" selection-start-line="81" selection-start-column="21" selection-end-line="81" selection-end-column="21" />
           <folding>
-            <element signature="method#getInstance#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="e#5513#5534#0" expanded="false" />
+            <element signature="e#11019#11040#0" expanded="false" />
+            <element signature="e#13038#13133#0" expanded="false" />
+            <element signature="method#getNumExpTypes#0;class#Update107To109#0" expanded="false" />
+            <element signature="method#getNumBanks#0;class#Update107To109#0" expanded="false" />
+            <element signature="method#getAllBanksNames#0;class#Update107To109#0" expanded="false" />
+            <element signature="method#onCreate#0;class#Update107To109#0" expanded="false" />
+            <element signature="e#14474#14557#0" expanded="false" />
+            <element signature="method#onUpgrade#0;class#Update107To109#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/ExpenseLayout.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.33150685">
+          <caret line="167" column="122" selection-start-line="167" selection-start-column="122" selection-end-line="167" selection-end-column="122" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/updates/Update68To88.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="441" column="5" selection-start-line="423" selection-start-column="4" selection-end-line="441" selection-end-column="5" />
+          <folding>
+            <element signature="method#Update68To88#0;class#Update68To88#0" expanded="false" />
+            <element signature="method#updateDatabase#0;class#Update68To88#0" expanded="false" />
+            <element signature="method#updateSharedPreferences#0;class#Update68To88#0" expanded="false" />
+            <element signature="e#3881#3973#0" expanded="false" />
+            <element signature="e#5348#5445#0" expanded="false" />
+            <element signature="e#5848#5915#0" expanded="false" />
+            <element signature="e#6402#6501#0" expanded="false" />
+            <element signature="e#6935#7037#0" expanded="false" />
+            <element signature="e#7690#7792#0" expanded="false" />
+            <element signature="method#updateBackups#0;class#Update68To88#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/Counters.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.33150685">
+          <caret line="35" column="11" selection-start-line="35" selection-start-column="11" selection-end-line="35" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseManager.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="807" column="28" selection-start-line="807" selection-start-column="28" selection-end-line="807" selection-end-column="28" />
+          <folding>
+            <element signature="docComment;method#getTransactions#0;class#DatabaseManager#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-2.6153846">
+          <caret line="4" column="36" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.33691755">
+          <caret line="345" column="68" selection-start-line="345" selection-start-column="68" selection-end-line="345" selection-end-column="68" />
+          <folding>
             <element signature="method#DatabaseAdapter#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#onCreate#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#onUpgrade#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="e#5900#5958#0" expanded="false" />
+            <element signature="method#addWallet#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#addAllWallets#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getWallet#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getWalletFromName#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getAllWalletsNames#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="e#9933#9989#0" expanded="false" />
+            <element signature="method#updateWallet#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getNumWallets#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getIDforNextWallet#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#addBank#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#addAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getBank#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getBankFromName#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getAllBanksNames#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#updateBank#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getNumBanks#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getIDforNextBank#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="docComment;method#addTransaction#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#addTransaction#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#addAllTransactions#0;class#DatabaseAdapter#0" expanded="false" />
@@ -2914,85 +3065,38 @@
             <element signature="docComment;method#deleteAllTransactions#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#deleteAllTransactions#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#getNumTransactions#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getWalletFromName#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#addBank#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#addAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getBank#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getBankFromName#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getAllBanksNames#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#updateBank#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#deleteBank#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#deleteAllBanks#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getNumBanks#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#initializeWalletTable#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#setWalletBalance#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getWalletBalance#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#addExpType#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#addAllExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getExpType#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getAllExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getAllVisibleExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getAllVisibleExpTypeNames#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#updateExpType#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#deleteExpType#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#deleteAllExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getNumExpTypes#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getIDforNextTransaction#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#addExpenditureType#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#addAllExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getExpenditureType#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getExpenditureTypeFromName#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getAllExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getAllVisibleExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getAllVisibleExpenditureTypeNames#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#updateExpenditureType#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#deleteAllExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="method#getNumExpenditureTypes#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="docComment;method#addCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#addCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="docComment;method#insertCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#insertCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="docComment;method#addAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#addAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#getCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#getAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#updateCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#deleteCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="docComment;method#deleteAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#deleteAllCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#getNumCountersRows#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="docComment;method#readjustCountersTable#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#readjustCountersTable#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="docComment;method#getIDforNextCountersRow#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#getNumTemplates#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="docComment;method#addTemplate#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#addTemplate#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#addAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="docComment;method#insertTemplate#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#insertTemplate#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#updateTemplate#0;class#DatabaseAdapter#0" expanded="false" />
+            <element signature="docComment;method#updateTemplate#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#getTemplate#0;class#DatabaseAdapter#0" expanded="false" />
-            <element signature="method#getAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#deleteTemplate#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="docComment;method#deleteAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
             <element signature="method#deleteAllTemplates#0;class#DatabaseAdapter#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="1097" column="23" selection-start-line="1097" selection-start-column="23" selection-end-line="1097" selection-end-column="23" />
-          <folding>
-            <element signature="docComment;method#getTransactions#0;class#DatabaseManager#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/ExpenseLayout.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="223" column="20" selection-start-line="223" selection-start-column="20" selection-end-line="223" selection-end-column="20" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.20058997">
-          <caret line="4" column="36" selection-start-line="4" selection-start-column="36" selection-end-line="4" selection-end-column="36" />
-          <folding />
         </state>
       </provider>
     </entry>
