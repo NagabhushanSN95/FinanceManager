@@ -6,8 +6,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.pm.ApplicationInfo;
 import android.os.Build.VERSION;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
@@ -93,5 +95,12 @@ public class HelpActivity extends Activity
 		{
 			textViews.get(i).setText(helpTexts.get(i));
 		}
+	}
+	
+	@Override
+	public void onBackPressed()
+	{
+		super.onBackPressed();
+		overridePendingTransition(R.anim.old_activity_enter, R.anim.new_activity_leave);
 	}
 }

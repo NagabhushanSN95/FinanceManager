@@ -7,13 +7,16 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.os.Build.VERSION;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
@@ -141,6 +144,8 @@ public class SummaryActivity extends Activity
 			{
 				DatabaseManager.setContext(SummaryActivity.this);
 				DatabaseManager.readDatabase();
+				buildLayout();
+				setData();
 				Toast.makeText(getApplicationContext(), "Data Recovered And Restored In If Block", Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -148,6 +153,8 @@ public class SummaryActivity extends Activity
 		{
 			new DatabaseManager(SummaryActivity.this);
 			DatabaseManager.readDatabase();
+			buildLayout();
+			setData();
 			Toast.makeText(getApplicationContext(), "Data Recovered And Restored In Catch Block", Toast.LENGTH_SHORT).show();
 		}
 	}
@@ -185,7 +192,7 @@ public class SummaryActivity extends Activity
 				return true;
 				
 			case R.id.action_help:
-				startActivity(helpIntent);
+				startHelpActivity();
 				return true;
 				
 			case R.id.action_extras:
@@ -318,7 +325,25 @@ public class SummaryActivity extends Activity
 		}
 		catch(Exception e)
 		{
-			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), 
+					Toast.LENGTH_LONG).show();
+		}
+	}
+	
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+	private void startHelpActivity()
+	{
+		int androidVersionNo = android.os.Build.VERSION.SDK_INT;
+		if(androidVersionNo < Build.VERSION_CODES.JELLY_BEAN)
+		{
+			startActivity(helpIntent);
+			overridePendingTransition(R.anim.new_activity_enter, R.anim.old_activity_leave);
+		}
+		else
+		{
+			Bundle animationBundle = ActivityOptions.makeCustomAnimation(getApplicationContext(), 
+					R.anim.new_activity_enter, R.anim.old_activity_leave).toBundle();
+			startActivity(helpIntent, animationBundle);
 		}
 	}
 	

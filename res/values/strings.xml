@@ -38,6 +38,7 @@
     <string name="instruction_expenditure_types">Enter Five Different Types Of Expenditures. 
         If You Leave The Fields Blank, Default Values Will Be Taken</string>
     <string name="instruction_export">The Data Will Be Exported To A Text File Named</string>
+    <string name="madeInIndia">Made In INDIA</string>
     <string name="next">Next</string>
     <string name="particulars">Particulars</string>
     <string name="quantity">Quantity</string>

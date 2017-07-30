@@ -144,13 +144,13 @@ public class ExpenditureSetupActivity extends Activity
 
 	private void saveToDatabase()
 	{
-		/*String[] hints = new String[5];
-		hints[0] = R.string.hint_exp01;
-		hints[1] = R.string.hint_exp02;
-		hints[2] = R.string.hint_exp03;
-		hints[3] = R.string.hint_exp04;
-		hints[4] = R.string.hint_exp05;*/
-		String[] hints = {"Studies", "Food", "Travels", "Entertainment", "Others"};
+		String[] hints = new String[5];
+		hints[0] = getResources().getString(R.string.hint_exp01);
+		hints[1] = getResources().getString(R.string.hint_exp02);
+		hints[2] = getResources().getString(R.string.hint_exp03);
+		hints[3] = getResources().getString(R.string.hint_exp04);
+		hints[4] = getResources().getString(R.string.hint_exp05);
+		//String[] hints = {"Studies", "Food", "Travels", "Entertainment", "Others"};
 		
 		expenditureTypes = new ArrayList<String>();
 		for(int i=0; i<NUM_EXPENDITURE_TYPES; i++)

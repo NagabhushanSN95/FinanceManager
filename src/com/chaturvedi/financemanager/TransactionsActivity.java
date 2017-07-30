@@ -138,6 +138,7 @@ public class TransactionsActivity extends Activity
 			{
 				DatabaseManager.setContext(TransactionsActivity.this);
 				DatabaseManager.readDatabase();
+				buildBodyLayout();
 				Toast.makeText(getApplicationContext(), "Data Recovered And Restored In If Block", Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -145,6 +146,7 @@ public class TransactionsActivity extends Activity
 		{
 			new DatabaseManager(TransactionsActivity.this);
 			DatabaseManager.readDatabase();
+			buildBodyLayout();
 			Toast.makeText(getApplicationContext(), "Data Recovered And Restored In Catch Block", Toast.LENGTH_SHORT).show();
 		}
 	}
