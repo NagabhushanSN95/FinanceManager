@@ -20,6 +20,8 @@ public class SmsReceiver extends BroadcastReceiver
 	private String sender;
 	private String message;
 	
+	private Intent detailsIntent;
+	
 	@Override
 	public void onReceive(Context context, Intent intent)
 	{
@@ -50,13 +52,113 @@ public class SmsReceiver extends BroadcastReceiver
 					if(sender.toLowerCase().contains(DatabaseManager.getBankSmsName(i).toLowerCase()))
 					{
 						Toast.makeText(context, "Transaction In "+DatabaseManager.getBankName(i)+" Detected. Please Update The Same", Toast.LENGTH_LONG).show();
-						Intent detailsIntent = new Intent(context, DetailsActivity.class);
+						detailsIntent = new Intent(context, DetailsActivity.class);
 						detailsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						detailsIntent.putExtra("Bank Sms", true);
+						detailsIntent.putExtra("Bank Number", i);
+						
+						if(sender.toLowerCase().contains("union"))
+							readUBIMessage();
+						else if(sender.toLowerCase().contains("sbi"))
+							readSBIMessage();
+						else if(sender.toUpperCase().contains("ANDBNK"))
+							readAndhraBankMessage();
+						else
+							readBankMessage();
+						
 						context.startActivity(detailsIntent);
 						break;
 					}
 				}
 			}
+		}
+	}
+
+	private void readUBIMessage()
+	{
+		if(message.toLowerCase().contains("debit"))
+		{
+			detailsIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("Rs", message.indexOf("debited"))+4;
+			int endIndex = message.indexOf("on", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+		}
+		else if(message.toLowerCase().contains("credit"))
+		{
+			detailsIntent.putExtra("Type", "credit");
+			int startIndex = message.indexOf("Rs", message.indexOf("credited"))+4;
+			int endIndex = message.indexOf("on", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+		}
+		else
+		{
+			detailsIntent.putExtra("Bank Sms", false);
+		}
+	}
+	
+	private void readSBIMessage()
+	{
+		if(message.toLowerCase().contains("debit"))
+		{
+			detailsIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("Rs")+2;
+			double amount = Double.parseDouble(message.substring(startIndex));
+			detailsIntent.putExtra("Amount", amount);
+		}
+		else if(message.toLowerCase().contains("credit"))
+		{
+			detailsIntent.putExtra("Type", "credit");
+			int startIndex = message.indexOf("Rs")+2;
+			double amount = Double.parseDouble(message.substring(startIndex));
+			detailsIntent.putExtra("Amount", amount);
+		}
+		else
+		{
+			detailsIntent.putExtra("Bank Sms", false);
+		}
+	}
+	
+	private void readAndhraBankMessage()
+	{
+		if(message.toLowerCase().contains("debit"))
+		{
+			detailsIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("Rs")+4;
+			int endIndex = message.indexOf("is")-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+		}
+		else if(message.toLowerCase().contains("credit"))
+		{
+			detailsIntent.putExtra("Type", "credit");
+			int startIndex = message.indexOf("Rs")+4;
+			int endIndex = message.indexOf("is")-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+		}
+		else
+		{
+			detailsIntent.putExtra("Bank Sms", false);
+		}
+	}
+	
+	private void readBankMessage()
+	{
+		if(message.toLowerCase().contains("debit"))
+		{
+			detailsIntent.putExtra("Type", "debit");
+			detailsIntent.putExtra("Amount", 0);
+		}
+		else if(message.toLowerCase().contains("credit"))
+		{
+			detailsIntent.putExtra("Type", "credit");
+			detailsIntent.putExtra("Amount", 0);
+		}
+		else
+		{
+			detailsIntent.putExtra("Bank Sms", false);
 		}
 	}
 

@@ -10,6 +10,7 @@ import java.util.Calendar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
@@ -71,6 +72,8 @@ public class DetailsActivity extends Activity
 	private EditText dateField;
 	private ArrayList<RadioButton> banks;
 	
+	private Intent smsIntent;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -107,6 +110,29 @@ public class DetailsActivity extends Activity
 		buildTitleLayout();
 		buildBodyLayout();
 		buildButtonPanel();
+		
+		smsIntent = getIntent();
+		if(smsIntent.getBooleanExtra("Bank Sms", false))
+		{
+			int bankNo = smsIntent.getIntExtra("Bank Number", 0);
+			String type = smsIntent.getStringExtra("Type");
+			double amount = smsIntent.getDoubleExtra("Amount", 0);
+			
+			if(type.equals("credit"))
+			{
+				buildBankCreditDialog();
+				banks.get(bankNo).setChecked(true);
+				amountField.setText(String.valueOf(amount));
+				bankCreditDialog.show();
+			}
+			else
+			{
+				buildBankDebitDialog();
+				banks.get(bankNo).setChecked(true);
+				amountField.setText(String.valueOf(amount));
+				bankDebitDialog.show();
+			}
+		}
 	}
 	
 	@Override
@@ -194,6 +220,8 @@ public class DetailsActivity extends Activity
 	private void buildButtonPanel()
 	{
 		walletCreditButton=(ImageButton)findViewById(R.id.button_wallet_credit);
+		LayoutParams walletCreditButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		walletCreditButton.setLayoutParams(walletCreditButtonParams);
 		walletCreditButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -203,10 +231,19 @@ public class DetailsActivity extends Activity
 				walletCreditDialog.show();
 			}
 		});
-		LayoutParams walletCreditButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
-		walletCreditButton.setLayoutParams(walletCreditButtonParams);
+		walletCreditButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add An Income To The Wallet", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
 		
 		walletDebitButton=(ImageButton)findViewById(R.id.button_wallet_debit);
+		LayoutParams walletDebitButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		walletDebitButton.setLayoutParams(walletDebitButtonParams);
 		walletDebitButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -216,10 +253,19 @@ public class DetailsActivity extends Activity
 				walletDebitDialog.show();
 			}
 		});
-		LayoutParams walletDebitButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
-		walletDebitButton.setLayoutParams(walletDebitButtonParams);
+		walletDebitButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add An Expenditure", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
 		
 		bankCreditButton=(ImageButton)findViewById(R.id.button_bank_credit);
+		LayoutParams bankCreditButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		bankCreditButton.setLayoutParams(bankCreditButtonParams);
 		bankCreditButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -229,10 +275,19 @@ public class DetailsActivity extends Activity
 				bankCreditDialog.show();
 			}
 		});
-		LayoutParams bankCreditButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
-		bankCreditButton.setLayoutParams(bankCreditButtonParams);
+		bankCreditButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add An Income To A Bank Account", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
 		
 		bankDebitButton=(ImageButton)findViewById(R.id.button_bank_debit);
+		LayoutParams bankDebitButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		bankDebitButton.setLayoutParams(bankDebitButtonParams);
 		bankDebitButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -242,8 +297,15 @@ public class DetailsActivity extends Activity
 				bankDebitDialog.show();
 			}
 		});
-		LayoutParams bankDebitButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
-		bankDebitButton.setLayoutParams(bankDebitButtonParams);
+		bankDebitButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add A Bank Withdrawal", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
 	}
 	
 	private void buildWalletCreditDialog()
@@ -369,6 +431,10 @@ public class DetailsActivity extends Activity
 				else if(quantity.length()==0)
 				{
 					quantity = ""+Math.round(Double.parseDouble(amount)/Double.parseDouble(rate));
+					dataCorrect = true;
+				}
+				else
+				{
 					dataCorrect = true;
 				}
 				
