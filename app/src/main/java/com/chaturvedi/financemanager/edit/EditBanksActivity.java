@@ -28,6 +28,7 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -50,10 +51,10 @@ public class EditBanksActivity extends Activity
 	private Button addBankButton;
 	
 	private AlertDialog.Builder addBankDialog;
-	private AutoCompleteTextView bankNameField;
+	private MyAutoCompleteTextView bankNameField;
 	private EditText bankAccNoField;
 	private EditText bankBalanceField;
-	private AutoCompleteTextView bankSmsNameField;
+	private MyAutoCompleteTextView bankSmsNameField;
 
 	//private static ArrayList<Bank> banks;
 	
@@ -174,7 +175,7 @@ public class EditBanksActivity extends Activity
 		final LinearLayout addBankLayout=(LinearLayout)layoutInflater.inflate(R.layout.dialog_add_bank, null);
 		addBankDialog.setView(addBankLayout);
 		
-		bankNameField = (AutoCompleteTextView) addBankLayout.findViewById(R.id.bankName);
+		bankNameField = (MyAutoCompleteTextView) addBankLayout.findViewById(R.id.bankName);
 		ArrayAdapter<String> bankNameSuggestionAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, bankNameSuggestions);
 		bankNameField.setAdapter(bankNameSuggestionAdapter);
 		bankNameField.setThreshold(1);
@@ -182,7 +183,7 @@ public class EditBanksActivity extends Activity
 		bankAccNoField = (EditText) addBankLayout.findViewById(R.id.bankAccNo);
 		bankBalanceField = (EditText) addBankLayout.findViewById(R.id.bankBalance);
 		
-		bankSmsNameField = (AutoCompleteTextView) addBankLayout.findViewById(R.id.bankSmsName);
+		bankSmsNameField = (MyAutoCompleteTextView) addBankLayout.findViewById(R.id.bankSmsName);
 		ArrayAdapter<String> bankSmsNameSuggestionAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, smsNameSuggestions);
 		bankSmsNameField.setAdapter(bankSmsNameSuggestionAdapter);
 		bankSmsNameField.setThreshold(1);

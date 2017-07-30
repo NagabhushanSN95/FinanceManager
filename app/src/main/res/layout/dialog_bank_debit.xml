@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
         
-        <AutoCompleteTextView
+        <com.chaturvedi.customviews.MyAutoCompleteTextView
             android:id="@+id/field_particulars"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

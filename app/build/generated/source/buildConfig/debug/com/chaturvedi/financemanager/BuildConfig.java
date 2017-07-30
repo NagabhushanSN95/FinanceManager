@@ -8,6 +8,6 @@ public final class BuildConfig {
   public static final String APPLICATION_ID = "com.chaturvedi.financemanager";
   public static final String BUILD_TYPE = "debug";
   public static final String FLAVOR = "";
-  public static final int VERSION_CODE = 105;
-  public static final String VERSION_NAME = "3.5.6";
+  public static final int VERSION_CODE = 106;
+  public static final String VERSION_NAME = "3.5.7";
 }

@@ -1,2 +1,7 @@
-CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\chaturvedi\financemanager\SmsReceiver$override.class
+CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\chaturvedi\financemanager\edit\EditBanksActivity$2$override.class
+CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\chaturvedi\financemanager\edit\EditBanksActivity$3$override.class
+CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\chaturvedi\financemanager\edit\EditBanksActivity$1$override.class
+CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\chaturvedi\financemanager\BuildConfig$override.class
 CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\android\tools\fd\runtime\AppPatchesLoaderImpl.class
+CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\chaturvedi\financemanager\edit\EditBanksActivity$override.class
+CHANGED,D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\instantRun\debug\folders\4000\5\enhanced\com\chaturvedi\financemanager\edit\EditBanksActivity$4$override.class

@@ -31,7 +31,9 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -52,6 +54,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.customviews.InputDialog;
+import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.Template;
@@ -100,7 +103,7 @@ public class TransactionsActivity extends Activity
 	private View bankCreditDialogView;
 	private View bankDebitDialogView;
 	
-	private AutoCompleteTextView particularsField;
+	private MyAutoCompleteTextView particularsField;
 	private Spinner typesList;
 	private EditText rateField;
 	private EditText quantityField;
@@ -700,15 +703,16 @@ public class TransactionsActivity extends Activity
 		});
 		walletCreditDialog.setNegativeButton("Cancel", null);
 		dateField = (EditText) walletCreditDialogView.findViewById(R.id.field_date);
-		particularsField = (AutoCompleteTextView) walletCreditDialogView.findViewById(R.id.field_particulars);
+		particularsField = (MyAutoCompleteTextView) walletCreditDialogView.findViewById(R.id.field_particulars);
 		amountField = (EditText) walletCreditDialogView.findViewById(R.id.field_amount);
 		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
 		// Related to Templates
 		templateCheckBox = (CheckBox) walletCreditDialogView.findViewById(R.id.checkBox_template);
 		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Wallet Credit"));
+				R.layout.dropdown_multiline_item, R.id.textView_option, getTemplateStrings("Wallet Credit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
+		particularsField.setDropDownWidth(-1);	// To set drop down width to Match Parent
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
 			@Override
@@ -790,7 +794,7 @@ public class TransactionsActivity extends Activity
 		dateField = (EditText) walletDebitDialogView.findViewById(R.id.field_date);
 		typesList = (Spinner) walletDebitDialogView.findViewById(R.id.list_types);
 		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getAllExpenditureTypes()));
-		particularsField = (AutoCompleteTextView) walletDebitDialogView.findViewById(R.id.field_particulars);
+		particularsField = (MyAutoCompleteTextView) walletDebitDialogView.findViewById(R.id.field_particulars);
 		rateField = (EditText) walletDebitDialogView.findViewById(R.id.field_rate);
 		quantityField = (EditText) walletDebitDialogView.findViewById(R.id.field_quantity);
 		amountField = (EditText) walletDebitDialogView.findViewById(R.id.field_amount);
@@ -798,9 +802,10 @@ public class TransactionsActivity extends Activity
 		// Related to Templates
 		templateCheckBox = (CheckBox) walletDebitDialogView.findViewById(R.id.checkBox_template);
 		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Wallet Debit"));
+				R.layout.dropdown_multiline_item, R.id.textView_option, getTemplateStrings("Wallet Debit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
+		particularsField.setDropDownWidth(-1);		// DropDown Width will match Parent
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
 			@Override
@@ -842,7 +847,7 @@ public class TransactionsActivity extends Activity
 		}
 		banks.get(0).setChecked(true);
 		
-		particularsField = (AutoCompleteTextView) bankCreditDialogView.findViewById(R.id.field_particulars);
+		particularsField = (MyAutoCompleteTextView) bankCreditDialogView.findViewById(R.id.field_particulars);
 		creditTypesList = (Spinner) bankCreditDialogView.findViewById(R.id.list_creditTypes);
 		creditTypesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, creditTypes));
 		amountField = (EditText) bankCreditDialogView.findViewById(R.id.field_amount);
@@ -851,9 +856,10 @@ public class TransactionsActivity extends Activity
 		// Related to Templates
 		templateCheckBox = (CheckBox) bankCreditDialogView.findViewById(R.id.checkBox_template);
 		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Bank Credit"));
+				R.layout.dropdown_multiline_item, R.id.textView_option, getTemplateStrings("Bank Credit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
+		particularsField.setDropDownWidth(-1);	// To set Drop Down Width to Match Parent
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
 			@Override
@@ -970,7 +976,7 @@ public class TransactionsActivity extends Activity
 		}
 		banks.get(0).setChecked(true);
 
-		particularsField = (AutoCompleteTextView) bankDebitDialogView.findViewById(R.id.field_particulars);
+		particularsField = (MyAutoCompleteTextView) bankDebitDialogView.findViewById(R.id.field_particulars);
 		debitTypesList = (Spinner) bankDebitDialogView.findViewById(R.id.list_debitTypes);
 		debitTypesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, debitTypes));
 		typesList = (Spinner) bankDebitDialogView.findViewById(R.id.list_types);
@@ -982,9 +988,10 @@ public class TransactionsActivity extends Activity
 		// Related to Templates
 		templateCheckBox = (CheckBox) bankDebitDialogView.findViewById(R.id.checkBox_template);
 		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Bank Debit"));
+				R.layout.dropdown_multiline_item, R.id.textView_option, getTemplateStrings("Bank Debit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
+		particularsField.setDropDownWidth(-1);	// Set Dropdown width to MatchParent
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
 		{
 			@Override
