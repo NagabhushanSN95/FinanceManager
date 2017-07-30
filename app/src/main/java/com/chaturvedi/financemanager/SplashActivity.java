@@ -51,9 +51,6 @@ public class SplashActivity extends Activity
 	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	private AutomaticBackupAndRestoreManager autoRestoreManager;
 	
-	public static final int ACTION_DATABASE_READ_PROGRESS = 101;
-	public static final int ACTION_INITIALIZATION_COMPLETE = 102;
-	public static final int ACTION_TOAST_MESSAGE = 103;
 	private boolean splashComplete = false;				// Completion Of Splash Duration
 	private boolean initializationComplete = false;		// Completion Of Database Reading & Auto Restore
 	private boolean activityAlive = true;				// Set to false when back button is pressed. So, next activity will ot be started
@@ -388,11 +385,11 @@ public class SplashActivity extends Activity
 				// Get the Percentage Of Database Read Completion
 				switch(databaseMessage.what)
 				{
-					case ACTION_DATABASE_READ_PROGRESS:
+					case DatabaseManager.ACTION_DATABASE_READ_PROGRESS:
 						databaseReadProgress = databaseMessage.arg1;
 						break;
 						
-					case ACTION_INITIALIZATION_COMPLETE:
+					case DatabaseManager.ACTION_INITIALIZATION_COMPLETE:
 						initializationComplete = true;
 						if(activityAlive && splashComplete)
 						{
@@ -401,7 +398,7 @@ public class SplashActivity extends Activity
 						}
 						break;
 						
-					case ACTION_TOAST_MESSAGE:
+					case DatabaseManager.ACTION_TOAST_MESSAGE:
 						String message = (String) databaseMessage.obj;
 						Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
 						break;
@@ -453,13 +450,13 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Wallet Balance. Data Recovered");
 								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Wallet Balance. Data Not Recovered");
 								databaseMessage.sendToTarget();
 							}
@@ -472,13 +469,13 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Transactions. Data Recovered");
 								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Transactions. Data Not Recovered");
 								databaseMessage.sendToTarget();
 							}
@@ -492,13 +489,13 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Banks. Data Recovered");
 								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Banks. Data Not Recovered");
 								databaseMessage.sendToTarget();
 							}
@@ -512,13 +509,13 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Exp Types. Data Recovered");
 								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Exp Types. Data Not Recovered");
 								databaseMessage.sendToTarget();
 							}
@@ -532,13 +529,13 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Counters. Data Recovered");
 								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Counters. Data Not Recovered");
 								databaseMessage.sendToTarget();
 							}
@@ -552,13 +549,13 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Templates. Data Recovered");
 								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 										"Error Found In Templates. Data Not Recovered");
 								databaseMessage.sendToTarget();
 							}
@@ -567,13 +564,13 @@ public class SplashActivity extends Activity
 					}
 					else
 					{
-						Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+						Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_TOAST_MESSAGE,
 								"Error In Automatic Restore\n" + "Error Code: " + restoreResult);
 						databaseMessage.sendToTarget();
 					}
 				}
 			}
-			Message databaseMessage = databaseHandler.obtainMessage(ACTION_INITIALIZATION_COMPLETE);
+			Message databaseMessage = databaseHandler.obtainMessage(DatabaseManager.ACTION_INITIALIZATION_COMPLETE);
 			databaseMessage.sendToTarget();
 			Looper.loop();
 			Looper.myLooper().quit();

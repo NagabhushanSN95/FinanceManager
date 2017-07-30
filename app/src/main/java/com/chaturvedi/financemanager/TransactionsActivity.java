@@ -10,8 +10,8 @@ import java.util.Calendar;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.SearchManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,7 +22,6 @@ import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
@@ -36,8 +35,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -62,6 +63,8 @@ public class TransactionsActivity extends Activity
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
 	private String transactionsDisplayInterval = "Month";
+	private boolean filteredState = false; 	// true if Filtering and Search is applied. Else false.
+	// This is used in onBackPressed() method.
 	
 	/*private final int DISPLAY_TRANSACTIONS_ALL = 0;
 	private final int DISPLAY_TRANSACTIONS_YEAR = 1;
@@ -116,7 +119,7 @@ public class TransactionsActivity extends Activity
 	private DecimalFormat formatterTextFields;
 	private DecimalFormat formatterDisplay;
 	private Intent templatesIntent;
-	private Handler searchHandler;
+	private Thread searchThread;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -167,6 +170,23 @@ public class TransactionsActivity extends Activity
 	}
 
 	@Override
+	public void onBackPressed()
+	{
+		// If Filtering or Search is applied, when back button is pressed, the TransactionsActivity should not close.
+		// Instead, filtering or search should be removed and original transactions should be displayed.
+		// If the back button is pressed when original transactions are showed, then the activity should be closed
+		if(filteredState)
+		{
+			refreshBodyLayout();
+			filteredState = false;
+		}
+		else
+		{
+			super.onBackPressed();
+		}
+	}
+
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		// Inflate the menu; this adds items to the action bar if it is present.
@@ -184,6 +204,15 @@ public class TransactionsActivity extends Activity
 				@Override
 				public boolean onQueryTextChange(String newText)
 				{
+					/*if(newText.length() > 1)
+					{
+						if(searchThread != null)
+						{
+							searchThread.interrupt();
+						}
+						startSearchTransaction(newText.trim());
+						searchView.requestFocus();
+					}*/
 					return false;
 				}
 
@@ -214,25 +243,28 @@ public class TransactionsActivity extends Activity
 				return true;
 				
 			case R.id.action_transactionsDisplayOptions:
-				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
-				//displayOptions();
+//				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
+				displayFilterOptions();
 				return true;
 
 			case R.id.action_search:
-				final InputDialog searchDialog = new InputDialog(this);
-				searchDialog.setTitle("Search Transactions");
-				searchDialog.setHint("Enter the word to be searched");
-				searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener()
+				if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)
 				{
-					@Override
-					public void onClick(DialogInterface dialog, int which)
+					final InputDialog searchDialog = new InputDialog(this);
+					searchDialog.setTitle("Search Transactions");
+					searchDialog.setHint("Enter the word to be searched");
+					searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener()
 					{
-						String query = searchDialog.getInput();
-						startSearchTransaction(query);
-					}
-				});
-				searchDialog.setNegativeButton("Cancel", null);
-				searchDialog.show();
+						@Override
+						public void onClick(DialogInterface dialog, int which)
+						{
+							String query = searchDialog.getInput().trim();
+							startSearchTransaction(query);
+						}
+					});
+					searchDialog.setNegativeButton("Cancel", null);
+					searchDialog.show();
+				}
 				return true;
 		}
 		return true;
@@ -287,14 +319,14 @@ public class TransactionsActivity extends Activity
 		
 		if(VERSION.SDK_INT<=10)
 		{
-			WIDTH_DATE=20*screenWidth/100-6;
+			WIDTH_DATE=25*screenWidth/100-6;
 		}
 		else
 		{
-			WIDTH_DATE=20*screenWidth/100-12;
+			WIDTH_DATE=25*screenWidth/100-12;
 		}
 		WIDTH_SLNO=10*screenWidth/100;
-		WIDTH_PARTICULARS=50*screenWidth/100;
+		WIDTH_PARTICULARS=45*screenWidth/100;
 		WIDTH_AMOUNT=20*screenWidth/100;
 		WIDTH_TRANSACTION_BUTTON = screenWidth*25/100;
 	}
@@ -451,7 +483,7 @@ public class TransactionsActivity extends Activity
 		LayoutParams dateParams = (LayoutParams) dateView.getLayoutParams();
 		dateParams.width = WIDTH_DATE;
 		dateView.setLayoutParams(dateParams);
-		dateView.setText(transaction.getDate().getShortDate());
+		dateView.setText(transaction.getDate().getDisplayDate());
 		
 		TextView particularsView = (TextView)linearLayout.findViewById(R.id.particulars);
 		LayoutParams particularsParams = (LayoutParams) particularsView.getLayoutParams();
@@ -494,7 +526,7 @@ public class TransactionsActivity extends Activity
 		LinearLayout layout = (LinearLayout) parentLayout.getChildAt(transactionNo);
 		
 		TextView dateView = (TextView)layout.findViewById(R.id.date);
-		dateView.setText(transaction.getDate().getShortDate());
+		dateView.setText(transaction.getDate().getDisplayDate());
 		
 		TextView particularsView = (TextView)layout.findViewById(R.id.particulars);
 		particularsView.setText(transaction.getParticular());
@@ -1673,19 +1705,119 @@ public class TransactionsActivity extends Activity
 		return templateStrings;
 	}
 	
-	private void displayOptions()
+	private void displayFilterOptions()
 	{
 		final ArrayList<String> expTypes = DatabaseManager.getAllExpenditureTypes();
 		
-		AlertDialog.Builder optionsDialogBuilder = new AlertDialog.Builder(this);
-		optionsDialogBuilder.setTitle("Select Which Transactions To Display");
+		AlertDialog.Builder filterDialogBuilder = new AlertDialog.Builder(this);
+		filterDialogBuilder.setTitle("Filter Transactions To Display");
 		LayoutInflater inflater = LayoutInflater.from(this);
 		
-		final RelativeLayout optionsDialogLayout = (RelativeLayout) inflater.inflate(R.layout.layout_transactions_display_options, null);
-		final LinearLayout expendituresLayout = (LinearLayout) optionsDialogLayout.findViewById(R.id.expendituresLayout);
-		final LinearLayout bankTransactionsLayout = (LinearLayout) optionsDialogLayout.findViewById(R.id.bankTransactionsLayout);
+		final RelativeLayout filterDialogLayout = (RelativeLayout) inflater.inflate(R.layout.layout_filter_transactions, null);
+		final Spinner intervalTypeSelector = (Spinner) filterDialogLayout.findViewById(R.id.spinner_intervalType);
+		final LinearLayout monthYearSelectorLayout = (LinearLayout) filterDialogLayout.findViewById(R.id.monthYearSelectorLayout);
+		final Spinner monthSelector = (Spinner) filterDialogLayout.findViewById(R.id.spinner_monthSelector);
+		final Spinner yearSelector = (Spinner) filterDialogLayout.findViewById(R.id.spinner_yearSelector);
+		final RelativeLayout customIntervalSelectorLayout = (RelativeLayout) filterDialogLayout.findViewById(R.id.customIntervalSelectorLayout);
+		final TextView fromDateTextView = (TextView) filterDialogLayout.findViewById(R.id.textView_fromDate);
+		final TextView toDateTextView = (TextView) filterDialogLayout.findViewById(R.id.textView_toDate);
+		Button fromDateButton = (Button) filterDialogLayout.findViewById(R.id.button_fromDate);
+		Button toDateButton = (Button) filterDialogLayout.findViewById(R.id.button_toDate);
+
+		String intervalTypes[] = {"Month", "Year", "All", "Custom"};
+		intervalTypeSelector.setAdapter(new ArrayAdapter<String>(TransactionsActivity.this,android.R.layout.simple_spinner_item,intervalTypes));
+		intervalTypeSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+		{
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+			{
+				switch (position)
+				{
+					case 0:
+						monthYearSelectorLayout.setVisibility(View.VISIBLE);
+						monthSelector.setVisibility(View.VISIBLE);
+						yearSelector.setVisibility(View.VISIBLE);
+						customIntervalSelectorLayout.setVisibility(View.GONE);
+						break;
+
+					case 1:
+						monthYearSelectorLayout.setVisibility(View.VISIBLE);
+						monthSelector.setVisibility(View.GONE);
+						yearSelector.setVisibility(View.VISIBLE);
+						customIntervalSelectorLayout.setVisibility(View.GONE);
+						break;
+
+					case 2:
+						monthYearSelectorLayout.setVisibility(View.GONE);
+						customIntervalSelectorLayout.setVisibility(View.GONE);
+						break;
+
+					case 3:
+						monthYearSelectorLayout.setVisibility(View.GONE);
+						customIntervalSelectorLayout.setVisibility(View.VISIBLE);
+						break;
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent)
+			{
+
+			}
+		});
+
+		String[] months = {"01","02","03","04","05","06","07","08","09","10","11","12"};
+		monthSelector.setAdapter(new ArrayAdapter<String>(TransactionsActivity.this,android.R.layout.simple_spinner_item,months));
+		int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+		String[] years = new String[currentYear-2014];
+		for(int i=2015; i<=currentYear; i++)
+		{
+			years[i-2015] = Integer.toString(i);
+		}
+		yearSelector.setAdapter(new ArrayAdapter<String>(TransactionsActivity.this,android.R.layout.simple_spinner_item,years));
+
+		fromDateTextView.setText(new Date(2015,1,1).getDisplayDate());
+		toDateTextView.setText(new Date(Calendar.getInstance()).getDisplayDate());
+		fromDateButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				Date fromDate = new Date(fromDateTextView.getText().toString());
+				DatePickerDialog fromDatePicker = new DatePickerDialog(TransactionsActivity.this, new DatePickerDialog.OnDateSetListener()
+				{
+					@Override
+					public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth)
+					{
+						fromDateTextView.setText(new Date(year,monthOfYear+1,dayOfMonth).getDisplayDate());
+					}
+				}, fromDate.getYear(), fromDate.getMonth()-1, fromDate.getDate());
+				fromDatePicker.show();
+			}
+		});
+		toDateButton.setOnClickListener(new View.OnClickListener()
+		{
+			Date toDate = new Date(toDateTextView.getText().toString());
+			@Override
+			public void onClick(View v)
+			{
+				DatePickerDialog toDatePicker = new DatePickerDialog(TransactionsActivity.this, new DatePickerDialog.OnDateSetListener()
+				{
+					@Override
+					public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth)
+					{
+						// +1 is added to month because, DatePickerDialog represents Jan by 0, Feb by 1 and so on
+						toDateTextView.setText(new Date(year,monthOfYear+1,dayOfMonth).getDisplayDate());
+					}
+				}, toDate.getYear(), toDate.getMonth()-1, toDate.getDate());
+				toDatePicker.show();
+			}
+		});
+
+		final LinearLayout expendituresLayout = (LinearLayout) filterDialogLayout.findViewById(R.id.expendituresLayout);
+		final LinearLayout bankTransactionsLayout = (LinearLayout) filterDialogLayout.findViewById(R.id.bankTransactionsLayout);
 		final ArrayList<CheckBox> checkBoxes = new ArrayList<CheckBox>();
-		CheckBox incomesCheckBox = (CheckBox) optionsDialogLayout.findViewById(R.id.checkBox_incomes);
+		CheckBox incomesCheckBox = (CheckBox) filterDialogLayout.findViewById(R.id.checkBox_incomes);
 		checkBoxes.add(incomesCheckBox);
 		for(String expType: expTypes)
 		{
@@ -1711,12 +1843,12 @@ public class TransactionsActivity extends Activity
 		{
 			CheckBox cb1 = new CheckBox(this);
 			cb1.setId(expTypes.indexOf(expType) + 10);
-			cb1.setText(expType + "A/C Transfer");
+			cb1.setText(expType + " A/C Transfer");
 			bankTransactionsLayout.addView(cb1);
 			checkBoxes.add(cb1);
 		}
 		
-		CheckBox expendituresCheckBox = (CheckBox) optionsDialogLayout.findViewById(R.id.checkBox_expenditures);
+		CheckBox expendituresCheckBox = (CheckBox) filterDialogLayout.findViewById(R.id.checkBox_expenditures);
 		expendituresCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
 		{
 			@Override
@@ -1735,7 +1867,7 @@ public class TransactionsActivity extends Activity
 			}
 		});
 		
-		CheckBox allBankTransactionsCheckBox = (CheckBox) optionsDialogLayout.findViewById(R.id.checkBox_allBankTransactions);
+		CheckBox allBankTransactionsCheckBox = (CheckBox) filterDialogLayout.findViewById(R.id.checkBox_allBankTransactions);
 		allBankTransactionsCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
 		{
 			@Override
@@ -1755,25 +1887,52 @@ public class TransactionsActivity extends Activity
 			}
 		});
 		
-		optionsDialogBuilder.setView(optionsDialogLayout);
+		filterDialogBuilder.setView(filterDialogLayout);
 		
-		optionsDialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		filterDialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener()
 		{
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
+				filteredState = true;
+				String interval1 = null;
+				switch (intervalTypeSelector.getSelectedItemPosition())
+				{
+					case 0:			// Month
+						int month = Integer.parseInt(monthSelector.getSelectedItem().toString().trim());
+						int year = Integer.parseInt(yearSelector.getSelectedItem().toString().trim());
+						interval1 = "month-"+(year*100+month);
+						break;
+
+					case 1:			// Year
+						year = Integer.parseInt(yearSelector.getSelectedItem().toString().trim());
+						interval1 = "year-"+year;
+						break;
+
+					case 2:
+						interval1 = "all";
+						break;
+
+					case 3:
+						long startDate = new Date(fromDateTextView.getText().toString()).getLongDate();
+						long endDate = new Date(toDateTextView.getText().toString()).getLongDate();
+						interval1 = "custom-" + startDate + "-" + endDate;
+						break;
+				}
+				final String interval = interval1;
+
 				DecimalFormat formatter = new DecimalFormat("00");
-				ArrayList<String> types = new ArrayList<String>();
+				final ArrayList<String> types = new ArrayList<String>();
 				if(checkBoxes.get(0).isChecked())
 				{
 					types.add("Wallet Credit");
-					Toast.makeText(getApplicationContext(), "Check-Point 04", Toast.LENGTH_SHORT).show();
+//					Toast.makeText(getApplicationContext(), "Check-Point 04", Toast.LENGTH_SHORT).show();
 				}
 				for(int i=0; i<expTypes.size(); i++)
 				{
 					if(checkBoxes.get(i+1).isChecked())
 					{
-						types.add("Wallet Debit Exp " + formatter.format(i));
+						types.add("Wallet Debit Exp" + formatter.format(i));
 					}
 				}
 				if(checkBoxes.get(expTypes.size()+1).isChecked())
@@ -1811,23 +1970,54 @@ public class TransactionsActivity extends Activity
 						}
 					}
 				}
-				transactions = DatabaseManager.getTransactions("all", types, null);
-				//Toast.makeText(getApplicationContext(), ""+transactions.size(), Toast.LENGTH_SHORT).show();
-				buildBodyLayout();
+
+				final Handler filterHandler = new Handler()
+				{
+					@Override
+					public void handleMessage(Message transactionMessage)
+					{
+						switch (transactionMessage.what)
+						{
+							case DatabaseManager.ACTION_NEW_TRANSACTION_FOUND:
+								Transaction transaction = (Transaction) transactionMessage.obj;
+								transactions.add(transaction);
+								displayNewTransaction(transaction);
+								break;
+
+							case DatabaseManager.ACTION_TOAST_MESSAGE:
+								String toastMessage = (String) transactionMessage.obj;
+								Toast.makeText(TransactionsActivity.this, toastMessage, Toast.LENGTH_LONG).show();
+								break;
+						}
+					}
+				};
+
+				parentLayout.removeAllViews();
+				transactions = new ArrayList<Transaction>();
+				Thread filterThread = new Thread(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						DatabaseManager.getTransactions(interval,types,filterHandler);
+					}
+				});
+				filterThread.start();
 			}
 		});
-		optionsDialogBuilder.setNegativeButton("Cancel", null);
-		optionsDialogBuilder.show();
+		filterDialogBuilder.setNegativeButton("Cancel", null);
+		filterDialogBuilder.show();
 	}
 
 	private void startSearchTransaction(final String query)
 	{
+		filteredState = true;
 		parentLayout.removeAllViews();
 		transactions = new ArrayList<Transaction>();
 
 		final int MESSAGE_NEW_MATCH_FOUND = 101;
 		final int MESSAGE_SEARCH_FINISHED = 102;
-		searchHandler = new Handler()
+		final Handler searchHandler = new Handler()
 		{
 			@Override
 			public void handleMessage(Message transactionMessage)
@@ -1847,7 +2037,7 @@ public class TransactionsActivity extends Activity
 			}
 		};
 
-		Thread searchThread = new Thread(new Runnable()
+		searchThread = new Thread(new Runnable()
 		{
 			@Override
 			public void run()
@@ -1863,6 +2053,11 @@ public class TransactionsActivity extends Activity
 					{
 						Message message = searchHandler.obtainMessage(MESSAGE_NEW_MATCH_FOUND,transaction);
 						message.sendToTarget();
+					}
+
+					if(Thread.interrupted())
+					{
+						return;
 					}
 				}
 				Message message = searchHandler.obtainMessage(MESSAGE_SEARCH_FINISHED);

@@ -10,8 +10,6 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.chaturvedi.financemanager.SplashActivity;
-
 public class DatabaseManager
 {
 	private static Context context;
@@ -23,6 +21,11 @@ public class DatabaseManager
 	private static ArrayList<String> expenditureTypes;
 	private static ArrayList<Counters> counters;
 	private static ArrayList<Template> templates;
+
+	public static final int ACTION_DATABASE_READ_PROGRESS = 101;
+	public static final int ACTION_INITIALIZATION_COMPLETE = 102;
+	public static final int ACTION_NEW_TRANSACTION_FOUND = 103;
+	public static final int ACTION_TOAST_MESSAGE = 104;
 	
 	public DatabaseManager(Context cxt)
 	{
@@ -112,7 +115,7 @@ public class DatabaseManager
 			Message databaseMessage;
 			
 			setWalletBalance(databaseAdapter.getWalletBalance());
-			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+			databaseMessage = databaseHandler.obtainMessage(ACTION_DATABASE_READ_PROGRESS,
 					10*maxProgress/100,0); // Database Reading 10% Complete
 			databaseMessage.sendToTarget();
 			
@@ -124,7 +127,7 @@ public class DatabaseManager
 			{
 				banks = new ArrayList<Bank>();
 			}
-			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+			databaseMessage = databaseHandler.obtainMessage(ACTION_DATABASE_READ_PROGRESS,
 					20*maxProgress/100,0); // Database Reading 20% Complete
 			databaseMessage.sendToTarget();
 
@@ -137,12 +140,12 @@ public class DatabaseManager
 			{
 				transactions = new ArrayList<Transaction>();
 			}
-			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+			databaseMessage = databaseHandler.obtainMessage(ACTION_DATABASE_READ_PROGRESS,
 					50*maxProgress/100,0); // Database Reading 50% Complete
 			databaseMessage.sendToTarget();
 			
 			expenditureTypes = databaseAdapter.getAllExpTypes();
-			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+			databaseMessage = databaseHandler.obtainMessage(ACTION_DATABASE_READ_PROGRESS,
 					60*maxProgress/100,0); // Database Reading 60% Complete
 			databaseMessage.sendToTarget();
 			
@@ -155,7 +158,7 @@ public class DatabaseManager
 			{
 				counters = new ArrayList<Counters>();
 			}
-			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+			databaseMessage = databaseHandler.obtainMessage(ACTION_DATABASE_READ_PROGRESS,
 					80*maxProgress/100,0); // Database Reading 80% Complete
 			databaseMessage.sendToTarget();
 			
@@ -168,7 +171,7 @@ public class DatabaseManager
 			{
 				templates = new ArrayList<Template>();
 			}
-			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+			databaseMessage = databaseHandler.obtainMessage(ACTION_DATABASE_READ_PROGRESS,
 					100*maxProgress/100,0); // Database Reading 100% Complete
 			databaseMessage.sendToTarget();
 		}
@@ -502,12 +505,12 @@ public class DatabaseManager
 	{
 		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
 
-		Toast.makeText(context, "Check-Point 01", Toast.LENGTH_SHORT).show();
+//		Toast.makeText(context, "Check-Point 01", Toast.LENGTH_SHORT).show();
 		StringTokenizer tokens = new StringTokenizer(interval, "-");
-		String interval1 = tokens.nextToken();
-		if(interval1.equals("all"))
+		String intervalType = tokens.nextToken();
+		if(intervalType.equals("all"))
 		{
-			Toast.makeText(context, "Check-Point 02:" + types.size(), Toast.LENGTH_SHORT).show();
+//			Toast.makeText(context, "Check-Point 02:" + types.size(), Toast.LENGTH_SHORT).show();
 			for(Transaction transaction : DatabaseManager.transactions)
 			{
 				for(String expType: types)
@@ -517,10 +520,10 @@ public class DatabaseManager
 						transactions1.add(new Transaction(transaction));
 					}
 				}
-				Toast.makeText(context, "Check-Point 03:"+transactions1.size(), Toast.LENGTH_SHORT).show();
+//				Toast.makeText(context, "Check-Point 03:"+transactions1.size(), Toast.LENGTH_SHORT).show();
 			}
 		}
-		else if(interval1.equals("month"))
+		else if(intervalType.equals("month"))
 		{
 			long month = Long.parseLong(tokens.nextToken());
 			for(Transaction transaction : DatabaseManager.transactions)
@@ -538,7 +541,7 @@ public class DatabaseManager
 				}
 			}
 		}
-		else if(interval1.equals("year"))
+		else if(intervalType.equals("year"))
 		{
 			long year = Long.parseLong(tokens.nextToken());
 			for(Transaction transaction : DatabaseManager.transactions)
@@ -556,7 +559,116 @@ public class DatabaseManager
 				}
 			}
 		}
+		else if (intervalType.equals("custom"))
+		{
+			long startDate = Long.parseLong(tokens.nextToken());
+			long endDate = Long.parseLong(tokens.nextToken());
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				long date = (long) Math.floor(transaction.getDate().getLongDate());
+				if(date>=startDate && date<=endDate)
+				{
+					for(String expType: types)
+					{
+						if(transaction.getType().equals(expType))
+						{
+							transactions1.add(new Transaction(transaction));
+						}
+					}
+				}
+			}
+		}
 		return transactions1;
+	}
+
+	/**
+	 * Returns transactions with the given parameters
+	 * @param interval: What is the interval of transactions e.g. year-2015 or month-201508
+	 * @param types: Types of transactions e.g. incomes or {bank savings, exp04}
+	 * @param handler: Handler to send back matched Transactions
+	 * @return
+	 */
+	public static void getTransactions(String interval, ArrayList<String> types, Handler handler)
+	{
+//		Toast.makeText(context, "Check-Point 01", Toast.LENGTH_SHORT).show();
+		StringTokenizer tokens = new StringTokenizer(interval, "-");
+		String intervalType = tokens.nextToken();
+		if(intervalType.equals("all"))
+		{
+//			Toast.makeText(context, "Check-Point 02:" + types.size(), Toast.LENGTH_SHORT).show();
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				for(String expType: types)
+				{
+					if(transaction.getType().equals(expType))
+					{
+						Message message = handler.obtainMessage(ACTION_NEW_TRANSACTION_FOUND,transaction);
+						message.sendToTarget();
+					}
+				}
+//				Toast.makeText(context, "Check-Point 03:"+transactions1.size(), Toast.LENGTH_SHORT).show();
+			}
+		}
+		else if(intervalType.equals("month"))
+		{
+			long month = Long.parseLong(tokens.nextToken());
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				long month1 = (long) Math.floor(transaction.getDate().getLongDate()/100);
+				if(month1 == month)
+				{
+					for(String expType: types)
+					{
+						if(transaction.getType().equals(expType))
+						{
+							Message message = handler.obtainMessage(ACTION_NEW_TRANSACTION_FOUND,transaction);
+							message.sendToTarget();
+						}
+					}
+				}
+			}
+		}
+		else if(intervalType.equals("year"))
+		{
+			long year = Long.parseLong(tokens.nextToken());
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				long year1 = (long) Math.floor(transaction.getDate().getLongDate()/10000);
+				if(year1 == year)
+				{
+					for(String expType: types)
+					{
+						if(transaction.getType().equals(expType))
+						{
+							Message message = handler.obtainMessage(ACTION_NEW_TRANSACTION_FOUND,transaction);
+							message.sendToTarget();
+						}
+					}
+				}
+			}
+		}
+		else if (intervalType.equals("custom"))
+		{
+			long startDate = Long.parseLong(tokens.nextToken());
+			long endDate = Long.parseLong(tokens.nextToken());
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				long date = (long) Math.floor(transaction.getDate().getLongDate());
+				if(date>=startDate && date<=endDate)
+				{
+					for(String expType: types)
+					{
+						if(transaction.getType().equals(expType))
+						{
+							Message message = handler.obtainMessage(ACTION_NEW_TRANSACTION_FOUND,transaction);
+							message.sendToTarget();
+						}
+					}
+				}
+			}
+		}
+		Message message = handler.obtainMessage(ACTION_TOAST_MESSAGE, "Filtering Finished");
+		message.sendToTarget();
 	}
 	
 	public static void addTemplate(Template template)

@@ -11,7 +11,7 @@
         android:id="@+id/action_transactionsDisplayOptions"
         android:orderInCategory="200"
         android:showAsAction="never"
-        android:title="@string/action_transactionsDisplayOptions"/>
+        android:title="@string/action_filterTransactions"/>
 
     <item
         android:id="@+id/action_search"

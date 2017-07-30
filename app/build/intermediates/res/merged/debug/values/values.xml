@@ -19,13 +19,13 @@
     <string name="aboutUs">About The Developer</string>
     <string name="action_edit">Edit Data</string>
     <string name="action_extras">Extras</string>
+    <string name="action_filterTransactions">Filter</string>
     <string name="action_help">Help</string>
     <string name="action_search">Search</string>
     <string name="action_settings">Settings</string>
     <string name="action_statistics">Statistics</string>
     <string name="action_templates">Templates</string>
     <string name="action_transactions">Transactions</string>
-    <string name="action_transactionsDisplayOptions">Options</string>
     <string name="addTemplate">Add To Templates</string>
     <string name="add_bank">Add A Bank</string>
     <string name="add_expType">Add New Expenditure Type</string>
@@ -37,6 +37,7 @@
     <string name="bankSms"> Messages From Banks</string>
     <string name="bank_credit">Bank Credit</string>
     <string name="bank_debit">Bank Withdrawal</string>
+    <string name="change">Change</string>
     <string name="clearData">Clear Data</string>
     <string name="colon">:</string>
     <string name="contactDeveloper">Contact Developer</string>
@@ -49,6 +50,7 @@
     <string name="expenditures">Expenditures</string>
     <string name="export">Export Data To SD Card</string>
     <string name="finish">Finish</string>
+    <string name="from">From:</string>
     <string name="guide">Guide</string>
     <string name="hint_bankAccNo">Account Number</string>
     <string name="hint_bankBalance">Balance</string>
@@ -94,6 +96,7 @@
     <string name="title_amountSpent">Amount Spent</string>
     <string name="title_details">Details</string>
     <string name="title_expenditureType">Expenditure Type</string>
+    <string name="to">To: </string>
     <string name="transactionsDisplayInterval">Display Transactions By</string>
     <string name="type">Type</string>
     <string name="walletBalance">Amount in your Wallet</string>
