@@ -3,6 +3,7 @@ package com.chaturvedi.expenditurelist;
 import java.text.DecimalFormat;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -18,6 +19,10 @@ import com.chaturvedi.expenditurelist.database.DatabaseManager;
 
 public class StatisticsActivity extends Activity
 {
+	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
+	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
+	private String currencySymbol = " ";
+	
 	private int screenWidth;
 	private int screenHeight;
 	private int WIDTH_NAMES;
@@ -53,6 +58,12 @@ public class StatisticsActivity extends Activity
 	
 	private void buildLayout()
 	{
+		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		if(preferences.contains(KEY_CURRENCY_SYMBOL))
+		{
+			currencySymbol = preferences.getString(KEY_CURRENCY_SYMBOL, " ");
+		}
+		
 		DecimalFormat formatter = new DecimalFormat("#,##0.##");
 		
 		LinearLayout parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
@@ -83,6 +94,9 @@ public class StatisticsActivity extends Activity
 			expenditureTypeName.setText(DatabaseManager.getExpenditureTypes().get(i));
 			expenditureTypeName.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
 			
+			TextView currencySymbolView = (TextView)statDisplayLayout.findViewById(R.id.currencySymbol);
+			currencySymbolView.setText(currencySymbol);
+			
 			TextView expenditureTypeAmount = (TextView)statDisplayLayout.findViewById(R.id.amount);
 			expenditureTypeAmount.setText(formatter.format(DatabaseManager.getCounter(i)));
 			expenditureTypeAmount.setLayoutParams(new LayoutParams(WIDTH_AMOUNTS, LayoutParams.WRAP_CONTENT));
@@ -112,6 +126,9 @@ public class StatisticsActivity extends Activity
 			TextView expenditureTypeName = (TextView)statDisplayLayout.findViewById(R.id.expendtureTypeName);
 			expenditureTypeName.setText(DatabaseManager.getExpenditureTypes().get(i));
 			expenditureTypeName.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
+			
+			TextView currencySymbolView = (TextView)statDisplayLayout.findViewById(R.id.currencySymbol);
+			currencySymbolView.setText(currencySymbol);
 			
 			TextView expenditureTypeAmount = (TextView)statDisplayLayout.findViewById(R.id.amount);
 			expenditureTypeAmount.setText(formatter.format(DatabaseManager.getCounter(i+5)));

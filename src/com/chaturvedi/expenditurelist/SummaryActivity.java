@@ -30,6 +30,9 @@ public class SummaryActivity extends Activity
 {
 	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
 	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
+	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
+	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
+	private String currencySymbol = " ";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -140,7 +143,7 @@ public class SummaryActivity extends Activity
 				return true;
 				
 			case R.id.action_settings:
-				startActivity(settingsIntent);
+				startActivityForResult(settingsIntent, 0);
 				return true;
 				
 			case R.id.action_help:
@@ -189,6 +192,12 @@ public class SummaryActivity extends Activity
 	
 	private void buildLayout()
 	{
+		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		if(preferences.contains(KEY_CURRENCY_SYMBOL))
+		{
+			currencySymbol = preferences.getString(KEY_CURRENCY_SYMBOL, " ");
+		}
+		
 		int numBanks = DatabaseManager.getNumBanks();
 		
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
@@ -219,6 +228,9 @@ public class SummaryActivity extends Activity
 			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams.WRAP_CONTENT);
 			nameViewParams.setMargins(MARGIN_LEFT_NAME_VIEWS, 0, 0, 0);
 			nameView.setLayoutParams(nameViewParams);
+			
+			TextView currencySymbolView = (TextView)summaryLayout.findViewById(R.id.currencySymbol);
+			currencySymbolView.setText(currencySymbol);
 			
 			TextView amountView = (TextView)summaryLayout.findViewById(R.id.amount);
 			LayoutParams amountViewParams = new LayoutParams(WIDTH_AMOUNT_VIEWS, LayoutParams.WRAP_CONTENT);

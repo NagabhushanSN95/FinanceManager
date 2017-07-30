@@ -18,6 +18,7 @@
     <string name="bank_debit">Bank Withdrawal</string>
     <string name="checkBox_splash">Always Show Splash Screen At The Beginning</string>
     <string name="checkBox_bank_sms">Respond To Messages From Banks</string>
+    <string name="currencySymbols">Currency Symbol</string>
     <string name="date">Date</string>
     <string name="finish">Finish</string>
     <string name="hint_bank_balance">Balance</string>
@@ -28,7 +29,6 @@
     <string name="particulars">Particulars</string>
     <string name="quantity">Quantity</string>
     <string name="rate">Rate</string>
-    <string name="rs">Rs</string>
     <string name="save">Save</string>
     <string name="slno">Sl No</string>
     <string name="title_amountSpent">Amount Spent</string>

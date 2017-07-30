@@ -60,4 +60,27 @@
         android:layout_marginRight="30dp"
         android:text="@string/checkBox_bank_sms" />
     
+    <LinearLayout
+        android:id="@+id/layout_currencySymbols"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBox_bank_sms"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:orientation="horizontal" >
+        
+        <TextView
+            android:id="@+id/textView_currencySymbols"
+            android:layout_width="wrap_content"
+    	    android:layout_height="wrap_content"
+    	    android:text="@string/currencySymbols" />
+        
+        <Spinner
+            android:id="@+id/list_currencySymbols"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />"
+    </LinearLayout>
+    
 </RelativeLayout>
