@@ -119,7 +119,7 @@ public class SplashActivity extends Activity
 			else
 			{
 				// Since Database is not Initialized, Start the Setup
-				nextActivityIntent = new Intent(this, StartupActivity.class);
+				nextActivityIntent = new Intent(this, BanksSetupActivity.class);
 			}
 		}
 		

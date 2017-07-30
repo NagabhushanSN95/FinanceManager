@@ -55,6 +55,8 @@ public class SummaryActivity extends Activity
 	private String currencySymbol = " ";
 	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "transactions_display_interval";
 	private String transactionsDisplayInterval = "Month";
+	private static final String SHARED_PREFERENCES_SMS = "Bank_SMS";
+	private static final String KEY_BANK_SMS_ARRIVED = "sms_arrived";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -180,7 +182,15 @@ public class SummaryActivity extends Activity
 		smsIntent = getIntent();
 		if(smsIntent.getBooleanExtra("Bank Sms", false))
 		{
-			performSMSTransaction();
+			SharedPreferences smsPreferences = this.getSharedPreferences(SHARED_PREFERENCES_SMS, 0);
+			boolean newSmsArrived = smsPreferences.getBoolean(KEY_BANK_SMS_ARRIVED, false);
+			if(newSmsArrived)
+			{
+				SharedPreferences.Editor editor = smsPreferences.edit();
+				editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
+				editor.commit();
+				performSMSTransaction();
+			}
 		}
 	}
 	
@@ -209,7 +219,7 @@ public class SummaryActivity extends Activity
 	{
 		switch(item.getItemId())
 		{
-			case R.id.action_details:
+			case R.id.action_transactions:
 				startActivityForResult(transactionsIntent, 0);
 				return true;
 				
@@ -413,6 +423,7 @@ public class SummaryActivity extends Activity
 		int bankNo = smsIntent.getIntExtra("Bank Number", 0);
 		String type = smsIntent.getStringExtra("Type");
 		double amount = smsIntent.getDoubleExtra("Amount", 0);
+		formatterTextFields = new DecimalFormat("##0.##");
 		
 		if(type.equals("credit"))
 		{

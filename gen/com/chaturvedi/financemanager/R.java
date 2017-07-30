@@ -68,13 +68,13 @@ public final class R {
     }
     public static final class id {
         public static final int action_bar=0x7f0b0000;
-        public static final int action_details=0x7f0b0072;
         public static final int action_edit_banks=0x7f0b0073;
         public static final int action_edit_expenditure_types=0x7f0b0074;
         public static final int action_extras=0x7f0b0078;
         public static final int action_help=0x7f0b0077;
         public static final int action_settings=0x7f0b0076;
         public static final int action_statistics=0x7f0b0075;
+        public static final int action_transactions=0x7f0b0072;
         public static final int activity_main=0x7f0b0048;
         public static final int add_bank=0x7f0b0013;
         public static final int amount=0x7f0b0051;

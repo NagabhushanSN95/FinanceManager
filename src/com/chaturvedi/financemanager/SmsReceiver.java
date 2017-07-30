@@ -15,6 +15,8 @@ public class SmsReceiver extends BroadcastReceiver
 {
 	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
 	private static final String KEY_BANK_SMS = "respond_bank_messages";
+	private static final String SHARED_PREFERENCES_SMS = "Bank_SMS";
+	private static final String KEY_BANK_SMS_ARRIVED = "sms_arrived";
 	private boolean respondBankMessages = true;
 	
 	private Context context;
@@ -52,15 +54,16 @@ public class SmsReceiver extends BroadcastReceiver
 				{
 					if(sender.toLowerCase().contains(DatabaseManager.getBank(i).getSmsName().toLowerCase()))
 					{
+						// Set the flag in the Preferences that a SMS has arrived
+						SharedPreferences.Editor editor = context.getSharedPreferences(SHARED_PREFERENCES_SMS, 0).edit();
+						editor.putBoolean(KEY_BANK_SMS_ARRIVED, true);
+						editor.commit();
+						
 						Toast.makeText(context, "Transaction In "+DatabaseManager.getBank(i).getName()+" Detected. Please Update The Same", Toast.LENGTH_LONG).show();
 						summaryActivityIntent = new Intent(context, SummaryActivity.class);
 						summaryActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 						summaryActivityIntent.putExtra("Bank Sms", true);
 						summaryActivityIntent.putExtra("Bank Number", i);
-						// Add ActivityStack As DetailsActivity
-						TaskStackBuilder stackBuilder=TaskStackBuilder.create(context);
-						stackBuilder.addParentStack(SummaryActivity.class);
-						stackBuilder.addNextIntent(summaryActivityIntent);
 						
 						if(sender.toUpperCase().contains("SBI"))
 							readSBIMessage();

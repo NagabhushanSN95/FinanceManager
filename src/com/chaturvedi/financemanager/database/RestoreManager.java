@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.widget.Toast;
 
@@ -329,5 +330,18 @@ public class RestoreManager
 					"Error In RestoreManager/restoreWalletBalance()\n" + 
 					e.getMessage(), Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	/**
+	 * Stores Default Preferences
+	 * @return
+	 */
+	public void restoreDefaultPreferences()
+	{
+		String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
+		String KEY_DATABASE_INITIALIZED = "database_initialized";
+		SharedPreferences.Editor editor = context.getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0).edit();
+		editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+		editor.commit();
 	}
 }

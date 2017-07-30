@@ -46,7 +46,6 @@ public class ExpenditureSetupActivity extends Activity
 	private ArrayList<String> expenditureTypes;
 	
 	private Intent summaryIntent;
-	private boolean dataEntered;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -93,11 +92,8 @@ public class ExpenditureSetupActivity extends Activity
 		{
 			case R.id.next:
 				saveToDatabase();
-				if(dataEntered)
-				{
-					startActivity(summaryIntent);
-					finish();
-				}
+				startActivity(summaryIntent);
+				finish();
 		}
 		return true;
 	}
