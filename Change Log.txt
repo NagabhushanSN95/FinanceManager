@@ -34,6 +34,8 @@ Bug Fix: In TransactionsActivity, after adding a transaction, if that transactio
  - Change Log Added
 
 4.2.1 (121)
- - .gitignore updated
+ - .gitignore updated to exclude non source code files
  - All files deleted except source code and some gradle settings. If any required file is found missing, please refer to files of previous version i.e. v4.2.0(120)
  
+4.2.2 (122)
+ - .gitignore updated to exclude remaining non source code files

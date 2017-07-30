@@ -4,5 +4,10 @@
 app/build
 app/app.iml
 app/lint.xml
+build/
 gradle/
-./local.properties
+FinanceManager.iml
+gradlew
+gradlew.bat
+import-summary.txt
+local.properties
