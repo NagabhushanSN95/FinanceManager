@@ -1,3 +1,6 @@
+// Shree KRISHNAya Namaha
+// Author: Nagabhushan S N
+
 package com.chaturvedi.expenditurelist;
 
 import java.io.BufferedReader;
@@ -98,8 +101,8 @@ public class DetailsActivity extends Activity
 	private BufferedWriter particularsWriter;
 	private BufferedWriter amountWriter;
 	
-	private Button debitButton;
-	private Button creditButton;
+	private Button walletDebitButton;
+	private Button bankCreditButton;
 	private AlertDialog.Builder expenditureDialog;
 	private AlertDialog.Builder atmWithdrawalDialog;
 	private LayoutInflater expenditureDialogLayout;
@@ -348,17 +351,16 @@ public class DetailsActivity extends Activity
 		{
 			Toast.makeText(this, "Error In Building Body Layout\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-		
 	}
 	
 	private void buildButtonPanel()
 	{
-		debitButton=(Button)findViewById(R.id.button_debit);
-		debitButton.setOnClickListener(new DebitListener());
-		debitButton.bringToFront();
-		creditButton=(Button)findViewById(R.id.button_atm_withdrawal);
-		creditButton.setOnClickListener(new CreditListener());
-		creditButton.bringToFront();
+		walletDebitButton=(Button)findViewById(R.id.button_wallet_debit);
+		walletDebitButton.setOnClickListener(new DebitListener());
+		walletDebitButton.bringToFront();
+		bankCreditButton=(Button)findViewById(R.id.button_bank_withdrawal);
+		bankCreditButton.setOnClickListener(new CreditListener());
+		bankCreditButton.bringToFront();
 	}
 	
 	private void buildExpenditureDialog()
@@ -367,7 +369,7 @@ public class DetailsActivity extends Activity
 		expenditureDialog.setTitle("Add Expenditure");
 		expenditureDialog.setMessage("Enter Details");
 		expenditureDialogLayout=LayoutInflater.from(this);
-		expenditureDialogView=expenditureDialogLayout.inflate(R.layout.layout_expenditure_dialog, null);
+		expenditureDialogView=expenditureDialogLayout.inflate(R.layout.dialog_wallet_debit, null);
 		expenditureDialog.setView(expenditureDialogView);
 		expenditureDialog.setPositiveButton("OK", new ExpenditureDialogListener(1));
 		expenditureDialog.setNegativeButton("Cancel", new ExpenditureDialogListener(0));

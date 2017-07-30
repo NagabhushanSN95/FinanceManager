@@ -10,7 +10,7 @@
         android:id="@+id/action_bar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="#0000FF" >
+        android:background="#444444" >
 
         <ImageView
             android:id="@+id/app_icon"
@@ -38,7 +38,14 @@
         android:layout_height="wrap_content"
 	android:gravity="center"
 	android:layout_marginLeft="75dp"
-	android:layout_marginBottom="75dp"
         android:text="@string/krishna" />
+    
+    <LinearLayout 
+        android:id="@+id/parentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+        
+    </LinearLayout>
 
 </LinearLayout>

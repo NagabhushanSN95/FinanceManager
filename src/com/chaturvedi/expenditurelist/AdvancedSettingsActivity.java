@@ -1,3 +1,6 @@
+// Shree KRISHNAya Namaha
+// Author: Nagabhushan S N
+
 package com.chaturvedi.expenditurelist;
 
 import java.io.BufferedReader;
@@ -10,6 +13,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -22,6 +26,14 @@ import android.widget.Toast;
 
 public class AdvancedSettingsActivity extends Activity
 {
+	private DisplayMetrics displayMetrics;
+	private int screenWidth;
+	private int screenHeight;
+	private int MARGIN_TOP_PARENT_LAYOUT;
+	private int MARGIN_LEFT_PARENT_LAYOUT;
+	private int WIDTH_TEXT_VIEWS; 
+	private int WIDTH_AMOUNT_FIELDS;
+	
 	private int walletBalance;
 	private int amountSpent;
 	private int numBanks;
@@ -29,6 +41,7 @@ public class AdvancedSettingsActivity extends Activity
 	private ArrayList<Integer> bankBalances;
 
 	private LinearLayout parentLayout;
+	private LayoutParams parentLayoutParams;
 	private ArrayList<LinearLayout> linearLayouts;
 	private ArrayList<LayoutParams> linearLayoutParams;
 	private ArrayList<TextView> textViews;
@@ -59,7 +72,19 @@ public class AdvancedSettingsActivity extends Activity
 		setContentView(R.layout.activity_advanced_settings);
 		readFile();
 		
+		displayMetrics=new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		screenWidth=displayMetrics.widthPixels;
+		screenHeight=displayMetrics.heightPixels;
+		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(numBanks*100))/6;
+		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*15/100;
+		WIDTH_TEXT_VIEWS=screenWidth*40/100;
+		WIDTH_AMOUNT_FIELDS=screenWidth*30/100;
+		
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
+		parentLayoutParams=(LayoutParams)parentLayout.getLayoutParams();
+		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, 0, 0);
+		parentLayout.setLayoutParams(parentLayoutParams);
 		linearLayouts=new ArrayList<LinearLayout>(numBanks+1);
 		linearLayoutParams=new ArrayList<LayoutParams>(numBanks+1);
 		textViews=new ArrayList<TextView>(numBanks+1);
@@ -71,9 +96,9 @@ public class AdvancedSettingsActivity extends Activity
 			linearLayouts.add(new LinearLayout(this));
 			linearLayoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 			textViews.add(new TextView(this));
-			textViewParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			textViewParams.add(new LayoutParams(WIDTH_TEXT_VIEWS, LayoutParams.WRAP_CONTENT));
 			amountFields.add(new EditText(this));
-			amountFieldParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			amountFieldParams.add(new LayoutParams(WIDTH_AMOUNT_FIELDS, LayoutParams.WRAP_CONTENT));
 			
 			linearLayouts.get(i).setOrientation(LinearLayout.HORIZONTAL);
 			linearLayouts.get(i).addView(textViews.get(i), textViewParams.get(i));
@@ -83,10 +108,10 @@ public class AdvancedSettingsActivity extends Activity
 		
 		for(int i=0; i<numBanks; i++)
 		{
-			textViews.get(i).setText(bankNames.get(i)+"\tRs");
+			textViews.get(i).setText(bankNames.get(i));
 			amountFields.get(i).setText(""+bankBalances.get(i));
 		}
-		textViews.get(numBanks).setText("Wallet Balance\tRs");
+		textViews.get(numBanks).setText("Wallet Balance");
 		amountFields.get(numBanks).setText(""+walletBalance);
 		
 		saveButton=(ImageButton)findViewById(R.id.button_save);

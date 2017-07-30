@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,6 +26,13 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity
 {
+	private DisplayMetrics displayMetrics;
+	private int screenWidth;
+	private int screenHeight;
+	private int MARGIN_TOP_PARENT_LAYOUT;
+	private int MARGIN_LEFT_PARENT_LAYOUT;
+	private int WIDTH_TEXT_VIEWS; 
+	
 	private static int walletBalance;
 	private static int amountSpent;
 	private static int numBanks;
@@ -44,7 +52,8 @@ public class MainActivity extends Activity
 	private static BufferedReader walletReader;
 	private static BufferedReader bankReader;
 	
-	private static LinearLayout mainLayout;
+	private static LinearLayout parentLayout;
+	private static LayoutParams parentLayoutParams;
 	private static ArrayList<LinearLayout> layouts;
 	private static ArrayList<LinearLayout.LayoutParams> layoutParams;
 	private static ArrayList<TextView> nameViews;
@@ -71,8 +80,16 @@ public class MainActivity extends Activity
 			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
 			actionBar.setVisibility(View.GONE);
 		}
-		
 		readData();
+		
+		displayMetrics=new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		screenWidth=displayMetrics.widthPixels;
+		screenHeight=displayMetrics.heightPixels;
+		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(numBanks*100))/6;
+		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*15/100;
+		WIDTH_TEXT_VIEWS=screenWidth*40/100;
+		
 		buildLayout();
 		setData();
 		
@@ -169,7 +186,10 @@ public class MainActivity extends Activity
 	
 	private void buildLayout()
 	{
-		mainLayout=(LinearLayout)findViewById(R.id.activity_main);
+		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
+		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
+		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, 0, 0);
+		parentLayout.setLayoutParams(parentLayoutParams);
 		
 		layouts=new ArrayList<LinearLayout>(numBanks+2);
 		layoutParams=new ArrayList<LayoutParams>(numBanks+2);
@@ -182,17 +202,17 @@ public class MainActivity extends Activity
 			layouts.add(new LinearLayout(this));
 			layoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 			nameViews.add(new TextView(this));
-			nameViewParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			nameViewParams.add(new LayoutParams(WIDTH_TEXT_VIEWS, LayoutParams.WRAP_CONTENT));
 			amountViews.add(new TextView(this));
 			amountViewParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 			
-			layoutParams.get(i).setMargins(50, 10, 10, 10);
+			layoutParams.get(i).setMargins(10, 10, 10, 10);
 			nameViewParams.get(i).setMargins(10,0,0,0);
 			amountViewParams.get(i).setMargins(30,0,0,0);
 
 			layouts.get(i).addView(nameViews.get(i), nameViewParams.get(i));
 			layouts.get(i).addView(amountViews.get(i), amountViewParams.get(i));
-			mainLayout.addView(layouts.get(i), layoutParams.get(i));
+			parentLayout.addView(layouts.get(i), layoutParams.get(i));
 		}
 	}
 	
