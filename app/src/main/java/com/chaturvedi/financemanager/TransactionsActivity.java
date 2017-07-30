@@ -10,6 +10,8 @@ import java.util.Calendar;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.SearchManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -20,6 +22,8 @@ import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -41,10 +45,12 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
+import android.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.customviews.InputDialog;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.Template;
@@ -110,6 +116,7 @@ public class TransactionsActivity extends Activity
 	private DecimalFormat formatterTextFields;
 	private DecimalFormat formatterDisplay;
 	private Intent templatesIntent;
+	private Handler searchHandler;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -164,6 +171,32 @@ public class TransactionsActivity extends Activity
 	{
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_transactions, menu);
+
+		// Associate searchable configuration with the SearchView
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+		{
+			SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+			final SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+			searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+			searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+			{
+
+				@Override
+				public boolean onQueryTextChange(String newText)
+				{
+					return false;
+				}
+
+				@Override
+				public boolean onQueryTextSubmit(final String query)
+				{
+					searchView.clearFocus();
+					startSearchTransaction(query.trim());
+					return false;
+				}
+			});
+		}
+
 		return true;
 	}
 	
@@ -183,6 +216,23 @@ public class TransactionsActivity extends Activity
 			case R.id.action_transactionsDisplayOptions:
 				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
 				//displayOptions();
+				return true;
+
+			case R.id.action_search:
+				final InputDialog searchDialog = new InputDialog(this);
+				searchDialog.setTitle("Search Transactions");
+				searchDialog.setHint("Enter the word to be searched");
+				searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener()
+				{
+					@Override
+					public void onClick(DialogInterface dialog, int which)
+					{
+						String query = searchDialog.getInput();
+						startSearchTransaction(query);
+					}
+				});
+				searchDialog.setNegativeButton("Cancel", null);
+				searchDialog.show();
 				return true;
 		}
 		return true;
@@ -1768,5 +1818,57 @@ public class TransactionsActivity extends Activity
 		});
 		optionsDialogBuilder.setNegativeButton("Cancel", null);
 		optionsDialogBuilder.show();
+	}
+
+	private void startSearchTransaction(final String query)
+	{
+		parentLayout.removeAllViews();
+		transactions = new ArrayList<Transaction>();
+
+		final int MESSAGE_NEW_MATCH_FOUND = 101;
+		final int MESSAGE_SEARCH_FINISHED = 102;
+		searchHandler = new Handler()
+		{
+			@Override
+			public void handleMessage(Message transactionMessage)
+			{
+				switch (transactionMessage.what)
+				{
+					case MESSAGE_NEW_MATCH_FOUND:
+						Transaction transaction = (Transaction) transactionMessage.obj;
+						transactions.add(transaction);
+						displayNewTransaction(transaction);
+						break;
+
+					case MESSAGE_SEARCH_FINISHED:
+						Toast.makeText(TransactionsActivity.this, "Search Finished", Toast.LENGTH_LONG).show();
+						break;
+				}
+			}
+		};
+
+		Thread searchThread = new Thread(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+//				Looper.prepare();
+
+				ArrayList<Transaction> allTransactions = DatabaseManager.getAllTransactions();
+				for(int i=allTransactions.size()-1; i>=0; i--)
+				{
+					Transaction transaction = allTransactions.get(i);
+					if(transaction.getParticular().toLowerCase().contains(query.toLowerCase()))
+					{
+						Message message = searchHandler.obtainMessage(MESSAGE_NEW_MATCH_FOUND,transaction);
+						message.sendToTarget();
+					}
+				}
+				Message message = searchHandler.obtainMessage(MESSAGE_SEARCH_FINISHED);
+				message.sendToTarget();
+			}
+		});
+		searchThread.start();
 	}
 }

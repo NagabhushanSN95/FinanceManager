@@ -13,11 +13,11 @@
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 86,
+                        "startLine": 88,
                         "startColumn": 4,
-                        "startOffset": 4594,
+                        "startOffset": 4701,
                         "endColumn": 44,
-                        "endOffset": 4634
+                        "endOffset": 4741
                     }
                 }
             },
@@ -32,11 +32,11 @@
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 89,
+                        "startLine": 91,
                         "startColumn": 4,
-                        "startOffset": 4740,
+                        "startOffset": 4847,
                         "endColumn": 51,
-                        "endOffset": 4787
+                        "endOffset": 4894
                     }
                 }
             },
@@ -51,11 +51,11 @@
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 88,
+                        "startLine": 90,
                         "startColumn": 4,
-                        "startOffset": 4688,
+                        "startOffset": 4795,
                         "endColumn": 51,
-                        "endOffset": 4735
+                        "endOffset": 4842
                     }
                 }
             },
@@ -70,11 +70,11 @@
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 87,
+                        "startLine": 89,
                         "startColumn": 4,
-                        "startOffset": 4639,
+                        "startOffset": 4746,
                         "endColumn": 48,
-                        "endOffset": 4683
+                        "endOffset": 4790
                     }
                 }
             },
@@ -89,11 +89,11 @@
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 90,
+                        "startLine": 92,
                         "startColumn": 4,
-                        "startOffset": 4792,
+                        "startOffset": 4899,
                         "endColumn": 55,
-                        "endOffset": 4843
+                        "endOffset": 4950
                     }
                 }
             },
@@ -108,11 +108,11 @@
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 91,
+                        "startLine": 93,
                         "startColumn": 4,
-                        "startOffset": 4848,
+                        "startOffset": 4955,
                         "endColumn": 55,
-                        "endOffset": 4899
+                        "endOffset": 5006
                     }
                 }
             },
@@ -298,11 +298,11 @@
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 34,
+                        "startLine": 35,
                         "startColumn": 4,
-                        "startOffset": 1808,
+                        "startOffset": 1855,
                         "endColumn": 36,
-                        "endOffset": 1840
+                        "endOffset": 1887
                     }
                 }
             },
@@ -319,9 +319,9 @@
                     "position": {
                         "startLine": 6,
                         "startColumn": 4,
-                        "startOffset": 247,
+                        "startOffset": 245,
                         "endColumn": 55,
-                        "endOffset": 298
+                        "endOffset": 296
                     }
                 }
             },
@@ -338,9 +338,9 @@
                     "position": {
                         "startLine": 7,
                         "startColumn": 4,
-                        "startOffset": 303,
+                        "startOffset": 301,
                         "endColumn": 49,
-                        "endOffset": 348
+                        "endOffset": 346
                     }
                 }
             },
@@ -357,9 +357,9 @@
                     "position": {
                         "startLine": 8,
                         "startColumn": 4,
-                        "startOffset": 353,
+                        "startOffset": 351,
                         "endColumn": 48,
-                        "endOffset": 397
+                        "endOffset": 395
                     }
                 }
             },
@@ -376,9 +376,9 @@
                     "position": {
                         "startLine": 9,
                         "startColumn": 4,
-                        "startOffset": 402,
+                        "startOffset": 400,
                         "endColumn": 44,
-                        "endOffset": 442
+                        "endOffset": 440
                     }
                 }
             },
@@ -387,17 +387,17 @@
                     "startLine": 22,
                     "startColumn": 4,
                     "startOffset": 1038,
-                    "endColumn": 52,
-                    "endOffset": 1086
+                    "endColumn": 48,
+                    "endOffset": 1082
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 11,
+                        "startLine": 10,
                         "startColumn": 4,
-                        "startOffset": 504,
-                        "endColumn": 52,
-                        "endOffset": 552
+                        "startOffset": 445,
+                        "endColumn": 48,
+                        "endOffset": 489
                     }
                 }
             },
@@ -405,18 +405,18 @@
                 "to": {
                     "startLine": 23,
                     "startColumn": 4,
-                    "startOffset": 1091,
-                    "endColumn": 56,
-                    "endOffset": 1143
+                    "startOffset": 1087,
+                    "endColumn": 52,
+                    "endOffset": 1135
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 10,
+                        "startLine": 11,
                         "startColumn": 4,
-                        "startOffset": 447,
-                        "endColumn": 56,
-                        "endOffset": 499
+                        "startOffset": 494,
+                        "endColumn": 52,
+                        "endOffset": 542
                     }
                 }
             },
@@ -424,18 +424,18 @@
                 "to": {
                     "startLine": 24,
                     "startColumn": 4,
-                    "startOffset": 1148,
-                    "endColumn": 54,
-                    "endOffset": 1198
+                    "startOffset": 1140,
+                    "endColumn": 56,
+                    "endOffset": 1192
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 12,
                         "startColumn": 4,
-                        "startOffset": 557,
-                        "endColumn": 54,
-                        "endOffset": 607
+                        "startOffset": 547,
+                        "endColumn": 56,
+                        "endOffset": 599
                     }
                 }
             },
@@ -443,18 +443,18 @@
                 "to": {
                     "startLine": 25,
                     "startColumn": 4,
-                    "startOffset": 1203,
-                    "endColumn": 60,
-                    "endOffset": 1259
+                    "startOffset": 1197,
+                    "endColumn": 54,
+                    "endOffset": 1247
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 13,
                         "startColumn": 4,
-                        "startOffset": 612,
-                        "endColumn": 60,
-                        "endOffset": 668
+                        "startOffset": 604,
+                        "endColumn": 54,
+                        "endOffset": 654
                     }
                 }
             },
@@ -462,18 +462,18 @@
                 "to": {
                     "startLine": 26,
                     "startColumn": 4,
-                    "startOffset": 1264,
-                    "endColumn": 69,
-                    "endOffset": 1329
+                    "startOffset": 1252,
+                    "endColumn": 60,
+                    "endOffset": 1308
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 14,
                         "startColumn": 4,
-                        "startOffset": 673,
-                        "endColumn": 69,
-                        "endOffset": 738
+                        "startOffset": 659,
+                        "endColumn": 60,
+                        "endOffset": 715
                     }
                 }
             },
@@ -481,18 +481,18 @@
                 "to": {
                     "startLine": 27,
                     "startColumn": 4,
-                    "startOffset": 1334,
-                    "endColumn": 56,
-                    "endOffset": 1386
+                    "startOffset": 1313,
+                    "endColumn": 69,
+                    "endOffset": 1378
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 17,
+                        "startLine": 15,
                         "startColumn": 4,
-                        "startOffset": 856,
-                        "endColumn": 56,
-                        "endOffset": 908
+                        "startOffset": 720,
+                        "endColumn": 69,
+                        "endOffset": 785
                     }
                 }
             },
@@ -500,18 +500,18 @@
                 "to": {
                     "startLine": 28,
                     "startColumn": 4,
-                    "startOffset": 1391,
-                    "endColumn": 47,
-                    "endOffset": 1434
+                    "startOffset": 1383,
+                    "endColumn": 56,
+                    "endOffset": 1435
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 15,
+                        "startLine": 18,
                         "startColumn": 4,
-                        "startOffset": 743,
-                        "endColumn": 47,
-                        "endOffset": 786
+                        "startOffset": 903,
+                        "endColumn": 56,
+                        "endOffset": 955
                     }
                 }
             },
@@ -519,18 +519,18 @@
                 "to": {
                     "startLine": 29,
                     "startColumn": 4,
-                    "startOffset": 1439,
-                    "endColumn": 64,
-                    "endOffset": 1499
+                    "startOffset": 1440,
+                    "endColumn": 47,
+                    "endOffset": 1483
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 16,
                         "startColumn": 4,
-                        "startOffset": 791,
-                        "endColumn": 64,
-                        "endOffset": 851
+                        "startOffset": 790,
+                        "endColumn": 47,
+                        "endOffset": 833
                     }
                 }
             },
@@ -538,18 +538,18 @@
                 "to": {
                     "startLine": 30,
                     "startColumn": 4,
-                    "startOffset": 1504,
-                    "endColumn": 69,
-                    "endOffset": 1569
+                    "startOffset": 1488,
+                    "endColumn": 64,
+                    "endOffset": 1548
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 18,
+                        "startLine": 17,
                         "startColumn": 4,
-                        "startOffset": 913,
-                        "endColumn": 69,
-                        "endOffset": 978
+                        "startOffset": 838,
+                        "endColumn": 64,
+                        "endOffset": 898
                     }
                 }
             },
@@ -557,18 +557,18 @@
                 "to": {
                     "startLine": 31,
                     "startColumn": 4,
-                    "startOffset": 1574,
-                    "endColumn": 41,
-                    "endOffset": 1611
+                    "startOffset": 1553,
+                    "endColumn": 69,
+                    "endOffset": 1618
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 19,
                         "startColumn": 4,
-                        "startOffset": 983,
-                        "endColumn": 41,
-                        "endOffset": 1020
+                        "startOffset": 960,
+                        "endColumn": 69,
+                        "endOffset": 1025
                     }
                 }
             },
@@ -576,18 +576,18 @@
                 "to": {
                     "startLine": 32,
                     "startColumn": 4,
-                    "startOffset": 1616,
-                    "endColumn": 52,
-                    "endOffset": 1664
+                    "startOffset": 1623,
+                    "endColumn": 41,
+                    "endOffset": 1660
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 3,
+                        "startLine": 20,
                         "startColumn": 4,
-                        "startOffset": 58,
-                        "endColumn": 52,
-                        "endOffset": 106
+                        "startOffset": 1030,
+                        "endColumn": 41,
+                        "endOffset": 1067
                     }
                 }
             },
@@ -595,18 +595,18 @@
                 "to": {
                     "startLine": 33,
                     "startColumn": 4,
-                    "startOffset": 1669,
-                    "endColumn": 69,
-                    "endOffset": 1734
+                    "startOffset": 1665,
+                    "endColumn": 52,
+                    "endOffset": 1713
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 20,
+                        "startLine": 3,
                         "startColumn": 4,
-                        "startOffset": 1025,
-                        "endColumn": 69,
-                        "endOffset": 1090
+                        "startOffset": 56,
+                        "endColumn": 52,
+                        "endOffset": 104
                     }
                 }
             },
@@ -614,18 +614,18 @@
                 "to": {
                     "startLine": 34,
                     "startColumn": 4,
-                    "startOffset": 1739,
-                    "endColumn": 47,
-                    "endOffset": 1782
+                    "startOffset": 1718,
+                    "endColumn": 69,
+                    "endOffset": 1783
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 21,
                         "startColumn": 4,
-                        "startOffset": 1095,
-                        "endColumn": 47,
-                        "endOffset": 1138
+                        "startOffset": 1072,
+                        "endColumn": 69,
+                        "endOffset": 1137
                     }
                 }
             },
@@ -633,18 +633,18 @@
                 "to": {
                     "startLine": 35,
                     "startColumn": 4,
-                    "startOffset": 1787,
-                    "endColumn": 56,
-                    "endOffset": 1839
+                    "startOffset": 1788,
+                    "endColumn": 47,
+                    "endOffset": 1831
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 24,
+                        "startLine": 22,
                         "startColumn": 4,
-                        "startOffset": 1250,
-                        "endColumn": 56,
-                        "endOffset": 1302
+                        "startOffset": 1142,
+                        "endColumn": 47,
+                        "endOffset": 1185
                     }
                 }
             },
@@ -652,18 +652,18 @@
                 "to": {
                     "startLine": 36,
                     "startColumn": 4,
-                    "startOffset": 1844,
-                    "endColumn": 51,
-                    "endOffset": 1891
+                    "startOffset": 1836,
+                    "endColumn": 56,
+                    "endOffset": 1888
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 22,
+                        "startLine": 25,
                         "startColumn": 4,
-                        "startOffset": 1143,
-                        "endColumn": 51,
-                        "endOffset": 1190
+                        "startOffset": 1297,
+                        "endColumn": 56,
+                        "endOffset": 1349
                     }
                 }
             },
@@ -671,18 +671,18 @@
                 "to": {
                     "startLine": 37,
                     "startColumn": 4,
-                    "startOffset": 1896,
-                    "endColumn": 54,
-                    "endOffset": 1946
+                    "startOffset": 1893,
+                    "endColumn": 51,
+                    "endOffset": 1940
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 23,
                         "startColumn": 4,
-                        "startOffset": 1195,
-                        "endColumn": 54,
-                        "endOffset": 1245
+                        "startOffset": 1190,
+                        "endColumn": 51,
+                        "endOffset": 1237
                     }
                 }
             },
@@ -690,18 +690,18 @@
                 "to": {
                     "startLine": 38,
                     "startColumn": 4,
-                    "startOffset": 1951,
-                    "endColumn": 48,
+                    "startOffset": 1945,
+                    "endColumn": 54,
                     "endOffset": 1995
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 25,
+                        "startLine": 24,
                         "startColumn": 4,
-                        "startOffset": 1307,
-                        "endColumn": 48,
-                        "endOffset": 1351
+                        "startOffset": 1242,
+                        "endColumn": 54,
+                        "endOffset": 1292
                     }
                 }
             },
@@ -710,17 +710,17 @@
                     "startLine": 39,
                     "startColumn": 4,
                     "startOffset": 2000,
-                    "endColumn": 35,
-                    "endOffset": 2031
+                    "endColumn": 48,
+                    "endOffset": 2044
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 42,
+                        "startLine": 26,
                         "startColumn": 4,
-                        "startOffset": 2219,
-                        "endColumn": 35,
-                        "endOffset": 2250
+                        "startOffset": 1354,
+                        "endColumn": 48,
+                        "endOffset": 1398
                     }
                 }
             },
@@ -728,18 +728,18 @@
                 "to": {
                     "startLine": 40,
                     "startColumn": 4,
-                    "startOffset": 2036,
-                    "endColumn": 62,
-                    "endOffset": 2094
+                    "startOffset": 2049,
+                    "endColumn": 35,
+                    "endOffset": 2080
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 26,
+                        "startLine": 43,
                         "startColumn": 4,
-                        "startOffset": 1356,
-                        "endColumn": 62,
-                        "endOffset": 1414
+                        "startOffset": 2266,
+                        "endColumn": 35,
+                        "endOffset": 2297
                     }
                 }
             },
@@ -747,18 +747,18 @@
                 "to": {
                     "startLine": 41,
                     "startColumn": 4,
-                    "startOffset": 2099,
-                    "endColumn": 59,
-                    "endOffset": 2154
+                    "startOffset": 2085,
+                    "endColumn": 62,
+                    "endOffset": 2143
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 27,
                         "startColumn": 4,
-                        "startOffset": 1419,
-                        "endColumn": 59,
-                        "endOffset": 1474
+                        "startOffset": 1403,
+                        "endColumn": 62,
+                        "endOffset": 1461
                     }
                 }
             },
@@ -766,9 +766,28 @@
                 "to": {
                     "startLine": 42,
                     "startColumn": 4,
-                    "startOffset": 2159,
-                    "endColumn": 48,
+                    "startOffset": 2148,
+                    "endColumn": 59,
                     "endOffset": 2203
+                },
+                "from": {
+                    "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
+                    "position": {
+                        "startLine": 28,
+                        "startColumn": 4,
+                        "startOffset": 1466,
+                        "endColumn": 59,
+                        "endOffset": 1521
+                    }
+                }
+            },
+            {
+                "to": {
+                    "startLine": 43,
+                    "startColumn": 4,
+                    "startOffset": 2208,
+                    "endColumn": 48,
+                    "endOffset": 2252
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\constants.xml",
@@ -783,39 +802,20 @@
             },
             {
                 "to": {
-                    "startLine": 43,
-                    "startColumn": 4,
-                    "startOffset": 2208,
-                    "endColumn": 37,
-                    "endOffset": 2241
-                },
-                "from": {
-                    "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
-                    "position": {
-                        "startLine": 28,
-                        "startColumn": 4,
-                        "startOffset": 1479,
-                        "endColumn": 37,
-                        "endOffset": 1512
-                    }
-                }
-            },
-            {
-                "to": {
                     "startLine": 44,
                     "startColumn": 4,
-                    "startOffset": 2246,
-                    "endColumn": 48,
+                    "startOffset": 2257,
+                    "endColumn": 37,
                     "endOffset": 2290
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 31,
+                        "startLine": 29,
                         "startColumn": 4,
-                        "startOffset": 1641,
-                        "endColumn": 48,
-                        "endOffset": 1685
+                        "startOffset": 1526,
+                        "endColumn": 37,
+                        "endOffset": 1559
                     }
                 }
             },
@@ -824,17 +824,17 @@
                     "startLine": 45,
                     "startColumn": 4,
                     "startOffset": 2295,
-                    "endColumn": 63,
-                    "endOffset": 2354
+                    "endColumn": 48,
+                    "endOffset": 2339
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 32,
                         "startColumn": 4,
-                        "startOffset": 1690,
-                        "endColumn": 63,
-                        "endOffset": 1749
+                        "startOffset": 1688,
+                        "endColumn": 48,
+                        "endOffset": 1732
                     }
                 }
             },
@@ -842,18 +842,18 @@
                 "to": {
                     "startLine": 46,
                     "startColumn": 4,
-                    "startOffset": 2359,
-                    "endColumn": 65,
-                    "endOffset": 2420
+                    "startOffset": 2344,
+                    "endColumn": 63,
+                    "endOffset": 2403
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 30,
+                        "startLine": 33,
                         "startColumn": 4,
-                        "startOffset": 1575,
-                        "endColumn": 65,
-                        "endOffset": 1636
+                        "startOffset": 1737,
+                        "endColumn": 63,
+                        "endOffset": 1796
                     }
                 }
             },
@@ -861,18 +861,18 @@
                 "to": {
                     "startLine": 47,
                     "startColumn": 4,
-                    "startOffset": 2425,
-                    "endColumn": 53,
-                    "endOffset": 2474
+                    "startOffset": 2408,
+                    "endColumn": 65,
+                    "endOffset": 2469
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 33,
+                        "startLine": 31,
                         "startColumn": 4,
-                        "startOffset": 1754,
-                        "endColumn": 53,
-                        "endOffset": 1803
+                        "startOffset": 1622,
+                        "endColumn": 65,
+                        "endOffset": 1683
                     }
                 }
             },
@@ -880,18 +880,18 @@
                 "to": {
                     "startLine": 48,
                     "startColumn": 4,
-                    "startOffset": 2479,
-                    "endColumn": 57,
-                    "endOffset": 2532
+                    "startOffset": 2474,
+                    "endColumn": 53,
+                    "endOffset": 2523
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 29,
+                        "startLine": 34,
                         "startColumn": 4,
-                        "startOffset": 1517,
-                        "endColumn": 57,
-                        "endOffset": 1570
+                        "startOffset": 1801,
+                        "endColumn": 53,
+                        "endOffset": 1850
                     }
                 }
             },
@@ -899,18 +899,18 @@
                 "to": {
                     "startLine": 49,
                     "startColumn": 4,
-                    "startOffset": 2537,
-                    "endColumn": 41,
-                    "endOffset": 2574
+                    "startOffset": 2528,
+                    "endColumn": 57,
+                    "endOffset": 2581
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 37,
+                        "startLine": 30,
                         "startColumn": 4,
-                        "startOffset": 1965,
-                        "endColumn": 41,
-                        "endOffset": 2002
+                        "startOffset": 1564,
+                        "endColumn": 57,
+                        "endOffset": 1617
                     }
                 }
             },
@@ -918,18 +918,18 @@
                 "to": {
                     "startLine": 50,
                     "startColumn": 4,
-                    "startOffset": 2579,
-                    "endColumn": 39,
-                    "endOffset": 2614
+                    "startOffset": 2586,
+                    "endColumn": 41,
+                    "endOffset": 2623
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 36,
+                        "startLine": 38,
                         "startColumn": 4,
-                        "startOffset": 1925,
-                        "endColumn": 39,
-                        "endOffset": 1960
+                        "startOffset": 2012,
+                        "endColumn": 41,
+                        "endOffset": 2049
                     }
                 }
             },
@@ -937,18 +937,18 @@
                 "to": {
                     "startLine": 51,
                     "startColumn": 4,
-                    "startOffset": 2619,
-                    "endColumn": 57,
-                    "endOffset": 2672
+                    "startOffset": 2628,
+                    "endColumn": 39,
+                    "endOffset": 2663
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 38,
+                        "startLine": 37,
                         "startColumn": 4,
-                        "startOffset": 2007,
-                        "endColumn": 57,
-                        "endOffset": 2060
+                        "startOffset": 1972,
+                        "endColumn": 39,
+                        "endOffset": 2007
                     }
                 }
             },
@@ -956,18 +956,18 @@
                 "to": {
                     "startLine": 52,
                     "startColumn": 4,
-                    "startOffset": 2677,
-                    "endColumn": 52,
-                    "endOffset": 2725
+                    "startOffset": 2668,
+                    "endColumn": 57,
+                    "endOffset": 2721
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 39,
                         "startColumn": 4,
-                        "startOffset": 2065,
-                        "endColumn": 52,
-                        "endOffset": 2113
+                        "startOffset": 2054,
+                        "endColumn": 57,
+                        "endOffset": 2107
                     }
                 }
             },
@@ -975,18 +975,18 @@
                 "to": {
                     "startLine": 53,
                     "startColumn": 4,
-                    "startOffset": 2730,
-                    "endColumn": 51,
-                    "endOffset": 2777
+                    "startOffset": 2726,
+                    "endColumn": 52,
+                    "endOffset": 2774
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 40,
                         "startColumn": 4,
-                        "startOffset": 2118,
-                        "endColumn": 51,
-                        "endOffset": 2165
+                        "startOffset": 2112,
+                        "endColumn": 52,
+                        "endOffset": 2160
                     }
                 }
             },
@@ -994,8 +994,8 @@
                 "to": {
                     "startLine": 54,
                     "startColumn": 4,
-                    "startOffset": 2782,
-                    "endColumn": 48,
+                    "startOffset": 2779,
+                    "endColumn": 51,
                     "endOffset": 2826
                 },
                 "from": {
@@ -1003,9 +1003,9 @@
                     "position": {
                         "startLine": 41,
                         "startColumn": 4,
-                        "startOffset": 2170,
-                        "endColumn": 48,
-                        "endOffset": 2214
+                        "startOffset": 2165,
+                        "endColumn": 51,
+                        "endOffset": 2212
                     }
                 }
             },
@@ -1014,17 +1014,17 @@
                     "startLine": 55,
                     "startColumn": 4,
                     "startOffset": 2831,
-                    "endColumn": 46,
-                    "endOffset": 2873
+                    "endColumn": 48,
+                    "endOffset": 2875
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 44,
+                        "startLine": 42,
                         "startColumn": 4,
-                        "startOffset": 2324,
-                        "endColumn": 46,
-                        "endOffset": 2366
+                        "startOffset": 2217,
+                        "endColumn": 48,
+                        "endOffset": 2261
                     }
                 }
             },
@@ -1032,9 +1032,9 @@
                 "to": {
                     "startLine": 56,
                     "startColumn": 4,
-                    "startOffset": 2878,
-                    "endColumn": 43,
-                    "endOffset": 2917
+                    "startOffset": 2880,
+                    "endColumn": 46,
+                    "endOffset": 2922
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
@@ -1042,8 +1042,8 @@
                         "startLine": 45,
                         "startColumn": 4,
                         "startOffset": 2371,
-                        "endColumn": 43,
-                        "endOffset": 2410
+                        "endColumn": 46,
+                        "endOffset": 2413
                     }
                 }
             },
@@ -1051,17 +1051,17 @@
                 "to": {
                     "startLine": 57,
                     "startColumn": 4,
-                    "startOffset": 2922,
-                    "endColumn": 46,
-                    "endOffset": 2964
+                    "startOffset": 2927,
+                    "endColumn": 43,
+                    "endOffset": 2966
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 46,
                         "startColumn": 4,
-                        "startOffset": 2415,
-                        "endColumn": 46,
+                        "startOffset": 2418,
+                        "endColumn": 43,
                         "endOffset": 2457
                     }
                 }
@@ -1070,9 +1070,9 @@
                 "to": {
                     "startLine": 58,
                     "startColumn": 4,
-                    "startOffset": 2969,
-                    "endColumn": 52,
-                    "endOffset": 3017
+                    "startOffset": 2971,
+                    "endColumn": 46,
+                    "endOffset": 3013
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
@@ -1080,8 +1080,8 @@
                         "startLine": 47,
                         "startColumn": 4,
                         "startOffset": 2462,
-                        "endColumn": 52,
-                        "endOffset": 2510
+                        "endColumn": 46,
+                        "endOffset": 2504
                     }
                 }
             },
@@ -1089,18 +1089,18 @@
                 "to": {
                     "startLine": 59,
                     "startColumn": 4,
-                    "startOffset": 3022,
-                    "endColumn": 45,
-                    "endOffset": 3063
+                    "startOffset": 3018,
+                    "endColumn": 52,
+                    "endOffset": 3066
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 48,
                         "startColumn": 4,
-                        "startOffset": 2515,
-                        "endColumn": 45,
-                        "endOffset": 2556
+                        "startOffset": 2509,
+                        "endColumn": 52,
+                        "endOffset": 2557
                     }
                 }
             },
@@ -1108,18 +1108,18 @@
                 "to": {
                     "startLine": 60,
                     "startColumn": 4,
-                    "startOffset": 3068,
-                    "endColumn": 68,
-                    "endOffset": 3132
+                    "startOffset": 3071,
+                    "endColumn": 45,
+                    "endOffset": 3112
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 43,
+                        "startLine": 49,
                         "startColumn": 4,
-                        "startOffset": 2255,
-                        "endColumn": 68,
-                        "endOffset": 2319
+                        "startOffset": 2562,
+                        "endColumn": 45,
+                        "endOffset": 2603
                     }
                 }
             },
@@ -1127,18 +1127,18 @@
                 "to": {
                     "startLine": 61,
                     "startColumn": 4,
-                    "startOffset": 3137,
-                    "endColumn": 67,
-                    "endOffset": 3200
+                    "startOffset": 3117,
+                    "endColumn": 68,
+                    "endOffset": 3181
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 49,
+                        "startLine": 44,
                         "startColumn": 4,
-                        "startOffset": 2561,
-                        "endColumn": 67,
-                        "endOffset": 2624
+                        "startOffset": 2302,
+                        "endColumn": 68,
+                        "endOffset": 2366
                     }
                 }
             },
@@ -1146,20 +1146,37 @@
                 "to": {
                     "startLine": 62,
                     "startColumn": 4,
-                    "startOffset": 3205,
-                    "endLine": 63,
-                    "endColumn": 76,
-                    "endOffset": 3371
+                    "startOffset": 3186,
+                    "endColumn": 59,
+                    "endOffset": 3241
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 50,
                         "startColumn": 4,
-                        "startOffset": 2629,
-                        "endLine": 51,
-                        "endColumn": 76,
-                        "endOffset": 2795
+                        "startOffset": 2608,
+                        "endColumn": 59,
+                        "endOffset": 2663
+                    }
+                }
+            },
+            {
+                "to": {
+                    "startLine": 63,
+                    "startColumn": 4,
+                    "startOffset": 3246,
+                    "endColumn": 67,
+                    "endOffset": 3309
+                },
+                "from": {
+                    "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
+                    "position": {
+                        "startLine": 51,
+                        "startColumn": 4,
+                        "startOffset": 2668,
+                        "endColumn": 67,
+                        "endOffset": 2731
                     }
                 }
             },
@@ -1167,37 +1184,20 @@
                 "to": {
                     "startLine": 64,
                     "startColumn": 4,
-                    "startOffset": 3376,
-                    "endColumn": 93,
-                    "endOffset": 3465
+                    "startOffset": 3314,
+                    "endLine": 65,
+                    "endColumn": 76,
+                    "endOffset": 3480
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 52,
                         "startColumn": 4,
-                        "startOffset": 2800,
-                        "endColumn": 93,
-                        "endOffset": 2889
-                    }
-                }
-            },
-            {
-                "to": {
-                    "startLine": 65,
-                    "startColumn": 4,
-                    "startOffset": 3470,
-                    "endColumn": 58,
-                    "endOffset": 3524
-                },
-                "from": {
-                    "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
-                    "position": {
-                        "startLine": 4,
-                        "startColumn": 4,
-                        "startOffset": 111,
-                        "endColumn": 58,
-                        "endOffset": 165
+                        "startOffset": 2736,
+                        "endLine": 53,
+                        "endColumn": 76,
+                        "endOffset": 2902
                     }
                 }
             },
@@ -1205,18 +1205,18 @@
                 "to": {
                     "startLine": 66,
                     "startColumn": 4,
-                    "startOffset": 3529,
-                    "endColumn": 76,
-                    "endOffset": 3601
+                    "startOffset": 3485,
+                    "endColumn": 93,
+                    "endOffset": 3574
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 5,
+                        "startLine": 54,
                         "startColumn": 4,
-                        "startOffset": 170,
-                        "endColumn": 76,
-                        "endOffset": 242
+                        "startOffset": 2907,
+                        "endColumn": 93,
+                        "endOffset": 2996
                     }
                 }
             },
@@ -1224,18 +1224,18 @@
                 "to": {
                     "startLine": 67,
                     "startColumn": 4,
-                    "startOffset": 3606,
-                    "endColumn": 64,
-                    "endOffset": 3666
+                    "startOffset": 3579,
+                    "endColumn": 58,
+                    "endOffset": 3633
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 53,
+                        "startLine": 4,
                         "startColumn": 4,
-                        "startOffset": 2894,
-                        "endColumn": 64,
-                        "endOffset": 2954
+                        "startOffset": 109,
+                        "endColumn": 58,
+                        "endOffset": 163
                     }
                 }
             },
@@ -1243,18 +1243,18 @@
                 "to": {
                     "startLine": 68,
                     "startColumn": 4,
-                    "startOffset": 3671,
-                    "endColumn": 50,
-                    "endOffset": 3717
+                    "startOffset": 3638,
+                    "endColumn": 76,
+                    "endOffset": 3710
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 54,
+                        "startLine": 5,
                         "startColumn": 4,
-                        "startOffset": 2959,
-                        "endColumn": 50,
-                        "endOffset": 3005
+                        "startOffset": 168,
+                        "endColumn": 76,
+                        "endOffset": 240
                     }
                 }
             },
@@ -1262,18 +1262,18 @@
                 "to": {
                     "startLine": 69,
                     "startColumn": 4,
-                    "startOffset": 3722,
-                    "endColumn": 53,
-                    "endOffset": 3771
+                    "startOffset": 3715,
+                    "endColumn": 64,
+                    "endOffset": 3775
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 55,
                         "startColumn": 4,
-                        "startOffset": 3010,
-                        "endColumn": 53,
-                        "endOffset": 3059
+                        "startOffset": 3001,
+                        "endColumn": 64,
+                        "endOffset": 3061
                     }
                 }
             },
@@ -1281,17 +1281,17 @@
                 "to": {
                     "startLine": 70,
                     "startColumn": 4,
-                    "startOffset": 3776,
-                    "endColumn": 52,
-                    "endOffset": 3824
+                    "startOffset": 3780,
+                    "endColumn": 50,
+                    "endOffset": 3826
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 56,
                         "startColumn": 4,
-                        "startOffset": 3064,
-                        "endColumn": 52,
+                        "startOffset": 3066,
+                        "endColumn": 50,
                         "endOffset": 3112
                     }
                 }
@@ -1300,9 +1300,9 @@
                 "to": {
                     "startLine": 71,
                     "startColumn": 4,
-                    "startOffset": 3829,
-                    "endColumn": 54,
-                    "endOffset": 3879
+                    "startOffset": 3831,
+                    "endColumn": 53,
+                    "endOffset": 3880
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
@@ -1310,8 +1310,8 @@
                         "startLine": 57,
                         "startColumn": 4,
                         "startOffset": 3117,
-                        "endColumn": 54,
-                        "endOffset": 3167
+                        "endColumn": 53,
+                        "endOffset": 3166
                     }
                 }
             },
@@ -1319,18 +1319,18 @@
                 "to": {
                     "startLine": 72,
                     "startColumn": 4,
-                    "startOffset": 3884,
-                    "endColumn": 48,
-                    "endOffset": 3928
+                    "startOffset": 3885,
+                    "endColumn": 52,
+                    "endOffset": 3933
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 58,
                         "startColumn": 4,
-                        "startOffset": 3172,
-                        "endColumn": 48,
-                        "endOffset": 3216
+                        "startOffset": 3171,
+                        "endColumn": 52,
+                        "endOffset": 3219
                     }
                 }
             },
@@ -1338,18 +1338,18 @@
                 "to": {
                     "startLine": 73,
                     "startColumn": 4,
-                    "startOffset": 3933,
-                    "endColumn": 47,
-                    "endOffset": 3976
+                    "startOffset": 3938,
+                    "endColumn": 54,
+                    "endOffset": 3988
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 59,
                         "startColumn": 4,
-                        "startOffset": 3221,
-                        "endColumn": 47,
-                        "endOffset": 3264
+                        "startOffset": 3224,
+                        "endColumn": 54,
+                        "endOffset": 3274
                     }
                 }
             },
@@ -1357,18 +1357,18 @@
                 "to": {
                     "startLine": 74,
                     "startColumn": 4,
-                    "startOffset": 3981,
-                    "endColumn": 43,
-                    "endOffset": 4020
+                    "startOffset": 3993,
+                    "endColumn": 48,
+                    "endOffset": 4037
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 60,
                         "startColumn": 4,
-                        "startOffset": 3269,
-                        "endColumn": 43,
-                        "endOffset": 3308
+                        "startOffset": 3279,
+                        "endColumn": 48,
+                        "endOffset": 3323
                     }
                 }
             },
@@ -1376,18 +1376,18 @@
                 "to": {
                     "startLine": 75,
                     "startColumn": 4,
-                    "startOffset": 4025,
-                    "endColumn": 51,
-                    "endOffset": 4072
+                    "startOffset": 4042,
+                    "endColumn": 47,
+                    "endOffset": 4085
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 61,
                         "startColumn": 4,
-                        "startOffset": 3313,
-                        "endColumn": 51,
-                        "endOffset": 3360
+                        "startOffset": 3328,
+                        "endColumn": 47,
+                        "endOffset": 3371
                     }
                 }
             },
@@ -1395,18 +1395,18 @@
                 "to": {
                     "startLine": 76,
                     "startColumn": 4,
-                    "startOffset": 4077,
-                    "endColumn": 55,
-                    "endOffset": 4128
+                    "startOffset": 4090,
+                    "endColumn": 43,
+                    "endOffset": 4129
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 62,
                         "startColumn": 4,
-                        "startOffset": 3365,
-                        "endColumn": 55,
-                        "endOffset": 3416
+                        "startOffset": 3376,
+                        "endColumn": 43,
+                        "endOffset": 3415
                     }
                 }
             },
@@ -1414,18 +1414,18 @@
                 "to": {
                     "startLine": 77,
                     "startColumn": 4,
-                    "startOffset": 4133,
-                    "endColumn": 59,
-                    "endOffset": 4188
+                    "startOffset": 4134,
+                    "endColumn": 51,
+                    "endOffset": 4181
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 63,
                         "startColumn": 4,
-                        "startOffset": 3421,
-                        "endColumn": 59,
-                        "endOffset": 3476
+                        "startOffset": 3420,
+                        "endColumn": 51,
+                        "endOffset": 3467
                     }
                 }
             },
@@ -1433,18 +1433,18 @@
                 "to": {
                     "startLine": 78,
                     "startColumn": 4,
-                    "startOffset": 4193,
-                    "endColumn": 63,
-                    "endOffset": 4252
+                    "startOffset": 4186,
+                    "endColumn": 55,
+                    "endOffset": 4237
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 64,
                         "startColumn": 4,
-                        "startOffset": 3481,
-                        "endColumn": 63,
-                        "endOffset": 3540
+                        "startOffset": 3472,
+                        "endColumn": 55,
+                        "endOffset": 3523
                     }
                 }
             },
@@ -1452,18 +1452,18 @@
                 "to": {
                     "startLine": 79,
                     "startColumn": 4,
-                    "startOffset": 4257,
-                    "endColumn": 53,
-                    "endOffset": 4306
+                    "startOffset": 4242,
+                    "endColumn": 59,
+                    "endOffset": 4297
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 65,
                         "startColumn": 4,
-                        "startOffset": 3545,
-                        "endColumn": 53,
-                        "endOffset": 3594
+                        "startOffset": 3528,
+                        "endColumn": 59,
+                        "endOffset": 3583
                     }
                 }
             },
@@ -1471,18 +1471,18 @@
                 "to": {
                     "startLine": 80,
                     "startColumn": 4,
-                    "startOffset": 4311,
-                    "endColumn": 37,
-                    "endOffset": 4344
+                    "startOffset": 4302,
+                    "endColumn": 63,
+                    "endOffset": 4361
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 66,
                         "startColumn": 4,
-                        "startOffset": 3599,
-                        "endColumn": 37,
-                        "endOffset": 3632
+                        "startOffset": 3588,
+                        "endColumn": 63,
+                        "endOffset": 3647
                     }
                 }
             },
@@ -1490,18 +1490,18 @@
                 "to": {
                     "startLine": 81,
                     "startColumn": 4,
-                    "startOffset": 4349,
-                    "endColumn": 51,
-                    "endOffset": 4396
+                    "startOffset": 4366,
+                    "endColumn": 53,
+                    "endOffset": 4415
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 67,
                         "startColumn": 4,
-                        "startOffset": 3637,
-                        "endColumn": 51,
-                        "endOffset": 3684
+                        "startOffset": 3652,
+                        "endColumn": 53,
+                        "endOffset": 3701
                     }
                 }
             },
@@ -1509,18 +1509,18 @@
                 "to": {
                     "startLine": 82,
                     "startColumn": 4,
-                    "startOffset": 4401,
-                    "endColumn": 45,
-                    "endOffset": 4442
+                    "startOffset": 4420,
+                    "endColumn": 37,
+                    "endOffset": 4453
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 68,
                         "startColumn": 4,
-                        "startOffset": 3689,
-                        "endColumn": 45,
-                        "endOffset": 3730
+                        "startOffset": 3706,
+                        "endColumn": 37,
+                        "endOffset": 3739
                     }
                 }
             },
@@ -1528,18 +1528,18 @@
                 "to": {
                     "startLine": 83,
                     "startColumn": 4,
-                    "startOffset": 4447,
-                    "endColumn": 37,
-                    "endOffset": 4480
+                    "startOffset": 4458,
+                    "endColumn": 51,
+                    "endOffset": 4505
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 69,
                         "startColumn": 4,
-                        "startOffset": 3735,
-                        "endColumn": 37,
-                        "endOffset": 3768
+                        "startOffset": 3744,
+                        "endColumn": 51,
+                        "endOffset": 3791
                     }
                 }
             },
@@ -1547,18 +1547,18 @@
                 "to": {
                     "startLine": 84,
                     "startColumn": 4,
-                    "startOffset": 4485,
-                    "endColumn": 43,
-                    "endOffset": 4524
+                    "startOffset": 4510,
+                    "endColumn": 45,
+                    "endOffset": 4551
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 70,
                         "startColumn": 4,
-                        "startOffset": 3773,
-                        "endColumn": 43,
-                        "endOffset": 3812
+                        "startOffset": 3796,
+                        "endColumn": 45,
+                        "endOffset": 3837
                     }
                 }
             },
@@ -1566,18 +1566,18 @@
                 "to": {
                     "startLine": 85,
                     "startColumn": 4,
-                    "startOffset": 4529,
-                    "endColumn": 52,
-                    "endOffset": 4577
+                    "startOffset": 4556,
+                    "endColumn": 37,
+                    "endOffset": 4589
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 71,
                         "startColumn": 4,
-                        "startOffset": 3817,
-                        "endColumn": 52,
-                        "endOffset": 3865
+                        "startOffset": 3842,
+                        "endColumn": 37,
+                        "endOffset": 3875
                     }
                 }
             },
@@ -1585,18 +1585,18 @@
                 "to": {
                     "startLine": 86,
                     "startColumn": 4,
-                    "startOffset": 4582,
-                    "endColumn": 37,
-                    "endOffset": 4615
+                    "startOffset": 4594,
+                    "endColumn": 43,
+                    "endOffset": 4633
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 72,
                         "startColumn": 4,
-                        "startOffset": 3870,
-                        "endColumn": 37,
-                        "endOffset": 3903
+                        "startOffset": 3880,
+                        "endColumn": 43,
+                        "endOffset": 3919
                     }
                 }
             },
@@ -1604,18 +1604,18 @@
                 "to": {
                     "startLine": 87,
                     "startColumn": 4,
-                    "startOffset": 4620,
-                    "endColumn": 40,
-                    "endOffset": 4656
+                    "startOffset": 4638,
+                    "endColumn": 52,
+                    "endOffset": 4686
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 73,
                         "startColumn": 4,
-                        "startOffset": 3908,
-                        "endColumn": 40,
-                        "endOffset": 3944
+                        "startOffset": 3924,
+                        "endColumn": 52,
+                        "endOffset": 3972
                     }
                 }
             },
@@ -1623,18 +1623,18 @@
                 "to": {
                     "startLine": 88,
                     "startColumn": 4,
-                    "startOffset": 4661,
+                    "startOffset": 4691,
                     "endColumn": 37,
-                    "endOffset": 4694
+                    "endOffset": 4724
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 74,
                         "startColumn": 4,
-                        "startOffset": 3949,
+                        "startOffset": 3977,
                         "endColumn": 37,
-                        "endOffset": 3982
+                        "endOffset": 4010
                     }
                 }
             },
@@ -1642,18 +1642,18 @@
                 "to": {
                     "startLine": 89,
                     "startColumn": 4,
-                    "startOffset": 4699,
-                    "endColumn": 38,
-                    "endOffset": 4733
+                    "startOffset": 4729,
+                    "endColumn": 40,
+                    "endOffset": 4765
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 75,
                         "startColumn": 4,
-                        "startOffset": 3987,
-                        "endColumn": 38,
-                        "endOffset": 4021
+                        "startOffset": 4015,
+                        "endColumn": 40,
+                        "endOffset": 4051
                     }
                 }
             },
@@ -1661,18 +1661,18 @@
                 "to": {
                     "startLine": 90,
                     "startColumn": 4,
-                    "startOffset": 4738,
-                    "endColumn": 68,
-                    "endOffset": 4802
+                    "startOffset": 4770,
+                    "endColumn": 37,
+                    "endOffset": 4803
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 76,
                         "startColumn": 4,
-                        "startOffset": 4026,
-                        "endColumn": 68,
-                        "endOffset": 4090
+                        "startOffset": 4056,
+                        "endColumn": 37,
+                        "endOffset": 4089
                     }
                 }
             },
@@ -1680,18 +1680,18 @@
                 "to": {
                     "startLine": 91,
                     "startColumn": 4,
-                    "startOffset": 4807,
-                    "endColumn": 58,
-                    "endOffset": 4861
+                    "startOffset": 4808,
+                    "endColumn": 38,
+                    "endOffset": 4842
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 77,
                         "startColumn": 4,
-                        "startOffset": 4095,
-                        "endColumn": 58,
-                        "endOffset": 4149
+                        "startOffset": 4094,
+                        "endColumn": 38,
+                        "endOffset": 4128
                     }
                 }
             },
@@ -1699,8 +1699,8 @@
                 "to": {
                     "startLine": 92,
                     "startColumn": 4,
-                    "startOffset": 4866,
-                    "endColumn": 49,
+                    "startOffset": 4847,
+                    "endColumn": 68,
                     "endOffset": 4911
                 },
                 "from": {
@@ -1708,9 +1708,9 @@
                     "position": {
                         "startLine": 78,
                         "startColumn": 4,
-                        "startOffset": 4154,
-                        "endColumn": 49,
-                        "endOffset": 4199
+                        "startOffset": 4133,
+                        "endColumn": 68,
+                        "endOffset": 4197
                     }
                 }
             },
@@ -1719,17 +1719,17 @@
                     "startLine": 93,
                     "startColumn": 4,
                     "startOffset": 4916,
-                    "endColumn": 66,
-                    "endOffset": 4978
+                    "endColumn": 58,
+                    "endOffset": 4970
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 79,
                         "startColumn": 4,
-                        "startOffset": 4204,
-                        "endColumn": 66,
-                        "endOffset": 4266
+                        "startOffset": 4202,
+                        "endColumn": 58,
+                        "endOffset": 4256
                     }
                 }
             },
@@ -1737,18 +1737,18 @@
                 "to": {
                     "startLine": 94,
                     "startColumn": 4,
-                    "startOffset": 4983,
-                    "endColumn": 79,
-                    "endOffset": 5058
+                    "startOffset": 4975,
+                    "endColumn": 49,
+                    "endOffset": 5020
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 35,
+                        "startLine": 80,
                         "startColumn": 4,
-                        "startOffset": 1845,
-                        "endColumn": 79,
-                        "endOffset": 1920
+                        "startOffset": 4261,
+                        "endColumn": 49,
+                        "endOffset": 4306
                     }
                 }
             },
@@ -1756,18 +1756,18 @@
                 "to": {
                     "startLine": 95,
                     "startColumn": 4,
-                    "startOffset": 5063,
-                    "endColumn": 37,
-                    "endOffset": 5096
+                    "startOffset": 5025,
+                    "endColumn": 66,
+                    "endOffset": 5087
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 80,
+                        "startLine": 81,
                         "startColumn": 4,
-                        "startOffset": 4271,
-                        "endColumn": 37,
-                        "endOffset": 4304
+                        "startOffset": 4311,
+                        "endColumn": 66,
+                        "endOffset": 4373
                     }
                 }
             },
@@ -1775,18 +1775,18 @@
                 "to": {
                     "startLine": 96,
                     "startColumn": 4,
-                    "startOffset": 5101,
-                    "endColumn": 63,
-                    "endOffset": 5160
+                    "startOffset": 5092,
+                    "endColumn": 79,
+                    "endOffset": 5167
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
-                        "startLine": 81,
+                        "startLine": 36,
                         "startColumn": 4,
-                        "startOffset": 4309,
-                        "endColumn": 63,
-                        "endOffset": 4368
+                        "startOffset": 1892,
+                        "endColumn": 79,
+                        "endOffset": 1967
                     }
                 }
             },
@@ -1794,18 +1794,18 @@
                 "to": {
                     "startLine": 97,
                     "startColumn": 4,
-                    "startOffset": 5165,
-                    "endColumn": 48,
-                    "endOffset": 5209
+                    "startOffset": 5172,
+                    "endColumn": 37,
+                    "endOffset": 5205
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 82,
                         "startColumn": 4,
-                        "startOffset": 4373,
-                        "endColumn": 48,
-                        "endOffset": 4417
+                        "startOffset": 4378,
+                        "endColumn": 37,
+                        "endOffset": 4411
                     }
                 }
             },
@@ -1813,18 +1813,18 @@
                 "to": {
                     "startLine": 98,
                     "startColumn": 4,
-                    "startOffset": 5214,
-                    "endColumn": 52,
-                    "endOffset": 5262
+                    "startOffset": 5210,
+                    "endColumn": 63,
+                    "endOffset": 5269
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 83,
                         "startColumn": 4,
-                        "startOffset": 4422,
-                        "endColumn": 52,
-                        "endOffset": 4470
+                        "startOffset": 4416,
+                        "endColumn": 63,
+                        "endOffset": 4475
                     }
                 }
             },
@@ -1832,18 +1832,18 @@
                 "to": {
                     "startLine": 99,
                     "startColumn": 4,
-                    "startOffset": 5267,
-                    "endColumn": 56,
-                    "endOffset": 5319
+                    "startOffset": 5274,
+                    "endColumn": 48,
+                    "endOffset": 5318
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 84,
                         "startColumn": 4,
-                        "startOffset": 4475,
-                        "endColumn": 56,
-                        "endOffset": 4527
+                        "startOffset": 4480,
+                        "endColumn": 48,
+                        "endOffset": 4524
                     }
                 }
             },
@@ -1851,18 +1851,18 @@
                 "to": {
                     "startLine": 100,
                     "startColumn": 4,
-                    "startOffset": 5324,
-                    "endColumn": 61,
-                    "endOffset": 5381
+                    "startOffset": 5323,
+                    "endColumn": 52,
+                    "endOffset": 5371
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
                     "position": {
                         "startLine": 85,
                         "startColumn": 4,
-                        "startOffset": 4532,
-                        "endColumn": 61,
-                        "endOffset": 4589
+                        "startOffset": 4529,
+                        "endColumn": 52,
+                        "endOffset": 4577
                     }
                 }
             },
@@ -1870,10 +1870,48 @@
                 "to": {
                     "startLine": 101,
                     "startColumn": 4,
-                    "startOffset": 5386,
-                    "endLine": 107,
+                    "startOffset": 5376,
+                    "endColumn": 56,
+                    "endOffset": 5428
+                },
+                "from": {
+                    "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
+                    "position": {
+                        "startLine": 86,
+                        "startColumn": 4,
+                        "startOffset": 4582,
+                        "endColumn": 56,
+                        "endOffset": 4634
+                    }
+                }
+            },
+            {
+                "to": {
+                    "startLine": 102,
+                    "startColumn": 4,
+                    "startOffset": 5433,
+                    "endColumn": 61,
+                    "endOffset": 5490
+                },
+                "from": {
+                    "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\strings.xml",
+                    "position": {
+                        "startLine": 87,
+                        "startColumn": 4,
+                        "startOffset": 4639,
+                        "endColumn": 61,
+                        "endOffset": 4696
+                    }
+                }
+            },
+            {
+                "to": {
+                    "startLine": 103,
+                    "startColumn": 4,
+                    "startOffset": 5495,
+                    "endLine": 109,
                     "endColumn": 12,
-                    "endOffset": 5672
+                    "endOffset": 5781
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\styles.xml",
@@ -1889,12 +1927,12 @@
             },
             {
                 "to": {
-                    "startLine": 108,
+                    "startLine": 110,
                     "startColumn": 4,
-                    "startOffset": 5677,
-                    "endLine": 110,
+                    "startOffset": 5786,
+                    "endLine": 112,
                     "endColumn": 12,
-                    "endOffset": 5832
+                    "endOffset": 5941
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\styles.xml",
@@ -1910,12 +1948,12 @@
             },
             {
                 "to": {
-                    "startLine": 111,
+                    "startLine": 113,
                     "startColumn": 4,
-                    "startOffset": 5837,
-                    "endLine": 114,
+                    "startOffset": 5946,
+                    "endLine": 116,
                     "endColumn": 12,
-                    "endOffset": 6040
+                    "endOffset": 6149
                 },
                 "from": {
                     "file": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\values\\styles.xml",

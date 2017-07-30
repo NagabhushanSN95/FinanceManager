@@ -76,12 +76,12 @@
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable\\border_pink.xml"
     },
     {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\button_blue_normal.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable\\button_blue_normal.xml"
-    },
-    {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\button_blue_pressed.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable\\button_blue_pressed.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\button_blue_normal.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable\\button_blue_normal.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\drawable\\button_extras.xml",

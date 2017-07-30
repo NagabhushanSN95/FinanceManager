@@ -187,6 +187,10 @@ public class SmsReceiver extends BroadcastReceiver
 			int endIndex = message.indexOf(" ", startIndex);
 			String amountString = message.substring(startIndex, endIndex);
 			amountString = amountString.replaceAll(",", "");
+			if(amountString.charAt(amountString.length()-1) == '.')
+			{
+				amountString = amountString.substring(0,amountString.length()-1);
+			}
 			double newBalance = Double.parseDouble(amountString);
 			int bankNo = summaryActivityIntent.getIntExtra("Bank Number", 0);
 			double oldBalance = DatabaseManager.getBank(bankNo).getBalance();

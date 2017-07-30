@@ -4,6 +4,90 @@
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\fragment_setup_banks.xml"
     },
     {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_faq_answer.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_faq_answer.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_statistics.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_statistics.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_search.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_search.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_add_exp_type.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_add_exp_type.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_wait.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_wait.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_input.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_input.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_transactions_display_options.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_transactions_display_options.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_setup_expenditure.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_setup_expenditure.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_guide.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_guide.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_splash.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_splash.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\list_suggestions.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\list_suggestions.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_wallet_debit.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_wallet_debit.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_faq_summary.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_faq_summary.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_title_statistics.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_title_statistics.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_bank_credit.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_bank_credit.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_extras.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_extras.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_add_bank.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_add_bank.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_edit_wallet_balance.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_edit_wallet_balance.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_help.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_help.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_edit_exp_types.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_edit_exp_types.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_edit_expenditure_types.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_edit_expenditure_types.xml"
+    },
+    {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_wallet_credit.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_wallet_credit.xml"
     },
@@ -12,20 +96,12 @@
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_display_templates.xml"
     },
     {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_faq_answer.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_faq_answer.xml"
-    },
-    {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_faq_question.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_faq_question.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_add_bank.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_add_bank.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_statistics.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_statistics.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_display_summary.xml",
@@ -38,10 +114,6 @@
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_about.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_about.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_add_exp_type.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_add_exp_type.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_display_bank.xml",
@@ -64,32 +136,12 @@
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_setup.xml"
     },
     {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_input.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_input.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_wait.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_wait.xml"
-    },
-    {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_templates.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_templates.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_edit_banks.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_edit_banks.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_transactions_display_options.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_transactions_display_options.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_setup_expenditure.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_setup_expenditure.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_guide.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_guide.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_bank_debit.xml",
@@ -100,24 +152,12 @@
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_startup.xml"
     },
     {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\list_suggestions.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\list_suggestions.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_splash.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_splash.xml"
-    },
-    {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\fragment_setup_exp_types.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\fragment_setup_exp_types.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_display_statistics.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_display_statistics.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_wallet_debit.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_wallet_debit.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_edit_wallet_balance.xml",
@@ -128,44 +168,12 @@
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_summary.xml"
     },
     {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_faq_summary.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_faq_summary.xml"
-    },
-    {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_display_transactions.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_display_transactions.xml"
     },
     {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_title_statistics.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_title_statistics.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_bank_credit.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_bank_credit.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_extras.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_extras.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_add_bank.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\layout_add_bank.xml"
-    },
-    {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_edit.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_edit.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\dialog_edit_wallet_balance.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\dialog_edit_wallet_balance.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_help.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_help.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_edit_exp_types.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_edit_exp_types.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\layout_display_exp_type.xml",
@@ -178,10 +186,6 @@
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_transactions.xml",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_transactions.xml"
-    },
-    {
-        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\activity_edit_expenditure_types.xml",
-        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\layout\\activity_edit_expenditure_types.xml"
     },
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\layout\\fragment_setup_wallet.xml",
