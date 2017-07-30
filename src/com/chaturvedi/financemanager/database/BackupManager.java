@@ -92,9 +92,15 @@ public class BackupManager
 				if(transaction.getID() != i)
 				{
 					Toast.makeText(context, "ID Error in " + i + "th Transaction\n" + "BackupManager/backup\n"
-							//+ "i=" + i + "id=" + transaction.getID()
+							+ "i=" + i + "id=" + transaction.getID()
 							,Toast.LENGTH_LONG).show();
 					transaction.setID(i);
+				}
+				else
+				{
+					Toast.makeText(context, "" + i + "th Transaction\n"
+							+ "i=" + i + "id=" + transaction.getID()
+							,Toast.LENGTH_SHORT).show();
 				}
 				transactionsWriter.write(transaction.getID() + "\n");
 				transactionsWriter.write(transaction.getCreatedTime().toString() + "\n");

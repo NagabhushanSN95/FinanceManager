@@ -1558,15 +1558,15 @@ public class TransactionsActivity extends Activity
 			expendituresLayout.addView(cb1);
 			checkBoxes.add(cb1);
 		}
-		CheckBox bankIncomeCheckBox = new CheckBox(this);
+		final CheckBox bankIncomeCheckBox = new CheckBox(this);
 		bankIncomeCheckBox.setText("Incomes (A/C Transfer)");
 		bankTransactionsLayout.addView(bankIncomeCheckBox);
 		checkBoxes.add(bankIncomeCheckBox);
-		CheckBox bankSavingsCheckBox = new CheckBox(this);
+		final CheckBox bankSavingsCheckBox = new CheckBox(this);
 		bankSavingsCheckBox.setText("Bank Savings");
 		bankTransactionsLayout.addView(bankSavingsCheckBox);
 		checkBoxes.add(bankSavingsCheckBox);
-		CheckBox bankWithdrawCheckBox = new CheckBox(this);
+		final CheckBox bankWithdrawCheckBox = new CheckBox(this);
 		bankWithdrawCheckBox.setText("Bank Withdrawals");
 		bankTransactionsLayout.addView(bankWithdrawCheckBox);
 		checkBoxes.add(bankWithdrawCheckBox);
@@ -1591,6 +1591,26 @@ public class TransactionsActivity extends Activity
 					{
 						CheckBox cb1 = (CheckBox) expendituresLayout.findViewById(i);
 						cb1.setChecked(true);
+						CheckBox cb2 = (CheckBox) bankTransactionsLayout.findViewById(i + 10);
+						cb2.setChecked(true);
+					}
+				}
+			}
+		});
+		
+		CheckBox allBankTransactionsCheckBox = (CheckBox) optionsDialogLayout.findViewById(R.id.checkBox_allBankTransactions);
+		allBankTransactionsCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+		{
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+			{
+				if(isChecked)
+				{
+					for(int i=0; i<expTypes.size(); i++)
+					{
+						bankIncomeCheckBox.setChecked(true);
+						bankSavingsCheckBox.setChecked(true);
+						bankWithdrawCheckBox.setChecked(true);
 						CheckBox cb2 = (CheckBox) bankTransactionsLayout.findViewById(i + 10);
 						cb2.setChecked(true);
 					}

@@ -16,12 +16,12 @@
     <string name="add_bank">Add A Bank</string>
     <string name="add_expType">Add New Expenditure Type</string>
     <string name="addTemplate">Add To Templates</string>
+    <string name="allBankTransactions">All Bank Transactions</string>
     <string name="amount">Amount</string>
     <string name="backup">Back-up Data</string>
     <string name="bank_credit">Bank Credit</string>
     <string name="bank_debit">Bank Withdrawal</string>
     <string name="bankSms"> Messages From Banks</string>
-    <string name="bankTransactions">Bank Transactions</string>
     <string name="clearData">Clear Data</string>
     <string name="contactDeveloper">Contact Developer</string>
     <string name="currencySymbols">Currency Symbol</string>

@@ -417,8 +417,11 @@ public class DatabaseManager
 		
 		//DatabaseManager.decreamentNumTransactions();
 		DatabaseManager.transactions.remove(transactionNo);
-		//transaction.setID(transactionNo + 1);
 		databaseAdapter.deleteTransaction(transaction);
+		for(int i=transactionNo; i<transactions.size(); i++)
+		{
+			transactions.get(i).setID(transactions.get(i).getID()-1);
+		}
 	}
 	
 	public static ArrayList<Transaction> getAllTransactions()
@@ -1185,89 +1188,108 @@ public class DatabaseManager
 	public static boolean areEqualTransactions(ArrayList<Transaction> transactions1, 
 			ArrayList<Transaction> transactions2)
 	{
+		//Toast.makeText(context, "Check-Point01", Toast.LENGTH_SHORT).show();
 		// Go on comparing every fields. Whenever you find a difference, return false;
 		if(transactions1.size() != transactions2.size())
 		{
+			Toast.makeText(context, "NumTransactions Mismatch", Toast.LENGTH_SHORT).show();
 			return false;
 		}
 		
-		int numTransactions = transactions1.size();
-		for(int i=0; i<numTransactions; i++)
+		boolean isValid = true;
+		int numTransactions = transactions1.size(), i;
+		for(i=0; isValid && i<numTransactions; i++)
 		{
 			Transaction transaction1 = transactions1.get(i);
 			Transaction transaction2 = transactions2.get(i);
 			if(transaction1.getID() != transaction2.getID())
 			{
-				return false;
+				Toast.makeText(context, "ID Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(transaction1.getCreatedTime().isNotEqualTo(transaction2.getCreatedTime()))
 			{
-				return false;
+				Toast.makeText(context, "02 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(transaction1.getModifiedTime().isNotEqualTo(transaction2.getModifiedTime()))
 			{
-				return false;
+				Toast.makeText(context, "03 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(transaction1.getDate().isNotEqualTo(transaction2.getDate()))
 			{
-				return false;
+				Toast.makeText(context, "04 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(!transaction1.getType().equals(transaction2.getType()))
 			{
-				return false;
+				Toast.makeText(context, "05 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(!transaction1.getParticular().equals(transaction2.getParticular()))
 			{
-				return false;
+				Toast.makeText(context, "06 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(transaction1.getRate() != transaction2.getRate())
 			{
-				return false;
+				Toast.makeText(context, "07 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(transaction1.getQuantity() != transaction2.getQuantity())
 			{
-				return false;
+				Toast.makeText(context, "08 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 			if(transaction1.getAmount() != transaction2.getAmount())
 			{
-				return false;
+				Toast.makeText(context, "09 Error: i="+i+", id1="+transaction1.getID()+", id2="+transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
 			}
 		}
-		return true;
+		return isValid;
 	}
 	
 	public static boolean areEqualBanks(ArrayList<Bank> banks1, ArrayList<Bank> banks2)
 	{
-		// Go on comparing every fields. Whenever you find a difference, return false;
 		if(banks1.size() != banks2.size())
 		{
+			Toast.makeText(context, "Error In NumBanks", Toast.LENGTH_SHORT).show();
 			return false;
 		}
-		int numBanks = banks1.size();
-		for(int i=0; i<numBanks; i++)
+		
+		// Go on comparing every fields. Whenever you find a difference, set isValid to false;
+		boolean isValid = true;
+		int numBanks = banks1.size(), i=0;
+		for(i=0; isValid && i<numBanks; i++)
 		{
 			if(banks1.get(i).getID() != banks2.get(i).getID())
 			{
-				return false;
+				isValid = false;
 			}
 			if(!banks1.get(i).getName().equals(banks2.get(i).getName()))
 			{
-				return false;
+				isValid = false;
 			}
 			if(!banks1.get(i).getAccNo().equals(banks2.get(i).getAccNo()))
 			{
-				return false;
+				isValid = false;
 			}
 			if(banks1.get(i).getBalance() != banks2.get(i).getBalance())
 			{
-				return false;
+				isValid = false;
 			}
 			if(!banks1.get(i).getSmsName().equals(banks2.get(i).getSmsName()))
 			{
-				return false;
+				isValid = false;
 			}
 		}
-		return true;
+		if(!isValid)
+		{
+			Toast.makeText(context, "Error In " + i + "th Bank", Toast.LENGTH_SHORT).show();
+		}
+		return isValid;
 	}
 	
 	public static boolean areEqualCounters(ArrayList<Counters> counters1, ArrayList<Counters> counters2)

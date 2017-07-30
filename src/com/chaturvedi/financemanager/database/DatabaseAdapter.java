@@ -246,6 +246,24 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
 		db.delete(TABLE_TRANSACTIONS, KEY_ID + " = ?", new String[] { String.valueOf(transaction.getID()) });
+		//Update IDs of next Transactions
+		for(int i = transaction.getID(); i<=getNumTransactions();i++)
+		{
+			ContentValues values = new ContentValues();
+			values.put(KEY_ID, i);
+			// updating row
+			if(db.isOpen())
+			{
+				db.update(TABLE_TRANSACTIONS, values, KEY_ID + " = ?", 
+						new String[] { String.valueOf(i) });
+			}
+			else
+			{
+				db = this.getWritableDatabase();
+				db.update(TABLE_TRANSACTIONS, values, KEY_ID + " = ?", 
+						new String[] { String.valueOf(i+1) });
+			}
+		}
 		db.close();
 	}
 	
