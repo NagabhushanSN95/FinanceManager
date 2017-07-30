@@ -52,6 +52,7 @@
     <string name="wallet_credit">Income</string>
     <string name="wallet_debit">Expenditure</string>
     <string name="wallet_view">Amount In Wallet</string>
+    <color name="background">#E2ECFF</color>
     <color name="background_top">#E2ECFF</color>
     <color name="background_middle">#E2ECFF</color>
     <color name="background_bottom">#E2ECFF</color>

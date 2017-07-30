@@ -10,6 +10,8 @@ import java.util.Calendar;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -26,12 +28,22 @@ import android.view.View;
 import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.database.Date;
+import com.chaturvedi.financemanager.database.Time;
+import com.chaturvedi.financemanager.database.Transaction;
 
 public class SummaryActivity extends Activity
 {
@@ -68,6 +80,42 @@ public class SummaryActivity extends Activity
 	private Intent helpIntent;
 	private Intent extrasIntent;
 	
+	// From Transactions Activity
+	private int WIDTH_TRANSACTION_BUTTON;
+	
+	private ImageButton walletCreditButton;
+	private ImageButton walletDebitButton;
+	private ImageButton bankCreditButton;
+	private ImageButton bankDebitButton;
+
+	private AlertDialog.Builder walletCreditDialog;
+	private AlertDialog.Builder walletDebitDialog;
+	private AlertDialog.Builder bankCreditDialog;
+	private AlertDialog.Builder bankDebitDialog;
+	private LayoutInflater walletCreditDialogLayout;
+	private LayoutInflater walletDebitDialogLayout;
+	private LayoutInflater bankCreditDialogLayout;
+	private LayoutInflater bankDebitDialogLayout;
+	private View walletCreditDialogView;
+	private View walletDebitDialogView;
+	private View bankCreditDialogView;
+	private View bankDebitDialogView;
+	
+	private EditText particularsField;
+	private Spinner typesList;
+	private EditText rateField;
+	private EditText quantityField;
+	private EditText amountField;
+	private EditText dateField;
+	private Spinner creditTypesList;
+	private Spinner debitTypesList;
+	private ArrayList<RadioButton> banks;
+	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
+	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
+	
+	private Intent smsIntent;
+	private DecimalFormat formatterTextFields;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -84,17 +132,7 @@ public class SummaryActivity extends Activity
 			actionBar.setVisibility(View.GONE);
 		}
 		
-		displayMetrics=new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-		screenWidth=displayMetrics.widthPixels;
-		screenHeight=displayMetrics.heightPixels;
-		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(DatabaseManager.getNumBanks()*100))/6;
-		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*5/100;
-		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*5/100;
-		WIDTH_NAME_VIEWS=screenWidth*55/100;
-		WIDTH_AMOUNT_VIEWS = screenWidth*35/100;
-		MARGIN_LEFT_NAME_VIEWS = 5;
-		
+		// Get the Version No Of The App
 		try
 		{
 			VERSION_NO = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
@@ -104,6 +142,9 @@ public class SummaryActivity extends Activity
 			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
 					"SummaryActivity\\onCreate\n" + e.getMessage(), Toast.LENGTH_LONG).show();
 		}
+		// Get the version no stored in the preferences. This contains the version no of the app, when it was 
+		// previously opened. So, it the app is updated now, this field contains version no of old app.
+		// So, update classes can be run
 		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
 		SharedPreferences.Editor versionEditor = versionPreferences.edit();
 		if(versionPreferences.contains(KEY_VERSION))
@@ -122,8 +163,10 @@ public class SummaryActivity extends Activity
 		}
 		versionEditor.commit();
 		
-		buildLayout();
+		calculateDimensions();
+		buildBodyLayout();
 		setData();
+		buildButtonPanel();
 		
 		transactionsIntent=new Intent(this, TransactionsActivity.class);
 		editBanksIntent=new Intent(this, EditBanksActivity.class);
@@ -132,30 +175,25 @@ public class SummaryActivity extends Activity
 		settingsIntent=new Intent(this, SettingsActivity.class);
 		helpIntent = new Intent(this, HelpActivity.class);
 		extrasIntent = new Intent(this, ExtrasActivity.class);
+		
+		// Read SMS Intent. 
+		smsIntent = getIntent();
+		if(smsIntent.getBooleanExtra("Bank Sms", false))
+		{
+			performSMSTransaction();
+		}
 	}
 	
 	@Override
 	public void onResume()
 	{
 		super.onResume();
-		try
+		if(DatabaseManager.getNumTransactions()==0)
 		{
-			if(DatabaseManager.getNumTransactions()==0)
-			{
-				DatabaseManager.setContext(SummaryActivity.this);
-				DatabaseManager.readDatabase();
-				buildLayout();
-				setData();
-				Toast.makeText(getApplicationContext(), "Data Recovered And Restored In If Block", Toast.LENGTH_SHORT).show();
-			}
-		}
-		catch(Exception e)
-		{
-			new DatabaseManager(SummaryActivity.this);
+			DatabaseManager.setContext(SummaryActivity.this);
 			DatabaseManager.readDatabase();
-			buildLayout();
+			buildBodyLayout();
 			setData();
-			Toast.makeText(getApplicationContext(), "Data Recovered And Restored In Catch Block", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -206,11 +244,31 @@ public class SummaryActivity extends Activity
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		super.onActivityResult(requestCode, resultCode, data);
-		buildLayout();
+		buildBodyLayout();
 		setData();
 	}
 	
-	private void buildLayout()
+	/**
+	 * Calculate the values of various Dimension Fields
+	 */
+	private void calculateDimensions()
+	{
+		displayMetrics=new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		screenWidth=displayMetrics.widthPixels;
+		screenHeight=displayMetrics.heightPixels;
+		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(DatabaseManager.getNumBanks()*100))/6;
+		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*5/100;
+		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*5/100;
+		WIDTH_NAME_VIEWS=screenWidth*55/100;
+		WIDTH_AMOUNT_VIEWS = screenWidth*35/100;
+		MARGIN_LEFT_NAME_VIEWS = 5;
+		
+		// Copied From Transactions Activity
+		WIDTH_TRANSACTION_BUTTON = screenWidth*25/100;
+	}
+	
+	private void buildBodyLayout()
 	{
 		// If Release Version, Make Krishna TextView Invisible
 		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
@@ -347,8 +405,684 @@ public class SummaryActivity extends Activity
 		}
 	}
 	
+	/**
+	 * Takes the details of the sms from the intent and performs the necessary transaction
+	 */
+	private void performSMSTransaction()
+	{
+		int bankNo = smsIntent.getIntExtra("Bank Number", 0);
+		String type = smsIntent.getStringExtra("Type");
+		double amount = smsIntent.getDoubleExtra("Amount", 0);
+		
+		if(type.equals("credit"))
+		{
+			buildBankCreditDialog();
+			banks.get(bankNo).setChecked(true);
+			amountField.setText(formatterTextFields.format(amount));
+			bankCreditDialog.setCancelable(false);
+			bankCreditDialog.show();
+		}
+		else
+		{
+			buildBankDebitDialog();
+			banks.get(bankNo).setChecked(true);
+			amountField.setText(formatterTextFields.format(amount));
+			bankDebitDialog.setCancelable(false);
+			bankDebitDialog.show();
+		}
+	}
+	
+	/**
+	 * If there is an update, this method runs the update classes required 
+	 * @param oldVersionNo
+	 */
 	private void runUpdateClasses(int oldVersionNo)
 	{
 		
+	}
+	
+	// Copied from Transactions Activity
+	/**
+	 * Set the LayoutParams, OnClickListeners to the buttons in ButtonPanel
+	 */
+	private void buildButtonPanel()
+	{
+		walletCreditButton=(ImageButton)findViewById(R.id.button_wallet_credit);
+		LayoutParams walletCreditButtonParams = (LayoutParams) walletCreditButton.getLayoutParams();
+		walletCreditButtonParams.width = WIDTH_TRANSACTION_BUTTON;
+		walletCreditButton.setLayoutParams(walletCreditButtonParams);
+		walletCreditButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				buildWalletCreditDialog();
+				walletCreditDialog.show();
+			}
+		});
+		walletCreditButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add An Income To The Wallet", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
+		
+		walletDebitButton=(ImageButton)findViewById(R.id.button_wallet_debit);
+		LayoutParams walletDebitButtonParams = (LayoutParams) walletDebitButton.getLayoutParams();
+		walletDebitButtonParams.width = WIDTH_TRANSACTION_BUTTON;
+		walletDebitButton.setLayoutParams(walletDebitButtonParams);
+		walletDebitButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				buildWalletDebitDialog();
+				walletDebitDialog.show();
+			}
+		});
+		walletDebitButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add An Expenditure", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
+		
+		bankCreditButton=(ImageButton)findViewById(R.id.button_bank_credit);
+		LayoutParams bankCreditButtonParams = (LayoutParams) bankCreditButton.getLayoutParams();
+		bankCreditButtonParams.width = WIDTH_TRANSACTION_BUTTON;
+		bankCreditButton.setLayoutParams(bankCreditButtonParams);
+		bankCreditButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				// If user has not yet added any banks, display the same
+				if(DatabaseManager.getNumBanks() == 0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Add A Bank To Add A Bank Transaction", 
+							Toast.LENGTH_LONG).show();
+				}
+				else
+				{
+					buildBankCreditDialog();
+					bankCreditDialog.show();
+				}
+			}
+		});
+		bankCreditButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add An Income To A Bank Account", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
+		
+		bankDebitButton=(ImageButton)findViewById(R.id.button_bank_debit);
+		LayoutParams bankDebitButtonParams = (LayoutParams) bankDebitButton.getLayoutParams();
+		bankDebitButtonParams.width = WIDTH_TRANSACTION_BUTTON;
+		bankDebitButton.setLayoutParams(bankDebitButtonParams);
+		bankDebitButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				// If user has not yet added any banks, display the same
+				if(DatabaseManager.getNumBanks() == 0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Add A Bank To Add A Bank Transaction", 
+							Toast.LENGTH_LONG).show();
+				}
+				else
+				{
+					buildBankDebitDialog();
+					bankDebitDialog.show();
+				}
+			}
+		});
+		bankDebitButton.setOnLongClickListener(new View.OnLongClickListener()
+		{
+			@Override
+			public boolean onLongClick(View v)
+			{
+				Toast.makeText(getApplicationContext(), "Add A Bank Withdrawal", Toast.LENGTH_LONG).show();
+				return true;
+			}
+		});
+	}
+	
+	private void buildWalletCreditDialog()
+	{
+		walletCreditDialog=new AlertDialog.Builder(this);
+		walletCreditDialog.setTitle("Add An Income");
+		walletCreditDialog.setMessage("Enter Details");
+		walletCreditDialogLayout=LayoutInflater.from(this);
+		walletCreditDialogView=walletCreditDialogLayout.inflate(R.layout.dialog_wallet_credit, null);
+		walletCreditDialog.setView(walletCreditDialogView);
+		walletCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				String id = ""+DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
+				String date = dateField.getText().toString();
+				String type = "Wallet Credit";
+				String particulars = particularsField.getText().toString().trim();
+				String amount = amountField.getText().toString();
+				Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
+				Transaction transaction = null;
+				
+				boolean validData = isValidData(data);
+				if(validData)
+				{
+					transaction = completeData(data);
+					DatabaseManager.addTransaction(transaction);
+				}
+				else
+				{
+					buildWalletCreditDialog();
+					particularsField.setText(particulars);
+					amountField.setText(amount);
+					dateField.setText(date);
+					walletCreditDialog.show();
+				}
+				buildBodyLayout();
+				setData();
+			}
+		});
+		walletCreditDialog.setNegativeButton("Cancel", null);
+		dateField=(EditText)walletCreditDialogView.findViewById(R.id.field_date);
+		particularsField=(EditText)walletCreditDialogView.findViewById(R.id.field_particulars);
+		amountField=(EditText)walletCreditDialogView.findViewById(R.id.field_amount);
+		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
+	}
+	
+	private void buildWalletDebitDialog()
+	{
+		walletDebitDialog=new AlertDialog.Builder(this);
+		walletDebitDialog.setTitle("Add Expenditure");
+		walletDebitDialog.setMessage("Enter Details");
+		walletDebitDialogLayout=LayoutInflater.from(this);
+		walletDebitDialogView=walletDebitDialogLayout.inflate(R.layout.dialog_wallet_debit, null);
+		walletDebitDialog.setView(walletDebitDialogView);
+		walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				String id = ""+DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
+				String particulars = particularsField.getText().toString();
+				int expTypeNo = typesList.getSelectedItemPosition();
+				DecimalFormat formatter = new DecimalFormat("00");
+				String type = "Wallet Debit Exp"+formatter.format(expTypeNo);
+				String rate = rateField.getText().toString();
+				String quantity = quantityField.getText().toString();
+				String amount = amountField.getText().toString();
+				String date = dateField.getText().toString();
+				Object[] data = {id, time, time, date, type, particulars, rate, quantity, amount};
+				Transaction transaction;
+				boolean validData = isValidData(data);
+				
+				if(validData)
+				{
+					transaction = completeData(data);
+					DatabaseManager.addTransaction(transaction);
+				}
+				else
+				{
+					buildWalletDebitDialog();
+					particularsField.setText(particulars);
+					typesList.setSelection(expTypeNo);
+					rateField.setText(rate);
+					quantityField.setText(quantity);
+					amountField.setText(amount);
+					dateField.setText(date);
+					walletDebitDialog.show();
+				}
+				buildBodyLayout();
+				setData();
+			}
+		});
+		walletDebitDialog.setNegativeButton("Cancel", null);
+		
+		dateField=(EditText)walletDebitDialogView.findViewById(R.id.field_date);
+		typesList = (Spinner)walletDebitDialogView.findViewById(R.id.list_types);
+		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getAllExpenditureTypes()));
+		particularsField=(EditText)walletDebitDialogView.findViewById(R.id.field_particulars);
+		rateField = (EditText)walletDebitDialogView.findViewById(R.id.field_rate);
+		quantityField = (EditText)walletDebitDialogView.findViewById(R.id.field_quantity);
+		amountField=(EditText)walletDebitDialogView.findViewById(R.id.field_amount);
+		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
+	}
+	
+	private void buildBankCreditDialog()
+	{
+		bankCreditDialogLayout=LayoutInflater.from(this);
+		bankCreditDialogView=bankCreditDialogLayout.inflate(R.layout.dialog_bank_credit, null);
+		
+		RadioGroup banksRadioGroup=(RadioGroup)bankCreditDialogView.findViewById(R.id.radioGroup_banks);
+		banks=new ArrayList<RadioButton>();
+		for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+		{
+			banks.add(new RadioButton(this));
+			banks.get(i).setText(DatabaseManager.getBank(i).getName());
+			banks.get(i).setTextSize(20);
+			banks.get(i).setTextColor(Color.BLUE);
+			banksRadioGroup.addView(banks.get(i));
+		}
+		banks.get(0).setChecked(true);
+		
+		particularsField = (EditText)bankCreditDialogView.findViewById(R.id.field_particulars);
+		creditTypesList = (Spinner)bankCreditDialogView.findViewById(R.id.list_creditTypes);
+		creditTypesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, creditTypes));
+		amountField=(EditText)bankCreditDialogView.findViewById(R.id.field_amount);
+		dateField=(EditText)bankCreditDialogView.findViewById(R.id.field_date);
+		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
+		
+		bankCreditDialog=new AlertDialog.Builder(this);
+		bankCreditDialog.setTitle("Add Bank Credit");
+		bankCreditDialog.setMessage("Enter Details");
+		bankCreditDialog.setView(bankCreditDialogView);
+		bankCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				// Determine Which Bank Is Selected
+				int bankNo=0;
+				for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+				{
+					if(banks.get(i).isChecked())
+						bankNo=i;
+				}
+				
+				// Read Data
+				String id = "" + DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
+				String date = dateField.getText().toString();
+				DecimalFormat bankNoFormatter = new DecimalFormat("00");
+				String type = "Bank Credit " + bankNoFormatter.format(bankNo);
+				int creditTypesNo = creditTypesList.getSelectedItemPosition();
+				if(creditTypesNo==0)
+				{
+					type += " Income";
+				}
+				else if(creditTypesNo==1)
+				{
+					type += " Savings";
+				}
+				String particulars = particularsField.getText().toString();
+				String amount = amountField.getText().toString();
+				Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
+				Transaction transaction = null;
+				boolean validData = isValidData(data);
+				
+				if(validData)
+				{
+					transaction = completeData(data);
+					DatabaseManager.addTransaction(transaction);
+				}
+				else
+				{
+					buildBankCreditDialog();
+					banks.get(bankNo).setChecked(true);
+					particularsField.setText(particulars);
+					creditTypesList.setSelection(creditTypesNo);
+					amountField.setText(amount);
+					dateField.setText(date);
+					bankCreditDialog.show();
+				}
+				buildBodyLayout();
+				setData();
+			}
+		});
+		bankCreditDialog.setNegativeButton("Cancel", null);
+	}
+	
+	private void buildBankDebitDialog()
+	{
+		bankDebitDialogLayout=LayoutInflater.from(this);
+		bankDebitDialogView=bankDebitDialogLayout.inflate(R.layout.dialog_bank_debit, null);
+		
+		RadioGroup banksRadioGroup=(RadioGroup)bankDebitDialogView.findViewById(R.id.radioGroup_banks);
+		banks=new ArrayList<RadioButton>();
+		for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+		{
+			banks.add(new RadioButton(this));
+			banks.get(i).setText(DatabaseManager.getBank(i).getName());
+			banks.get(i).setTextSize(20);
+			banks.get(i).setTextColor(Color.BLUE);
+			banksRadioGroup.addView(banks.get(i));
+		}
+		banks.get(0).setChecked(true);
+
+		particularsField = (EditText)bankDebitDialogView.findViewById(R.id.field_particulars);
+		debitTypesList = (Spinner)bankDebitDialogView.findViewById(R.id.list_debitTypes);
+		debitTypesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, debitTypes));
+		typesList = (Spinner)bankDebitDialogView.findViewById(R.id.list_types);
+		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getAllExpenditureTypes()));
+		typesList.setVisibility(View.GONE);
+		amountField=(EditText)bankDebitDialogView.findViewById(R.id.field_amount);
+		dateField=(EditText)bankDebitDialogView.findViewById(R.id.field_date);
+		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
+		
+		debitTypesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+		{
+			@Override
+			public void onItemSelected(AdapterView<?> arg0, View arg1, int itemNo, long arg3)
+			{
+				if(itemNo==0)
+				{
+					typesList.setVisibility(View.GONE);
+				}
+				else
+				{
+					typesList.setVisibility(View.VISIBLE);
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0)
+			{
+				
+			}
+		});
+		
+		bankDebitDialog=new AlertDialog.Builder(this);
+		bankDebitDialog.setTitle("Add Bank Debit");
+		bankDebitDialog.setMessage("Enter Details");
+		bankDebitDialog.setView(bankDebitDialogView);
+		bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				// Determine Which Bank Is Selected
+				int bankNo=0;
+				for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+				{
+					if(banks.get(i).isChecked())
+						bankNo=i;
+				}
+				
+				// Validate Data
+				String id = ""+DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
+				String date = dateField.getText().toString();
+				DecimalFormat formatter = new DecimalFormat("00");
+				String type = "Bank Debit " + formatter.format(bankNo);
+				int debitTypesNo = debitTypesList.getSelectedItemPosition();
+				if(debitTypesNo == 0)
+				{
+					type += " Withdraw";
+				}
+				else if(debitTypesNo == 1)
+				{
+					int expTypeNo = typesList.getSelectedItemPosition();
+					type += " Exp" + formatter.format(expTypeNo);
+				}
+				String particulars = particularsField.getText().toString();
+				int expTypeNo = 0;
+				String amount = amountField.getText().toString();
+				Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
+				Transaction transaction;
+				boolean validData = isValidData(data);
+				
+				if(validData)
+				{
+					transaction = completeData(data);
+					DatabaseManager.addTransaction(transaction);
+				}
+				else
+				{
+					buildBankDebitDialog();
+					banks.get(bankNo).setChecked(true);
+					particularsField.setText(particulars);
+					debitTypesList.setSelection(debitTypesNo);
+					typesList.setSelection(expTypeNo);
+					amountField.setText(amount);
+					dateField.setText(date);
+					bankDebitDialog.show();
+				}
+				
+				buildBodyLayout();
+				setData();
+			}
+		});
+		bankDebitDialog.setNegativeButton("Cancel", null);
+	}
+	
+	// Do this in TransactionsActivity only
+	/**
+	 * Checks if the data provided by the user is valid
+	 * @param data An array of String holding all data
+	 * @param data[0] credit/debit
+	 * @param data[1] particulars
+	 * @param data[2] type
+	 * @param data[3] rate
+	 * @param data[4] quantity
+	 * @param data[5] amount
+	 * @param data[6] date
+	 * @return true if data is valid, else false
+	 */
+	private boolean isValidData(Object[] data)
+	{
+		//int id = Integer.parseInt((String) data[0]);
+		//Time createdTime = (Time) data[1];
+		//Time modifiedTime = (Time) data[2];
+		String date = (String) data[3];
+		String type = (String) data[4];
+		String particulars = (String) data[5];
+		String rate = (String) data[6];
+		String quantity = (String) data[7];
+		String amount = (String) data[8];
+		boolean validData = true;
+		
+		// Check the data for Wallet Credit
+		if(type.contains("Wallet Credit"))
+		{
+			if(particulars.length()==0)
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter The Particulars", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else if(amount.length()==0)
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else if(!Date.isValidDate(date))
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter A Valid Date", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else
+			{
+				validData = true;
+			}
+		}
+		
+		// Checks the data for Wallet Debit
+		else if(type.contains("Wallet Debit"))
+		{
+			if(particulars.length()==0)
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter The Particulars", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else if(!Date.isValidDate(date))
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter A Valid Date", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else if(amount.length()==0)
+			{
+				if(rate.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Rate And Amount", Toast.LENGTH_LONG).show();
+					validData = false;
+				}
+				else if(quantity.length()==0)
+				{
+					validData = true;
+				}
+				else
+				{
+					validData = true;
+				}
+			}
+			else if(rate.length()==0)
+			{
+				validData = true;
+			}
+			else if(quantity.length()==0)
+			{
+				validData = true;
+			}
+			else
+			{
+				validData = true;
+			}
+		}
+		else if(type.contains("Bank Credit"))
+		{
+			if(amount.length()==0)
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else if(!Date.isValidDate(date))
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter A Valid Date", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else
+			{
+				validData = true;
+			}
+		}
+		else if(type.contains("Bank Debit"))
+		{
+			if(amount.length()==0)
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else if(!Date.isValidDate(date))
+			{
+				Toast.makeText(getApplicationContext(), "Please Enter A Valid Date", Toast.LENGTH_LONG).show();
+				validData = false;
+			}
+			else
+			{
+				validData = true;
+			}
+		}
+		else
+		{
+			Toast.makeText(getApplicationContext(), "An Error Has Ocurred in \nDetailsActivity/isValidData()\nWrong Credit/Debit Type", Toast.LENGTH_LONG).show();
+		}
+		return validData;
+	}
+	
+	private Transaction completeData(Object[] data)
+	{
+		int id = Integer.parseInt((String) data[0]);
+		Time createdTime = (Time) data[1];
+		Time modifiedTime = (Time) data[2];
+		String date = (String) data[3];
+		String type = (String) data[4];
+		String particulars = (String) data[5];
+		String rate = (String) data[6];
+		String quantity = (String) data[7];
+		String amount = (String) data[8];
+		Transaction transaction = null;
+		
+		if(type.contains("Wallet Credit"))
+		{
+			transaction = new Transaction(id, createdTime, modifiedTime, new Date(date), type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
+		}
+		else if(type.contains("Wallet Debit"))
+		{
+			int expTypeNo = Integer.parseInt(type.substring(16, 18));   // Wallet Debit Exp01
+			if(particulars.length()==0)
+			{
+				particulars = DatabaseManager.getAllExpenditureTypes().get(expTypeNo);
+			}
+			if(amount.length()==0)
+			{
+				if(quantity.length()==0)
+				{
+					amount = rate;
+					quantity = String.valueOf(1);
+				}
+				else
+				{
+					amount = ""+Double.parseDouble(rate)*Double.parseDouble(quantity);
+				}
+			}
+			else if(rate.length()==0)
+			{
+				if(quantity.length()==0)
+				{
+					rate = amount;
+					quantity = String.valueOf(1);
+				}
+				else
+				{
+					rate = ""+Double.parseDouble(amount)/Double.parseDouble(quantity);
+				}
+			}
+			else if(quantity.length()==0)
+			{
+				quantity = "" + Double.parseDouble(amount)/Double.parseDouble(rate);
+			}
+			transaction = new Transaction(id, createdTime, modifiedTime, new Date(date), type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
+		}
+		else if(type.contains("Bank Credit"))
+		{
+			int bankNo = Integer.parseInt(type.substring(12, 14));    // Bank Credit 01 Income
+			int creditTypesNo = 0;
+			if(type.contains("Income"))
+			{
+				creditTypesNo = 0;
+			}
+			else if(type.contains("Savings"))
+			{
+				creditTypesNo = 1;
+			}
+			particulars = DatabaseManager.getBank(bankNo).getName() + " Credit: " + creditTypes[creditTypesNo] + ": " + particulars;
+			transaction = new Transaction(id, createdTime, modifiedTime, new Date(date), type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
+		}
+		else if(type.contains("Bank Debit"))
+		{
+			int bankNo = Integer.parseInt(type.substring(11, 13));  // Bank Debit 01 Withdraw
+			int debitTypesNo = 0;
+			if(type.contains("Withdraw"))
+			{
+				debitTypesNo = 0;
+			}
+			else if(type.contains("Exp"))
+			{
+				debitTypesNo = 1;
+			}
+			particulars = DatabaseManager.getBank(bankNo).getName() + " Withdrawal: "+ debitTypes[debitTypesNo] + ": " + particulars;
+			transaction = new Transaction(id, createdTime, modifiedTime, new Date(date), type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
+		}
+		
+		return transaction;	
 	}
 }

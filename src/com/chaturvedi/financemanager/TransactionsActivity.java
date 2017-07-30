@@ -51,7 +51,6 @@ public class TransactionsActivity extends Activity
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
-	private int MIN_LINES = 3;
 	private int WIDTH_SLNO;
 	private int WIDTH_DATE;
 	private int WIDTH_PARTICULARS;
@@ -106,11 +105,11 @@ public class TransactionsActivity extends Activity
 		if(VERSION.SDK_INT<=10)
 		{
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_details);
+			setContentView(R.layout.activity_transactions);
 		}
 		else
 		{
-			setContentView(R.layout.activity_details);
+			setContentView(R.layout.activity_transactions);
 			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
 			actionBar.setVisibility(View.GONE);
 		}
@@ -132,22 +131,11 @@ public class TransactionsActivity extends Activity
 	public void onResume()
 	{
 		super.onResume();
-		try
+		if(DatabaseManager.getNumTransactions()==0)
 		{
-			if(DatabaseManager.getNumTransactions()==0)
-			{
-				DatabaseManager.setContext(TransactionsActivity.this);
-				DatabaseManager.readDatabase();
-				buildBodyLayout();
-				Toast.makeText(getApplicationContext(), "Data Recovered And Restored In If Block", Toast.LENGTH_SHORT).show();
-			}
-		}
-		catch(Exception e)
-		{
-			new DatabaseManager(TransactionsActivity.this);
+			DatabaseManager.setContext(TransactionsActivity.this);
 			DatabaseManager.readDatabase();
 			buildBodyLayout();
-			Toast.makeText(getApplicationContext(), "Data Recovered And Restored In Catch Block", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -782,6 +770,7 @@ public class TransactionsActivity extends Activity
 		{
 			final double backupAmount = oldTransaction.getAmount();
 			buildWalletCreditDialog();
+			walletCreditDialog.setTitle("Edit Transaction: Income");
 			particularsField.setText(oldTransaction.getParticular());
 			amountField.setText(formatterTextFields.format(backupAmount));
 			dateField.setText(oldTransaction.getDate().getDisplayDate());
@@ -822,6 +811,7 @@ public class TransactionsActivity extends Activity
 		{
 			int oldExpTypeNo = Integer.parseInt(expType.substring(16, 18));   // Wallet Debit Exp01
 			buildWalletDebitDialog();
+			walletDebitDialog.setTitle("Edit Transaction: Expenditure");
 			particularsField.setText(oldTransaction.getParticular());
 			typesList.setSelection(oldExpTypeNo);
 			rateField.setText(formatterTextFields.format(oldTransaction.getRate()));
@@ -874,6 +864,7 @@ public class TransactionsActivity extends Activity
 			String oldParticulars = oldTransaction.getParticular();
 			final double oldAmount = oldTransaction.getAmount();
 			buildBankCreditDialog();
+			bankCreditDialog.setTitle("Edit Transaction: Bank Credit");
 			String creditType = creditTypes[0];
 			if(expType.contains("Income"))
 			{
@@ -956,6 +947,7 @@ public class TransactionsActivity extends Activity
 			String oldParticulars = oldTransaction.getParticular();
 			final double oldAmount = oldTransaction.getAmount();
 			buildBankDebitDialog();
+			bankDebitDialog.setTitle("Edit Transaction: Bank Debit");
 			String debitType = debitTypes[0];
 			int oldExpTypeNo = 0;
 			if(expType.contains("Withdraw"))

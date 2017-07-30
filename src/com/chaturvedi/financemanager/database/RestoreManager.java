@@ -29,7 +29,18 @@ public class RestoreManager
 	public RestoreManager(Context cxt)
 	{
 		context = cxt;
-		
+	}
+	
+	/**
+	 * Restores Backed-up Data
+	 * @return
+	 * 		1 If Restored Properly
+	 * 		0 If No Backup Exists
+	 * 		-1 Old Data
+	 * 		2 Error in Catch Block
+	 */
+	public int restore()
+	{
 		String backupFolderName = "Finance Manager/Backups";
 		
 		backupFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), backupFolderName);
@@ -37,7 +48,7 @@ public class RestoreManager
 		{
 			Toast.makeText(context, "No Backups Were Found.\nMake sure the Backup Files are located in " + 
 					"Chaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();
-			return;
+			return 0;
 		}
 		extension = ".snb";
 		
@@ -47,7 +58,7 @@ public class RestoreManager
 		{
 			Toast.makeText(context, "No Backups Were Found.\nMake sure they are located in " + 
 					"Chaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();
-			return;
+			return 0;
 		}
 		
 		try
@@ -59,7 +70,7 @@ public class RestoreManager
 			{
 				Toast.makeText(context, "Old Data. Cannot be Restored. Sorry!", Toast.LENGTH_LONG).show();
 				keyDataReader.close();
-				return;
+				return -1;
 			}
 			else if(Integer.parseInt(keyDataReader.readLine()) < VERSION_NO_BACKUP_02)
 			{
@@ -82,10 +93,12 @@ public class RestoreManager
 			keyDataReader.close();
 			DatabaseManager.saveDatabase();
 			Toast.makeText(context, "Data Has Been Restored Succesfully", Toast.LENGTH_LONG).show();
+			return 1;
 		}
 		catch(IOException e)
 		{
 			Toast.makeText(context, "Error in Backing Up Data\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			return 2;
 		}
 	}
 	

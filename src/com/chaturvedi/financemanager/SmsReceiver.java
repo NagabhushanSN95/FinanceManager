@@ -21,7 +21,7 @@ public class SmsReceiver extends BroadcastReceiver
 	private String sender;
 	private String message;
 	
-	private Intent transactionsIntent;
+	private Intent summaryActivityIntent;
 	
 	@Override
 	public void onReceive(Context context, Intent intent)
@@ -53,14 +53,14 @@ public class SmsReceiver extends BroadcastReceiver
 					if(sender.toLowerCase().contains(DatabaseManager.getBank(i).getSmsName().toLowerCase()))
 					{
 						Toast.makeText(context, "Transaction In "+DatabaseManager.getBank(i).getName()+" Detected. Please Update The Same", Toast.LENGTH_LONG).show();
-						transactionsIntent = new Intent(context, TransactionsActivity.class);
-						transactionsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-						transactionsIntent.putExtra("Bank Sms", true);
-						transactionsIntent.putExtra("Bank Number", i);
+						summaryActivityIntent = new Intent(context, SummaryActivity.class);
+						summaryActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						summaryActivityIntent.putExtra("Bank Sms", true);
+						summaryActivityIntent.putExtra("Bank Number", i);
 						// Add ActivityStack As DetailsActivity
 						TaskStackBuilder stackBuilder=TaskStackBuilder.create(context);
 						stackBuilder.addParentStack(SummaryActivity.class);
-						stackBuilder.addNextIntent(transactionsIntent);
+						stackBuilder.addNextIntent(summaryActivityIntent);
 						
 						if(sender.toUpperCase().contains("SBI"))
 							readSBIMessage();
@@ -86,21 +86,21 @@ public class SmsReceiver extends BroadcastReceiver
 	{
 		if(message.toLowerCase().contains("debit"))
 		{
-			transactionsIntent.putExtra("Type", "debit");
+			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs", message.indexOf("debited"))+4;
 			int endIndex = message.indexOf("on", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
-			transactionsIntent.putExtra("Type", "credit");
+			summaryActivityIntent.putExtra("Type", "credit");
 			int startIndex = message.indexOf("Rs", message.indexOf("credited"))+4;
 			int endIndex = message.indexOf("on", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		/*else
 		{
@@ -112,28 +112,28 @@ public class SmsReceiver extends BroadcastReceiver
 	{
 		if(message.toLowerCase().contains("debit"))
 		{
-			transactionsIntent.putExtra("Type", "debit");
+			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs")+2;
 			double amount = Double.parseDouble(message.substring(startIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		else if(message.toLowerCase().contains("withdraw"))
 		{
-			transactionsIntent.putExtra("Type", "debit");
+			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs")+2;
 			int endIndex = message.indexOf("from", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
-			transactionsIntent.putExtra("Type", "credit");
+			summaryActivityIntent.putExtra("Type", "credit");
 			int startIndex = message.indexOf("Rs")+2;
 			double amount = Double.parseDouble(message.substring(startIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		/*else
 		{
@@ -145,21 +145,21 @@ public class SmsReceiver extends BroadcastReceiver
 	{
 		if(message.toLowerCase().contains("debit"))
 		{
-			transactionsIntent.putExtra("Type", "debit");
+			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("INR")+4;
 			int endIndex = message.indexOf("has", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
-			transactionsIntent.putExtra("Type", "credit");
+			summaryActivityIntent.putExtra("Type", "credit");
 			int startIndex = message.indexOf("INR")+4;
 			int endIndex = message.indexOf("has", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		/*else
 		{
@@ -171,21 +171,21 @@ public class SmsReceiver extends BroadcastReceiver
 	{
 		if(message.toLowerCase().contains("debit"))
 		{
-			transactionsIntent.putExtra("Type", "debit");
+			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs")+3;
 			int endIndex = message.indexOf("ATM", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
-			transactionsIntent.putExtra("Type", "credit");
+			summaryActivityIntent.putExtra("Type", "credit");
 			int startIndex = message.indexOf("Rs")+2;
 			int endIndex = message.indexOf("on", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		/*else
 		{
@@ -197,21 +197,21 @@ public class SmsReceiver extends BroadcastReceiver
 	{
 		if(message.toLowerCase().contains("debit"))
 		{
-			transactionsIntent.putExtra("Type", "debit");
+			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs")+4;
 			int endIndex = message.indexOf("is")-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
-			transactionsIntent.putExtra("Type", "credit");
+			summaryActivityIntent.putExtra("Type", "credit");
 			int startIndex = message.indexOf("Rs")+4;
 			int endIndex = message.indexOf("is")-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
-			transactionsIntent.putExtra("Amount", amount);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
 		}
 		/*else
 		{
@@ -223,15 +223,15 @@ public class SmsReceiver extends BroadcastReceiver
 	{
 		if(message.toLowerCase().contains("debit"))
 		{
-			transactionsIntent.putExtra("Type", "debit");
-			transactionsIntent.putExtra("Amount", 0);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Type", "debit");
+			summaryActivityIntent.putExtra("Amount", 0);
+			context.startActivity(summaryActivityIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
-			transactionsIntent.putExtra("Type", "credit");
-			transactionsIntent.putExtra("Amount", 0);
-			context.startActivity(transactionsIntent);
+			summaryActivityIntent.putExtra("Type", "credit");
+			summaryActivityIntent.putExtra("Amount", 0);
+			context.startActivity(summaryActivityIntent);
 		}
 		/*else
 		{

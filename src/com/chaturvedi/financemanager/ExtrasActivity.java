@@ -197,7 +197,7 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				new RestoreManager(ExtrasActivity.this);
+				new RestoreManager(ExtrasActivity.this).restore();
 			}
 		});
 		restoreDialog.setNegativeButton("Cancel", null);

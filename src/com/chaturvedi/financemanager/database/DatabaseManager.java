@@ -190,6 +190,10 @@ public class DatabaseManager
 			
 			DatabaseManager.increamentBankBalance(bankNo, transaction.getAmount());
 			DatabaseManager.increamentNumTransations();
+			
+			// Save the new Bank Balance in Database
+			Bank bank = banks.get(bankNo);
+			databaseAdapter.updateBank(bank);
 		}
 		else if(transaction.getType().contains("Bank Debit"))
 		{
@@ -208,6 +212,10 @@ public class DatabaseManager
 			
 			DatabaseManager.decreamentBankBalance(bankNo, transaction.getAmount());
 			DatabaseManager.increamentNumTransations();
+			
+			// Save the new Bank Balance in Database
+			Bank bank = banks.get(bankNo);
+			databaseAdapter.updateBank(bank);
 		}
 		
 		transaction.setID(transactions.size()+1);
@@ -278,16 +286,22 @@ public class DatabaseManager
 			int newBankNo=Integer.parseInt(newType.substring(12, 14));    // Bank Credit 01 Income;
 			
 			// Make the transaction
-			if(oldType.contains("Income"))
+			if(newType.contains("Income"))
 			{
 				DatabaseManager.increamentIncome(newDate, newAmount);
 			}
-			else if(oldType.contains("Savings"))
+			else if(newType.contains("Savings"))
 			{
 				DatabaseManager.decreamentWalletBalance(newAmount);
 				DatabaseManager.increamentSavings(newDate, newAmount);
 			}
 			DatabaseManager.increamentBankBalance(newBankNo, newAmount);
+			
+			// Save the new Bank Balance in Database
+			Bank oldBank = banks.get(oldBankNo);
+			databaseAdapter.updateBank(oldBank);
+			Bank newBank = banks.get(newBankNo);
+			databaseAdapter.updateBank(newBank);
 		}
 		else if(newTransaction.getType().contains("Bank Debit"))
 		{
@@ -325,6 +339,12 @@ public class DatabaseManager
 				DatabaseManager.increamentCounters(newDate, newExpTypeNo, newAmount);
 				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
 			}
+			
+			// Save the new Bank Balance in Database
+			Bank oldBank = banks.get(oldBankNo);
+			databaseAdapter.updateBank(oldBank);
+			Bank newBank = banks.get(newBankNo);
+			databaseAdapter.updateBank(newBank);
 		}
 		//newTransaction.setID(oldTransaction.getID());
 		newTransaction.setCreatedTime(transactions.get(transactionNo).getCreatedTime());
@@ -364,6 +384,10 @@ public class DatabaseManager
 				DatabaseManager.decreamentBankBalance(bankNo, amount);
 				DatabaseManager.decreamentSavings(date, amount);
 			}
+			
+			// Save the new Bank Balance in Database
+			Bank bank = banks.get(bankNo);
+			databaseAdapter.updateBank(bank);
 		}
 		else if(type.contains("Bank Debit"))
 		{
@@ -381,6 +405,10 @@ public class DatabaseManager
 				DatabaseManager.decreamentAmountSpent(date, amount);
 				DatabaseManager.decreamentCounters(date, expTypeNo, amount);
 			}
+			
+			// Save the new Bank Balance in Database
+			Bank bank = banks.get(bankNo);
+			databaseAdapter.updateBank(bank);
 		}
 		
 		DatabaseManager.decreamentNumTransactions();

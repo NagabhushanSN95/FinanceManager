@@ -1,3 +1,7 @@
+Crucial:
+While editing a bank transaction (Bank Credit), type is not getting saved properly. Check it out.
+If you edit a transaction from UBI to SBI, when app is closed and opened, the transaction will have reverted back to UBI. (Only typeNo, nothing else. Amount will not be transferred or name will not be changed)
+
 Read from database onResume if data is lost (numTransactions==0).
 Done: Need to be verified
 Add activity stack to TransactionsActivity for Sms reading
