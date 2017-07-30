@@ -1,0 +1,40 @@
+Union Bank Of India 
+Your SB A/c **********01342 is debited for Rs. 10 on 22-11-2014 by Debit Card Swipe. Avbl Bal Rs:11413.65
+
+Your SB A/c **********01342 is debited for Rs. 150 on 05-11-2014 by Debit Card Swipe. At Present  A/c Balance is Rs: 11711.65
+
+Your SB A/c **********01342 is debited for Rs. 100 on 02-11-2014 by Transfer.
+
+Your SB A/c **********01342 is credited by Rs. 5000 on 25-10-2014 by Cash.  At Present  A/c  Balance is Rs: 13440.75
+
+Your SB A/c **********01342 is debited for Rs. 1000 on 09-10-2014 by A T M. At Present  A/c Balance is Rs: 8720.75
+
+Your SB A/c **********01342 is debited for Rs. 333 on 19-08-2014At Present  A/c Balance is Rs: 11244.75
+
+Karnataka Bank
+Your Account xxxxxxxx012543xx has been DEBITED for Rs.1000/ATM-CWDR/000000680659/06- Clear Balance is Rs.464.13-(2015-01-06 06:14:11)
+
+SBI
+
+Format D04
+Thank you for using your SBI Debit Card 459XXX2762 for a purchase worth Rs174 on POS 00007865 at FLIPKART.COM Banglore IN txn# 529009196923.  3:28 PM
+Thank you for using your SBI Debit Card 459XXX2762 for a purchase worth Rs654 on POS PU000084 at www.printvenue.com Mumbai IN txn# 527815607056.  3:34 PM, 05-Oct-2015
+
+Format D05
+Thank you for using State Bank Internet banking. Your Transaction Ref No IR74044526 for Rs.650 on 04-OCT-15 16:50  4:51 PM, 04-Oct-2015
+
+Format C01
+Your AC XXXXX570239 Credited INR 13,819.00 on 03/10/15 -Deposit through own cheque. . Avl Bal INR 13,819.00  2:08 PM, 03-Oct-2015
+
+Format O01
+Available Balance in your Account XXXXX570239 as on 09/11/15 is INR 22,652.10  4:50 PM
+
+
+HDFC Bank
+Credits
+INR 1,24,361.00 deposited to A/c No XX0014 towards NEFT Cr-CHAS0INBX01-Salary for AUG 2016 CISCO SYSTEMS INDIA PVT LTD PA-Nagabhushan S N-CHASA16235459222 Val 24-AUG-16. Clr Bal is INR 1,24,361.00 subject to clearing.
+
+Debits
+Rs.10000.00 was withdrawn using your HDFC Bank Card ending 6990 on 2016-09-04:17:16:22 at SBI  PATENNAGAR EXTEN. Avl bal: Rs.110059.00
+Thank you for using Debit Card ending 6990 for Rs.3249.00 in BANGALORE at SHIVSHAKTI GARMENTS on 2016-09-11:19:53:40  Avl bal: Rs.95011.00
+An amount of Rs.75,000.00 has been debited from your account number XXXX0014 for NEFT txn done using HDFC Bank NetBanking

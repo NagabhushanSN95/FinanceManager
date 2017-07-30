@@ -400,7 +400,7 @@ public class SummaryActivity extends Activity
 		double amount = smsIntent.getDoubleExtra("Amount", 0);
 		formatterTextFields = new DecimalFormat("##0.##");
 		
-		if(type.equals("credit"))
+		if(type.contains("credit"))
 		{
 			buildBankCreditDialog();
 			banks.get(bankNo).setChecked(true);
@@ -414,6 +414,15 @@ public class SummaryActivity extends Activity
 			banks.get(bankNo).setChecked(true);
 			amountField.setText(formatterTextFields.format(amount));
 			bankDebitDialog.setCancelable(false);
+
+			if(type.contains("Wallet"))
+			{
+				debitTypesList.setSelection(0);
+			}
+			else
+			{
+				debitTypesList.setSelection(1);
+			}
 			bankDebitDialog.show();
 		}
 	}

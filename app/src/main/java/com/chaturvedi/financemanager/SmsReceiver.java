@@ -72,7 +72,9 @@ public class SmsReceiver extends BroadcastReceiver
 							readSyndicateBankMessage();
 						else if(sender.toUpperCase().contains("KTK"))
 							readKarnatakaBankMessage();
-						else if(sender.toUpperCase().contains("AND"))
+						else if(sender.toUpperCase().contains("HDFC"))
+							readHDFCBankMessage();
+						else if(sender.toUpperCase().contains("AND"))	// Andhra Bank
 							readAndhraBankMessage();
 						else
 							readBankMessage();
@@ -274,6 +276,58 @@ public class SmsReceiver extends BroadcastReceiver
 			summaryActivityIntent.putExtra("Type", "credit");
 			int startIndex = message.indexOf("Rs")+2;
 			int endIndex = message.indexOf("on", startIndex)-1;
+			String amountString = message.substring(startIndex, endIndex);
+			amountString = amountString.replaceAll(",", "");
+			double amount = Double.parseDouble(amountString);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
+		}
+		/*else
+		{
+			detailsIntent.putExtra("Bank Sms", false);
+		}*/
+	}
+
+	private void readHDFCBankMessage()
+	{
+		if(message.toLowerCase().contains("deposited"))
+		{
+			summaryActivityIntent.putExtra("Type", "credit");
+			int startIndex = message.indexOf("INR")+4;
+			int endIndex = message.indexOf("deposited", startIndex)-1;
+			String amountString = message.substring(startIndex, endIndex);
+			amountString = amountString.replaceAll(",", "");
+			double amount = Double.parseDouble(amountString);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
+		}
+		else if(message.toLowerCase().contains("withdrawn"))	// ATM Withdrawal
+		{
+			summaryActivityIntent.putExtra("Type", "debit Wallet");
+			int startIndex = message.indexOf("Rs")+3;
+			int endIndex = message.indexOf("was", startIndex)-1;
+			String amountString = message.substring(startIndex, endIndex);
+			amountString = amountString.replaceAll(",", "");
+			double amount = Double.parseDouble(amountString);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
+		}
+		else if(message.toLowerCase().contains("debit card"))	// Debit Card at shops
+		{
+			summaryActivityIntent.putExtra("Type", "debit AC Transfer");
+			int startIndex = message.indexOf("Rs")+3;
+			int endIndex = message.indexOf("in", startIndex)-1;
+			String amountString = message.substring(startIndex, endIndex);
+			amountString = amountString.replaceAll(",", "");
+			double amount = Double.parseDouble(amountString);
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
+		}
+		else if(message.toLowerCase().contains("debited"))		// NEFT
+		{
+			summaryActivityIntent.putExtra("Type", "debit AC Transfer");
+			int startIndex = message.indexOf("Rs")+3;
+			int endIndex = message.indexOf("has", startIndex)-1;
 			String amountString = message.substring(startIndex, endIndex);
 			amountString = amountString.replaceAll(",", "");
 			double amount = Double.parseDouble(amountString);
