@@ -62,6 +62,7 @@ public class MainActivity extends Activity
 		
 		detailsIntent=new Intent(this, DetailsActivity.class);
 		detailsIntent.putExtra("Number Of Entries", numEntries);
+		detailsIntent.putExtra("Number Of Banks", numBanks);
 	}
 
 	@Override
@@ -77,12 +78,20 @@ public class MainActivity extends Activity
 		switch(item.getItemId())
 		{
 			case R.id.action_details:
-				startActivity(detailsIntent);
+				startActivityForResult(detailsIntent, 0);
 				return true;
 				
 				
 		}
 		return true;
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		super.onActivityResult(requestCode, resultCode, data);
+		readData();
+		setData();
 	}
 	
 	private void readData()

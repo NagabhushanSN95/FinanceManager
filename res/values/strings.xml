@@ -6,5 +6,7 @@
     <string name="krishna">Shree KRISHNAya Namaha</string>
     <string name="title_details">Details</string>
     <string name="action_details">View Details</string>
+    <string name="debit">Expenditure</string>
+    <string name="credit">ATM Withdrawal</string>
 
 </resources>
