@@ -5,6 +5,7 @@ import java.util.Calendar;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -59,6 +60,13 @@ public class StatisticsActivity extends Activity
 	
 	private void buildLayout()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 		if(preferences.contains(KEY_CURRENCY_SYMBOL))
 		{

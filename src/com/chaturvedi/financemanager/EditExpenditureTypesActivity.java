@@ -3,6 +3,7 @@ package com.chaturvedi.financemanager;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.pm.ApplicationInfo;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -86,12 +88,12 @@ public class EditExpenditureTypesActivity extends Activity
 		return true;
 	}
 	
-	@Override
+	/*@Override
 	public void onPause()
 	{
 		super.onPause();
 		DatabaseManager.saveDatabase();
-	}
+	}*/
 	
 	/*@Override
 	public void onStart()
@@ -102,6 +104,13 @@ public class EditExpenditureTypesActivity extends Activity
 	
 	private void buildLayout()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		typeTextFields = new ArrayList<EditText>();
 		typeTextFields.add((EditText) findViewById(R.id.expenditure_type1));
 		typeTextFields.add((EditText) findViewById(R.id.expenditure_type2));

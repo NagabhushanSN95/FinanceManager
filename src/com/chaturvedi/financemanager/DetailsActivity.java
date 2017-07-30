@@ -12,6 +12,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
@@ -42,6 +43,11 @@ import com.chaturvedi.financemanager.database.Transaction;
 
 public class DetailsActivity extends Activity
 {
+	/*private final int DISPLAY_TRANSACTIONS_ALL = 0;
+	private final int DISPLAY_TRANSACTIONS_YEAR = 1;
+	private final int DISPLAY_TRANSACTIONS_MONTH = 2;
+	private int displayTransactions;*/
+	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
@@ -109,8 +115,8 @@ public class DetailsActivity extends Activity
 			actionBar.setVisibility(View.GONE);
 		}
 		
-		readPreferences();
 		calculateDimensions();
+		readPreferences();
 		buildTitleLayout();
 		buildBodyLayout();
 		buildButtonPanel();
@@ -126,7 +132,7 @@ public class DetailsActivity extends Activity
 	public void onPause()
 	{
 		super.onPause();
-		DatabaseManager.saveDatabase();
+		DatabaseManager.saveDatabaseImproved();
 	}
 
 	/*@Override
@@ -229,6 +235,16 @@ public class DetailsActivity extends Activity
 	
 	private void buildTitleLayout()
 	{
+		// To be removed later
+		readPreferences();
+		
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+				
 		TextView slnoTitleView = (TextView)findViewById(R.id.slno);
 		LayoutParams slnoTitleParams = (LayoutParams) slnoTitleView.getLayoutParams();
 		slnoTitleParams.width = WIDTH_SLNO;
@@ -252,6 +268,7 @@ public class DetailsActivity extends Activity
 	
 	private void buildBodyLayout()
 	{
+		readPreferences();						// This will get the transactions
 		try
 		{
 			parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
@@ -362,8 +379,17 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				buildBankCreditDialog();
-				bankCreditDialog.show();
+				// If user has not yet added any banks, display the same
+				if(DatabaseManager.getNumBanks() == 0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Add A Bank To Add A Bank Transaction", 
+							Toast.LENGTH_LONG).show();
+				}
+				else
+				{
+					buildBankCreditDialog();
+					bankCreditDialog.show();
+				}
 			}
 		});
 		bankCreditButton.setOnLongClickListener(new View.OnLongClickListener()
@@ -385,8 +411,17 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				buildBankDebitDialog();
-				bankDebitDialog.show();
+				// If user has not yet added any banks, display the same
+				if(DatabaseManager.getNumBanks() == 0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Add A Bank To Add A Bank Transaction", 
+							Toast.LENGTH_LONG).show();
+				}
+				else
+				{
+					buildBankDebitDialog();
+					bankDebitDialog.show();
+				}
 			}
 		});
 		bankDebitButton.setOnLongClickListener(new View.OnLongClickListener()

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
@@ -99,7 +100,6 @@ public class EditBanksActivity extends Activity
 		WIDTH_ACC_NO_VIEWS=screenWidth*20/100;
 		WIDTH_BALANCE_VIEWS=screenWidth*15/100;
 		WIDTH_SMS_VIEWS=screenWidth*15/100;
-		//WIDTH_REMOVE_BUTTON=screenWidth*10/100;
 		MARGIN_TOP_VIEWS=5;
 		
 		readBankNames();
@@ -132,7 +132,7 @@ public class EditBanksActivity extends Activity
 	public void onPause()
 	{
 		super.onPause();
-		DatabaseManager.saveDatabase();
+		DatabaseManager.saveDatabaseImproved();			// To save Wallet Balance
 	}
 	
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
@@ -165,6 +165,13 @@ public class EditBanksActivity extends Activity
 
 	private void buildLayout()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
 		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
 		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT, MARGIN_BOTTOM_PARENT_LAYOUT);

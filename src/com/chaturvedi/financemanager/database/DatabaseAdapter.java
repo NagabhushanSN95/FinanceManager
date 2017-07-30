@@ -280,12 +280,12 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			
-			int i=0;
+			//int i=0;
 			for(Bank bank:banks)
 			{
-				i++;
+				//i++;
 				ContentValues values = new ContentValues();
-				values.put(KEY_ID, i);
+				//values.put(KEY_ID, i);
 				values.put(KEY_NAME, bank.getName());
 				values.put(KEY_ACC_NO, bank.getAccNo());
 				values.put(KEY_BALANCE, bank.getBalance());
@@ -330,7 +330,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 					}
 					else if(cursor.getColumnCount()==4)
 					{
-
+						Toast.makeText(context, "DatabaseAdapter/getAllBanks - NumColumns = 4", 
+								Toast.LENGTH_LONG).show();
 						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
 								cursor.getString(3));
 					}
@@ -422,52 +423,6 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			db.close();
 			return walletBalance;
 		}
-		
-		/*public void setAmountSpent(double amount)
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			ContentValues values = new ContentValues();
-			values.put(KEY_NAME, "amount_spent");
-			values.put(KEY_AMOUNT, amount);
-			db.update(TABLE_WALLET, values, KEY_ID + " = ?", new String[] { String.valueOf(2) });
-			db.close();
-		}
-		
-		public double getAmountSpent()
-		{
-			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_WALLET, new String[] { KEY_ID, KEY_NAME, KEY_AMOUNT }
-					, KEY_ID + "=?", new String[] { String.valueOf(2) }, null, null, null, null);
-			if (cursor != null)
-				cursor.moveToFirst();
-			
-			double amountSpent=Double.parseDouble(cursor.getString(2));
-			db.close();
-			return amountSpent;
-		}
-		
-		public void setIncome(double amount)
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			ContentValues values = new ContentValues();
-			values.put(KEY_NAME, "income");
-			values.put(KEY_AMOUNT, amount);
-			db.update(TABLE_WALLET, values, KEY_ID + " = ?", new String[] { String.valueOf(3) });
-			db.close();
-		}
-		
-		public double getIncome()
-		{
-			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_WALLET, new String[] { KEY_ID, KEY_NAME, KEY_AMOUNT }
-					, KEY_ID + "=?", new String[] { String.valueOf(3) }, null, null, null, null);
-			if (cursor != null)
-				cursor.moveToFirst();
-			
-			double income=Double.parseDouble(cursor.getString(2));
-			db.close();
-			return income;
-		}*/
 
 		
 		public void addExpenditureType(ExpenditureTypes expenditureType)
@@ -562,110 +517,6 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			db.close();
 			return cursor.getCount();
 		}
-		
-		/*public void initializeCountersTable()
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			
-			ContentValues values = new ContentValues();
-			values.put(KEY_ID, 1);
-			values.put(KEY_NAME, "current_type1");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 2);
-			values.put(KEY_NAME, "current_type2");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 3);
-			values.put(KEY_NAME, "current_type3");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 4);
-			values.put(KEY_NAME, "current_type4");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 5);
-			values.put(KEY_NAME, "current_type5");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 6);
-			values.put(KEY_NAME, "total_type1");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 7);
-			values.put(KEY_NAME, "total_type2");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 8);
-			values.put(KEY_NAME, "total_type3");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 9);
-			values.put(KEY_NAME, "total_type4");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 10);
-			values.put(KEY_NAME, "total_type5");
-			values.put(KEY_AMOUNT, 0);
-			db.insert(TABLE_COUNTERS, null, values);
-			
-			db.close();
-		}
-		
-		public void setCounters(ArrayList<Double> amounts)
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			
-			/*ContentValues values = new ContentValues();
-			values.put(KEY_NAME, "current_type1");
-			values.put(KEY_AMOUNT, amounts.get(0));
-			db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(1) });* /
-			
-			ContentValues values;
-			for(int i=0; i<10; i++)
-			{
-				values = new ContentValues();
-				values.put(KEY_AMOUNT, amounts.get(i));
-				db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(i+1) });
-			}
-			db.close();
-		}
-		
-		public ArrayList<Double> getCounters()
-		{
-			SQLiteDatabase db = this.getReadableDatabase();
-			ArrayList<Double> amounts = new ArrayList<Double>(10);
-			String query = "SELECT * FROM " + TABLE_COUNTERS;
-			Cursor cursor = db.rawQuery(query, null);
-			if(cursor.moveToFirst())
-			{
-				do
-				{
-					amounts.add(Double.parseDouble(cursor.getString(2)));
-				}
-				while(cursor.moveToNext());
-			}
-			db.close();
-			return amounts;
-		}*/
 		
 		/**
 		* Adds A New Row Of Counters

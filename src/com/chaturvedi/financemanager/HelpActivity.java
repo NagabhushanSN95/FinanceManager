@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.pm.ApplicationInfo;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.view.View;
@@ -42,6 +43,13 @@ public class HelpActivity extends Activity
 	
 	private void findViews()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		textViews = new ArrayList<TextView>();
 		textViews.add((TextView) findViewById(R.id.heading_1));
 		textViews.add((TextView) findViewById(R.id.description_1));

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.view.View;
@@ -15,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class SettingsActivity extends Activity
@@ -66,6 +68,13 @@ public class SettingsActivity extends Activity
 	
 	private void buildLayout()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		splashCheckBox=(CheckBox)findViewById(R.id.checkBox_splash);
 		splashCheckBox.setChecked(enableSplash);
 		bankSmsCheckBox = (CheckBox)findViewById(R.id.checkBox_bank_sms);

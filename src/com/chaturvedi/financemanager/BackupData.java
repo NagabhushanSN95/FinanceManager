@@ -36,12 +36,14 @@ public class BackupData
 		String banksFileName = "Banks";
 		String countersFileName = "Counters";
 		String expTypesFileName = "Expenditure Types";
+		String walletFileName = "Wallet";
 
 		File keyDataFile = new File(expenditureFolder, keyDataFileName+extension);
 		File transactionsFile = new File(expenditureFolder, transactionsFileName+extension);
 		File banksFile = new File(expenditureFolder, banksFileName+extension);
 		File countersFile = new File(expenditureFolder, countersFileName+extension);
 		File expTypesFile = new File(expenditureFolder, expTypesFileName+extension);
+		File walletFile = new File(expenditureFolder, walletFileName+extension);
 		
 		try
 		{
@@ -50,6 +52,7 @@ public class BackupData
 			BufferedWriter banksWriter = new BufferedWriter(new FileWriter(banksFile));
 			BufferedWriter countersWriter = new BufferedWriter(new FileWriter(countersFile));
 			BufferedWriter expTypesWriter = new BufferedWriter(new FileWriter(expTypesFile));
+			BufferedWriter walletWriter = new BufferedWriter(new FileWriter(walletFile));
 			
 			// Store The KEY DATA
 			int versionNo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
@@ -112,6 +115,9 @@ public class BackupData
 				expTypesWriter.write(expType + "\n");
 			}
 			expTypesWriter.close();
+			
+			walletWriter.write(DatabaseManager.getWalletBalance() + "\n");
+			walletWriter.close();
 			
 			Toast.makeText(context, "Data Has Been Backed-Up Succesfully", Toast.LENGTH_LONG).show();
 		}

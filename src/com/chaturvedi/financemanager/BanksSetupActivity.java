@@ -14,6 +14,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
@@ -116,7 +117,41 @@ public class BanksSetupActivity extends Activity
 		banks = new ArrayList<Bank>();
 		readBankNames();
 		buildLayout();
+		displayDisclaimer();
 		expendituresSetupIntent=new Intent(this, ExpenditureSetupActivity.class);
+	}
+
+	private void displayDisclaimer()
+	{
+		// If debug version, don't display Disclaimer.
+		if((this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0)
+		{
+			return;
+		}
+		
+		String disclaimerText = "";
+		InputStream inputStream = getResources().openRawResource(R.raw.disclaimer);
+		BufferedReader disclaimerReader = new BufferedReader(new InputStreamReader(inputStream));
+		try
+		{
+			String line=disclaimerReader.readLine();
+			while(line!=null)
+			{
+				disclaimerText += line + "\n";
+				line=disclaimerReader.readLine();
+			}
+		}
+		catch(Exception e)
+		{
+			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		
+		AlertDialog.Builder disclaimerDialog = new AlertDialog.Builder(this);
+		disclaimerDialog.setTitle("AGREEMENT!");
+		disclaimerDialog.setMessage(disclaimerText);
+		disclaimerDialog.setCancelable(false);
+		disclaimerDialog.setPositiveButton("Accept", null);
+		disclaimerDialog.show().getWindow().setLayout((int) (screenWidth*0.9), (int) (screenHeight*0.5));
 	}
 
 	@Override
@@ -170,6 +205,13 @@ public class BanksSetupActivity extends Activity
 
 	private void buildLayout()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
 		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
 		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT, MARGIN_BOTTOM_PARENT_LAYOUT);
@@ -383,7 +425,7 @@ public class BanksSetupActivity extends Activity
 		
 		if(dataEntered)
 		{
-			DatabaseManager.setWalletBalance(walletBalance);
+			DatabaseManager.initialize(walletBalance);
 			DatabaseManager.setNumBanks(numBanks);
 			DatabaseManager.setAllBanks(banks);
 			

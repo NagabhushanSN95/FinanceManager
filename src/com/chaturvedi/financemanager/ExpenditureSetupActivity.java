@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build.VERSION;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -30,6 +32,8 @@ public class ExpenditureSetupActivity extends Activity
 	private static final String SHARED_PREFERENCES_VERSION = "app_version";
 	private static final String KEY_VERSION = "version";
 	private static int VERSION_NO;
+	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
+	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
 	
 	private int screenWidth;
 	private int screenHeight;
@@ -100,6 +104,13 @@ public class ExpenditureSetupActivity extends Activity
 	
 	private void buildLayout()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		typeTextFields = new ArrayList<EditText>();
 		typeTextFields.add((EditText) findViewById(R.id.expenditure_type1));
 		typeTextFields.add((EditText) findViewById(R.id.expenditure_type2));
@@ -158,11 +169,11 @@ public class ExpenditureSetupActivity extends Activity
 		{
 			DatabaseManager.setAllExpenditureTypes(expenditureTypes);
 			
-			SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
-			SharedPreferences.Editor editor = preferences.edit();
-			editor.putBoolean(KEY_ENABLE_SPLASH, true);
-			editor.putBoolean(KEY_BANK_SMS, true);
-			editor.commit();
+			SharedPreferences settingsPreferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+			SharedPreferences.Editor settingsEditor = settingsPreferences.edit();
+			settingsEditor.putBoolean(KEY_ENABLE_SPLASH, true);
+			settingsEditor.putBoolean(KEY_BANK_SMS, true);
+			settingsEditor.commit();
 			
 
 			SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
@@ -174,10 +185,15 @@ public class ExpenditureSetupActivity extends Activity
 			catch (NameNotFoundException e)
 			{
 				Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
-						"ExpenditureSetupActivity\\saveToDtabase\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+						"ExpenditureSetupActivity\\saveToDatabase\n" + e.getMessage(), Toast.LENGTH_LONG).show();
 			}
 			versionEditor.putInt(KEY_VERSION, VERSION_NO);
 			versionEditor.commit();
+			
+			SharedPreferences databasePreferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
+			SharedPreferences.Editor databaseEditor = databasePreferences.edit();
+			databaseEditor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+			databaseEditor.commit();
 		}
 	}
 }

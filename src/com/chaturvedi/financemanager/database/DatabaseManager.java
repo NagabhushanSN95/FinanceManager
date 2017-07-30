@@ -88,7 +88,19 @@ public class DatabaseManager
 		}
 	}
 	
-	public static void initializeDatabase()
+	public static void initialize(double walletBalance)
+	{
+		numTransactions = 0;
+		transactions = new ArrayList<Transaction>();
+		
+		DatabaseManager.walletBalance = walletBalance;
+		databaseAdapter.initializeWalletTable(walletBalance);
+		
+		numCountersRows = 0;
+		counters = new ArrayList<Counters>();
+	}
+	
+	/*public static void initializeDatabase()
 	{
 		try
 		{
@@ -113,7 +125,7 @@ public class DatabaseManager
 		databaseAdapter.addAllExpenditureTypes(expTypes);
 		
 		databaseAdapter.close();
-	}
+	}*/
 	
 	public static void saveDatabase()
 	{
@@ -160,17 +172,36 @@ public class DatabaseManager
 		databaseAdapter.close();
 	}
 	
+	public static void saveDatabaseImproved()
+	{
+		databaseAdapter.setWalletBalance(walletBalance);
+		
+		if(numCountersRows>0)
+		{
+			databaseAdapter.deleteAllCountersRows();
+			databaseAdapter.addAllCountersRows(counters);
+		}
+		else
+		{
+			databaseAdapter.deleteAllCountersRows();
+		}
+	}
+	
 	public static void clearDatabase()
 	{
 		numTransactions=0;
 		transactions = new ArrayList<Transaction>();
+		databaseAdapter.deleteAllTransactions();
+		
 		numCountersRows = 0;
 		counters = new ArrayList<Counters>();
+		databaseAdapter.deleteAllCountersRows();
 	}
 	
 	public static void addTransaction(Transaction transaction)
 	{
 		DatabaseManager.transactions.add(transaction);
+		databaseAdapter.addTransaction(transaction);
 		
 		if(transaction.getType().contains("Wallet Credit"))
 		{
@@ -333,8 +364,10 @@ public class DatabaseManager
 				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
 			}
 		}
+		newTransaction.setID(transactionNo+1);
 		newTransaction.setCreatedTime(transactions.get(transactionNo).getCreatedTime());
 		transactions.set(transactionNo, newTransaction);
+		databaseAdapter.updateTransaction(newTransaction);
 	}
 	
 	public static void deleteTransaction(Transaction transaction)
@@ -390,6 +423,8 @@ public class DatabaseManager
 		
 		DatabaseManager.decreamentNumTransactions();
 		DatabaseManager.transactions.remove(transactionNo);
+		transaction.setID(transactionNo);
+		databaseAdapter.deleteTransaction(transaction);
 	}
 	
 	public static ArrayList<Transaction> getAllTransactions()
@@ -416,17 +451,20 @@ public class DatabaseManager
 	{
 		DatabaseManager.increamentNumBanks();
 		banks.add(bank);
+		databaseAdapter.addBank(bank);
 	}
 	
 	public static void editBank(int bankNum, Bank bank)
 	{
 		banks.set(bankNum, bank);
+		databaseAdapter.updateBank(bank);
 	}
 	
 	public static void deleteBank(int bankNum)
 	{
 		DatabaseManager.decreamentNumBanks();
 		banks.remove(bankNum);
+		databaseAdapter.deleteBank(banks.get(bankNum));
 	}
 
 	public static void setAllCounters(ArrayList<Counters> counters)
@@ -763,11 +801,7 @@ public class DatabaseManager
 	public static void setWalletBalance(double walletBalance)
 	{
 		DatabaseManager.walletBalance = walletBalance;
-	}
-	
-	public static void setWalletBalance(String walletBalance)
-	{
-		DatabaseManager.walletBalance = Double.parseDouble(walletBalance);
+		databaseAdapter.setWalletBalance(walletBalance);
 	}
 
 	/**
@@ -905,6 +939,8 @@ public class DatabaseManager
 	public static void setAllBanks(ArrayList<Bank> banks)
 	{
 		DatabaseManager.banks = banks;
+		databaseAdapter.deleteAllBanks();
+		databaseAdapter.addAllBanks(banks);
 	}
 	
 	public static ArrayList<Bank> getAllBanks()
@@ -927,9 +963,17 @@ public class DatabaseManager
 		banks.get(bankNum).decreamentBanlance(amount);
 	}
 	
-	public static void setAllExpenditureTypes(ArrayList<String> expTypes)
+	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
 	{
-		expenditureTypes=expTypes;
+		expenditureTypes=expTypes1;
+		
+		ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
+		for(int i=0; i<expenditureTypes.size(); i++)
+		{
+			expTypes.add(new ExpenditureTypes(i, expenditureTypes.get(i)));
+		}
+		databaseAdapter.deleteAllExpenditureTypes();
+		databaseAdapter.addAllExpenditureTypes(expTypes);
 	}
 	
 	public static ArrayList<String> getAllExpenditureTypes()

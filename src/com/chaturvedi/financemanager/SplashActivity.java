@@ -11,6 +11,8 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.chaturvedi.financemanager.database.DatabaseManager;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -47,8 +49,10 @@ public class SplashActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash);
-		
+
+		new DatabaseManager(this);
 		readPreferences();
+		
 		// If Splash Screen is enabled by the user, read the quotes and start the Splash Screen
 		// Else, start the NextActivity
 		if(showSplash)
@@ -80,7 +84,9 @@ public class SplashActivity extends Activity
 		preferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
 		if(preferences.contains(KEY_DATABASE_INITIALIZED))
 		{
-			// Since Database Is Initialized, Start The SummaryActivity (Home Screen Of The App)
+			// Since Database Is Initialized, Read the Database And start The SummaryActivity 
+			//(Home Screen Of The App)
+			DatabaseManager.readDatabase();
 			nextActivityIntent = new Intent(this, SummaryActivity.class);
 		}
 		else

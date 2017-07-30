@@ -12,6 +12,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.os.Build.VERSION;
@@ -33,8 +34,6 @@ import com.chaturvedi.financemanager.database.DatabaseManager;
 
 public class SummaryActivity extends Activity
 {
-	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
-	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
 	private static final String SHARED_PREFERENCES_VERSION = "app_version";
 	private static final String KEY_VERSION = "version";
 	private static int VERSION_NO;
@@ -123,21 +122,6 @@ public class SummaryActivity extends Activity
 		}
 		versionEditor.commit();
 		
-		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
-		if(preferences.contains(KEY_DATABASE_INITIALIZED))
-		{
-			new DatabaseManager(this);
-			DatabaseManager.readDatabase();
-		}
-		else
-		{
-			DatabaseManager.setContext(this);
-			DatabaseManager.initializeDatabase();
-			SharedPreferences.Editor editor = preferences.edit();
-			editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
-			editor.commit();
-		}
-		
 		buildLayout();
 		setData();
 		
@@ -220,15 +204,22 @@ public class SummaryActivity extends Activity
 		setData();
 	}
 	
-	@Override
+	/*@Override
 	public void onPause()
 	{
 		super.onPause();
 		DatabaseManager.saveDatabase();
-	}
+	}*/
 	
 	private void buildLayout()
 	{
+		// If Release Version, Make Krishna TextView Invisible
+		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+		}
+		
 		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 		if(preferences.contains(KEY_CURRENCY_SYMBOL))
 		{

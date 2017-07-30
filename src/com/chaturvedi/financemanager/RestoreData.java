@@ -38,12 +38,21 @@ private Context context;
 		String banksFileName = "Banks";
 		String countersFileName = "Counters";
 		String expTypesFileName = "Expenditure Types";
+		String walletFileName = "Wallet";
 
 		File keyDataFile = new File(expenditureFolder, keyDataFileName+extension);
 		File transactionsFile = new File(expenditureFolder, transactionsFileName+extension);
 		File banksFile = new File(expenditureFolder, banksFileName+extension);
 		File countersFile = new File(expenditureFolder, countersFileName+extension);
 		File expTypesFile = new File(expenditureFolder, expTypesFileName+extension);
+		File walletFile = new File(expenditureFolder, walletFileName+extension);
+		
+		if(!keyDataFile.exists())
+		{
+			Toast.makeText(context, "No Backups Were Found.\nMake sure they are located in " + 
+					"Chaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();
+			return;
+		}
 		
 		try
 		{
@@ -52,6 +61,7 @@ private Context context;
 			BufferedReader banksReader = new BufferedReader(new FileReader(banksFile));
 			BufferedReader countersReader = new BufferedReader(new FileReader(countersFile));
 			BufferedReader expTypesReader = new BufferedReader(new FileReader(expTypesFile));
+			BufferedReader walletReader = new BufferedReader(new FileReader(walletFile));
 			
 			// Read The KEY DATA
 			int versionNo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
@@ -63,6 +73,7 @@ private Context context;
 				banksReader.close();
 				countersReader.close();
 				expTypesReader.close();
+				walletReader.close();
 				return;
 			}
 			int numTransactions = Integer.parseInt(keyDataReader.readLine());
@@ -137,6 +148,9 @@ private Context context;
 			}
 			DatabaseManager.setAllExpenditureTypes(expTypes);
 			expTypesReader.close();
+			
+			DatabaseManager.setWalletBalance(Double.parseDouble(walletReader.readLine()));
+			walletReader.close();
 			
 			DatabaseManager.saveDatabase();
 			Toast.makeText(context, "Data Has Been Restored Succesfully", Toast.LENGTH_LONG).show();
