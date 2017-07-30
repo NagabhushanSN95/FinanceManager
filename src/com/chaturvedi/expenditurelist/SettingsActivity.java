@@ -1,26 +1,24 @@
 package com.chaturvedi.expenditurelist;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.view.Window;
 import android.widget.CheckBox;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 public class SettingsActivity extends Activity
 {
+	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
+	private static final String KEY_ENABLE_SPLASH = "enable_splash";
+	private static final String KEY_BANK_SMS = "respond_bank_messages";
 	
 	private CheckBox splashCheckBox;
+	private CheckBox bankSmsCheckBox;
 	private static boolean enableSplash=true;
+	private static boolean respondBankMessages = true;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -37,67 +35,41 @@ public class SettingsActivity extends Activity
 			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
 			actionBar.setVisibility(View.GONE);
 		}
-		readFile();
+		readPreferences();
 		splashCheckBox=(CheckBox)findViewById(R.id.checkBox_splash);
 		splashCheckBox.setChecked(enableSplash);
+		bankSmsCheckBox = (CheckBox)findViewById(R.id.checkBox_bank_sms);
+		bankSmsCheckBox.setChecked(respondBankMessages);
 	}
 	
 	@Override
 	public void onBackPressed()
 	{
-		saveData();
+		savePreferences();
 		super.onBackPressed();
 	}
-
-	private void readFile()
+	
+	private void readPreferences()
 	{
-		String line;
-		
-		try
+		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		if(preferences.contains(KEY_ENABLE_SPLASH))
 		{
-			String expenditureFolderName = "Expenditure List/.temp";
-			String settingsFileName= "settings.txt";
-			File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
-			if(!expenditureFolder.exists())
-				expenditureFolder.mkdirs();
-			File settingsFile=new File(expenditureFolder, settingsFileName);
-			BufferedReader settingsReader=new BufferedReader(new FileReader(settingsFile));
-			line=settingsReader.readLine();
-			if(line.contains("false"))
-				enableSplash=false;
-			else
-				enableSplash=true;
-			settingsReader.close();
+			enableSplash=preferences.getBoolean(KEY_ENABLE_SPLASH, true);
 		}
-		catch(Exception e)
+		if(preferences.contains(KEY_BANK_SMS))
 		{
-			enableSplash=true;
-			Toast.makeText(this, "Error In Reading File", Toast.LENGTH_SHORT).show();
+			respondBankMessages=preferences.getBoolean(KEY_BANK_SMS, true);
 		}
 	}
 	
-	private void saveData()
+	private void savePreferences()
 	{
-		String line;
-		try
-		{
-			String expenditureFolderName = "Expenditure List/.temp";
-			String settingsFileName= "settings.txt";
-			File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
-			if(!expenditureFolder.exists())
-				expenditureFolder.mkdirs();
-			File settingsFile=new File(expenditureFolder, settingsFileName);
-			BufferedWriter settingsWriter=new BufferedWriter(new FileWriter(settingsFile));
-			
-			enableSplash=splashCheckBox.isChecked();
-			line="enable_splash="+enableSplash;
-			settingsWriter.write(line);
-			settingsWriter.close();
-		}
-		catch(Exception e)
-		{
-			enableSplash=true;
-			Toast.makeText(this, "Error In Reading File", Toast.LENGTH_SHORT).show();
-		}
+		enableSplash=splashCheckBox.isChecked();
+		respondBankMessages = bankSmsCheckBox.isChecked();
+		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.putBoolean(KEY_ENABLE_SPLASH, enableSplash);
+		editor.putBoolean(KEY_BANK_SMS, respondBankMessages);
+		editor.commit();
 	}
 }

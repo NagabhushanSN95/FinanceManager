@@ -1,15 +1,16 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="@drawable/background_activity_summary"
     tools:context=".MainActivity" >
 
     <RelativeLayout
         android:id="@+id/action_bar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:layout_alignParentTop="true"
         android:background="#444444" >
 
         <ImageView
@@ -36,15 +37,32 @@
         android:id="@+id/krishna"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-	android:gravity="center"
-	android:layout_marginLeft="75dp"
+        android:layout_below="@+id/action_bar"
+        android:layout_centerHorizontal="true"
         android:text="@string/krishna" />
-        
-    <LinearLayout 
-        android:id="@+id/parentLayout"
+    
+    <ScrollView
+        android:id="@+id/scrollView_parent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" >
+        android:layout_below="@+id/krishna"
+        android:layout_marginTop="30dp" >
         
-    </LinearLayout>
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+            
+            <LinearLayout 
+        	android:id="@+id/parentLayout"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+        	android:orientation="vertical"
+        	android:background="#FFFFFF" >
+        
+	    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+        
+    
+</RelativeLayout>

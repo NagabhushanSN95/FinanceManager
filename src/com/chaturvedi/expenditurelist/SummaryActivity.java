@@ -3,17 +3,17 @@
 
 package com.chaturvedi.expenditurelist;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,48 +24,35 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.expenditurelist.database.DatabaseManager;
+
 public class SummaryActivity extends Activity
 {
+	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
+	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
+	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
 	private int MARGIN_TOP_PARENT_LAYOUT;
 	private int MARGIN_LEFT_PARENT_LAYOUT;
-	private int WIDTH_TEXT_VIEWS; 
-	
-	private static int walletBalance;
-	private static int amountSpent;
-	private static int income;
-	private static int numBanks;
-	private static ArrayList<String> bankNames;
-	private static ArrayList<Integer> bankBalances;
-	private static int numEntries;
-
-	private static String expenditureFolderName;
-	private static String prefFileName;
-	private static String walletFileName;
-	private static String bankFileName;
-	private static File expenditureFolder;
-	private static File prefFile;
-	private static File walletFile;
-	private static File bankFile;
-	private static BufferedReader prefReader;
-	private static BufferedReader walletReader;
-	private static BufferedReader bankReader;
+	private int MARGIN_RIGHT_PARENT_LAYOUT;
+	private int WIDTH_NAME_VIEWS;
+	private int WIDTH_AMOUNT_VIEWS;
+	private int MARGIN_LEFT_NAME_VIEWS;
 	
 	private static LinearLayout parentLayout;
 	private static LayoutParams parentLayoutParams;
 	private static ArrayList<LinearLayout> layouts;
-	private static ArrayList<LinearLayout.LayoutParams> layoutParams;
 	private static ArrayList<TextView> nameViews;
-	private static ArrayList<LinearLayout.LayoutParams> nameViewParams;
 	private static ArrayList<TextView> amountViews;
-	private static ArrayList<LinearLayout.LayoutParams> amountViewParams;
 	
 	private Intent detailsIntent;
-	private Intent editIntent;
-	private Intent exportIntent;
+	private Intent editBanksIntent;
+	private Intent editExpenditureTypesIntent;
+	private Intent statisticsIntent;
 	private Intent settingsIntent;
+	private Intent exportIntent;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -82,25 +69,42 @@ public class SummaryActivity extends Activity
 			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
 			actionBar.setVisibility(View.GONE);
 		}
-		readData();
 		
 		displayMetrics=new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		screenWidth=displayMetrics.widthPixels;
 		screenHeight=displayMetrics.heightPixels;
-		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(numBanks*100))/6;
-		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*15/100;
-		WIDTH_TEXT_VIEWS=screenWidth*40/100;
+		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(DatabaseManager.getNumBanks()*100))/6;
+		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*5/100;
+		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*5/100;
+		WIDTH_NAME_VIEWS=screenWidth*55/100;
+		WIDTH_AMOUNT_VIEWS = screenWidth*35/100;
+		MARGIN_LEFT_NAME_VIEWS = 5;
+		
+		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
+		if(preferences.contains(KEY_DATABASE_INITIALIZED))
+		{
+			new DatabaseManager(this);
+			DatabaseManager.readDatabase();
+		}
+		else
+		{
+			DatabaseManager.setContext(this);
+			DatabaseManager.initializeDatabase();
+			SharedPreferences.Editor editor = preferences.edit();
+			editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+			editor.commit();
+		}
 		
 		buildLayout();
 		setData();
 		
 		detailsIntent=new Intent(this, DetailsActivity.class);
-		detailsIntent.putExtra("Number Of Entries", numEntries);
-		detailsIntent.putExtra("Number Of Banks", numBanks);
-		editIntent=new Intent(this, EditActivity.class);
-		exportIntent=new Intent(this, ExportActivity.class);
+		editBanksIntent=new Intent(this, EditBanksActivity.class);
+		editExpenditureTypesIntent = new Intent(this, EditExpenditureTypesActivity.class);
+		statisticsIntent=new Intent(this, StatisticsActivity.class);
 		settingsIntent=new Intent(this, SettingsActivity.class);
+		exportIntent=new Intent(this, ExportActivity.class);
 	}
 
 	@Override
@@ -119,8 +123,16 @@ public class SummaryActivity extends Activity
 				startActivityForResult(detailsIntent, 0);
 				return true;
 				
-			case R.id.action_edit:
-				startActivityForResult(editIntent, 0);
+			case R.id.action_edit_banks:
+				startActivityForResult(editBanksIntent, 0);
+				return true;
+				
+			case R.id.action_edit_expenditure_types:
+				startActivity(editExpenditureTypesIntent);
+				return true;
+				
+			case R.id.action_statistics:
+				startActivity(statisticsIntent);
 				return true;
 				
 			case R.id.action_settings:
@@ -129,7 +141,6 @@ public class SummaryActivity extends Activity
 				
 			case R.id.action_export:
 				startActivityForResult(exportIntent, 0);
-				refresh();
 				return true;
 		}
 		return true;
@@ -139,113 +150,97 @@ public class SummaryActivity extends Activity
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		super.onActivityResult(requestCode, resultCode, data);
-		refresh();
-	}
-	
-	private void refresh()
-	{
-		readData();
+		buildLayout();
 		setData();
 	}
 	
-	private void readData()
+	@Override
+	public void onBackPressed()
 	{
-		String line;
-		try
-		{
-			expenditureFolderName="Expenditure List/.temp";
-			prefFileName="preferences.txt";
-			walletFileName="wallet_info.txt";
-			bankFileName="bank_info.txt";
-			
-			expenditureFolder=new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
-			if(!expenditureFolder.exists())
-				expenditureFolder.mkdirs();
-			prefFile=new File(expenditureFolder, prefFileName);
-			walletFile=new File(expenditureFolder, walletFileName);
-			bankFile=new File(expenditureFolder, bankFileName);
-			
-			prefReader=new BufferedReader(new FileReader(prefFile));
-			numBanks=Integer.parseInt(prefReader.readLine());
-			numEntries=Integer.parseInt(prefReader.readLine());
-			
-			walletReader=new BufferedReader(new FileReader(walletFile));
-			line=walletReader.readLine();
-			walletBalance=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
-			line=walletReader.readLine();
-			amountSpent=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
-			line=walletReader.readLine();
-			income=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
-			
-			bankReader=new BufferedReader(new FileReader(bankFile));
-			bankNames=new ArrayList<String>();
-			bankBalances=new ArrayList<Integer>();
-			for(int i=0; i<numBanks; i++)
-			{
-				line=bankReader.readLine();
-				bankNames.add(line.substring(0, line.indexOf("=")));
-				bankBalances.add(Integer.parseInt(line.substring(line.indexOf("Rs")+2)));
-			}
-		}
-		catch(Exception e)
-		{
-			if(!(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)))
-				Toast.makeText(this, "External Storage Not Available", Toast.LENGTH_SHORT).show();
-		}
+		DatabaseManager.saveDatabase();
+		super.onBackPressed();
 	}
 	
 	private void buildLayout()
 	{
+		int numBanks = DatabaseManager.getNumBanks();
+		
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
 		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
-		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, 0, 0);
+		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT, 0);
 		parentLayout.setLayoutParams(parentLayoutParams);
+		parentLayout.removeAllViews();
+		
+		View line = new View(this);
+		LayoutParams lineParams = new LayoutParams(LayoutParams.MATCH_PARENT, 1);
+		line.setLayoutParams(lineParams);
+		line.setBackgroundColor(Color.parseColor("#FFFFFF"));
+		//parentLayout.addView(line);
 		
 		layouts=new ArrayList<LinearLayout>(numBanks+3);
-		layoutParams=new ArrayList<LayoutParams>(numBanks+3);
 		nameViews=new ArrayList<TextView>(numBanks+3);
-		nameViewParams=new ArrayList<LayoutParams>(numBanks+3);
 		amountViews=new ArrayList<TextView>(numBanks+3);
-		amountViewParams=new ArrayList<LayoutParams>(numBanks+3);
 		for(int i=0; i<numBanks+3; i++)
 		{
-			layouts.add(new LinearLayout(this));
-			layoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-			nameViews.add(new TextView(this));
-			nameViewParams.add(new LayoutParams(WIDTH_TEXT_VIEWS, LayoutParams.WRAP_CONTENT));
-			amountViews.add(new TextView(this));
-			amountViewParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			LayoutInflater layoutInflater = LayoutInflater.from(this);
+			LinearLayout summaryLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_summary, null);
+			if(i%2==0)
+				summaryLayout.setBackgroundColor(Color.parseColor("#88CC00CC"));
+			else
+				summaryLayout.setBackgroundColor(Color.parseColor("#880044FF"));
 			
-			layoutParams.get(i).setMargins(10, 10, 10, 10);
-			nameViewParams.get(i).setMargins(10,0,0,0);
-			amountViewParams.get(i).setMargins(30,0,0,0);
-
-			layouts.get(i).addView(nameViews.get(i), nameViewParams.get(i));
-			layouts.get(i).addView(amountViews.get(i), amountViewParams.get(i));
-			parentLayout.addView(layouts.get(i), layoutParams.get(i));
+			TextView nameView = (TextView)summaryLayout.findViewById(R.id.name);
+			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams.WRAP_CONTENT);
+			nameViewParams.setMargins(MARGIN_LEFT_NAME_VIEWS, 0, 0, 0);
+			nameView.setLayoutParams(nameViewParams);
+			
+			TextView amountView = (TextView)summaryLayout.findViewById(R.id.amount);
+			LayoutParams amountViewParams = new LayoutParams(WIDTH_AMOUNT_VIEWS, LayoutParams.WRAP_CONTENT);
+			amountView.setLayoutParams(amountViewParams);
+			
+			layouts.add(summaryLayout);
+			nameViews.add(nameView);
+			amountViews.add(amountView);
+			parentLayout.addView(summaryLayout);
 		}
+		
+		line = new View(this);
+		lineParams = new LayoutParams(LayoutParams.MATCH_PARENT, 1);
+		line.setLayoutParams(lineParams);
+		line.setBackgroundColor(Color.parseColor("#FFFFFF"));
+		parentLayout.addView(line);
+		
 	}
 	
 	private void setData()
 	{
+		int numBanks = DatabaseManager.getNumBanks();
+		//Toast.makeText(getApplicationContext(), "Check-Point 01 "+numBanks, Toast.LENGTH_SHORT).show();
+		ArrayList<String> bankNames = DatabaseManager.getBankNames();
+		//Toast.makeText(getApplicationContext(), "Check-Point 02 "+bankNames, Toast.LENGTH_SHORT).show();
+		ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
+		//Toast.makeText(getApplicationContext(), "Check-Point 03 "+bankBalances, Toast.LENGTH_SHORT).show();
+		DecimalFormat formatter = new DecimalFormat("###,##0");
 		try
 		{
 			// Set The Data
 			for(int i=0; i<numBanks; i++)
 			{
 				nameViews.get(i).setText(bankNames.get(i));
-				amountViews.get(i).setText("Rs "+bankBalances.get(i));
+				amountViews.get(i).setText(""+formatter.format(bankBalances.get(i)));
 			}
+			//Toast.makeText(getApplicationContext(), "Check-Point 04", Toast.LENGTH_SHORT).show();
 			nameViews.get(numBanks).setText("Wallet");
 			nameViews.get(numBanks+1).setText("Amount Spent");
 			nameViews.get(numBanks+2).setText("Income");
-			amountViews.get(numBanks).setText("Rs "+walletBalance);
-			amountViews.get(numBanks+1).setText("Rs "+amountSpent);
-			amountViews.get(numBanks+2).setText("Rs "+income);
+			amountViews.get(numBanks).setText(""+formatter.format(DatabaseManager.getWalletBalance()));
+			amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getAmountSpent()));
+			amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getIncome()));
+			//Toast.makeText(getApplicationContext(), "Check-Point 05", Toast.LENGTH_SHORT).show();
 		}
 		catch(Exception e)
 		{
-			
+			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 	}
 }

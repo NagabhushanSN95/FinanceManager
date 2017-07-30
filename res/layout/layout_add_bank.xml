@@ -12,7 +12,8 @@
         android:textSize="13sp"
         android:inputType="textPersonName"
         android:hint="@string/hint_bank_name"
-        android:ems="10" >
+        android:ems="10"
+        android:nextFocusDown="@+id/bankBalance" >
 
         <requestFocus />
     </EditText>
@@ -26,6 +27,18 @@
         android:inputType="number"
         android:singleLine="true"
         android:hint="@string/hint_bank_balance"
+        android:ems="5"
+        android:nextFocusDown="@+id/bankSmsName" />
+
+    <EditText
+        android:id="@+id/bankSmsName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="13sp"
+        android:inputType="textPersonName"
+        android:singleLine="true"
+        android:hint="@string/hint_bank_sms_name"
         android:ems="5" />
     
     <ImageButton

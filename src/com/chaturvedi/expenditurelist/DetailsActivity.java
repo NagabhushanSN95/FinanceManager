@@ -3,118 +3,52 @@
 
 package com.chaturvedi.expenditurelist;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.chaturvedi.expenditurelist.database.DatabaseManager;
 
 public class DetailsActivity extends Activity
 {
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
-	private int MARGIN_TOP=100;
-	private int MARGIN_TOP_SCROLL_VIEW;
-	private int MARGIN_BOTTOM_SCROLL_VIEW;
-	private int MARGIN_LEFT_SLNO;
-	private int MARGIN_LEFT_DATE;
-	private int MARGIN_LEFT_PARTICULARS;
-	private int MARGIN_LEFT_AMOUNT;
-	private int MARGIN_RIGHT_AMOUNT;
-	private int MARGIN_TOP_ITEMS=20;
 	private int WIDTH_SLNO;
 	private int WIDTH_DATE;
 	private int WIDTH_PARTICULARS;
 	private int WIDTH_AMOUNT;
 	
-
-	private int walletBalance;
-	private int amountSpent;
-	private int income;
-	private int numEntries;
-	private ArrayList<String> particulars;
-	private ArrayList<Integer> amounts;
-	private ArrayList<String> dates;
-	private int numBanks;
-	private ArrayList<String> bankNames;
-	private ArrayList<Integer> bankBalances;
+	//private LinearLayout titleLayout;
+	//private ArrayList<LinearLayout> itemsLayout;
+	private LinearLayout parentLayout;
 	
-	private RelativeLayout titleLayout;
-	private ArrayList<RelativeLayout> itemsLayout;
-	private ScrollView detailsScrollView;
-	private LinearLayout scrollLayout;
-	
-	private TextView slnoTitleView;
-	private TextView dateTitleView;
-	private TextView particularsTitleView;
-	private TextView amountTitleView;
-	private ArrayList<ArrayList<TextView>> itemsView;
-	
-	private RelativeLayout.LayoutParams titleLayoutParams;
-	private RelativeLayout.LayoutParams slnoTitleParams;
-	private RelativeLayout.LayoutParams dateTitleParams;
-	private RelativeLayout.LayoutParams particularsTitleParams;
-	private RelativeLayout.LayoutParams amountTitleParams;
-	private RelativeLayout.LayoutParams scrollViewParams;
-	private ArrayList<ArrayList<RelativeLayout.LayoutParams>> itemsLayoutParams;
-	
-	private String expenditureFolderName;
-	private String prefFileName;
-	private String walletFileName;
-	private String bankFileName;
-	private String particularsFileName;
-	private String amountFileName;
-	private String dateFileName;
-	private File expenditureFolder;
-	private File prefFile;
-	private File walletFile;
-	private File bankFile;
-	private File particularsFile;
-	private File amountFile;
-	private File dateFile;
-	private BufferedReader prefReader;
-	private BufferedReader walletReader;
-	private BufferedReader bankReader;
-	private BufferedReader particularsReader;
-	private BufferedReader amountReader;
-	private BufferedReader dateReader;
-	private BufferedWriter prefWriter;
-	private BufferedWriter walletWriter;
-	private BufferedWriter bankWriter;
-	private BufferedWriter particularsWriter;
-	private BufferedWriter amountWriter;
-	private BufferedWriter dateWriter;
-	
-	private Button walletCreditButton;
-	private Button walletDebitButton;
-	private Button bankCreditButton;
-	private Button bankDebitButton;
+	private ImageButton walletCreditButton;
+	private ImageButton walletDebitButton;
+	private ImageButton bankCreditButton;
+	private ImageButton bankDebitButton;
 
 	private AlertDialog.Builder walletCreditDialog;
 	private AlertDialog.Builder walletDebitDialog;
@@ -128,11 +62,14 @@ public class DetailsActivity extends Activity
 	private View walletDebitDialogView;
 	private View bankCreditDialogView;
 	private View bankDebitDialogView;
+	
 	private EditText particularsField;
+	private Spinner typesList;
+	private EditText rateField;
+	private EditText quantityField;
 	private EditText amountField;
 	private EditText dateField;
 	private ArrayList<RadioButton> banks;
-	private Intent detailsIntent;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -149,248 +86,103 @@ public class DetailsActivity extends Activity
 			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
 			actionBar.setVisibility(View.GONE);
 		}
-		detailsIntent=getIntent();
-		numEntries=detailsIntent.getIntExtra("Number Of Entries", 0);
 		
 		displayMetrics=new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		screenWidth=displayMetrics.widthPixels;
 		screenHeight=displayMetrics.heightPixels;
+		
 		if(VERSION.SDK_INT<=10)
 		{
-			MARGIN_TOP=screenHeight*18/100;
-			MARGIN_TOP_SCROLL_VIEW=screenHeight*6/100;
-			MARGIN_BOTTOM_SCROLL_VIEW=screenHeight*15/100;
+			WIDTH_DATE=20*screenWidth/100-6;
 		}
 		else
 		{
-			MARGIN_TOP=screenHeight*8/100;
-			MARGIN_TOP_SCROLL_VIEW=screenHeight*12/100;
-			MARGIN_BOTTOM_SCROLL_VIEW=screenHeight*20/100;
+			WIDTH_DATE=20*screenWidth/100-12;
 		}
-		
-		MARGIN_LEFT_SLNO=5*screenWidth/100;
-		MARGIN_LEFT_DATE=10*screenWidth/100;
-		MARGIN_LEFT_PARTICULARS=30*screenWidth/100;
-		MARGIN_LEFT_AMOUNT=80*screenWidth/100;
-		MARGIN_RIGHT_AMOUNT=5*screenWidth/100;
 		WIDTH_SLNO=10*screenWidth/100;
-		WIDTH_DATE=20*screenWidth/100;
 		WIDTH_PARTICULARS=50*screenWidth/100;
 		WIDTH_AMOUNT=20*screenWidth/100;
 		
-		readFile();
 		buildTitleLayout();
 		buildBodyLayout();
 		buildButtonPanel();
 	}
-
-	private void readFile()
+	
+	@Override
+	public void onPause()
 	{
-		String line;
-		
-		try
-		{
-			expenditureFolderName="Expenditure List/.temp";
-			prefFileName="preferences.txt";
-			walletFileName="wallet_info.txt";
-			bankFileName="bank_info.txt";
-			particularsFileName="particulars.txt";
-			amountFileName="amount.txt";
-			dateFileName="date.txt";
-			
-			expenditureFolder=new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
-			if(!expenditureFolder.exists())
-				expenditureFolder.mkdirs();
-			
-			prefFile=new File(expenditureFolder, prefFileName);
-			walletFile=new File(expenditureFolder, walletFileName);
-			bankFile=new File(expenditureFolder, bankFileName);
-			particularsFile=new File(expenditureFolder, particularsFileName);
-			amountFile=new File(expenditureFolder, amountFileName);
-			dateFile=new File(expenditureFolder, dateFileName);
-
-			prefReader=new BufferedReader(new FileReader(prefFile));
-			walletReader=new BufferedReader(new FileReader(walletFile));
-			bankReader=new BufferedReader(new FileReader(bankFile));
-			particularsReader=new BufferedReader(new FileReader(particularsFile));
-			amountReader=new BufferedReader(new FileReader(amountFile));
-			dateReader=new BufferedReader(new FileReader(dateFile));
-			
-			numBanks=Integer.parseInt(prefReader.readLine());
-			numEntries=Integer.parseInt(prefReader.readLine());
-			line=walletReader.readLine();
-			walletBalance=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
-			line=walletReader.readLine();
-			amountSpent=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
-			line=walletReader.readLine();
-			income=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
-			
-			bankNames=new ArrayList<String>();
-			bankBalances=new ArrayList<Integer>();
-			for(int i=0; i<numBanks; i++)
-			{
-				line=bankReader.readLine();
-				bankNames.add(line.substring(0, line.indexOf("=")));
-				bankBalances.add(Integer.parseInt(line.substring(line.indexOf("Rs")+2)));
-			}
-			
-			particulars=new ArrayList<String>();
-			amounts=new ArrayList<Integer>();
-			dates=new ArrayList<String>();
-			for(int i=0; i<numEntries; i++)
-			{
-				particulars.add(particularsReader.readLine());
-				amounts.add(Integer.parseInt(amountReader.readLine()));
-				dates.add(dateReader.readLine());
-			}
-		}
-		catch(Exception e)
-		{
-			Toast.makeText(this, "Error In Reading File"+e.getMessage(), Toast.LENGTH_SHORT).show();
-		}
+		super.onPause();
+		Toast.makeText(getApplicationContext(), "Details Acticity Paused", Toast.LENGTH_SHORT).show();
 	}
 	
-	private void saveData()
+	@Override
+	public void onStart()
 	{
-		try
-		{
-			expenditureFolderName="Expenditure List/.temp";
-			prefFileName="preferences.txt";
-			walletFileName="wallet_info.txt";
-			bankFileName="bank_info.txt";
-			particularsFileName="particulars.txt";
-			amountFileName="amount.txt";
-			dateFileName="date.txt";
-			
-			expenditureFolder=new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
-			if(!expenditureFolder.exists())
-				expenditureFolder.mkdirs();
-			
-			prefFile=new File(expenditureFolder, prefFileName);
-			walletFile=new File(expenditureFolder, walletFileName);
-			bankFile=new File(expenditureFolder, bankFileName);
-			particularsFile=new File(expenditureFolder, particularsFileName);
-			amountFile=new File(expenditureFolder, amountFileName);
-			dateFile=new File(expenditureFolder, dateFileName);
-			
-			prefWriter=new BufferedWriter(new FileWriter(prefFile));
-			walletWriter=new BufferedWriter(new FileWriter(walletFile));
-			bankWriter=new BufferedWriter(new FileWriter(bankFile));
-			particularsWriter=new BufferedWriter(new FileWriter(particularsFile));
-			amountWriter=new BufferedWriter(new FileWriter(amountFile));
-			dateWriter=new BufferedWriter(new FileWriter(dateFile));
-			
-			prefWriter.write(numBanks+"\n");
-			prefWriter.write(""+numEntries+"\n");
-			walletWriter.write("wallet_balance=Rs"+walletBalance+"\n");
-			walletWriter.write("amount_spent=Rs"+amountSpent+"\n");
-			walletWriter.write("income=Rs"+income+"\n");
-			for(int i=0; i<numBanks; i++)
-			{
-				bankWriter.write(bankNames.get(i)+"=Rs"+bankBalances.get(i)+"\n");
-			}
-			for(int i=0; i<numEntries; i++)
-			{
-				particularsWriter.write(particulars.get(i)+"\n");
-				amountWriter.write(amounts.get(i)+"\n");
-				dateWriter.write(dates.get(i)+"\n");
-			}
-			prefWriter.close();
-			walletWriter.close();
-			bankWriter.close();
-			particularsWriter.close();
-			amountWriter.close();
-			dateWriter.close();
-		}
-		catch(Exception e)
-		{
-			Toast.makeText(this, "Error In Saving To File", Toast.LENGTH_SHORT).show();
-		}
+		super.onPause();
+		Toast.makeText(getApplicationContext(), "Details Acticity Started", Toast.LENGTH_SHORT).show();
 	}
 	
 	private void buildTitleLayout()
 	{
-		titleLayout=new RelativeLayout(this);
-		titleLayoutParams=new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		titleLayout.setLayoutParams(titleLayoutParams);
+		//titleLayout=(LinearLayout)findViewById(R.id.layout_title);
 		
-		slnoTitleView=new TextView(this);
-		slnoTitleView.setText("Sl No");
-		//slnoTitleView.setBackgroundColor(Color.parseColor("#CCCCCC"));
-		slnoTitleParams=new RelativeLayout.LayoutParams(WIDTH_SLNO, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		slnoTitleParams.setMargins(screenWidth*2/100, MARGIN_TOP, 0, 0);
+		TextView slnoTitleView = (TextView)findViewById(R.id.slno);
+		LayoutParams slnoTitleParams = new LayoutParams(WIDTH_SLNO, LayoutParams.WRAP_CONTENT);
+		slnoTitleView.setLayoutParams(slnoTitleParams);
 		
-		dateTitleView=new TextView(this);
-		dateTitleView.setText("Date");
-		//dateTitleView.setBackgroundColor(Color.parseColor("#CCCCCC"));
-		dateTitleParams=new RelativeLayout.LayoutParams(WIDTH_DATE, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		dateTitleParams.setMargins(screenWidth*15/100, MARGIN_TOP, 0, 0);
+		TextView dateTitleView = (TextView)findViewById(R.id.date);
+		LayoutParams dateTitleParams = new LayoutParams(WIDTH_DATE, LayoutParams.WRAP_CONTENT);
+		dateTitleView.setLayoutParams(dateTitleParams);
 		
-		particularsTitleView=new TextView(this);
-		particularsTitleView.setText("Particulars");
-		//particularsTitleView.setBackgroundColor(Color.parseColor("#CCCCCC"));
-		particularsTitleParams=new RelativeLayout.LayoutParams(WIDTH_PARTICULARS, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		particularsTitleParams.setMargins(screenWidth*40/100, MARGIN_TOP, 0, 0);
+		TextView particularsTitleView = (TextView)findViewById(R.id.particulars);
+		LayoutParams particularsTitleParams = new LayoutParams(WIDTH_PARTICULARS, LayoutParams.WRAP_CONTENT);
+		particularsTitleView.setLayoutParams(particularsTitleParams);
 		
-		amountTitleView=new TextView(this);
-		amountTitleView.setText("Amount");
-		//amountTitleView.setBackgroundColor(Color.parseColor("#CCCCCC"));
-		amountTitleParams=new RelativeLayout.LayoutParams(WIDTH_AMOUNT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		amountTitleParams.setMargins(screenWidth*80/100, MARGIN_TOP, 0, 0);
-
-		titleLayout.addView(slnoTitleView, slnoTitleParams);
-		titleLayout.addView(dateTitleView, dateTitleParams);
-		titleLayout.addView(particularsTitleView, particularsTitleParams);
-		titleLayout.addView(amountTitleView, amountTitleParams);
-		this.addContentView(titleLayout, titleLayoutParams);
+		TextView amountTitleView = (TextView)findViewById(R.id.amount);
+		LayoutParams amountTitleParams = new LayoutParams(WIDTH_AMOUNT, LayoutParams.WRAP_CONTENT);
+		amountTitleView.setLayoutParams(amountTitleParams);
 	}
 	
 	private void buildBodyLayout()
 	{
 		try
 		{
-			detailsScrollView=(ScrollView)findViewById(R.id.details_scroll);
-			scrollViewParams=(RelativeLayout.LayoutParams)detailsScrollView.getLayoutParams();
-			scrollViewParams.setMargins(0, MARGIN_TOP_SCROLL_VIEW, 0, MARGIN_BOTTOM_SCROLL_VIEW);
-			detailsScrollView.setLayoutParams(scrollViewParams);
+			parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
+			parentLayout.removeAllViews();
 			
-			scrollLayout=(LinearLayout)findViewById(R.id.scroll_layout);
-			scrollLayout.removeAllViews();
-			
-			itemsLayout=new ArrayList<RelativeLayout>();
-			itemsView=new ArrayList<ArrayList<TextView>>();
-			itemsLayoutParams=new ArrayList<ArrayList<RelativeLayout.LayoutParams>>();
-			for(int i=0; i<numEntries; i++)
+			//itemsLayout = new ArrayList<LinearLayout>();
+			ArrayList<String> dates = DatabaseManager.getDates();
+			ArrayList<String> particulars = DatabaseManager.getParticulars();
+			ArrayList<Double> amounts = DatabaseManager.getAmounts();
+			DecimalFormat formatter = new DecimalFormat("#,##0");
+			for(int i=0; i<DatabaseManager.getNumTransactions(); i++)
 			{
-				itemsLayout.add(new RelativeLayout(this));
+				LayoutInflater layoutInflater = LayoutInflater.from(this);
+				LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_details, null);
+
+				TextView slnoView = (TextView)linearLayout.findViewById(R.id.slno);
+				LayoutParams slnoParams = new LayoutParams(WIDTH_SLNO, LayoutParams.WRAP_CONTENT);
+				slnoView.setLayoutParams(slnoParams);
+				slnoView.setText(""+(i+1));
 				
-				itemsView.add(new ArrayList<TextView>());
-				itemsView.get(i).add(new TextView(this));
-				itemsView.get(i).add(new TextView(this));
-				itemsView.get(i).add(new TextView(this));
-				itemsView.get(i).add(new TextView(this));
-				itemsView.get(i).get(0).setText(""+(i+1));
-				itemsView.get(i).get(1).setText(dates.get(i));
-				itemsView.get(i).get(2).setText(particulars.get(i));
-				itemsView.get(i).get(3).setText(amounts.get(i)+"");
-				itemsView.get(i).get(3).setGravity(Gravity.RIGHT);
+				TextView dateView = (TextView)linearLayout.findViewById(R.id.date);
+				LayoutParams dateParams = new LayoutParams(WIDTH_DATE, LayoutParams.WRAP_CONTENT);
+				dateView.setLayoutParams(dateParams);
+				dateView.setText(dates.get(i).substring(0, dates.get(i).indexOf("/20")));
 				
-				itemsLayoutParams.add(new ArrayList<RelativeLayout.LayoutParams>());
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(WIDTH_SLNO, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(WIDTH_DATE, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(WIDTH_PARTICULARS, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(WIDTH_AMOUNT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, MARGIN_TOP_ITEMS, 0, 0);
-				itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_DATE, MARGIN_TOP_ITEMS, 0, 0);
-				itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_PARTICULARS, MARGIN_TOP_ITEMS, 0, 0);
-				itemsLayoutParams.get(i).get(3).setMargins(MARGIN_LEFT_AMOUNT, MARGIN_TOP_ITEMS, MARGIN_RIGHT_AMOUNT, 0);
+				TextView particularsView = (TextView)linearLayout.findViewById(R.id.particulars);
+				LayoutParams particularsParams = new LayoutParams(WIDTH_PARTICULARS, LayoutParams.WRAP_CONTENT);
+				particularsView.setLayoutParams(particularsParams);
+				particularsView.setText(particulars.get(i));
 				
-				itemsLayout.get(i).addView(itemsView.get(i).get(0), itemsLayoutParams.get(i).get(0));
-				itemsLayout.get(i).addView(itemsView.get(i).get(1), itemsLayoutParams.get(i).get(1));
-				itemsLayout.get(i).addView(itemsView.get(i).get(2), itemsLayoutParams.get(i).get(2));
-				itemsLayout.get(i).addView(itemsView.get(i).get(3), itemsLayoutParams.get(i).get(3));
-				scrollLayout.addView(itemsLayout.get(i), titleLayoutParams);
+				TextView amountView = (TextView)linearLayout.findViewById(R.id.amount);
+				LayoutParams amountParams = new LayoutParams(WIDTH_AMOUNT, LayoutParams.WRAP_CONTENT);
+				amountView.setLayoutParams(amountParams);
+				amountView.setText(formatter.format(amounts.get(i)));
+
+				//itemsLayout.add(linearLayout);
+				parentLayout.addView(linearLayout);
 			}
 		}
 		catch(Exception e)
@@ -401,7 +193,7 @@ public class DetailsActivity extends Activity
 	
 	private void buildButtonPanel()
 	{
-		walletCreditButton=(Button)findViewById(R.id.button_wallet_credit);
+		walletCreditButton=(ImageButton)findViewById(R.id.button_wallet_credit);
 		walletCreditButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -411,8 +203,10 @@ public class DetailsActivity extends Activity
 				walletCreditDialog.show();
 			}
 		});
+		LayoutParams walletCreditButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		walletCreditButton.setLayoutParams(walletCreditButtonParams);
 		
-		walletDebitButton=(Button)findViewById(R.id.button_wallet_debit);
+		walletDebitButton=(ImageButton)findViewById(R.id.button_wallet_debit);
 		walletDebitButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -422,9 +216,10 @@ public class DetailsActivity extends Activity
 				walletDebitDialog.show();
 			}
 		});
-		walletDebitButton.bringToFront();
+		LayoutParams walletDebitButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		walletDebitButton.setLayoutParams(walletDebitButtonParams);
 		
-		bankCreditButton=(Button)findViewById(R.id.button_bank_credit);
+		bankCreditButton=(ImageButton)findViewById(R.id.button_bank_credit);
 		bankCreditButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -434,9 +229,10 @@ public class DetailsActivity extends Activity
 				bankCreditDialog.show();
 			}
 		});
-		bankCreditButton.bringToFront();
+		LayoutParams bankCreditButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		bankCreditButton.setLayoutParams(bankCreditButtonParams);
 		
-		bankDebitButton=(Button)findViewById(R.id.button_bank_debit);
+		bankDebitButton=(ImageButton)findViewById(R.id.button_bank_debit);
 		bankDebitButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -446,6 +242,8 @@ public class DetailsActivity extends Activity
 				bankDebitDialog.show();
 			}
 		});
+		LayoutParams bankDebitButtonParams = new LayoutParams(screenWidth/4, LayoutParams.WRAP_CONTENT);
+		bankDebitButton.setLayoutParams(bankDebitButtonParams);
 	}
 	
 	private void buildWalletCreditDialog()
@@ -461,28 +259,26 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				numEntries++;
-				int amount=Integer.parseInt(amountField.getText().toString());
-				String date=dateField.getText().toString();
-				walletBalance+=amount;
-				income+=amount;
-				particulars.add(particularsField.getText().toString());
-				amounts.add(amount);
-				dates.add(date);
-				saveData();
-				buildTitleLayout();
+				DatabaseManager.increamentNumTransations();
+				DatabaseManager.increamentWalletBalance(amountField.getText().toString());
+				DatabaseManager.increamentIncome(amountField.getText().toString());
+				DatabaseManager.addDate(dateField.getText().toString());
+				DatabaseManager.addType("Income");
+				DatabaseManager.addParticular(particularsField.getText().toString());
+				DatabaseManager.addRate(0);
+				DatabaseManager.addQuantity(0);
+				DatabaseManager.addAmount(amountField.getText().toString());
+				
 				buildBodyLayout();
-				buildButtonPanel();
-				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
 			}
 		});
 		walletCreditDialog.setNegativeButton("Cancel", null);
+		dateField=(EditText)walletCreditDialogView.findViewById(R.id.edit_date);
 		particularsField=(EditText)walletCreditDialogView.findViewById(R.id.edit_particulars);
 		amountField=(EditText)walletCreditDialogView.findViewById(R.id.edit_amount);
-		dateField=(EditText)walletCreditDialogView.findViewById(R.id.edit_date);
 		
 		Calendar calendar=Calendar.getInstance();
-		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
+		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
 		dateField.setText(date);
 	}
 	
@@ -499,27 +295,31 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				numEntries++;
-				int amount=Integer.parseInt(amountField.getText().toString());
-				String date=dateField.getText().toString();
-				walletBalance-=amount;
-				amountSpent+=amount;
-				particulars.add(particularsField.getText().toString());
-				amounts.add(amount);
-				dates.add(date);
-				saveData();
-				buildTitleLayout();
+				DatabaseManager.increamentNumTransations();
+				DatabaseManager.decreamentWalletBalance(amountField.getText().toString());
+				DatabaseManager.increamentAmountSpent(amountField.getText().toString());
+				DatabaseManager.addDate(dateField.getText().toString());
+				DatabaseManager.addType(typesList.getSelectedItemPosition());
+				DatabaseManager.addParticular(particularsField.getText().toString());
+				DatabaseManager.addRate(rateField.getText().toString());
+				DatabaseManager.addQuantity(quantityField.getText().toString());
+				DatabaseManager.addAmount(amountField.getText().toString());
+				DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amountField.getText().toString());
+				
 				buildBodyLayout();
-				buildButtonPanel();
 			}
 		});
 		walletDebitDialog.setNegativeButton("Cancel", null);
-		particularsField=(EditText)walletDebitDialogView.findViewById(R.id.edit_particulars);
-		amountField=(EditText)walletDebitDialogView.findViewById(R.id.edit_amount);
 		dateField=(EditText)walletDebitDialogView.findViewById(R.id.edit_date);
+		typesList = (Spinner)walletDebitDialogView.findViewById(R.id.list_types);
+		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getExpenditureTypes()));
+		particularsField=(EditText)walletDebitDialogView.findViewById(R.id.edit_particulars);
+		rateField = (EditText)walletDebitDialogView.findViewById(R.id.edit_rate);
+		quantityField = (EditText)walletDebitDialogView.findViewById(R.id.edit_quantity);
+		amountField=(EditText)walletDebitDialogView.findViewById(R.id.edit_amount);
 		
 		Calendar calendar=Calendar.getInstance();
-		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
+		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
 		dateField.setText(date);
 	}
 	
@@ -530,10 +330,10 @@ public class DetailsActivity extends Activity
 		
 		RadioGroup banksRadioGroup=(RadioGroup)bankCreditDialogView.findViewById(R.id.radioGroup_banks);
 		banks=new ArrayList<RadioButton>();
-		for(int i=0; i<numBanks; i++)
+		for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 		{
 			banks.add(new RadioButton(this));
-			banks.get(i).setText(bankNames.get(i));
+			banks.get(i).setText(DatabaseManager.getBankName(i));
 			banks.get(i).setTextSize(20);
 			banks.get(i).setTextColor(Color.BLUE);
 			banksRadioGroup.addView(banks.get(i));
@@ -543,11 +343,11 @@ public class DetailsActivity extends Activity
 		dateField=(EditText)bankCreditDialogView.findViewById(R.id.edit_date);
 		
 		Calendar calendar=Calendar.getInstance();
-		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
+		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
 		dateField.setText(date);
 		
 		bankCreditDialog=new AlertDialog.Builder(this);
-		bankCreditDialog.setTitle("Add ATM Withdrawal");
+		bankCreditDialog.setTitle("Add Bank Credit");
 		bankCreditDialog.setMessage("Enter Details");
 		bankCreditDialog.setView(bankCreditDialogView);
 		bankCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
@@ -558,28 +358,26 @@ public class DetailsActivity extends Activity
 				int bankNo=0;
 				try
 				{
-					int amount=Integer.parseInt(amountField.getText().toString());
-					String date=dateField.getText().toString();
-					for(int i=0; i<numBanks; i++)
+					for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 					{
 						if(banks.get(i).isChecked())
 							bankNo=i;
 					}
-					bankBalances.set(bankNo, bankBalances.get(bankNo)+amount);
-					income+=amount;
-					numEntries++;
-					particulars.add(bankNames.get(bankNo)+" Credit");
-					amounts.add(amount);
-					dates.add(date);
-					saveData();
+					DatabaseManager.increamentBankBalance(bankNo, amountField.getText().toString());
+					DatabaseManager.increamentIncome(amountField.getText().toString());
+					DatabaseManager.increamentNumTransations();
+					DatabaseManager.addDate(dateField.getText().toString());
+					DatabaseManager.addType("Income");
+					DatabaseManager.addParticular(DatabaseManager.getBankName(bankNo) + " Credit");
+					DatabaseManager.addRate(0);
+					DatabaseManager.addQuantity(0);
+					DatabaseManager.addAmount(amountField.getText().toString());
 				}
 				catch(Exception e)
 				{
 					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_SHORT).show();
 				}
-				buildTitleLayout();
 				buildBodyLayout();
-				buildButtonPanel();
 			}
 		});
 		bankCreditDialog.setNegativeButton("Cancel", null);
@@ -592,10 +390,10 @@ public class DetailsActivity extends Activity
 		
 		RadioGroup banksRadioGroup=(RadioGroup)bankDebitDialogView.findViewById(R.id.radioGroup_banks);
 		banks=new ArrayList<RadioButton>();
-		for(int i=0; i<numBanks; i++)
+		for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 		{
 			banks.add(new RadioButton(this));
-			banks.get(i).setText(bankNames.get(i));
+			banks.get(i).setText(DatabaseManager.getBankName(i));
 			banks.get(i).setTextSize(20);
 			banks.get(i).setTextColor(Color.BLUE);
 			banksRadioGroup.addView(banks.get(i));
@@ -604,11 +402,11 @@ public class DetailsActivity extends Activity
 		amountField=(EditText)bankDebitDialogView.findViewById(R.id.edit_amount);
 		dateField=(EditText)bankDebitDialogView.findViewById(R.id.edit_date);
 		Calendar calendar=Calendar.getInstance();
-		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
+		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
 		dateField.setText(date);
 		
 		bankDebitDialog=new AlertDialog.Builder(this);
-		bankDebitDialog.setTitle("Add ATM Withdrawal");
+		bankDebitDialog.setTitle("Add Bank Debit");
 		bankDebitDialog.setMessage("Enter Details");
 		bankDebitDialog.setView(bankDebitDialogView);
 		bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
@@ -619,100 +417,29 @@ public class DetailsActivity extends Activity
 				int bankNo=0;
 				try
 				{
-					int withdrawalAmount=Integer.parseInt(amountField.getText().toString());
-					String date=dateField.getText().toString();
-					for(int i=0; i<numBanks; i++)
+					
+					for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 					{
 						if(banks.get(i).isChecked())
 							bankNo=i;
 					}
-					bankBalances.set(bankNo, bankBalances.get(bankNo)-withdrawalAmount);
-					walletBalance+=withdrawalAmount;
-					numEntries++;
-					particulars.add(bankNames.get(bankNo)+" withdrawal");
-					amounts.add(withdrawalAmount);
-					dates.add(date);
-					saveData();
+					DatabaseManager.decreamentBankBalance(bankNo, amountField.getText().toString());
+					DatabaseManager.increamentWalletBalance(amountField.getText().toString());
+					DatabaseManager.increamentNumTransations();
+					DatabaseManager.addDate(dateField.getText().toString());
+					DatabaseManager.addType("Bank Debit");
+					DatabaseManager.addParticular(DatabaseManager.getBankName(bankNo) + " Withdrawal");
+					DatabaseManager.addRate(0);
+					DatabaseManager.addQuantity(0);
+					DatabaseManager.addAmount(amountField.getText().toString());
 				}
 				catch(Exception e)
 				{
 					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_SHORT).show();
 				}
-				buildTitleLayout();
 				buildBodyLayout();
-				buildButtonPanel();
 			}
 		});
 		bankDebitDialog.setNegativeButton("Cancel", null);
 	}
-	
-	/*private String breakParticularsString(String line)
-	{
-		ArrayList<String> lines=new ArrayList<String>();
-		for(int i=0; i<line.length()/10; i++)
-		{
-			lines.add(line.substring(0, 10));
-			line=line.substring(10);
-		}
-		line="";
-		for(int i=0; i<lines.size(); i++)
-		{
-			line+=lines.get(i)+"\n";
-		}
-		return line;
-	}
-	
-	private class DebitListener implements OnClickListener
-	{
-		@Override
-		public void onClick(View v)
-		{
-			buildWalletDebitDialog();
-			walletDebitDialog.show();
-		}
-	}
-	
-	private class CreditListener implements OnClickListener
-	{
-
-		@Override
-		public void onClick(View v)
-		{
-			buildBankDebitDialog();
-			bankDebitDialog.show();
-		}
-		
-	}
-	
-	private class ExpenditureDialogListener implements DialogInterface.OnClickListener
-	{
-		private int action;
-		
-		public ExpenditureDialogListener(int act)
-		{
-			action=act;
-		}
-
-		@Override
-		public void onClick(DialogInterface dialog, int which)
-		{
-			if(action==1)
-			{
-				numEntries++;
-				int amount=Integer.parseInt(amountField.getText().toString());
-				String date=dateField.getText().toString();
-				walletBalance-=amount;
-				amountSpent+=amount;
-				particulars.add(particularsField.getText().toString());
-				amounts.add(amount);
-				dates.add(date);
-				saveData();
-				buildTitleLayout();
-				buildBodyLayout();
-				buildButtonPanel();
-				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
-			}
-		}
-		
-	}*/
 }

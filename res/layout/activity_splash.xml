@@ -1,27 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:background="@drawable/background_activity_splash" >
+    
+    <RelativeLayout
+        android:id="@+id/action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:background="#444444" >
+
+        <ImageView
+            android:id="@+id/app_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:src="@drawable/app_icon" />
+
+        <TextView
+            android:id="@+id/app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/app_icon"
+            android:text="@string/title_details"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/krishna"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/action_bar"
+        android:layout_centerHorizontal="true"
+        android:text="@string/krishna"
+        android:textColor="#FFFF0000" />
 
     <ImageView
         android:id="@+id/photo_krishna"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/krishnaa"
-        android:layout_gravity="center" />
+        android:layout_below="@+id/krishna"
+        android:src="@drawable/krishna"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:id="@+id/quote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_below="@+id/photo_krishna"
+        android:layout_centerHorizontal="true"
         android:padding="25dip"/>
 
     <LinearLayout 
         android:id="@+id/loading"
         android:layout_width="match_parent"
         android:layout_height="3dp"
+        android:layout_below="@+id/quote"
         android:layout_margin="20dp"
         android:orientation="horizontal" >
         
@@ -29,9 +69,9 @@
             android:id="@+id/progress_line"
         	android:layout_width="1dp"
         	android:layout_height="match_parent"
-        	android:background="#00FF00" />
+        	android:background="#FFFF00FF" />
     </LinearLayout>
     
     
 
-</LinearLayout>
+</RelativeLayout>

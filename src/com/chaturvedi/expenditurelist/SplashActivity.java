@@ -4,10 +4,6 @@
 package com.chaturvedi.expenditurelist;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -17,18 +13,26 @@ import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
+import android.os.Build.VERSION;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.Window;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class SplashActivity extends Activity 
 {
+	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
+	private static final String KEY_ENABLE_SPLASH = "enable_splash";
+	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
+	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
+	
 	private static boolean showSplash=true;
 	private static int splashTime=5000;
 	
@@ -39,10 +43,6 @@ public class SplashActivity extends Activity
 	private LinearLayout.LayoutParams lp;
 	private int deviceWidth=1000;
 	private int progressStatus=00;
-	
-	private InputStream quoteStream;
-	private InputStreamReader quoteReader;
-	private BufferedReader reader;
 	private Random randomNumber;
 	
 	private Intent nextActivityIntent;
@@ -51,9 +51,21 @@ public class SplashActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_splash);
-		readFile();
+		if(VERSION.SDK_INT<=10)
+		{
+			requestWindowFeature(Window.FEATURE_NO_TITLE);
+			setContentView(R.layout.activity_splash);
+		}
+		else
+		{
+			setContentView(R.layout.activity_splash);
+			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
+			actionBar.setVisibility(View.GONE);
+		}
+		
+		readPreferences();
 		startSplash();
+		//new DatabaseManager(this);
 	}
 	
 	private void startSplash()
@@ -62,22 +74,21 @@ public class SplashActivity extends Activity
 		{
 			quoteView=(TextView)findViewById(R.id.quote);
 			quoteStrings=new ArrayList<String>();
-			quoteStream=getResources().openRawResource(R.raw.splash_screen_quotes);
-			quoteReader=new InputStreamReader(quoteStream);
-			reader=new BufferedReader(quoteReader);
+			InputStream quoteStream = getResources().openRawResource(R.raw.splash_screen_quotes);
+			BufferedReader quotesReader = new BufferedReader(new InputStreamReader(quoteStream));
 			randomNumber=new Random();
 			try
 			{
-				String line=reader.readLine();
+				String line=quotesReader.readLine();
 				while(line!=null)
 				{
 					quoteStrings.add(line);
-					line=reader.readLine();
+					line=quotesReader.readLine();
 				}
 			}
 			catch(Exception e)
 			{
-				
+				Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 			}
 			quoteText=quoteStrings.get(randomNumber.nextInt(quoteStrings.size()));
 			quoteView.setText(quoteText);
@@ -112,54 +123,6 @@ public class SplashActivity extends Activity
 			
 	}
 	
-	private void readFile()
-	{
-		try
-		{
-			String expenditureFolderName = "Expenditure List/.temp";
-			String settingsFileName="settings.txt";
-			String prefFileName = "preferences.txt";
-			
-			File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
-			if(!expenditureFolder.exists())
-				expenditureFolder.mkdirs();
-			
-			File settingsFile=new File(expenditureFolder, settingsFileName);
-			if(settingsFile.exists())
-			{
-				BufferedReader settingsReader=new BufferedReader(new FileReader(settingsFile));
-				String line=settingsReader.readLine();
-				if(line.contains("false"))
-				{
-					showSplash=false;
-				}
-				else
-				{
-					showSplash=true;
-				}
-				settingsReader.close();
-			}
-			else
-			{
-				BufferedWriter settingsWriter=new BufferedWriter(new FileWriter(settingsFile));
-				settingsWriter.write("enable_splash=true");
-				showSplash=true;
-				settingsWriter.close();
-			}
-			
-			File prefFile = new File(expenditureFolder, prefFileName);
-			if(prefFile.exists())
-				nextActivityIntent=new Intent(this, SummaryActivity.class);
-			else
-				nextActivityIntent=new Intent(this, StartupActivity.class);
-		}
-		catch(Exception e)
-		{
-			showSplash=true;
-			Toast.makeText(this, "Error In Reading File", Toast.LENGTH_SHORT).show();
-		}
-	}
-	
 	public class Refresh extends TimerTask
 	{
 		@Override
@@ -175,6 +138,31 @@ public class SplashActivity extends Activity
 					progressLine.setLayoutParams(lp);
 				}
 			});
+		}
+	}
+	
+	private void readPreferences()
+	{
+		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		if(preferences.contains(KEY_ENABLE_SPLASH))
+		{
+			showSplash=preferences.getBoolean(KEY_ENABLE_SPLASH, true);
+			//nextActivityIntent = new Intent(this, SummaryActivity.class);
+		}
+		else
+		{
+			showSplash = true;
+			//nextActivityIntent = new Intent(this, BanksSetupActivity.class);
+		}
+		
+		preferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
+		if(preferences.contains(KEY_DATABASE_INITIALIZED))
+		{
+			nextActivityIntent = new Intent(this, SummaryActivity.class);
+		}
+		else
+		{
+			nextActivityIntent = new Intent(this, BanksSetupActivity.class);
 		}
 	}
 	

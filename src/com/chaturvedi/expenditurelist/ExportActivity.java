@@ -1,9 +1,7 @@
 package com.chaturvedi.expenditurelist;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -19,52 +17,17 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.expenditurelist.database.DatabaseManager;
+
 public class ExportActivity extends Activity
 {
-	private String expenditureFolderName;
-	private String prefFileName;
-	private String walletFileName;
-	private String bankFileName;
-	private String particularsFileName;
-	private String amountFileName;
-	private String dateFileName;
-	private String icFileName;
 	private String exportFileName;
-	private File expenditureFolder;
-	private File prefFile;
-	private File walletFile;
-	private File bankFile;
-	private File particularsFile;
-	private File amountFile;
-	private File dateFile;
-	private File icFile;
-	private File exportFile;
-	private BufferedReader prefReader;
-	private BufferedReader walletReader;
-	private BufferedReader bankReader;
-	private BufferedReader particularsReader;
-	private BufferedReader amountReader;
-	private BufferedReader dateReader;
-	private BufferedReader icReader;
-	private BufferedWriter exportWriter;
 	
 	private TextView exportFileNameField;
 	private CheckBox clearDataCheckBox;
 	private LayoutInflater exportDialogLayout;
 	private View exportDialogView;
 	private AlertDialog.Builder exportDialog;
-	
-	private int numBanks;
-	private int numEntries;
-	private int walletBalance;
-	private int amountSpent;
-	private int income;
-	private ArrayList<String> bankNames;
-	private ArrayList<Integer> bankBalances;
-	private ArrayList<String> particulars;
-	private ArrayList<Integer> amounts;
-	private ArrayList<String> dates;
-	private ArrayList<ArrayList<String>> initialConditions;
 	
 	private Calendar calendar;
 	private String currentYear;
@@ -78,7 +41,7 @@ public class ExportActivity extends Activity
 		currentMonth=getMonth(calendar.get(Calendar.MONTH));
 		currentYear=calendar.get(Calendar.YEAR)+"";
 		exportFileName=currentMonth+"-"+currentYear+".doc";
-		readFile();
+		//readFile();
 		
 		exportDialogLayout=LayoutInflater.from(this);
 		exportDialogView=exportDialogLayout.inflate(R.layout.dialog_export, null);
@@ -97,7 +60,7 @@ public class ExportActivity extends Activity
 				exportFileName=exportFileNameField.getText().toString();
 				saveData();
 				if(clearDataCheckBox.isChecked())
-					clearData();
+					DatabaseManager.clearDatabase();
 				finish();
 			}
 		});
@@ -159,7 +122,7 @@ public class ExportActivity extends Activity
 		}
 	}
 	
-	private void readFile()
+	/*private void readFile()
 	{
 		String line;
 		try
@@ -236,25 +199,25 @@ public class ExportActivity extends Activity
 		{
 			Toast.makeText(this, "Error In Reading File\n"+e.getMessage(), Toast.LENGTH_SHORT).show();
 		}
-	}
+	}*/
 	
 	private void saveData()
 	{
 		try
 		{
-			expenditureFolderName="Expenditure List";
+			String expenditureFolderName = "Expenditure List";
 			
-			expenditureFolder=new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
+			File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
 			if(!expenditureFolder.exists())
 				expenditureFolder.mkdirs();
 			
-			exportFile=new File(expenditureFolder, exportFileName);
-			exportWriter=new BufferedWriter(new FileWriter(exportFile));
+			File exportFile = new File(expenditureFolder, exportFileName);
+			BufferedWriter exportWriter = new BufferedWriter(new FileWriter(exportFile));
 			
 			exportWriter.write("<html>\n<body>");
 			exportWriter.write("<h1>"+currentMonth+"-"+currentYear+"</h1>\n");
 			
-			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
+			/*exportWriter.write("<table border=\"1\" style=\"width:600px\">");
 			for(int i=0; i<initialConditions.size(); i++)
 			{
 				exportWriter.write("<tr>\n");
@@ -262,22 +225,28 @@ public class ExportActivity extends Activity
 				exportWriter.write("\t<td>"+initialConditions.get(i).get(1)+"</td>");
 				exportWriter.write("</tr>\n");
 			}
-			exportWriter.write("</table>");
+			exportWriter.write("</table>");*/
 
 			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Sl No"+"</td>");
 			exportWriter.write("\t<td>"+"Date"+"</td>");
+			exportWriter.write("\t<td>"+"Type"+"</td>");
 			exportWriter.write("\t<td>"+"Particulars"+"</td>");
+			exportWriter.write("\t<td>"+"Rate"+"</td>");
+			exportWriter.write("\t<td>"+"Quantity"+"</td>");
 			exportWriter.write("\t<td>"+"Amount"+"</td>");
 			exportWriter.write("</tr>\n");
-			for(int i=0; i<numEntries; i++)
+			for(int i=0; i<DatabaseManager.getNumTransactions(); i++)
 			{
 				exportWriter.write("<tr>\n");
 				exportWriter.write("\t<td>"+(i+1)+"</td>");
-				exportWriter.write("\t<td>"+dates.get(i)+"</td>");
-				exportWriter.write("\t<td>"+particulars.get(i)+"</td>");
-				exportWriter.write("\t<td>"+amounts.get(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getDates().get(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getTypes().get(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getParticulars().get(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getRates().get(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getQuantities().get(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getAmounts().get(i)+"</td>");
 				exportWriter.write("</tr>\n");
 			}
 			exportWriter.write("</table>");
@@ -285,17 +254,19 @@ public class ExportActivity extends Activity
 			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Total Income In This Month"+"</td>");
-			exportWriter.write("\t<td>"+"Rs "+income+"</td>");
+			exportWriter.write("\t<td>"+"Rs "+DatabaseManager.getIncome()+"</td>");
 			exportWriter.write("</tr>\n");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Total Amount Spent In This Month"+"</td>");
-			exportWriter.write("\t<td>"+"Rs "+amountSpent+"</td>");
+			exportWriter.write("\t<td>"+"Rs "+DatabaseManager.getAmountSpent()+"</td>");
 			exportWriter.write("</tr>\n");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Amount In wallet"+"</td>");
-			exportWriter.write("\t<td>"+"Rs "+walletBalance+"</td>");
+			exportWriter.write("\t<td>"+"Rs "+DatabaseManager.getWalletBalance()+"</td>");
 			exportWriter.write("</tr>\n");
-			for(int i=0; i<numBanks; i++)
+			ArrayList<String> bankNames = DatabaseManager.getBankNames();
+			ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
+			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 			{
 				exportWriter.write("<tr>\n");
 				exportWriter.write("\t<td>"+"Amount In "+bankNames.get(i)+"</td>");
@@ -315,7 +286,7 @@ public class ExportActivity extends Activity
 		}
 	}
 	
-	private void clearData()
+	/*private void clearData()
 	{
 		try
 		{
@@ -376,5 +347,5 @@ public class ExportActivity extends Activity
 		{
 			Toast.makeText(getApplicationContext(), "Error In Clearing Data\n"+e.getMessage(), Toast.LENGTH_SHORT).show();
 		}
-	}
+	}*/
 }
