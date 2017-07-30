@@ -38,8 +38,8 @@ public class SummaryActivity extends Activity
 	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
 	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
 	private String currencySymbol = " ";
-	private static final String KEY_TRANSACTIONS_DISPLAY_OPTIONS = "transactions_display_options";
-	private String transactionsDisplayOption = "Month";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "transactions_display_interval";
+	private String transactionsDisplayInterval = "Month";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -57,7 +57,7 @@ public class SummaryActivity extends Activity
 	private static ArrayList<TextView> nameViews;
 	private static ArrayList<TextView> amountViews;
 	
-	private Intent detailsIntent;
+	private Intent transactionsIntent;
 	private Intent editBanksIntent;
 	private Intent editExpenditureTypesIntent;
 	private Intent statisticsIntent;
@@ -122,7 +122,7 @@ public class SummaryActivity extends Activity
 		buildLayout();
 		setData();
 		
-		detailsIntent=new Intent(this, DetailsActivity.class);
+		transactionsIntent=new Intent(this, TransactionsActivity.class);
 		editBanksIntent=new Intent(this, EditBanksActivity.class);
 		editExpenditureTypesIntent = new Intent(this, EditExpenditureTypesActivity.class);
 		statisticsIntent=new Intent(this, StatisticsActivity.class);
@@ -144,7 +144,7 @@ public class SummaryActivity extends Activity
 		switch(item.getItemId())
 		{
 			case R.id.action_details:
-				startActivityForResult(detailsIntent, 0);
+				startActivityForResult(transactionsIntent, 0);
 				return true;
 				
 			case R.id.action_edit_banks:
@@ -268,12 +268,12 @@ public class SummaryActivity extends Activity
 			
 			SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 			
-			if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_OPTIONS))
+			if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 			{
-				transactionsDisplayOption=preferences.getString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, "Month");
+				transactionsDisplayInterval=preferences.getString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 			}
 			
-			if(transactionsDisplayOption.equals("Month"))
+			if(transactionsDisplayInterval.equals("Month"))
 			{
 				Calendar calendar = Calendar.getInstance();
 				int year = calendar.get(Calendar.YEAR);
@@ -282,7 +282,7 @@ public class SummaryActivity extends Activity
 				amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getMonthlyAmountSpent(currentMonth)));
 				amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getMonthlyIncome(currentMonth)));
 			}
-			else if(transactionsDisplayOption.equals("Year"))
+			else if(transactionsDisplayInterval.equals("Year"))
 			{
 				Calendar calendar = Calendar.getInstance();
 				int year = calendar.get(Calendar.YEAR);

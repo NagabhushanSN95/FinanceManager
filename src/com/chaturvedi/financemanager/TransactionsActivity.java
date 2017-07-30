@@ -41,7 +41,7 @@ import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.Time;
 import com.chaturvedi.financemanager.database.Transaction;
 
-public class DetailsActivity extends Activity
+public class TransactionsActivity extends Activity
 {
 	/*private final int DISPLAY_TRANSACTIONS_ALL = 0;
 	private final int DISPLAY_TRANSACTIONS_YEAR = 1;
@@ -91,8 +91,8 @@ public class DetailsActivity extends Activity
 	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
 	
 	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_TRANSACTIONS_DISPLAY_OPTIONS = "transactions_display_options";
-	private String transactionsDisplayOption = "Month";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "transactions_display_interval";
+	private String transactionsDisplayInterval = "Month";
 	
 	private ArrayList<Transaction> transactions;
 	private int contextMenuTransactionNo;
@@ -127,13 +127,6 @@ public class DetailsActivity extends Activity
 			performSMSTransaction();
 		}
 	}
-	
-	/*@Override
-	public void onPause()
-	{
-		super.onPause();
-		DatabaseManager.saveDatabaseImproved();
-	}*/
 
 	/*@Override
 	public boolean onCreateOptionsMenu(Menu menu)
@@ -208,12 +201,12 @@ public class DetailsActivity extends Activity
 	{
 		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 		
-		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_OPTIONS))
+		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 		{
-			transactionsDisplayOption=preferences.getString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, "Month");
+			transactionsDisplayInterval=preferences.getString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		}
 		
-		if(transactionsDisplayOption.equals("Month"))
+		if(transactionsDisplayInterval.equals("Month"))
 		{
 			Calendar calendar = Calendar.getInstance();
 			int year = calendar.get(Calendar.YEAR);
@@ -221,7 +214,7 @@ public class DetailsActivity extends Activity
 			long currentMonth = year*100+month;
 			transactions = DatabaseManager.getMonthlyTransactions(currentMonth);
 		}
-		else if(transactionsDisplayOption.equals("Year"))
+		else if(transactionsDisplayInterval.equals("Year"))
 		{
 			Calendar calendar = Calendar.getInstance();
 			int year = calendar.get(Calendar.YEAR);
@@ -1266,13 +1259,6 @@ public class DetailsActivity extends Activity
 		}
 		
 		return transaction;	
-	}
-	
-	private void displayOptions()
-	{
-		LayoutInflater layoutInflater = LayoutInflater.from(DetailsActivity.this);
-		LinearLayout displayOptionsLayout01 = (LinearLayout) layoutInflater.inflate(R.layout.dialog_display_options01, null);
-		
 	}
 	
 	/**

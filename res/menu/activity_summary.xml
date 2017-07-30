@@ -4,7 +4,7 @@
         android:id="@+id/action_details"
         android:orderInCategory="100"
         android:showAsAction="ifRoom"
-        android:title="@string/action_details"/>
+        android:title="@string/action_transactions"/>
     
     <item
         android:id="@+id/action_edit_banks"

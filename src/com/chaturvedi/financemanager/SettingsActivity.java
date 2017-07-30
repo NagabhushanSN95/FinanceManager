@@ -25,7 +25,7 @@ public class SettingsActivity extends Activity
 	private static final String KEY_ENABLE_SPLASH = "enable_splash";
 	private static final String KEY_BANK_SMS = "respond_bank_messages";
 	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
-	private static final String KEY_TRANSACTIONS_DISPLAY_OPTIONS = "transactions_display_options";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "transactions_display_interval";
 	
 	private CheckBox splashCheckBox;
 	private static boolean enableSplash=true;
@@ -36,7 +36,7 @@ public class SettingsActivity extends Activity
 	private String currencySymbolSelected = "Rs ";
 	private static final int NUM_CURRENCY_SYMBOLS=3;
 	Spinner transactionsDisplayOptionsList;
-	private static String transactionsDisplayOption = "Month";
+	private static String transactionsDisplayInterval = "Month";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -87,11 +87,11 @@ public class SettingsActivity extends Activity
 		//String[] transactionsDisplayOptions = { "Month", "Year", "All" };
 		String[] transactionsDisplayOptions = { "Month", "All" };
 		transactionsDisplayOptionsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, transactionsDisplayOptions));
-		if(transactionsDisplayOption.equals("Month"))
+		if(transactionsDisplayInterval.equals("Month"))
 		{
 			transactionsDisplayOptionsList.setSelection(0);
 		}
-		else if(transactionsDisplayOption.equals("Year"))
+		else if(transactionsDisplayInterval.equals("Year"))
 		{
 			transactionsDisplayOptionsList.setSelection(1);
 		}
@@ -117,9 +117,9 @@ public class SettingsActivity extends Activity
 		{
 			currencySymbolSelected=preferences.getString(KEY_CURRENCY_SYMBOL, "Rs ");
 		}
-		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_OPTIONS))
+		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 		{
-			transactionsDisplayOption=preferences.getString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, "Month");
+			transactionsDisplayInterval=preferences.getString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		}
 	}
 	
@@ -130,14 +130,14 @@ public class SettingsActivity extends Activity
 		currencySymbolSelected = (String) currencySymbolsList.getSelectedItem();
 		if(currencySymbolSelected.equalsIgnoreCase("None"))
 			currencySymbolSelected = " ";
-		transactionsDisplayOption = (String) transactionsDisplayOptionsList.getSelectedItem();
+		transactionsDisplayInterval = (String) transactionsDisplayOptionsList.getSelectedItem();
 		
 		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 		SharedPreferences.Editor editor = preferences.edit();
 		editor.putBoolean(KEY_ENABLE_SPLASH, enableSplash);
 		editor.putBoolean(KEY_BANK_SMS, respondBankMessages);
 		editor.putString(KEY_CURRENCY_SYMBOL, currencySymbolSelected);
-		editor.putString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, transactionsDisplayOption);
+		editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, transactionsDisplayInterval);
 		editor.commit();
 	}
 	
