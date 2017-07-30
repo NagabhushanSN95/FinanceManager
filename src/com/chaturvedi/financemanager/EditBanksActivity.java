@@ -124,6 +124,7 @@ public class EditBanksActivity extends Activity
 		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
 		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT, MARGIN_BOTTOM_PARENT_LAYOUT);
 		parentLayout.setLayoutParams(parentLayoutParams);
+		parentLayout.removeAllViews();
 		
 		addBankButton=(Button)findViewById(R.id.button_addBank);
 		addBankButton.setOnClickListener(new View.OnClickListener()
