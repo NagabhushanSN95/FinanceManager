@@ -10,9 +10,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Build.VERSION;
+import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -242,9 +243,12 @@ public class ExtrasActivity extends Activity
 							DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
 							DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 							DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+							int numExpTypesInDatabase = DatabaseManager.getNumExpTypes();
 							DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
-							if(restoreManager.getNumExpTypes() != DatabaseManager.getNumExpTypes())
+							if(restoreManager.getNumExpTypes() != numExpTypesInDatabase)
 							{
+								Log.d("ExtrasActivity/restoreData()","Readjusting Counters Table: SD Card: " + 
+										restoreManager.getNumExpTypes() + "|Database: " + numExpTypesInDatabase);
 								DatabaseManager.readjustCountersTable();
 							}
 							DatabaseManager.setAllCounters(restoreManager.getAllCounters());

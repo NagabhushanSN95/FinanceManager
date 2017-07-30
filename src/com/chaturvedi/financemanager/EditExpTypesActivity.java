@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.ContextMenu;
@@ -67,14 +66,6 @@ public class EditExpTypesActivity extends Activity
 	{
 		parentLayout = (LinearLayout) findViewById(R.id.parentLayout);
 		
-		// Get all the 5 Hints  stored as String Resources
-		/*String[] hints = new String[5];
-		hints[0] = getResources().getString(R.string.hint_exp01);
-		hints[1] = getResources().getString(R.string.hint_exp02);
-		hints[2] = getResources().getString(R.string.hint_exp03);
-		hints[3] = getResources().getString(R.string.hint_exp04);
-		hints[4] = getResources().getString(R.string.hint_exp05);*/
-		
 		expTypes = DatabaseManager.getAllExpenditureTypes();
 		for(int i=0; i<expTypes.size(); i++)
 		{
@@ -83,84 +74,66 @@ public class EditExpTypesActivity extends Activity
 			TextView expTypeView = (TextView) expTypeLayout.findViewById(R.id.textView_expType);
 			expTypeView.setText(expTypes.get(i));
 			registerForContextMenu(expTypeLayout);
-			
-			Button addExpTypeButton = (Button) findViewById(R.id.button_add_expType);
-			addExpTypeButton.setOnClickListener(new View.OnClickListener()
-			{
-				@Override
-				public void onClick(View v)
-				{
-					LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
-					LinearLayout addExpTypeLayout = (LinearLayout) inflater.inflate(R.layout.dialog_add_exp_type, null);
-					final EditText expTypeNameField = (EditText) addExpTypeLayout.findViewById(R.id.editText_expTypeName);
-					final Spinner positionList = (Spinner) addExpTypeLayout.findViewById(R.id.spinner_position);
-					int numExpTypes = DatabaseManager.getNumExpTypes();
-					String[] positions = new String[numExpTypes];
-					for(int i=0; i<numExpTypes; i++)
-					{
-						positions[i] = ""+(i+1);
-					}
-					positionList.setAdapter(new ArrayAdapter<String>(getApplicationContext(), 
-							android.R.layout.simple_spinner_item, positions));
-					positionList.setSelection(numExpTypes-1);
-					
-					AlertDialog.Builder addExpTypeBuilder = new AlertDialog.Builder(getApplicationContext());
-					addExpTypeBuilder.setTitle("Enter New Expenditure Type:");
-					addExpTypeBuilder.setView(addExpTypeLayout);
-					addExpTypeBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener()
-					{
-						@Override
-						public void onClick(DialogInterface dialog, int which)
-						{
-							String expTypeName = expTypeNameField.getText().toString();
-							int position = Integer.parseInt(positionList.getSelectedItem().toString());
-							DatabaseManager.addExpType(expTypeName, position);
-							buildLayout();
-						}
-					});
-					addExpTypeBuilder.setNegativeButton("Cancel", null);
-					addExpTypeBuilder.show();
-				}
-			});
-			/*final EditText expTypeField = (EditText) expTypeLayout.findViewById(R.id.expType);
-			expTypeField.setHint(hints[i]);
-			expTypeField.setText(expTypes.get(i));
-			// Whenever the ExpType is changed, update the same in ExpTypes ArrayList
-			expTypeField.addTextChangedListener(new TextWatcher()
-			{
-				@Override
-				public void afterTextChanged(Editable arg0)
-				{
-					String expType = expTypeField.getText().toString();
-					int position = parentLayout.indexOfChild(expTypeLayout)-1;
-					Toast.makeText(getApplicationContext(), "Krishna:"+position, Toast.LENGTH_SHORT).show();
-					expTypes.set(position, expType);
-				}
-
-				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after)
-				{
-					
-				}
-
-				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count)
-				{
-					
-				}
-				
-			});
-			ImageButton deleteButton = (ImageButton) expTypeLayout.findViewById(R.id.imageButton_delete);
-			deleteButton.setOnClickListener(new View.OnClickListener()
-			{
-				@Override
-				public void onClick(View v)
-				{
-					parentLayout.removeView(expTypeLayout);
-				}
-			});*/
 			parentLayout.addView(expTypeLayout, i+1);
 		}
+		
+		Button addExpTypeButton = (Button) findViewById(R.id.button_add_expType);
+		addExpTypeButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				LayoutInflater inflater = LayoutInflater.from(EditExpTypesActivity.this);
+				LinearLayout addExpTypeLayout = (LinearLayout) inflater.inflate(R.layout.dialog_add_exp_type, null);
+				final EditText expTypeNameField = (EditText) addExpTypeLayout.findViewById(R.id.editText_expTypeName);
+				final Spinner positionList = (Spinner) addExpTypeLayout.findViewById(R.id.spinner_position);
+				int numExpTypes = DatabaseManager.getNumExpTypes();
+				String[] positions = new String[numExpTypes];
+				for(int i=0; i<numExpTypes; i++)
+				{
+					positions[i] = ""+(i+1);
+				}
+				positionList.setAdapter(new ArrayAdapter<String>(EditExpTypesActivity.this, 
+						android.R.layout.simple_spinner_item, positions));
+				positionList.setSelection(numExpTypes-1);
+				
+				AlertDialog.Builder addExpTypeBuilder = new AlertDialog.Builder(EditExpTypesActivity.this);
+				addExpTypeBuilder.setTitle("Enter New Expenditure Type:");
+				addExpTypeBuilder.setView(addExpTypeLayout);
+				addExpTypeBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener()
+				{
+					@Override
+					public void onClick(DialogInterface dialog, int which)
+					{
+						final String expTypeName = expTypeNameField.getText().toString();
+						final int position = Integer.parseInt(positionList.getSelectedItem().toString());
+						addNewExpTypeToLayout(expTypeName, position-1);
+						
+						AlertDialog.Builder waitDialogBuilder = new AlertDialog.Builder(EditExpTypesActivity.this);
+						LayoutInflater inflater = LayoutInflater.from(EditExpTypesActivity.this);
+						View waitView = inflater.inflate(R.layout.dialog_wait, null);
+						TextView waitTextView = (TextView) waitView.findViewById(R.id.textView_wait);
+						waitTextView.setText("Please Wait While Your Expenditure Type Is Added " + 
+								"And The App Is Configured For The Changes");
+						waitDialogBuilder.setView(waitView);
+						final AlertDialog waitDialog = waitDialogBuilder.show();
+						// Add Exp Type in a seperate (non-ui) thread
+						Thread addExpTypeThread = new Thread(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								DatabaseManager.addExpType(expTypeName, position);
+								waitDialog.dismiss();
+							}
+						});
+						addExpTypeThread.start();
+					}
+				});
+				addExpTypeBuilder.setNegativeButton("Cancel", null);
+				addExpTypeBuilder.show();
+			}
+		});
 		
 		/*final ImageButton editOthersButton = (ImageButton) findViewById(R.id.imageButton_editOthers);
 		editOthersButton.setOnClickListener(new View.OnClickListener()
@@ -245,6 +218,16 @@ public class EditExpTypesActivity extends Activity
 				expTypes.add(parentLayout.getChildCount()-3,"");
 			}
 		});*/
+	}
+	
+	private void addNewExpTypeToLayout(String expTypeName, int position)
+	{
+		LayoutInflater inflater = LayoutInflater.from(this);
+		LinearLayout expTypeLayout = (LinearLayout) inflater.inflate(R.layout.layout_display_exp_type, null);
+		TextView expTypeView = (TextView) expTypeLayout.findViewById(R.id.textView_expType);
+		expTypeView.setText(expTypeName);
+		registerForContextMenu(expTypeLayout);
+		parentLayout.addView(expTypeLayout, position+1);
 	}
 	
 	private void deleteExpType(int contextMenuExpTypeNo2)

@@ -8,6 +8,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 import android.widget.Toast;
 
 public class DatabaseAdapter extends SQLiteOpenHelper
@@ -661,8 +662,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				values.put(KEY_DATE, counter.getDate().getSavableDate());
 				DecimalFormat formatter = new DecimalFormat("00");
 				double[] allExps = counter.getAllExpenditures();
+				//Log.d("DatabaseAdapter/addAllCountersRows()", "Check-Point 03:"+getNumExpTypes());
 				for(int i=0; i<getNumExpTypes(); i++)
 				{
+					//Log.d("DatabaseAdapter/addAllCountersRows()", "Check-Point 04:"+i);
 					values.put("expenditure_"+formatter.format(i+1), allExps[i]);
 				}
 				/*values.put(KEY_EXP01, counter.getExp01());
@@ -738,6 +741,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				do
 				{
 					double[] counter1 = new double[numExpTypes+4];
+					//Log.d("DatabaseAdapter/getAllCountersRows()", "Check-Point 15:" + cursor.getColumnCount());
 					for(int i=0; i<numExpTypes+4; i++)
 					{
 						counter1[i] = cursor.getDouble(i+2);
@@ -848,6 +852,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			CREATE_COUNTERS_TABLE = "CREATE TABLE " + TABLE_COUNTERS + "(" + 
 					KEY_ID + " INTEGER PRIMARY KEY," + 
 					KEY_DATE + " TEXT,";
+			Log.d("DatabaseAdapter/readjustCountersTable()", "Check-Point 11:" + getNumExpTypes());
 			for(int i=0; i<getNumExpTypes(); i++)
 			{
 				CREATE_COUNTERS_TABLE += "expenditure_"+formatter.format(i+1) +  " DOUBLE,";

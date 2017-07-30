@@ -219,7 +219,7 @@ public class Counters
 		double[] exp1 = new double[numExpTypes];
 		for(int i=0; i<numExpTypes; i++)
 		{
-			exp1[i] += exp[i];
+			exp1[i] = exp[i];
 		}
 		return exp1;
 	}

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 public class DatabaseManager
@@ -57,13 +58,8 @@ public class DatabaseManager
 				transactions = new ArrayList<Transaction>();
 			}
 			
-			ArrayList<String> expTypes = databaseAdapter.getAllExpTypes();
-			/*expenditureTypes = new ArrayList<String>();
-			for(ExpenditureTypes expType: expTypes)
-			{
-				expenditureTypes.add(expType.getExpenditureTypeName());
-			}*/
-
+			expenditureTypes = databaseAdapter.getAllExpTypes();
+			
 			int numCountersRows = databaseAdapter.getNumCountersRows();
 			if(numCountersRows>0)
 			{
@@ -648,7 +644,7 @@ public class DatabaseManager
 	public static void decreamentCounters(Date date, int expTypeNo, double amount)
 	{
 		int numCountersRows = counters.size();
-		double[] exp = new double[9];
+		double[] exp = new double[expenditureTypes.size()+4];
 		exp[expTypeNo] = amount;
 		
 		// Search For The Date
@@ -707,7 +703,8 @@ public class DatabaseManager
 			else if(found && month1 == month)
 			{
 				double[] allExpenditures = counter1.getAllExpenditures();
-				for(int j=0; j<expenditureTypes.size(); j++)
+				int numExpTypes = expenditureTypes.size();
+				for(int j=0; j<numExpTypes; j++)
 				{
 					monthlyCounters[j] += allExpenditures[j];
 				}
@@ -716,10 +713,10 @@ public class DatabaseManager
 				monthlyCounters[2] += counter1.getExp03();
 				monthlyCounters[3] += counter1.getExp04();
 				monthlyCounters[4] += counter1.getExp05();*/
-				monthlyCounters[5] += counter1.getAmountSpent();
-				monthlyCounters[6] += counter1.getIncome();
-				monthlyCounters[7] += counter1.getSavings();
-				monthlyCounters[8] += counter1.getWithdrawal();
+				monthlyCounters[numExpTypes] += counter1.getAmountSpent();
+				monthlyCounters[numExpTypes+1] += counter1.getIncome();
+				monthlyCounters[numExpTypes+2] += counter1.getSavings();
+				monthlyCounters[numExpTypes+3] += counter1.getWithdrawal();
 			}
 			else if(month1 > month)
 			{
@@ -759,7 +756,8 @@ public class DatabaseManager
 			else if(found && year1 == year)
 			{
 				double[] allExpenditures = counter1.getAllExpenditures();
-				for(int j=0; j<expenditureTypes.size(); j++)
+				int numExpTypes = expenditureTypes.size();
+				for(int j=0; j<numExpTypes; j++)
 				{
 					yearlyCounters[j] += allExpenditures[j];
 				}
@@ -768,10 +766,10 @@ public class DatabaseManager
 				yearlyCounters[2] += counter1.getExp03();
 				yearlyCounters[3] += counter1.getExp04();
 				yearlyCounters[4] += counter1.getExp05();*/
-				yearlyCounters[5] += counter1.getAmountSpent();
-				yearlyCounters[6] += counter1.getIncome();
-				yearlyCounters[7] += counter1.getSavings();
-				yearlyCounters[8] += counter1.getWithdrawal();
+				yearlyCounters[numExpTypes] += counter1.getAmountSpent();
+				yearlyCounters[numExpTypes+1] += counter1.getIncome();
+				yearlyCounters[numExpTypes+2] += counter1.getSavings();
+				yearlyCounters[numExpTypes+3] += counter1.getWithdrawal();
 			}
 			else if(year1 > year)
 			{
@@ -790,7 +788,8 @@ public class DatabaseManager
 		{
 			Counters counter1 = counters.get(i);
 			double[] allExpenditures = counter1.getAllExpenditures();
-			for(int j=0; j<expenditureTypes.size(); j++)
+			int numExpTypes = expenditureTypes.size();
+			for(int j=0; j<numExpTypes; j++)
 			{
 				totalCounters[j] += allExpenditures[j];
 			}
@@ -799,10 +798,10 @@ public class DatabaseManager
 			totalCounters[2] += counter1.getExp03();
 			totalCounters[3] += counter1.getExp04();
 			totalCounters[4] += counter1.getExp05();*/
-			totalCounters[5] += counter1.getAmountSpent();
-			totalCounters[6] += counter1.getIncome();
-			totalCounters[7] += counter1.getSavings();
-			totalCounters[8] += counter1.getWithdrawal();
+			totalCounters[numExpTypes] += counter1.getAmountSpent();
+			totalCounters[numExpTypes+1] += counter1.getIncome();
+			totalCounters[numExpTypes+2] += counter1.getSavings();
+			totalCounters[numExpTypes+3] += counter1.getWithdrawal();
 		}
 		return totalCounters;
 	}
@@ -932,9 +931,13 @@ public class DatabaseManager
 		}
 		
 		// Update the same in Database
-		DatabaseManager.setAllTransactions(transactions);
-		DatabaseManager.setAllTemplates(templates);
-		DatabaseManager.readjustCountersTable();
+		databaseAdapter.deleteAllTransactions();
+		databaseAdapter.addAllTransactions(transactions);
+		databaseAdapter.deleteAllTemplates();
+		databaseAdapter.addAllTemplates(templates);
+		databaseAdapter.deleteAllExpTypes();
+		databaseAdapter.addAllExpTypes(expenditureTypes);
+		databaseAdapter.readjustCountersTable();
 		databaseAdapter.addAllCountersRows(counters);
 	}
 	
@@ -1160,134 +1163,134 @@ public class DatabaseManager
 	
 	public static void increamentAmountSpent(Date date, double amount)
 	{
-		// Amount Spent is the 6th column
-		DatabaseManager.increamentCounters(date, 5, amount);
+		// Amount Spent is the (N+1)th column where N is numExpTypes
+		DatabaseManager.increamentCounters(date, expenditureTypes.size(), amount);
 	}
 	
 	public static void decreamentAmountSpent(Date date, double amount)
 	{
-		// Amount Spent is the 6th column
-		DatabaseManager.decreamentCounters(date, 5, amount);
+		// Amount Spent is the (N+1)th column where N is numExpTypes
+		DatabaseManager.decreamentCounters(date, expenditureTypes.size(), amount);
 	}
 	
 	public static double getMonthlyAmountSpent(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
-		// Amount Spent is the 6th Column
-		return counters[5];
+		// Amount Spent is the (N+1)th column where N is numExpTypes
+		return counters[expenditureTypes.size()];
 	}
 	
 	public static double getYearlyAmountSpent(long year)
 	{
 		double counters[] = getYearlyCounters(year);
-		// Amount Spent is the 6th Column
-		return counters[5];
+		// Amount Spent is the (N+1)th column where N is numExpTypes
+		return counters[expenditureTypes.size()];
 	}
 	
 	public static double getTotalAmountSpent()
 	{
 		double counters[] = getTotalCounters();
-		// Amount Spent is the 6th Column
-		return counters[5];
+		// Amount Spent is the (N+1)th column where N is numExpTypes
+		return counters[expenditureTypes.size()];
 	}
 	
 	public static void increamentIncome(Date date, double amount)
 	{
-		// Income is the 7th column
-		DatabaseManager.increamentCounters(date, 6, amount);
+		// Income is the (N+2)th column where N is numExpTypes
+		DatabaseManager.increamentCounters(date, expenditureTypes.size()+1, amount);
 	}
 	
 	public static void decreamentIncome(Date date, double amount)
 	{
-		// Income is the 7th column
-		DatabaseManager.decreamentCounters(date, 6, amount);
+		// Income is the (N+2)th column where N is numExpTypes
+		DatabaseManager.decreamentCounters(date, expenditureTypes.size()+1, amount);
 	}
 	
 	public static double getMonthlyIncome(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
-		// Income is the 7th Column
-		return counters[6];
+		// Income is the (N+2)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+1];
 	}
 	
 	public static double getYearlyIncome(long year)
 	{
 		double counters[] = getYearlyCounters(year);
-		// Income is the 7th Column
-		return counters[6];
+		// Income is the (N+2)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+1];
 	}
 	
 	public static double getTotalIncome()
 	{
 		double counters[] = getTotalCounters();
-		// Income is the 7th Column
-		return counters[6];
+		// Income is the (N+2)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+1];
 	}
 	
 	public static void increamentSavings(Date date, double amount)
 	{
-		// Savings is the 8th column
-		DatabaseManager.increamentCounters(date, 7, amount);
+		// Savings is the (N+3)th column where N is numExpTypes
+		DatabaseManager.increamentCounters(date, expenditureTypes.size()+2, amount);
 	}
 	
 	public static void decreamentSavings(Date date, double amount)
 	{
-		// Savings is the 8th column
-		DatabaseManager.decreamentCounters(date, 7, amount);
+		// Savings is the (N+3)th column where N is numExpTypes
+		DatabaseManager.decreamentCounters(date, expenditureTypes.size()+2, amount);
 	}
 	
 	public static double getMonthlySavings(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
-		// Savings is the 8th Column
-		return counters[7];
+		// Savings is the (N+3)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+2];
 	}
 	
 	public static double getYearlySavings(long year)
 	{
 		double counters[] = getYearlyCounters(year);
-		// Savings is the 8th Column
-		return counters[7];
+		// Savings is the (N+3)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+2];
 	}
 	
 	public static double getTotalSavings()
 	{
 		double counters[] = getTotalCounters();
-		// Savings is the 8th Column
-		return counters[7];
+		// Savings is the (N+3)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+2];
 	}
 	
 	public static void increamentWithdrawal(Date date, double amount)
 	{
-		// Withdrawal is the 9th column
-		DatabaseManager.increamentCounters(date, 8, amount);
+		// Withdrawal is the (N+4)th column where N is numExpTypes
+		DatabaseManager.increamentCounters(date, expenditureTypes.size()+3, amount);
 	}
 	
 	public static void decreamentWithdrawal(Date date, double amount)
 	{
-		// Withdrawal is the 9th column
-		DatabaseManager.decreamentCounters(date, 8, amount);
+		// Withdrawal is the (N+4)th column where N is numExpTypes
+		DatabaseManager.decreamentCounters(date, expenditureTypes.size()+3, amount);
 	}
 	
 	public static double getMonthlyWithdrawal(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
-		// Withdrawal is the 9th column
-		return counters[8];
+		// Withdrawal is the (N+4)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+3];
 	}
 	
 	public static double getYearlyWithdrawal(long year)
 	{
 		double counters[] = getYearlyCounters(year);
-		// Withdrawal is the 9th column
-		return counters[8];
+		// Withdrawal is the (N+4)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+3];
 	}
 	
 	public static double getTotalWithdrawal()
 	{
 		double counters[] = getTotalCounters();
-		// Withdrawal is the 9th column
-		return counters[8];
+		// Withdrawal is the (N+4)th column where N is numExpTypes
+		return counters[expenditureTypes.size()+3];
 	}
 	
 	public static void setAllBanks(ArrayList<Bank> banks)
@@ -1444,8 +1447,10 @@ public class DatabaseManager
 			{
 				return false;
 			}
+			//Log.d("DatabaseManager/areEqualCounters()", "Check-Point 02:" + counters1.get(i).getAllExpenditures().length);
 			for(int j=0; j<expenditureTypes.size(); j++)
 			{
+				//Log.d("DatabaseManager/areEqualCounters(", "Check-Point 03:i=" + i + "|j=" + j);
 				if(counters1.get(i).getAllExpenditures()[j] != counters2.get(i).getAllExpenditures()[j])
 				{
 					return false;

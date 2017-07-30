@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
@@ -349,8 +350,14 @@ public class StartupActivity extends FragmentActivity
 					//DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
 					DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 					DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-					DatabaseManager.setAllCounters(restoreManager.getAllCounters());
 					DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+					// Initially, in DatabaseAdapter, Counters Table is configured to have 5 Exp Types By Deafult
+					if(restoreManager.getNumExpTypes() != 5)
+					{
+						Log.d("ExtrasActivity/restoreData()","Readjusting Counters Table");
+						DatabaseManager.readjustCountersTable();
+					}
+					DatabaseManager.setAllCounters(restoreManager.getAllCounters());
 					DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
 					
 					// Store Default Preferences

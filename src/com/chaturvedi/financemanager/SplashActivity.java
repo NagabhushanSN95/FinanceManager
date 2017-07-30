@@ -378,21 +378,21 @@ public class SplashActivity extends Activity
 								Toast.LENGTH_SHORT).show();
 					}
 					
-					// Counters
-					if(!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
-							restoreManager.getAllCounters()))
-					{
-						DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-						Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
-								Toast.LENGTH_SHORT).show();
-					}
-					
 					// Expenditure Types
 					if(!DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
 							restoreManager.getAllExpTypes()))
 					{
 						DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
 						Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Recovered",
+								Toast.LENGTH_SHORT).show();
+					}
+					
+					// Counters
+					if(!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
+							restoreManager.getAllCounters()))
+					{
+						DatabaseManager.setAllCounters(restoreManager.getAllCounters());
+						Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
 					
