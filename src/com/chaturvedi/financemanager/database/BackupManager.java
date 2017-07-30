@@ -7,10 +7,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Environment;
 import android.widget.Toast;
 
+import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.Counters;
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -49,6 +51,7 @@ public class BackupManager
 		String expTypesFileName = "Expenditure Types";
 		String walletFileName = "Wallet";
 		String templatesFileName = "Templates";
+		String preferencesFileName = "Preferences";
 
 		File keyDataFile = new File(financeFolder, keyDataFileName+extension);
 		File transactionsFile = new File(financeFolder, transactionsFileName+extension);
@@ -57,6 +60,7 @@ public class BackupManager
 		File expTypesFile = new File(financeFolder, expTypesFileName+extension);
 		File walletFile = new File(financeFolder, walletFileName+extension);
 		File templatesFile = new File(financeFolder, templatesFileName+extension);
+		File preferencesFile = new File(financeFolder, preferencesFileName+extension);
 		
 		try
 		{
@@ -67,6 +71,7 @@ public class BackupManager
 			BufferedWriter expTypesWriter = new BufferedWriter(new FileWriter(expTypesFile));
 			BufferedWriter walletWriter = new BufferedWriter(new FileWriter(walletFile));
 			BufferedWriter templatesWriter = new BufferedWriter(new FileWriter(templatesFile));
+			BufferedWriter preferencesWriter = new BufferedWriter(new FileWriter(preferencesFile));
 			
 			// Store The KEY DATA
 			int versionNo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
@@ -159,6 +164,30 @@ public class BackupManager
 			}
 			templatesWriter.close();
 			
+			// Backup Preferences
+			final String ALL_PREFERENCES = "AllPreferences";
+			final String KEY_APP_VERSION = "AppVersionNo";
+			final int CURRENT_APP_VERSION_NO = 
+					Integer.parseInt(context.getResources().getString(R.string.currentAppVersion)); 
+			final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
+			final String KEY_SPLASH_DURATION = "SplashDuration";
+			final String KEY_QUOTE_NO = "QuoteNo";
+			final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
+			final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
+			final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
+			final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
+			
+			SharedPreferences preferences = context.getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+			preferencesWriter.write(preferences.getInt(KEY_APP_VERSION, CURRENT_APP_VERSION_NO) + "\n");
+			preferencesWriter.write(preferences.getBoolean(KEY_DATABASE_INITIALIZED, true) + "\n");
+			preferencesWriter.write(preferences.getInt(KEY_SPLASH_DURATION, 5000) + "\n");
+			preferencesWriter.write(preferences.getInt(KEY_QUOTE_NO, 0) + "\n");
+			preferencesWriter.write(preferences.getString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month") + "\n");
+			preferencesWriter.write(preferences.getString(KEY_CURRENCY_SYMBOL, " ") + "\n");
+			preferencesWriter.write(preferences.getBoolean(KEY_RESPOND_BANK_SMS, true) + "\n");
+			preferencesWriter.write(preferences.getBoolean(KEY_BANK_SMS_ARRIVED, false) + "\n");
+			preferencesWriter.close();
+			
 			Toast.makeText(context, "Data Has Been Backed-Up Succesfully", Toast.LENGTH_LONG).show();
 		}
 		catch(IOException e)
@@ -169,5 +198,6 @@ public class BackupManager
 		{
 			Toast.makeText(context, "Error in retrieving Version No\n" + e.getMessage(), Toast.LENGTH_LONG).show();
 		}
+		
 	}
 }

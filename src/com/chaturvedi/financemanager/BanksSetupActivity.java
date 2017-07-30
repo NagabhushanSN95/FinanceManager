@@ -73,7 +73,6 @@ public class BanksSetupActivity extends Activity
 	private AutoCompleteTextView bankSmsNameField;
 
 	private double walletBalance;
-	private int numBanks=0;
 	private ArrayList<Bank> banks;
 	
 	private Intent expendituresSetupIntent;
@@ -247,7 +246,7 @@ public class BanksSetupActivity extends Activity
 		
 		DecimalFormat formatter = new DecimalFormat("#,##0.##");
 		
-		for(int i=0; i<numBanks; i++)
+		for(int i=0; i<banks.size(); i++)
 		{
 			LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
 			LinearLayout layout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_bank, null);
@@ -354,7 +353,6 @@ public class BanksSetupActivity extends Activity
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					numBanks++;
 					Bank bank = new Bank(bankName, bankAccNo, bankBalance, bankSmsName);
 					banks.add(bank);
 					
@@ -426,7 +424,6 @@ public class BanksSetupActivity extends Activity
 		if(dataEntered)
 		{
 			DatabaseManager.initialize(walletBalance);
-			DatabaseManager.setNumBanks(numBanks);
 			DatabaseManager.setAllBanks(banks);
 			
 			// Start The Next Activity And Finish This Activity
@@ -439,7 +436,6 @@ public class BanksSetupActivity extends Activity
 	{
 		// Remove Bank Details
 		banks.remove(bankNo);
-		numBanks--;
 	}
 	
 	private void editBank(final int bankNo)

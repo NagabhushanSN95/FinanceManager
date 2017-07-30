@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import com.chaturvedi.financemanager.R;
+
 import android.content.Context;
 import android.os.Environment;
 import android.widget.Toast;
@@ -15,12 +17,12 @@ public class RestoreManager
 {
 	private Context context;
 	//Backup Data introduced in v3.0.0(56)
-	private final int APP_VERSION_NO_56 = 56;
+	private int APP_VERSION_NO_56;
 	//While Backing Up in v3.0.0(56), Wallet Balance was not Backed-Up. v3.0.2(58) onwards, Wallet Balance 
 	//Will Also Be Saved
-	private final int APP_VERSION_NO_58 = 58;
-	//In Version 71, backup and restore for Templates was enables
-	private final int APP_VERSION_NO_71 = 71;
+	private int APP_VERSION_NO_58;
+	//In Version 77, backup and restore for Templates was enables
+	private int APP_VERSION_NO_77;
 	
 	private File backupFolder;
 	private String extension;
@@ -42,6 +44,9 @@ public class RestoreManager
 	public RestoreManager(Context cxt)
 	{
 		context = cxt;
+		APP_VERSION_NO_56 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_56));
+		APP_VERSION_NO_58 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_58));
+		APP_VERSION_NO_77 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_77));
 	}
 	
 	/**
@@ -90,7 +95,7 @@ public class RestoreManager
 				walletBalance = 0;						// Since Wallet Balance was not backed up in that version
 				templates = new ArrayList<Template>();	// Same explanation as above
 			}
-			else if(appVersionNo < APP_VERSION_NO_71)
+			else if(appVersionNo < APP_VERSION_NO_77)
 			{
 				readKeyData();
 				readTransactions();

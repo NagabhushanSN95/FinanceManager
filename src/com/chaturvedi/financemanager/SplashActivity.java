@@ -35,7 +35,7 @@ public class SplashActivity extends Activity
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
-	private static final int APP_VERSION_NO_76 = 76;
+	private static int APP_VERSION_NO_77;
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
@@ -115,10 +115,11 @@ public class SplashActivity extends Activity
 			}
 		}
 		
+		APP_VERSION_NO_77 = Integer.parseInt(getResources().getString(R.string.currentAppVersion));
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if(canProceed && (previousVersionNo != currentVersionNo))
 		{
-			if(previousVersionNo < APP_VERSION_NO_76)
+			if(previousVersionNo < APP_VERSION_NO_77)
 			{
 				new Update68To76(SplashActivity.this);
 			}

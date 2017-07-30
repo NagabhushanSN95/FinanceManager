@@ -38,7 +38,8 @@ public class AboutActivity extends Activity
 		devotionView.setText("Devoted To Lord KRISHNA, My Parents, Teachers, Relatives, Friends And All Those Who Helped Me Reach This Position");
 		
 		TextView nagabhushanView = (TextView)findViewById(R.id.textView_nagabhushan);
-		SpannableString nagabhushanString = new SpannableString("NAGABHUSHAN S N, currently doing B.E. In PESIT, Bengaluru, India.");
+		SpannableString nagabhushanString = new SpannableString("NAGABHUSHAN S N, currently doing B.E. In PESIT, Bengaluru, India.\n\n" + 
+																	"Special Thanks To Aaditya Ravindran for designing the Finance Manager Logo.\n");
 		nagabhushanString.setSpan(new RelativeSizeSpan(1.5f), 0, 15, 0);
 		nagabhushanString.setSpan(new ForegroundColorSpan(Color.parseColor("#FF00FF")), 0, 15, 0);
 		nagabhushanString.setSpan(new StyleSpan(2), 0, 15, 0);

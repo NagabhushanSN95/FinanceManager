@@ -419,6 +419,7 @@ public class SummaryActivity extends Activity
 	}
 	
 	// Copied from Transactions Activity
+	// Add setData after buildLayout below
 	
 	private void doTransactionsActivityOperations()
 	{
@@ -585,6 +586,7 @@ public class SummaryActivity extends Activity
 					walletCreditDialog.show();
 				}
 				buildBodyLayout();
+				setData();
 			}
 		});
 		walletCreditDialog.setNegativeButton("Cancel", null);
@@ -671,6 +673,7 @@ public class SummaryActivity extends Activity
 					walletDebitDialog.show();
 				}
 				buildBodyLayout();
+				setData();
 			}
 		});
 		walletDebitDialog.setNegativeButton("Cancel", null);
@@ -833,6 +836,7 @@ public class SummaryActivity extends Activity
 					bankCreditDialog.show();
 				}
 				buildBodyLayout();
+				setData();
 			}
 		});
 		bankCreditDialog.setNegativeButton("Cancel", null);
@@ -989,6 +993,7 @@ public class SummaryActivity extends Activity
 				}
 				
 				buildBodyLayout();
+				setData();
 			}
 		});
 		bankDebitDialog.setNegativeButton("Cancel", null);

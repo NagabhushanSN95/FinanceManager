@@ -10,9 +10,9 @@ public class DatabaseManager
 	private static Context context;
 	private static DatabaseAdapter databaseAdapter;
 	
-	private static int numBanks;
+	/*private static int numBanks;
 	private static int numTransactions;
-	private static int numCountersRows;
+	private static int numCountersRows;*/
 	
 	private static double walletBalance;
 	private static ArrayList<Bank> banks;
@@ -45,7 +45,7 @@ public class DatabaseManager
 		{
 			setWalletBalance(databaseAdapter.getWalletBalance());
 
-			setNumBanks(databaseAdapter.getNumBanks());
+			int numBanks = databaseAdapter.getNumBanks();
 			if(numBanks>0)
 			{
 				banks = databaseAdapter.getAllBanks();
@@ -55,7 +55,7 @@ public class DatabaseManager
 				banks = new ArrayList<Bank>();
 			}
 
-			setNumTransactions(databaseAdapter.getNumTransactions());
+			int numTransactions = databaseAdapter.getNumTransactions();
 			if(numTransactions>0)
 			{
 				transactions = databaseAdapter.getAllTransactions();
@@ -72,7 +72,7 @@ public class DatabaseManager
 				expenditureTypes.add(expType.getExpenditureTypeName());
 			}
 
-			DatabaseManager.numCountersRows = databaseAdapter.getNumCountersRows();
+			int numCountersRows = databaseAdapter.getNumCountersRows();
 			if(numCountersRows>0)
 			{
 				counters = databaseAdapter.getAllCountersRows();
@@ -100,19 +100,14 @@ public class DatabaseManager
 	
 	public static void initialize(double walletBalance)
 	{
-		numTransactions = 0;
 		transactions = new ArrayList<Transaction>();
-		
 		DatabaseManager.walletBalance = walletBalance;
 		databaseAdapter.initializeWalletTable(walletBalance);
-		
-		numCountersRows = 0;
 		counters = new ArrayList<Counters>();
-		
 		templates = new ArrayList<Template>(); 
 	}
 	
-	public static void saveDatabase()
+	/*public static void saveDatabase()
 	{
 		if(numTransactions>0)
 		{
@@ -166,15 +161,12 @@ public class DatabaseManager
 		
 		// Check this and remove
 		databaseAdapter.close();
-	}
+	}*/
 	
 	public static void clearDatabase()
 	{
-		numTransactions=0;
 		transactions = new ArrayList<Transaction>();
 		databaseAdapter.deleteAllTransactions();
-		
-		numCountersRows = 0;
 		counters = new ArrayList<Counters>();
 		databaseAdapter.deleteAllCountersRows();
 	}
@@ -185,7 +177,7 @@ public class DatabaseManager
 		
 		if(transaction.getType().contains("Wallet Credit"))
 		{
-			DatabaseManager.increamentNumTransations();
+			//DatabaseManager.increamentNumTransations();
 			DatabaseManager.increamentWalletBalance(transaction.getAmount());
 			DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmount());
 		}
@@ -193,7 +185,7 @@ public class DatabaseManager
 		{
 			int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
 			
-			DatabaseManager.increamentNumTransations();
+			//DatabaseManager.increamentNumTransations();
 			DatabaseManager.decreamentWalletBalance(transaction.getAmount());
 			DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmount());
 			DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmount());
@@ -212,7 +204,7 @@ public class DatabaseManager
 			}
 			
 			DatabaseManager.increamentBankBalance(bankNo, transaction.getAmount());
-			DatabaseManager.increamentNumTransations();
+			//DatabaseManager.increamentNumTransations();
 			
 			// Save the new Bank Balance in Database
 			Bank bank = banks.get(bankNo);
@@ -234,7 +226,7 @@ public class DatabaseManager
 			}
 			
 			DatabaseManager.decreamentBankBalance(bankNo, transaction.getAmount());
-			DatabaseManager.increamentNumTransations();
+			//DatabaseManager.increamentNumTransations();
 			
 			// Save the new Bank Balance in Database
 			Bank bank = banks.get(bankNo);
@@ -247,7 +239,6 @@ public class DatabaseManager
 
 	public static void setAllTransactions(ArrayList<Transaction> transactions)
 	{
-		DatabaseManager.numTransactions = transactions.size();
 		DatabaseManager.transactions = transactions;
 		databaseAdapter.deleteAllTransactions();
 		databaseAdapter.addAllTransactions(transactions);
@@ -437,7 +428,7 @@ public class DatabaseManager
 			databaseAdapter.updateBank(bank);
 		}
 		
-		DatabaseManager.decreamentNumTransactions();
+		//DatabaseManager.decreamentNumTransactions();
 		DatabaseManager.transactions.remove(transactionNo);
 		//transaction.setID(transactionNo + 1);
 		databaseAdapter.deleteTransaction(transaction);
@@ -465,7 +456,7 @@ public class DatabaseManager
 	
 	public static void addBank(Bank bank)
 	{
-		DatabaseManager.increamentNumBanks();
+		//DatabaseManager.increamentNumBanks();
 		banks.add(bank);
 		databaseAdapter.addBank(bank);
 	}
@@ -478,14 +469,13 @@ public class DatabaseManager
 	
 	public static void deleteBank(int bankNum)
 	{
-		DatabaseManager.decreamentNumBanks();
+		//DatabaseManager.decreamentNumBanks();
 		banks.remove(bankNum);
 		databaseAdapter.deleteBank(banks.get(bankNum));
 	}
 
 	public static void setAllCounters(ArrayList<Counters> counters)
 	{
-		DatabaseManager.numCountersRows = counters.size();
 		DatabaseManager.counters = counters;
 		databaseAdapter.deleteAllCountersRows();
 		databaseAdapter.addAllCountersRows(counters);
@@ -498,6 +488,7 @@ public class DatabaseManager
 	
 	public static void increamentCounters(Date date, int expTypeNo, double amount)
 	{
+		int numCountersRows = counters.size();
 		double[] exp = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		exp[expTypeNo] = amount;
 		if(numCountersRows == 0)
@@ -568,6 +559,7 @@ public class DatabaseManager
 	
 	public static void decreamentCounters(Date date, int expTypeNo, double amount)
 	{
+		int numCountersRows = counters.size();
 		double[] exp = new double[9];
 		exp[expTypeNo] = amount;
 		
@@ -600,6 +592,7 @@ public class DatabaseManager
 	
 	public static double[] getMonthlyCounters(long month)
 	{
+		int numCountersRows = counters.size();
 		double[] monthlyCounters = new double[9];
 		boolean found = false;
 		for(int i=0; i<numCountersRows; i++)
@@ -646,6 +639,7 @@ public class DatabaseManager
 	
 	public static double[] getTotalCounters()
 	{
+		int numCountersRows = counters.size();
 		double[] totalCounters = new double[9];
 		for(int i=0; i<numCountersRows; i++)
 		{
@@ -674,7 +668,7 @@ public class DatabaseManager
 		ArrayList<String> months = new ArrayList<String>();		//January - 2015, February - 2015
 		
 		// Gets All the months(In which transactions were made) in the format 201501, 201502, 201503,....
-		for(int i=0; i<numTransactions; i++)
+		for(int i=0; i<transactions.size(); i++)
 		{
 			long longMonth = (long) transactions.get(i).getDate().getLongDate()/100;	//201501
 			if(!longMonths.contains(longMonth))
@@ -804,23 +798,23 @@ public class DatabaseManager
 		return templates;
 	}
 
-	/**
+	/* *
 	 * @param numBanks the numBanks to set
-	 */
+	 * /
 	public static void setNumBanks(int numBanks)
 	{
 		DatabaseManager.numBanks = numBanks;
-	}
+	}*/
 
 	/**
 	 * @return the numBanks
 	 */
 	public static int getNumBanks()
 	{
-		return numBanks;
+		return banks.size();
 	}
 	
-	public static void increamentNumBanks()
+	/*public static void increamentNumBanks()
 	{
 		numBanks++;
 	}
@@ -832,21 +826,21 @@ public class DatabaseManager
 
 	/**
 	 * @param numTransactions the numTransactions to set
-	 */
+	 * /
 	public static void setNumTransactions(int numTransactions)
 	{
 		DatabaseManager.numTransactions = numTransactions;
-	}
+	}*/
 
 	/**
 	 * @return the numTransactions
 	 */
 	public static int getNumTransactions()
 	{
-		return numTransactions;
+		return transactions.size();
 	}
 	
-	public static void increamentNumTransations()
+	/*public static void increamentNumTransations()
 	{
 		numTransactions++;
 	}
@@ -859,14 +853,14 @@ public class DatabaseManager
 	public static void setNumCountersRows(int numRows)
 	{
 		DatabaseManager.numCountersRows = numRows;
-	}
+	}*/
 	
 	public static int getNumCountersRows()
 	{
-		return DatabaseManager.numCountersRows;
+		return counters.size();
 	}
 	
-	public static void increamentNumCountersRows()
+	/*public static void increamentNumCountersRows()
 	{
 		DatabaseManager.numCountersRows++;
 	}
@@ -874,7 +868,7 @@ public class DatabaseManager
 	public static void decreamentNumCountersRows()
 	{
 		DatabaseManager.numCountersRows--;
-	}
+	}*/
 
 	/**
 	 * @param walletBalance the walletBalance to set
@@ -1023,7 +1017,6 @@ public class DatabaseManager
 	
 	public static void setAllBanks(ArrayList<Bank> banks)
 	{
-		DatabaseManager.numBanks = banks.size();
 		DatabaseManager.banks = banks;
 		databaseAdapter.deleteAllBanks();
 		databaseAdapter.addAllBanks(banks);
@@ -1084,7 +1077,6 @@ public class DatabaseManager
 		// Go on comparing every fields. Whenever you find a difference, return false;
 		if(transactions1.size() != transactions2.size())
 		{
-			Toast.makeText(context, "Check-Point 01", Toast.LENGTH_SHORT).show();
 			return false;
 		}
 		

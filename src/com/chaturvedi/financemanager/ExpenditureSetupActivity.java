@@ -28,7 +28,7 @@ public class ExpenditureSetupActivity extends Activity
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
-	private final int CURRENT_APP_VERSION_NO = 76;
+	private int CURRENT_APP_VERSION_NO;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
@@ -67,6 +67,9 @@ public class ExpenditureSetupActivity extends Activity
 			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
 			actionBar.setVisibility(View.GONE);
 		}
+		
+		// Get the current AppVersionNo from String Resource
+		CURRENT_APP_VERSION_NO = Integer.parseInt(getResources().getString(R.string.currentAppVersion));
 		
 		DisplayMetrics displayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);

@@ -45,8 +45,11 @@
     <string name="particulars">Particulars</string>
     <string name="quantity">Quantity</string>
     <string name="rate">Rate</string>
-    <string name="restore">Restore Data</string>
+    <string name="restore">Restore</string>
+    <string name="restoreData">Restore Data</string>
     <string name="save">Save</string>
+    <string name="setup">Set Up</string>
+    <string name="skip">Skip</string>
     <string name="slno">Sl No</string>
     <string name="title_amountSpent">Amount Spent</string>
     <string name="title_details">Details</string>
@@ -55,6 +58,7 @@
     <string name="wallet_credit">Income</string>
     <string name="wallet_debit">Expenditure</string>
     <string name="wallet_view">Amount In Wallet</string>
+    <string name="welcomeNote">Welcome. Let\'s Begin</string>
     <color name="background">#E2ECFF</color>
     <color name="background_top">#E2ECFF</color>
     <color name="background_middle">#E2ECFF</color>

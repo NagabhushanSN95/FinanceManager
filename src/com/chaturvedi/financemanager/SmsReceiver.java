@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.TaskStackBuilder;
 import android.telephony.SmsMessage;
 import android.widget.Toast;
 
@@ -113,7 +112,7 @@ public class SmsReceiver extends BroadcastReceiver
 	
 	private void readSBIMessage()
 	{
-		if(message.toLowerCase().contains("debit"))
+		if(message.toLowerCase().contains("to draw rs"))
 		{
 			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs")+2;
@@ -121,11 +120,20 @@ public class SmsReceiver extends BroadcastReceiver
 			summaryActivityIntent.putExtra("Amount", amount);
 			context.startActivity(summaryActivityIntent);
 		}
-		else if(message.toLowerCase().contains("withdraw"))
+		else if(message.toLowerCase().contains("withdrawing"))
 		{
 			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs")+2;
 			int endIndex = message.indexOf("from", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
+		}
+		else if(message.toLowerCase().contains("withdrawn"))
+		{
+			summaryActivityIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("Rs")+2;
+			int endIndex = message.indexOf("withdrawn", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
 			summaryActivityIntent.putExtra("Amount", amount);
 			context.startActivity(summaryActivityIntent);
@@ -146,7 +154,16 @@ public class SmsReceiver extends BroadcastReceiver
 	
 	private void readSyndicateBankMessage()
 	{
-		if(message.toLowerCase().contains("debit"))
+		if(message.toLowerCase().contains("debited to A/C No".toLowerCase()))
+		{
+			summaryActivityIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("INR")+4;
+			int endIndex = message.indexOf("debited", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
+		}
+		else if(message.toLowerCase().contains("debited to your account"))
 		{
 			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("INR")+4;

@@ -9,6 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import com.chaturvedi.financemanager.R;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -20,7 +22,7 @@ import android.widget.Toast;
 public class Update68To76 extends SQLiteOpenHelper		// To create Templates Table
 {
 	private Context context;
-	private final int CURRENT_APP_VERSION_NO = 76;
+	private int CURRENT_APP_VERSION_NO;
 
 	private static final int DATABASE_VERSION = 1;
 	private static final String DATABASE_NAME = "expenditureManager";
@@ -28,6 +30,7 @@ public class Update68To76 extends SQLiteOpenHelper		// To create Templates Table
 	{
 		super(cxt, DATABASE_NAME, null, DATABASE_VERSION);
 		context = cxt;
+		CURRENT_APP_VERSION_NO = Integer.parseInt(context.getResources().getString(R.string.currentAppVersion));
 		
 		Toast.makeText(context, "Updating The App", Toast.LENGTH_LONG).show();
 		updateDatabase();
