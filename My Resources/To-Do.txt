@@ -6,10 +6,8 @@ Add aaditya's name in About Developer Page
 While displaying autoComplete options, display only related ones. Don't show income options during wallet debit
 while displaying autoComplete options for banks, remove banks header
 Edit Template
-Backup Templates
-Backup IDs
 Display Indian Flag and App icon in Splash Activity
-In settings activity, chanhe showSplash to minTime, 5s, 10s, etc
+In settings activity, change showSplash to minTime, 5s, 10s, etc
 In settings, give an option for automatic backup and restore
 Release App
 

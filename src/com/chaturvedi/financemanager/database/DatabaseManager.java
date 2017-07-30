@@ -247,6 +247,7 @@ public class DatabaseManager
 
 	public static void setAllTransactions(ArrayList<Transaction> transactions)
 	{
+		DatabaseManager.numTransactions = transactions.size();
 		DatabaseManager.transactions = transactions;
 		databaseAdapter.deleteAllTransactions();
 		databaseAdapter.addAllTransactions(transactions);
@@ -484,6 +485,7 @@ public class DatabaseManager
 
 	public static void setAllCounters(ArrayList<Counters> counters)
 	{
+		DatabaseManager.numCountersRows = counters.size();
 		DatabaseManager.counters = counters;
 		databaseAdapter.deleteAllCountersRows();
 		databaseAdapter.addAllCountersRows(counters);
@@ -1021,6 +1023,7 @@ public class DatabaseManager
 	
 	public static void setAllBanks(ArrayList<Bank> banks)
 	{
+		DatabaseManager.numBanks = banks.size();
 		DatabaseManager.banks = banks;
 		databaseAdapter.deleteAllBanks();
 		databaseAdapter.addAllBanks(banks);
@@ -1048,7 +1051,7 @@ public class DatabaseManager
 	
 	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
 	{
-		expenditureTypes=expTypes1;
+		DatabaseManager.expenditureTypes=expTypes1;
 		
 		ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
 		for(int i=0; i<expenditureTypes.size(); i++)

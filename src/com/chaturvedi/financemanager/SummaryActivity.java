@@ -1,4 +1,3 @@
-// Shree KRISHNAya Namaha
 // Author: Nagabhushan S N
 
 package com.chaturvedi.financemanager;
@@ -17,8 +16,8 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
-import android.os.Build.VERSION;
 import android.os.Build;
+import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
@@ -26,14 +25,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
@@ -48,6 +47,7 @@ import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.Template;
 import com.chaturvedi.financemanager.database.Time;
 import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.updates.Update68To75;
 
 public class SummaryActivity extends Activity
 {
@@ -156,6 +156,7 @@ public class SummaryActivity extends Activity
 		// So, update classes can be run
 		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
 		SharedPreferences.Editor versionEditor = versionPreferences.edit();
+		new Update68To75(this);								// Remove This
 		if(versionPreferences.contains(KEY_VERSION))
 		{
 			int versionNo = versionPreferences.getInt(KEY_VERSION, 0);

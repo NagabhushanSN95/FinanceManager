@@ -317,16 +317,27 @@ public class SplashActivity extends Activity
 				RestoreManager restoreManager = new RestoreManager(SplashActivity.this);
 				int restoreResult = restoreManager.readBackups("Finance Manager/Auto Backup");
 				// If read backups, proceed
-				if(restoreResult == 1)
+				if(restoreResult == 0)
 				{
 					//If found any error, restore
+					
+					// Wallet Balance
+					if(DatabaseManager.getWalletBalance() != restoreManager.getWalletBalance())
+					{
+						DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
+					}
+					// Transactions
 					if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
 							restoreManager.getAllTransactions()))
 					{
+						Toast.makeText(getApplicationContext(), "Database: " + DatabaseManager.getAllTransactions().size() + "SD Card: " + restoreManager.getAllTransactions().size(),
+								Toast.LENGTH_LONG).show();
 						DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 						Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
+					
+					// Banks
 					if(!DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(), 
 							restoreManager.getAllBanks()))
 					{
@@ -334,6 +345,8 @@ public class SplashActivity extends Activity
 						Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Recovered", 
 								Toast.LENGTH_SHORT).show();
 					}
+					
+					// Counters
 					if(!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
 							restoreManager.getAllCounters()))
 					{
@@ -341,6 +354,8 @@ public class SplashActivity extends Activity
 						Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
+					
+					// Expenditure Types
 					if(!DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
 							restoreManager.getAllExpTypes()))
 					{
@@ -348,6 +363,8 @@ public class SplashActivity extends Activity
 						Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
+					
+					// Templates
 					if(!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(), 
 							restoreManager.getAllTemplates()))
 					{
@@ -355,6 +372,11 @@ public class SplashActivity extends Activity
 						Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
 								Toast.LENGTH_SHORT).show();
 					}
+				}
+				else
+				{
+					Toast.makeText(getApplicationContext(), "Error In Automatic Restore\n" + 
+							"Error Code: " + restoreResult, Toast.LENGTH_LONG).show();
 				}
 			}
 			if(!showSplash)

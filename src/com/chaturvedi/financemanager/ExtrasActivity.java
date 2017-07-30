@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.BackupManager;
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -197,7 +198,33 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				new RestoreManager(ExtrasActivity.this).restore();
+				RestoreManager restoreManager = new RestoreManager(ExtrasActivity.this);
+				int result = restoreManager.readBackups("Finance Manager/Backups");
+				if(result == 0)
+				{
+					DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
+					DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
+					DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+					DatabaseManager.setAllCounters(restoreManager.getAllCounters());
+					DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+					DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+				}
+				else if(result == 1)
+				{
+					Toast.makeText(getApplicationContext(), "No Backups Were Found.\n" + 
+							"Make sure the Backup Files are located in\n" + "Chaturvedi/Finance Manager Folder", 
+							Toast.LENGTH_LONG).show();
+				}
+				else if(result == 2)
+				{
+					Toast.makeText(getApplicationContext(), "Old Data. Cannot be Restored. Sorry!", 
+							Toast.LENGTH_LONG).show();
+				}
+				else if(result == 3)
+				{
+					Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block",
+							Toast.LENGTH_LONG).show();
+				}
 			}
 		});
 		restoreDialog.setNegativeButton("Cancel", null);
