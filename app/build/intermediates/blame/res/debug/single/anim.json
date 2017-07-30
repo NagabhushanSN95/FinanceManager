@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\anim\\new_activity_enter.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\anim\\new_activity_enter.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\anim\\dialog_slide_up.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\anim\\dialog_slide_up.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\anim\\new_activity_leave.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\anim\\new_activity_leave.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\anim\\old_activity_enter.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\anim\\old_activity_enter.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\anim\\old_activity_leave.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\anim\\old_activity_leave.xml"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\anim\\dialog_slide_down.xml",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\anim\\dialog_slide_down.xml"
+    }
+]

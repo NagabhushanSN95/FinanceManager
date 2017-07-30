@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
+        jumboMode="true"
+        revision="23.0.2"
+        sha1="25662387cffa9f5aae49d5bd14462fb1820b5a59">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe.jar" />
+    </item>
+
+</items>

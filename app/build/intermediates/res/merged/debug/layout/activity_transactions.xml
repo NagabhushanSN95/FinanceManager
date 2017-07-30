@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_activity_details" >
+
+    <TextView
+        android:id="@+id/krishna"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/krishna" />
+    
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_below="@+id/krishna"
+        android:background="#000000" />
+
+    <ScrollView
+        android:id="@+id/scrollView_transactions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/krishna"
+        android:layout_above="@+id/button_layout" >
+
+        <LinearLayout
+            android:id="@+id/scroll_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+            
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="#000000" />
+            
+            <LinearLayout
+                android:id="@+id/layout_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFF4400"
+                android:orientation="horizontal" >
+                
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:background="#000000" />
+                
+                <TextView
+                    android:id="@+id/slno"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/slno"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp" />
+                
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="#000000" />
+                
+                <TextView
+                    android:id="@+id/date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/date"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp" />
+                
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="#000000" />
+                
+                <TextView
+                    android:id="@+id/particulars"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/particulars"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp" />
+                
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="#000000" />
+                
+                <TextView
+                    android:id="@+id/amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/amount"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp" />
+                
+                <View
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:background="#000000"
+                    android:layout_gravity="right" />
+            </LinearLayout>
+            
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="#000000" />
+            
+            <LinearLayout
+                android:id="@+id/layout_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+                
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/button_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#CCCCCC" >
+
+        <ImageButton
+            android:id="@+id/button_wallet_credit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/wallet_credit"
+            android:background="#00000000"
+            android:text="@string/wallet_credit" />
+
+        <ImageButton
+            android:id="@+id/button_wallet_debit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/wallet_debit"
+            android:background="#00000000"
+            android:text="@string/wallet_debit" />
+
+        <ImageButton
+            android:id="@+id/button_bank_credit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/bank_credit"
+            android:background="#00000000"
+            android:text="@string/bank_credit" />
+
+        <ImageButton
+            android:id="@+id/button_bank_debit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/bank_debit"
+            android:background="#00000000"
+            android:text="@string/bank_debit" />
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,46 @@
+[
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\bank_names.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\bank_names.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\facts.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\facts.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\cricket.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\cricket.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\bank_sms_names.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\bank_sms_names.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\currency_symbols.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\currency_symbols.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\guide.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\guide.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\disclaimer.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\disclaimer.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\tips.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\tips.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\faq.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\faq.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\movies.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\movies.txt"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\raw\\quotes.txt",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\raw\\quotes.txt"
+    }
+]

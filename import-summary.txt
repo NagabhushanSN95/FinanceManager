@@ -1,0 +1,139 @@
+ECLIPSE ANDROID PROJECT IMPORT SUMMARY
+======================================
+
+Ignored Files:
+--------------
+The following files were *not* copied into the new Gradle project; you
+should evaluate whether these are still needed in your project and if
+so manually move them:
+
+* Google Play Resources\
+* Google Play Resources\Other Graphic Assets\
+* Google Play Resources\Other Graphic Assets\Other Graphic Assets.pptx
+* Google Play Resources\Other Graphic Assets\app_icon 512x512.png
+* Google Play Resources\Other Graphic Assets\feature_graphic 1024x500 02.png
+* Google Play Resources\Other Graphic Assets\feature_graphic 1024x500.png
+* Google Play Resources\Other Graphic Assets\high_res_icon 512x512.png
+* Google Play Resources\Screenshots\
+* Google Play Resources\Screenshots\Mobile\
+* Google Play Resources\Screenshots\Mobile\Hwawei Honor 4x\
+* Google Play Resources\Screenshots\Mobile\Hwawei Honor 4x\Screenshot_2015-11-11-18-31-35.jpeg
+* Google Play Resources\Screenshots\Mobile\Hwawei Honor 4x\Screenshot_2015-11-11-18-32-09.jpeg
+* Google Play Resources\Screenshots\Mobile\Hwawei Honor 4x\Screenshot_2015-11-11-18-32-34.jpeg
+* Google Play Resources\Screenshots\Mobile\Hwawei Honor 4x\Screenshot_2015-11-11-18-32-48.jpeg
+* Google Play Resources\Screenshots\Mobile\Hwawei Honor 4x\Screenshot_2015-11-11-18-36-46.jpeg
+* Google Play Resources\Screenshots\Mobile\Moto E\
+* Google Play Resources\Screenshots\Mobile\Moto E\Screenshot 01 (56).png
+* Google Play Resources\Screenshots\Mobile\Moto E\Screenshot 02 (56).png
+* Google Play Resources\Screenshots\Mobile\Moto E\Screenshot 03 (56).png
+* Google Play Resources\Screenshots\Mobile\Moto E\Screenshot 04 (56).png
+* Google Play Resources\Screenshots\Mobile\Moto E\Screenshot_2015-10-17-06-54-08.png
+* Google Play Resources\description.txt
+* My Resources\
+* My Resources\Code\
+* My Resources\Code\Adding Custom Suggestions  Android Developers.pdf
+* My Resources\Code\AlarmManager  Android Developers.pdf
+* My Resources\Code\Android SQLite Database Tutorial.pdf
+* My Resources\Code\Android SQLite Database with Multiple Tables Example.pdf
+* My Resources\Code\Android Spanned, SpannedString, Spannable, SpannableString and CharSequence - Stack Overflow.pdf
+* My Resources\Code\AutoCompleteTextView  Android Developers.pdf
+* My Resources\Code\Can I underline text in an android layout - Stack Overflow.pdf
+* My Resources\Code\ParcelableSpan  Android Developers (1).pdf
+* My Resources\Code\ParcelableSpan  Android Developers.pdf
+* My Resources\Code\Scheduling Repeating Alarms  Android Developers.pdf
+* My Resources\Code\Spannable  Android Developers.pdf
+* My Resources\Code\SpannableString  Android Developers.pdf
+* My Resources\Code\SpannableStringBuilder  Android Developers.pdf
+* My Resources\Code\Text Fields  Android Developers.pdf
+* My Resources\Code\To draw an Underline below the TextView in Android - Stack Overflow.pdf
+* My Resources\Code\Using spannable strings in android - Nocturnal Development Blog.pdf
+* My Resources\Photos\
+* My Resources\Photos\Aaditya\
+* My Resources\Photos\Aaditya\Finance Manager-1.psd
+* My Resources\Photos\Aaditya\Finance Manager-2.psd
+* My Resources\Photos\Aaditya\Finance Manager-3.psd
+* My Resources\Photos\app_icon 01.png
+* My Resources\Photos\app_icon 02.png
+* My Resources\Photos\app_icon 03.png
+* My Resources\Photos\bank 02.png
+* My Resources\Photos\bank_credit 01.png
+* My Resources\Photos\bank_credit 02.png
+* My Resources\Photos\bank_debit 01.png
+* My Resources\Photos\bank_debit 02.png
+* My Resources\Photos\info 01.png
+* My Resources\Photos\info 02.png
+* My Resources\Photos\info 03.png
+* My Resources\Photos\info 04.png
+* My Resources\Photos\info 05.png
+* My Resources\Photos\info 06.png
+* My Resources\Photos\nagabhushan 01.jpg
+* My Resources\Photos\photos.pptx
+* My Resources\Photos\remove_symbol 01.png
+* My Resources\Photos\remove_symbol_pressed 01.png
+* My Resources\Photos\wallet 01.png
+* My Resources\Photos\wallet 02.png
+* My Resources\Photos\wallet_credit 01.png
+* My Resources\Photos\wallet_credit 02.png
+* My Resources\Photos\wallet_debit 01.png
+* My Resources\Photos\wallet_debit 02.png
+* My Resources\Text Resources\
+* My Resources\Text Resources\Bank SMS Formats.txt
+* My Resources\Text Resources\Splash Activity Quotes\
+* My Resources\Text Resources\Splash Activity Quotes\Cricket 01.txt
+* My Resources\Text Resources\Splash Activity Quotes\Facts 01.txt
+* My Resources\Text Resources\Splash Activity Quotes\Movies 01.txt
+* My Resources\Text Resources\Splash Activity Quotes\Quotes 01.txt
+* My Resources\Text Resources\Splash Activity Quotes\Quotes 02 (hike).txt
+* My Resources\Text Resources\Splash Activity Quotes\Quotes 03 (hike discarded).txt
+* My Resources\Text Resources\Splash Activity Quotes\Tips 01.txt
+* My Resources\Text Resources\Splash Activity Quotes\cricket.txt
+* My Resources\Text Resources\Splash Activity Quotes\facts.txt
+* My Resources\Text Resources\Splash Activity Quotes\movies.txt
+* My Resources\Text Resources\Splash Activity Quotes\quotes.txt
+* My Resources\Text Resources\Splash Activity Quotes\tips.txt
+* My Resources\Text Resources\bank_names.txt
+* My Resources\Text Resources\bank_sms_names.txt
+* My Resources\Text Resources\currency_symbols.txt
+* My Resources\Text Resources\disclaimer.txt
+* My Resources\Text Resources\faq.txt
+* My Resources\Text Resources\help.txt
+* My Resources\To-Do.txt
+* proguard-project.txt
+
+Replaced Jars with Dependencies:
+--------------------------------
+The importer recognized the following .jar files as third party
+libraries and replaced them with Gradle dependencies instead. This has
+the advantage that more explicit version information is known, and the
+libraries can be updated automatically. However, it is possible that
+the .jar file in your project was of an older version than the
+dependency we picked, which could render the project not compileable.
+You can disable the jar replacement in the import wizard and try again:
+
+android-support-v4.jar => com.android.support:support-v4:19.1.0
+
+Moved Files:
+------------
+Android Gradle projects use a different directory structure than ADT
+Eclipse projects. Here's how the projects were restructured:
+
+* AndroidManifest.xml => app\src\main\AndroidManifest.xml
+* assets\ => app\src\main\assets
+* lint.xml => app\lint.xml
+* res\ => app\src\main\res\
+* src\ => app\src\main\java\
+
+Next Steps:
+-----------
+You can now build the project. The Gradle project needs network
+connectivity to download dependencies.
+
+Bugs:
+-----
+If for some reason your project does not build, and you determine that
+it is due to a bug or limitation of the Eclipse to Gradle importer,
+please file a bug at http://b.android.com with category
+Component-Tools.
+
+(This import summary is for your information only, and can be deleted
+after import once you are satisfied with the results.)
