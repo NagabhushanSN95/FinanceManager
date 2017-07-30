@@ -9,9 +9,11 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
@@ -43,6 +45,8 @@ public class MainActivity extends Activity
 	private static TextView balanceBank02View;
 	private static TextView balanceBank03View;
 	
+	private Intent detailsIntent;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -51,6 +55,8 @@ public class MainActivity extends Activity
 		setContentView(R.layout.activity_main);
 		readData();
 		setData();
+		
+		detailsIntent=new Intent(this, DetailsActivity.class);
 	}
 
 	@Override
@@ -61,12 +67,25 @@ public class MainActivity extends Activity
 		return true;
 	}
 	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case R.id.action_details:
+				startActivity(detailsIntent);
+				return true;
+				
+				
+		}
+		return true;
+	}
+	
 	private void readData()
 	{
 		String line;
 		try
 		{
-			expenditureFolderName="Expenditure List";
+			expenditureFolderName="Expenditure List/.temp";
 			walletFileName="wallet_info.txt";
 			bankFileName="bank_info.txt";
 			
