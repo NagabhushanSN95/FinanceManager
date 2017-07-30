@@ -49,5 +49,7 @@
     <color name="background_top">#E2ECFF</color>
     <color name="background_middle">#E2ECFF</color>
     <color name="background_bottom">#E2ECFF</color>
+    <color name="button_extras_default">#E2ECFF</color>
+    <color name="button_extras_pressed">#CCCCCC</color>
 
 </resources>

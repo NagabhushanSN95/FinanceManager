@@ -12,12 +12,6 @@ public class Transaction
 	private double quantity;
 	private double amount;
 	
-	// Empty constructor
-	public Transaction()
-	{
-		
-	}
-	
 	// Constructor
 	public Transaction(int id, Time createdTime, Time modifiedTime, Date date, String type, String particular, double rate, double quantity, double amount)
 	{

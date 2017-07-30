@@ -14,6 +14,8 @@ public final class R {
         public static final int background_bottom=0x7f070002;
         public static final int background_middle=0x7f070001;
         public static final int background_top=0x7f070000;
+        public static final int button_extras_default=0x7f070003;
+        public static final int button_extras_pressed=0x7f070004;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -202,10 +204,11 @@ public final class R {
     public static final class raw {
         public static final int bank_names=0x7f040000;
         public static final int bank_sms_names=0x7f040001;
-        public static final int currency_symbols=0x7f040002;
-        public static final int disclaimer=0x7f040003;
-        public static final int help=0x7f040004;
-        public static final int quotes=0x7f040005;
+        public static final int cricket=0x7f040002;
+        public static final int currency_symbols=0x7f040003;
+        public static final int disclaimer=0x7f040004;
+        public static final int help=0x7f040005;
+        public static final int quotes=0x7f040006;
     }
     public static final class string {
         public static final int aboutUs=0x7f060003;

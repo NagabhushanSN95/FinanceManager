@@ -749,7 +749,7 @@ public class DetailsActivity extends Activity
 			public void onClick(DialogInterface dialog, int which)
 			{
 				DatabaseManager.deleteTransaction(transactions.get(contextMenuTransactionNo));
-				transactions = DatabaseManager.getAllTransactions();
+				//transactions = DatabaseManager.getAllTransactions();
 				buildBodyLayout();
 			}
 		});
@@ -774,7 +774,7 @@ public class DetailsActivity extends Activity
 				@Override
 				public void onClick(DialogInterface dialog, int which)
 				{
-					String id = "" + transactionNo;
+					String id = "" + oldTransaction.getID();
 					Time time = new Time(Calendar.getInstance());
 					String date = dateField.getText().toString();
 					String type = "Wallet Credit";
@@ -818,7 +818,7 @@ public class DetailsActivity extends Activity
 				@Override
 				public void onClick(DialogInterface dialog, int which)
 				{
-					String id = "" + transactionNo;
+					String id = "" + oldTransaction.getID();
 					Time time = new Time(Calendar.getInstance());
 					String date = dateField.getText().toString();
 					DecimalFormat formatter = new DecimalFormat("00");
@@ -893,7 +893,7 @@ public class DetailsActivity extends Activity
 					}
 					
 					// Validate Data
-					String id = "" + transactionNo;
+					String id = "" + oldTransaction.getID();
 					Time time = new Time(Calendar.getInstance());
 					String date = dateField.getText().toString();
 					DecimalFormat formatter = new DecimalFormat("00");
@@ -999,7 +999,7 @@ public class DetailsActivity extends Activity
 							newBankNo=i;
 					}
 					
-					String id = "" + transactionNo;
+					String id = "" + oldTransaction.getID();
 					Time time = new Time(Calendar.getInstance());
 					String date = dateField.getText().toString();
 					DecimalFormat formatter = new DecimalFormat("00");

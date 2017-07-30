@@ -136,6 +136,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		SQLiteDatabase db = this.getWritableDatabase();
 		
 		ContentValues values = new ContentValues();
+		values.put(KEY_ID, transaction.getID());
 		values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
 		values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
 		values.put(KEY_DATE, transaction.getDate().getSavableDate());

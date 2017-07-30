@@ -1,0 +1,106 @@
+<html>
+<body><h1>February-2015</h1>
+<table border="1" style="width:600px"><tr>
+	<td>Sl No</td>	<td>Date</td>	<td>Type</td>	<td>Particulars</td>	<td>Rate</td>	<td>Quantity</td>	<td>Amount</td></tr>
+<tr>
+	<td>1</td>	<td>1/2/2015</td>	<td>Others </td>	<td>Hair Cutting </td>	<td>50.0</td>	<td>1.0</td>	<td>50.0</td></tr>
+<tr>
+	<td>2</td>	<td>1/2/2015</td>	<td>Food </td>	<td>Bhel</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>3</td>	<td>1/2/2015</td>	<td>Studies </td>	<td>Cello Tape </td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>4</td>	<td>1/2/2015</td>	<td>Income</td>	<td>Sold Soap Nut Powder To Ganesh</td>	<td>2.0</td>	<td>1.0</td>	<td>2.0</td></tr>
+<tr>
+	<td>5</td>	<td>3/2/2015</td>	<td>Food </td>	<td>Chulbule </td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>6</td>	<td>3/2/2015</td>	<td>Income</td>	<td>Sold DSDV Lab Manual Xerox To Aaditya, Lakshmi Tejas, Karan Patel, Kishan</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>7</td>	<td>4/2/2015</td>	<td>Others </td>	<td>Medimix Soap </td>	<td>33.0</td>	<td>1.0</td>	<td>33.0</td></tr>
+<tr>
+	<td>8</td>	<td>4/2/2015</td>	<td>Others </td>	<td>Rin Soap </td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>9</td>	<td>4/2/2015</td>	<td>Others </td>	<td>Parachute Coconut Oil </td>	<td>31.0</td>	<td>1.0</td>	<td>31.0</td></tr>
+<tr>
+	<td>10</td>	<td>4/2/2015</td>	<td>Others </td>	<td>Karthika Soap Nut Powder </td>	<td>1.5</td>	<td>15.0</td>	<td>15.0</td></tr>
+<tr>
+	<td>11</td>	<td>4/2/2015</td>	<td>Food </td>	<td>Salt Lassi </td>	<td>6.0</td>	<td>1.0</td>	<td>6.0</td></tr>
+<tr>
+	<td>12</td>	<td>3/2/2015</td>	<td>Travels </td>	<td>Train Ticket SBC-BAY (454/2) And BAY-SBC (232)  </td>	<td>460.0</td>	<td>1.0</td>	<td>460.0</td></tr>
+<tr>
+	<td>13</td>	<td>8/2/2015</td>	<td>Food </td>	<td>Lassi </td>	<td>7.0</td>	<td>1.0</td>	<td>7.0</td></tr>
+<tr>
+	<td>14</td>	<td>8/2/2015</td>	<td>Travels </td>	<td>Hosakere Halli Petrol Bunk To Shreenivasa Nagar Bus </td>	<td>14.0</td>	<td>1.0</td>	<td>14.0</td></tr>
+<tr>
+	<td>15</td>	<td>8/2/2015</td>	<td>Others </td>	<td>Vidyapeetha </td>	<td>13.0</td>	<td>1.0</td>	<td>13.0</td></tr>
+<tr>
+	<td>16</td>	<td>8/2/2015</td>	<td>Others </td>	<td>Gopichandana </td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>17</td>	<td>8/2/2015</td>	<td>Travels </td>	<td>Shreenivasa Nagar To Vidyanagar Bus </td>	<td>12.0</td>	<td>1.0</td>	<td>12.0</td></tr>
+<tr>
+	<td>18</td>	<td>8/2/2015</td>	<td>Food </td>	<td>Bhel </td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>19</td>	<td>10/2/2015</td>	<td>Mobile </td>	<td>Docomo Half Rate Pack </td>	<td>38.0</td>	<td>1.0</td>	<td>38.0</td></tr>
+<tr>
+	<td>20</td>	<td>10/2/2015</td>	<td>Studies </td>	<td>Docomo Sms Pack </td>	<td>6.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>21</td>	<td>10/2/2015</td>	<td>Mobile </td>	<td>Aircel Unlimited Internet For 1 Week</td>	<td>37.0</td>	<td>1.0</td>	<td>37.0</td></tr>
+<tr>
+	<td>22</td>	<td>14/2/2015</td>	<td>Food </td>	<td>Lassi </td>	<td>7.0</td>	<td>1.0</td>	<td>7.0</td></tr>
+<tr>
+	<td>23</td>	<td>14/2/2015</td>	<td>Others </td>	<td>Close Up Tooth Paste </td>	<td>43.0</td>	<td>1.0</td>	<td>43.0</td></tr>
+<tr>
+	<td>24</td>	<td>14/2/2015</td>	<td>Mobile </td>	<td>DVD </td>	<td>16.0</td>	<td>1.0</td>	<td>16.0</td></tr>
+<tr>
+	<td>25</td>	<td>15/2/2015</td>	<td>Food </td>	<td>Tender Coconut Water </td>	<td>25.0</td>	<td>1.0</td>	<td>25.0</td></tr>
+<tr>
+	<td>26</td>	<td>15/2/2015</td>	<td>Food </td>	<td>Salt Lassi </td>	<td>6.0</td>	<td>1.0</td>	<td>6.0</td></tr>
+<tr>
+	<td>27</td>	<td>15/2/2015</td>	<td>Food </td>	<td>Sweet Lassi </td>	<td>7.0</td>	<td>1.0</td>	<td>7.0</td></tr>
+<tr>
+	<td>28</td>	<td>15/2/2015</td>	<td>Others </td>	<td>Match Box</td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>29</td>	<td>16/2/2015</td>	<td>Others </td>	<td>Donation </td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>30</td>	<td>18/2/2015</td>	<td>Studies </td>	<td>CE 2 Lab Manual </td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>31</td>	<td>18/2/2015</td>	<td>Others </td>	<td>Donation </td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>32</td>	<td>17/2/2015</td>	<td>Others </td>	<td>Shiva Temple </td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>33</td>	<td>10/2/2015</td>	<td>Studies </td>	<td>CCN Print Out </td>	<td>6.0</td>	<td>1.0</td>	<td>6.0</td></tr>
+<tr>
+	<td>34</td>	<td>19/2/2015</td>	<td>Food </td>	<td>Chulbule </td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>35</td>	<td>21/2/2015</td>	<td>Studies </td>	<td>DSDV Lab Manual Part 2 Xerox </td>	<td>14.0</td>	<td>1.0</td>	<td>14.0</td></tr>
+<tr>
+	<td>36</td>	<td>20/2/2015</td>	<td>Studies </td>	<td>CCN Print Out </td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>37</td>	<td>20/2/2015</td>	<td>Studies </td>	<td>DSDV Print Out </td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>38</td>	<td>23/2/2015</td>	<td>Income</td>	<td>E Yantra Arena Print </td>	<td>580.0</td>	<td>0.25</td>	<td>145.0</td></tr>
+<tr>
+	<td>39</td>	<td>26/2/2015</td>	<td>Mobile </td>	<td>Docomo Currency + Internet Pack </td>	<td>499.0</td>	<td>1.0</td>	<td>500.0</td></tr>
+<tr>
+	<td>40</td>	<td>25/2/2015</td>	<td>Food </td>	<td>Bhel</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>41</td>	<td>27/2/2015</td>	<td></td>	<td>Union Bank Of India Withdrawal: To Wallet: </td>	<td>2000.0</td>	<td>1.0</td>	<td>2000.0</td></tr>
+<tr>
+	<td>42</td>	<td>28/2/2015</td>	<td>Travels </td>	<td>Bus Pass</td>	<td>70.0</td>	<td>1.0</td>	<td>70.0</td></tr>
+<tr>
+	<td>43</td>	<td>28/2/2015</td>	<td>Food </td>	<td>Masala Dosa At IISC </td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>44</td>	<td>28/2/2015</td>	<td>Food </td>	<td>Ice Cream At IISC </td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>45</td>	<td>28/2/2015</td>	<td>Food </td>	<td>Sweet Lassi </td>	<td>7.0</td>	<td>1.0</td>	<td>7.0</td></tr>
+</table><table border="1" style="width:600px"><tr>
+	<td>Total Income In This Month</td>	<td>Rs 42.0</td></tr>
+<tr>
+	<td>Total Amount Spent In This Month</td>	<td>Rs 1811.0</td></tr>
+<tr>
+	<td>Amount In wallet</td>	<td>Rs 2510.0</td></tr>
+<tr>
+	<td>Amount In Union Bank Of India</td>	<td>Rs 6205.0</td></tr>
+<tr>
+	<td>Amount In State Bank Of India</td>	<td>Rs 11090.0</td></tr>
+</table></html>
+</body>

@@ -21,6 +21,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:orientation="vertical"
+        android:background="@drawable/button_extras"
         android:clickable="true" >
         
         <TextView
@@ -47,6 +48,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:orientation="vertical"
+        android:background="@drawable/button_extras"
         android:clickable="true" >
         
         <TextView
@@ -73,6 +75,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:orientation="vertical"
+        android:background="@drawable/button_extras"
         android:clickable="true" >
         
         <TextView
@@ -99,6 +102,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:orientation="vertical"
+        android:background="@drawable/button_extras"
         android:clickable="true" >
         
         <TextView
@@ -125,6 +129,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:orientation="vertical"
+        android:background="@drawable/button_extras"
         android:clickable="true" >
         
         <TextView

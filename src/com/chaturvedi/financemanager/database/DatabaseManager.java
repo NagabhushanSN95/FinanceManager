@@ -159,7 +159,6 @@ public class DatabaseManager
 	public static void addTransaction(Transaction transaction)
 	{
 		DatabaseManager.transactions.add(transaction);
-		databaseAdapter.addTransaction(transaction);
 		
 		if(transaction.getType().contains("Wallet Credit"))
 		{
@@ -210,6 +209,9 @@ public class DatabaseManager
 			DatabaseManager.decreamentBankBalance(bankNo, transaction.getAmount());
 			DatabaseManager.increamentNumTransations();
 		}
+		
+		transaction.setID(transactions.size()+1);
+		databaseAdapter.addTransaction(transaction);
 	}
 
 	public static void setAllTransactions(ArrayList<Transaction> transactions)
@@ -219,8 +221,8 @@ public class DatabaseManager
 	
 	/**
 	 * Edits an existing transaction
-	 * @param transactionNo Number of the transaction
-	 * @param data New data for the transaction
+	 * @param oldTransaction Transaction Object for Old Transaction
+	 * @param newTransaction Transaction Object for Edited Transaction
 	 */
 	public static void editTransaction(Transaction oldTransaction, Transaction newTransaction)
 	{
@@ -246,12 +248,14 @@ public class DatabaseManager
 			int oldExpTypeNo = Integer.parseInt(oldType.substring(16,18));
 			int newExpTypeNo = Integer.parseInt(newType.substring(16,18));
 			
-			double netAmount = newAmount - oldAmount;
 			DatabaseManager.decreamentCounters(oldDate, oldExpTypeNo, oldAmount);
 			DatabaseManager.increamentCounters(newDate, newExpTypeNo, newAmount);
 			DatabaseManager.decreamentAmountSpent(oldDate, oldAmount);
 			DatabaseManager.increamentAmountSpent(newDate, newAmount);
-			DatabaseManager.decreamentWalletBalance(netAmount);
+			//double netAmount = newAmount - oldAmount;
+			//DatabaseManager.increamentWalletBalance(netAmount);
+			DatabaseManager.increamentWalletBalance(oldAmount);
+			DatabaseManager.decreamentWalletBalance(newAmount);
 		}
 		else if(newTransaction.getType().contains("Bank Credit"))
 		{
@@ -322,7 +326,7 @@ public class DatabaseManager
 				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
 			}
 		}
-		newTransaction.setID(transactionNo+1);
+		//newTransaction.setID(oldTransaction.getID());
 		newTransaction.setCreatedTime(transactions.get(transactionNo).getCreatedTime());
 		transactions.set(transactionNo, newTransaction);
 		databaseAdapter.updateTransaction(newTransaction);
@@ -381,7 +385,7 @@ public class DatabaseManager
 		
 		DatabaseManager.decreamentNumTransactions();
 		DatabaseManager.transactions.remove(transactionNo);
-		transaction.setID(transactionNo + 1);
+		//transaction.setID(transactionNo + 1);
 		databaseAdapter.deleteTransaction(transaction);
 	}
 	
