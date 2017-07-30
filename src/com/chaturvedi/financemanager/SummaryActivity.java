@@ -130,6 +130,27 @@ public class SummaryActivity extends Activity
 		helpIntent = new Intent(this, HelpActivity.class);
 		extrasIntent = new Intent(this, ExtrasActivity.class);
 	}
+	
+	@Override
+	public void onResume()
+	{
+		super.onResume();
+		try
+		{
+			if(DatabaseManager.getNumTransactions()==0)
+			{
+				DatabaseManager.setContext(SummaryActivity.this);
+				DatabaseManager.readDatabase();
+				Toast.makeText(getApplicationContext(), "Data Recovered And Restored In If Block", Toast.LENGTH_SHORT).show();
+			}
+		}
+		catch(Exception e)
+		{
+			new DatabaseManager(SummaryActivity.this);
+			DatabaseManager.readDatabase();
+			Toast.makeText(getApplicationContext(), "Data Recovered And Restored In Catch Block", Toast.LENGTH_SHORT).show();
+		}
+	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)

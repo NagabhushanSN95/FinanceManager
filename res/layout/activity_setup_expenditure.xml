@@ -72,35 +72,40 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="text" />
+                android:inputType="textCapWords"
+                android:hint="@string/hint_exp01" />"
         
             <EditText
                 android:id="@+id/expenditure_type2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="text" />
+                android:inputType="textCapWords"
+                android:hint="@string/hint_exp02" />
             
             <EditText
                 android:id="@+id/expenditure_type3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="text" />
+                android:inputType="textCapWords"
+                android:hint="@string/hint_exp03" />
             
             <EditText
                 android:id="@+id/expenditure_type4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="text" />
+                android:inputType="textCapWords"
+                android:hint="@string/hint_exp04" />
         
             <EditText
                 android:id="@+id/expenditure_type5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="text" />
+                android:inputType="textCapWords"
+                android:hint="@string/hint_exp05" />
        	</LinearLayout>
     </ScrollView>
 </RelativeLayout>

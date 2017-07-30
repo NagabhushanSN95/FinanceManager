@@ -16,6 +16,7 @@ import com.chaturvedi.financemanager.database.DatabaseManager;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
@@ -50,6 +51,7 @@ public class SplashActivity extends Activity
 	private int NUM_QUOTES = 0;
 	private int NUM_FACTS = 0;
 	private int NUM_CRICKET_QUOTES = 0;
+	private int NUM_MOVIE_QUOTES = 0;
 	
 	private Intent nextActivityIntent;
 	
@@ -156,6 +158,8 @@ public class SplashActivity extends Activity
 		BufferedReader factsReader = new BufferedReader(new InputStreamReader(factsStream));
 		InputStream cricketStream = getResources().openRawResource(R.raw.cricket);
 		BufferedReader cricketReader = new BufferedReader(new InputStreamReader(cricketStream));
+		InputStream moviesStream = getResources().openRawResource(R.raw.movies);
+		BufferedReader moviesReader = new BufferedReader(new InputStreamReader(moviesStream));
 		Random randomNumber=new Random();
 		try
 		{
@@ -194,15 +198,30 @@ public class SplashActivity extends Activity
 				NUM_CRICKET_QUOTES++;
 				line=cricketReader.readLine();
 			}
+			
+			// Read the lines in "movies" Raw File
+			line=moviesReader.readLine();
+			while(line!=null)
+			{
+				quotes.add(line);
+				NUM_MOVIE_QUOTES++;
+				line=moviesReader.readLine();
+			}
 		}
 		catch(Exception e)
 		{
 			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 		
+		// If Debug Version, Don't display Tips
+		if(0 != (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		{
+			quotesNumReads += NUM_TIPS;
+		}	
+				
 		int NUM_TOTAL_QUOTES = NUM_QUOTES + NUM_FACTS + NUM_CRICKET_QUOTES;
 		// Select A Random Quote depending on Number Of Quote Reads
-		if(quotesNumReads<=17)
+		if(quotesNumReads<=NUM_TIPS)
 		{
 			// Very less reads. So, display only Tips in order
 			quoteText=quotes.get(quotesNumReads);

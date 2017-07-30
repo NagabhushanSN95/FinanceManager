@@ -182,9 +182,9 @@ public final class R {
         public static final int dialog_wallet_debit=0x7f030011;
         public static final int layout_add_bank=0x7f030012;
         public static final int layout_display_bank=0x7f030013;
-        public static final int layout_display_details=0x7f030014;
-        public static final int layout_display_statistics=0x7f030015;
-        public static final int layout_display_summary=0x7f030016;
+        public static final int layout_display_statistics=0x7f030014;
+        public static final int layout_display_summary=0x7f030015;
+        public static final int layout_display_transactions=0x7f030016;
         public static final int layout_title_statistics=0x7f030017;
     }
     public static final class menu {
@@ -201,8 +201,9 @@ public final class R {
         public static final int disclaimer=0x7f040004;
         public static final int facts=0x7f040005;
         public static final int help=0x7f040006;
-        public static final int quotes=0x7f040007;
-        public static final int tips=0x7f040008;
+        public static final int movies=0x7f040007;
+        public static final int quotes=0x7f040008;
+        public static final int tips=0x7f040009;
     }
     public static final class string {
         public static final int aboutUs=0x7f060003;
@@ -230,25 +231,30 @@ public final class R {
         public static final int hint_bankBalance=0x7f060019;
         public static final int hint_bankName=0x7f06001a;
         public static final int hint_bankSmsName=0x7f06001b;
+        public static final int hint_exp01=0x7f06001d;
+        public static final int hint_exp02=0x7f06001e;
+        public static final int hint_exp03=0x7f06001f;
+        public static final int hint_exp04=0x7f060020;
+        public static final int hint_exp05=0x7f060021;
         public static final int hint_export_fileName=0x7f06001c;
-        public static final int instruction_expenditure_types=0x7f06001d;
-        public static final int instruction_export=0x7f06001e;
+        public static final int instruction_expenditure_types=0x7f060022;
+        public static final int instruction_export=0x7f060023;
         public static final int krishna=0x7f060001;
         public static final int krishnarpanamastu=0x7f060002;
-        public static final int next=0x7f06001f;
-        public static final int particulars=0x7f060020;
-        public static final int quantity=0x7f060021;
-        public static final int rate=0x7f060022;
-        public static final int restore=0x7f060023;
-        public static final int save=0x7f060024;
-        public static final int slno=0x7f060025;
-        public static final int title_amountSpent=0x7f060026;
-        public static final int title_details=0x7f060027;
-        public static final int title_expenditureType=0x7f060028;
+        public static final int next=0x7f060024;
+        public static final int particulars=0x7f060025;
+        public static final int quantity=0x7f060026;
+        public static final int rate=0x7f060027;
+        public static final int restore=0x7f060028;
+        public static final int save=0x7f060029;
+        public static final int slno=0x7f06002a;
+        public static final int title_amountSpent=0x7f06002b;
+        public static final int title_details=0x7f06002c;
+        public static final int title_expenditureType=0x7f06002d;
         public static final int transactionsDisplayInterval=0x7f060016;
-        public static final int wallet_credit=0x7f060029;
-        public static final int wallet_debit=0x7f06002a;
-        public static final int wallet_view=0x7f06002b;
+        public static final int wallet_credit=0x7f06002e;
+        public static final int wallet_debit=0x7f06002f;
+        public static final int wallet_view=0x7f060030;
     }
     public static final class style {
         /** 

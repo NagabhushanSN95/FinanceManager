@@ -135,11 +135,8 @@ public class ExpenditureSetupActivity extends Activity
 				public void onClick(View v)
 				{
 					saveToDatabase();
-					if(dataEntered)
-					{
-						startActivity(summaryIntent);
-						finish();
-					}
+					startActivity(summaryIntent);
+					finish();
 				}
 			});
 		}
@@ -147,53 +144,54 @@ public class ExpenditureSetupActivity extends Activity
 
 	private void saveToDatabase()
 	{
-		dataEntered=true;
+		/*String[] hints = new String[5];
+		hints[0] = R.string.hint_exp01;
+		hints[1] = R.string.hint_exp02;
+		hints[2] = R.string.hint_exp03;
+		hints[3] = R.string.hint_exp04;
+		hints[4] = R.string.hint_exp05;*/
+		String[] hints = {"Studies", "Food", "Travels", "Entertainment", "Others"};
 		
 		expenditureTypes = new ArrayList<String>();
 		for(int i=0; i<NUM_EXPENDITURE_TYPES; i++)
 		{
 			String type = typeTextFields.get(i).getText().toString();
-			if(dataEntered && type.length()!=0)
+			if(type.length()!=0)
 			{
 				expenditureTypes.add(type);
 			}
-			else if(dataEntered)
+			else
 			{
-				Toast.makeText(getApplicationContext(), "Enter Something For Expenditure Type "+(i+1), 
-						Toast.LENGTH_LONG).show();
-				dataEntered=false;
+				expenditureTypes.add(hints[i]);
 			}
 		}
 		
-		if(dataEntered)
-		{
-			DatabaseManager.setAllExpenditureTypes(expenditureTypes);
-			
-			SharedPreferences settingsPreferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
-			SharedPreferences.Editor settingsEditor = settingsPreferences.edit();
-			settingsEditor.putBoolean(KEY_ENABLE_SPLASH, true);
-			settingsEditor.putBoolean(KEY_BANK_SMS, true);
-			settingsEditor.commit();
-			
+		DatabaseManager.setAllExpenditureTypes(expenditureTypes);
+		
+		SharedPreferences settingsPreferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		SharedPreferences.Editor settingsEditor = settingsPreferences.edit();
+		settingsEditor.putBoolean(KEY_ENABLE_SPLASH, true);
+		settingsEditor.putBoolean(KEY_BANK_SMS, true);
+		settingsEditor.commit();
+		
 
-			SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
-			SharedPreferences.Editor versionEditor = versionPreferences.edit();
-			try
-			{
-				VERSION_NO = this.getPackageManager().getPackageInfo(this.getLocalClassName(), 0).versionCode;
-			}
-			catch (NameNotFoundException e)
-			{
-				Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
-						"ExpenditureSetupActivity\\saveToDatabase\n" + e.getMessage(), Toast.LENGTH_LONG).show();
-			}
-			versionEditor.putInt(KEY_VERSION, VERSION_NO);
-			versionEditor.commit();
-			
-			SharedPreferences databasePreferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
-			SharedPreferences.Editor databaseEditor = databasePreferences.edit();
-			databaseEditor.putBoolean(KEY_DATABASE_INITIALIZED, true);
-			databaseEditor.commit();
+		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
+		SharedPreferences.Editor versionEditor = versionPreferences.edit();
+		try
+		{
+			VERSION_NO = this.getPackageManager().getPackageInfo(this.getLocalClassName(), 0).versionCode;
 		}
+		catch (NameNotFoundException e)
+		{
+			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
+					"ExpenditureSetupActivity\\saveToDatabase\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		versionEditor.putInt(KEY_VERSION, VERSION_NO);
+		versionEditor.commit();
+		
+		SharedPreferences databasePreferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
+		SharedPreferences.Editor databaseEditor = databasePreferences.edit();
+		databaseEditor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+		databaseEditor.commit();
 	}
 }

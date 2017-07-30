@@ -127,6 +127,27 @@ public class TransactionsActivity extends Activity
 			performSMSTransaction();
 		}
 	}
+	
+	@Override
+	public void onResume()
+	{
+		super.onResume();
+		try
+		{
+			if(DatabaseManager.getNumTransactions()==0)
+			{
+				DatabaseManager.setContext(TransactionsActivity.this);
+				DatabaseManager.readDatabase();
+				Toast.makeText(getApplicationContext(), "Data Recovered And Restored In If Block", Toast.LENGTH_SHORT).show();
+			}
+		}
+		catch(Exception e)
+		{
+			new DatabaseManager(TransactionsActivity.this);
+			DatabaseManager.readDatabase();
+			Toast.makeText(getApplicationContext(), "Data Recovered And Restored In Catch Block", Toast.LENGTH_SHORT).show();
+		}
+	}
 
 	/*@Override
 	public boolean onCreateOptionsMenu(Menu menu)
@@ -272,7 +293,7 @@ public class TransactionsActivity extends Activity
 			for(int i=0; i<transactions.size(); i++)
 			{
 				LayoutInflater layoutInflater = LayoutInflater.from(this);
-				LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_details, null);
+				LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
 
 				TextView slnoView = (TextView)linearLayout.findViewById(R.id.slno);
 				LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.TaskStackBuilder;
 import android.telephony.SmsMessage;
 import android.widget.Toast;
 
@@ -56,6 +57,10 @@ public class SmsReceiver extends BroadcastReceiver
 						transactionsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 						transactionsIntent.putExtra("Bank Sms", true);
 						transactionsIntent.putExtra("Bank Number", i);
+						// Add ActivityStack As DetailsActivity
+						TaskStackBuilder stackBuilder=TaskStackBuilder.create(context);
+						stackBuilder.addParentStack(SummaryActivity.class);
+						stackBuilder.addNextIntent(transactionsIntent);
 						
 						if(sender.toUpperCase().contains("SBI"))
 							readSBIMessage();

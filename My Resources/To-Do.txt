@@ -1,0 +1,20 @@
+Read from database onResume if data is lost (numTransactions==0).
+Done: Need to be verified
+Add activity stack to TransactionsActivity for Sms reading
+Done: Need to be verified
+Settings Activity - Make it neat
+Add 4 buttons (in TransactionsActivity) in SummaryActivity itself
+Help: Guide/Demo/FAQs/Mail
+In Displaying Banks, display bank name and balance only
+Release App
+
+Add predictions (Templates, AutoCompleteTextView) while adding transactions
+ViewPager for banks/expenditure setup/edit activities
+Start up Page: Initialize/ Restore/ Skip
+Animations
+Redesign SplashActivity and About Developer Page
+Release App
+
+Design Icons
+Graphs for statistics
+pdf and doc file export
