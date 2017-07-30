@@ -5,15 +5,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.ActivityOptions;
 import android.content.pm.ApplicationInfo;
-import android.os.Build.VERSION;
 import android.os.Build;
+import android.os.Build.VERSION;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,25 +22,35 @@ public class HelpActivity extends Activity
 	private ArrayList<TextView> textViews;
 	private ArrayList<String> helpTexts;
 	
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
+		setContentView(R.layout.activity_help);
+		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
 		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_help);
+			// Provide Up Button in Action Bar
+			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 		else
 		{
-			setContentView(R.layout.activity_help);
-			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
+			// No Up Button in Action Bar
 		}
 		findViews();
 		readHelpFile();
 		setHelpText();
-		
+	}
+	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(HelpActivity.this);
+				return true;
+		}
+		return true;
 	}
 	
 	private void findViews()

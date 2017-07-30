@@ -6,38 +6,11 @@
     android:background="@drawable/background_activity_summary"
     tools:context=".MainActivity" >
 
-    <RelativeLayout
-        android:id="@+id/action_bar"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:background="#444444" >
-
-        <ImageView
-            android:id="@+id/app_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="5dp"
-            android:src="@drawable/app_icon" />
-
-        <TextView
-            android:id="@+id/app_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@+id/app_icon"
-            android:text="@string/app_name"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp" />
-    </RelativeLayout>
-
     <TextView
         android:id="@+id/krishna"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/action_bar"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:text="@string/krishna" />
     

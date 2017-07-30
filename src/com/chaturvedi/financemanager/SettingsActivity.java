@@ -5,11 +5,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Build.VERSION;
+import android.support.v4.app.NavUtils;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
@@ -50,11 +55,22 @@ public class SettingsActivity extends Activity
 	private Spinner transactionsDisplayIntervalSpinner;
 	private int transactionsDisplayInterval = TRANSACTIONS_MONTHLY;
 	
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
+		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
+		{
+			// Provide Up Button in Action Bar
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+		else
+		{
+			// No Up Button in Action Bar
+		}
+		
 		readPreferences();
 		readCurrencySymbolsFile();
 		buildLayout();
@@ -66,6 +82,17 @@ public class SettingsActivity extends Activity
 	{
 		super.onPause();
 		savePreferences();
+	}
+	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(SettingsActivity.this);
+				return true;
+		}
+		return true;
 	}
 	
 	private void buildLayout()

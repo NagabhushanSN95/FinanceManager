@@ -17,14 +17,12 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Build;
-import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -35,7 +33,6 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -124,17 +121,7 @@ public class SummaryActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
-		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_summary);
-		}
-		else
-		{
-			setContentView(R.layout.activity_summary);
-			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
-		}
+		setContentView(R.layout.activity_summary);
 		
 		preferences = this.getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		calculateDimensions();

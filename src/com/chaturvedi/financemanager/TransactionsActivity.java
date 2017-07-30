@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -15,8 +16,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -24,7 +27,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -35,7 +37,6 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -106,20 +107,20 @@ public class TransactionsActivity extends Activity
 	private DecimalFormat formatterTextFields;
 	private Intent templatesIntent;
 	
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
+		setContentView(R.layout.activity_transactions);
+		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
 		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_transactions);
+			// Provide Up Button in Action Bar
+			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 		else
 		{
-			setContentView(R.layout.activity_transactions);
-			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
+			// No Up Button in Action Bar
 		}
 		
 		calculateDimensions();
@@ -159,6 +160,10 @@ public class TransactionsActivity extends Activity
 	{
 		switch(item.getItemId())
 		{
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(TransactionsActivity.this);
+				return true;
+				
 			case R.id.action_templates:
 				templatesIntent = new Intent(TransactionsActivity.this, TemplatesActivity.class);
 				startActivityForResult(templatesIntent, 0);

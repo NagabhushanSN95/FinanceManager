@@ -3,19 +3,21 @@ package com.chaturvedi.financemanager;
 import java.text.DecimalFormat;
 import java.util.Calendar;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -34,20 +36,20 @@ public class StatisticsActivity extends Activity
 	private int WIDTH_AMOUNTS;
 	private int MARGIN_LEFT_PARENT_LAYOUT;
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
+		setContentView(R.layout.activity_statistics);
+		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
 		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_statistics);
+			// Provide Up Button in Action Bar
+			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 		else
 		{
-			setContentView(R.layout.activity_statistics);
-			RelativeLayout actionBar = (RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
+			// No Up Button in Action Bar
 		}
 		
 		DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -59,6 +61,17 @@ public class StatisticsActivity extends Activity
 		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*10/100;
 		
 		buildLayout();
+	}
+	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(StatisticsActivity.this);
+				return true;
+		}
+		return true;
 	}
 	
 	private void buildLayout()

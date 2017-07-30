@@ -2,7 +2,6 @@ Crucial:
 While editing a bank transaction (Bank Credit), type is not getting saved properly. Check it out.
 If you edit a transaction from UBI to SBI, when app is closed and opened, the transaction will have reverted back to UBI. (Only typeNo, nothing else. Amount will not be transferred or name will not be changed)
 
-Change all preferences into one file. Delete others
 In Transactions activity, provide options to settings, statistics, extras, etc
 In TransactionsActivity, after returning from TemplatesActivity, Particulars title contains the particular of last transaction
 Do, restoring in seperate thread
@@ -10,7 +9,6 @@ Add aaditya's name in About Developer Page
 while displaying autoComplete options for banks, remove banks header
 Edit Template
 Display Indian Flag and App icon in Splash Activity
-In settings activity, change showSplash to minTime, 5s, 10s, etc
 In settings, give an option for automatic backup and restore
 Release App
 

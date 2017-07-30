@@ -1,37 +1,39 @@
 package com.chaturvedi.financemanager;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class AboutActivity extends Activity
 {
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
+		setContentView(R.layout.activity_about);
+		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
 		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_about);
+			// Provide Up Button in Action Bar
+			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 		else
 		{
-			setContentView(R.layout.activity_about);
-			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
+			// No Up Button in Action Bar
 		}
 		
 		TextView devotionView = (TextView)findViewById(R.id.devotion);
@@ -64,5 +66,16 @@ public class AboutActivity extends Activity
 				startActivity(Intent.createChooser(mailIntent, "Send Mail Using"));
 			}
 		});
+	}
+	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(AboutActivity.this);
+				return true;
+		}
+		return true;
 	}
 }

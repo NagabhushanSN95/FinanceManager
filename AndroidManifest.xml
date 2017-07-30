@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.chaturvedi.financemanager"
-    android:versionCode="78"
-    android:versionName="3.2.4" >
+    android:versionCode="79"
+    android:versionName="3.2.5" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -27,16 +27,68 @@
         <activity android:name="com.chaturvedi.financemanager.StartupActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.BanksSetupActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.ExpenditureSetupActivity"> </activity>
-        <activity android:name="com.chaturvedi.financemanager.SummaryActivity" android:label="@string/app_name" ></activity>
-        <activity android:name="com.chaturvedi.financemanager.TransactionsActivity"></activity>
-        <activity android:name="com.chaturvedi.financemanager.TemplatesActivity"></activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.SummaryActivity" 
+            android:label="@string/app_name" >
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.TransactionsActivity"
+            android:label="@string/label_transactions"
+            android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.TemplatesActivity"
+            android:label="@string/label_templates"
+            android:parentActivityName="com.chaturvedi.financemanager.TransactionsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
         <activity android:name="com.chaturvedi.financemanager.EditBanksActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.EditExpenditureTypesActivity"> </activity>
-        <activity android:name="com.chaturvedi.financemanager.StatisticsActivity"> </activity>
-        <activity android:name="com.chaturvedi.financemanager.SettingsActivity"></activity>
-        <activity android:name="com.chaturvedi.financemanager.HelpActivity"></activity>
-        <activity android:name="com.chaturvedi.financemanager.AboutActivity"></activity>
-        <activity android:name="com.chaturvedi.financemanager.ExtrasActivity"></activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.StatisticsActivity"
+            android:label="@string/label_statistics"
+            android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.SettingsActivity"
+            android:label="@string/label_settings"
+            android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.HelpActivity"
+            android:label="@string/label_help"
+            android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.AboutActivity"
+            android:label="@string/label_aboutDeveloper"
+            android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.ExtrasActivity"
+            android:label="@string/label_extras"
+            android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
         <receiver android:name="com.chaturvedi.financemanager.SmsReceiver" >
             <intent-filter android:priority="100" >
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />

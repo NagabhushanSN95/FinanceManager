@@ -3,17 +3,21 @@ package com.chaturvedi.financemanager;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
+import android.os.Build;
+import android.os.Build.VERSION;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
@@ -42,11 +46,21 @@ public class TemplatesActivity extends Activity
 	private ArrayList<String> templateStrings;
 	private int contextMenuTemplateNo;
 	
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_templates);
+		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
+		{
+			// Provide Up Button in Action Bar
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+		else
+		{
+			// No Up Button in Action Bar
+		}
 		
 		calculateDimensions();
 		readTemplates();
@@ -64,6 +78,17 @@ public class TemplatesActivity extends Activity
 			DatabaseManager.readDatabase();
 			buildBodyLayout();
 		}
+	}
+	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(TemplatesActivity.this);
+				return true;
+		}
+		return true;
 	}
 	
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
