@@ -11,9 +11,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Build.VERSION;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -23,16 +25,27 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class DetailsActivity extends Activity
 {
-	private final int MARGIN_TOP=100;
-	private final int MARGIN_LEFT=50;
-	private final int MARGIN_LEFT_SLNO=20;
-	private final int MARGIN_LEFT_PARTICULARS=160;
-	private final int MARGIN_LEFT_AMOUNT=350;
+	private DisplayMetrics displayMetrics;
+	private int screenWidth;
+	private int screenHeight;
+	private int MARGIN_TOP=100;
+	private int MARGIN_TOP_SCROLL_VIEW;
+	private int MARGIN_BOTTOM_SCROLL_VIEW;
+	private int MARGIN_LEFT_SLNO;
+	private int MARGIN_LEFT_PARTICULARS;
+	private int MARGIN_LEFT_AMOUNT;
+	private int MARGIN_RIGHT_AMOUNT;
+	private int MARGIN_TOP_ITEMS=20;
+	private int WIDTH_SLNO;
+	private int WIDTH_PARTICULARS;
+	private int WIDTH_AMOUNT;
+	
 
 	private int walletBalance;
 	private int amountSpent;
@@ -45,6 +58,7 @@ public class DetailsActivity extends Activity
 	
 	private RelativeLayout titleLayout;
 	private ArrayList<RelativeLayout> itemsLayout;
+	private ScrollView detailsScrollView;
 	private LinearLayout scrollLayout;
 	
 	private TextView slnoTitleView;
@@ -56,6 +70,7 @@ public class DetailsActivity extends Activity
 	private RelativeLayout.LayoutParams slnoTitleParams;
 	private RelativeLayout.LayoutParams particularsTitleParams;
 	private RelativeLayout.LayoutParams amountTitleParams;
+	private RelativeLayout.LayoutParams scrollViewParams;
 	private ArrayList<ArrayList<RelativeLayout.LayoutParams>> itemsLayoutParams;
 	
 	private String expenditureFolderName;
@@ -112,6 +127,32 @@ public class DetailsActivity extends Activity
 		}
 		detailsIntent=getIntent();
 		numEntries=detailsIntent.getIntExtra("Number Of Entries", 0);
+		
+		displayMetrics=new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		screenWidth=displayMetrics.widthPixels;
+		screenHeight=displayMetrics.heightPixels;
+		if(VERSION.SDK_INT<=10)
+		{
+			MARGIN_TOP=screenHeight*18/100;
+			MARGIN_TOP_SCROLL_VIEW=screenHeight*6/100;
+			MARGIN_BOTTOM_SCROLL_VIEW=screenHeight*15/100;
+		}
+		else
+		{
+			MARGIN_TOP=screenHeight*8/100;
+			MARGIN_TOP_SCROLL_VIEW=screenHeight*12/100;
+			MARGIN_BOTTOM_SCROLL_VIEW=screenHeight*12/100;
+		}
+		
+		MARGIN_LEFT_SLNO=5*screenWidth/100;
+		MARGIN_LEFT_PARTICULARS=20*screenWidth/100;
+		MARGIN_LEFT_AMOUNT=80*screenWidth/100;
+		MARGIN_RIGHT_AMOUNT=5*screenWidth/100;
+		WIDTH_SLNO=15*screenWidth/100;
+		WIDTH_PARTICULARS=60*screenWidth/100;
+		WIDTH_AMOUNT=20*screenWidth/100;
+		
 		readFile();
 		buildTitleLayout();
 		buildBodyLayout();
@@ -233,36 +274,38 @@ public class DetailsActivity extends Activity
 	{
 		titleLayout=new RelativeLayout(this);
 		titleLayoutParams=new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		titleLayoutParams.topMargin=200;
-		titleLayoutParams.leftMargin=200;
-		titleLayoutParams.setMargins(MARGIN_LEFT, MARGIN_TOP, MARGIN_LEFT, MARGIN_TOP);
 		titleLayout.setLayoutParams(titleLayoutParams);
 		
 		slnoTitleView=new TextView(this);
 		slnoTitleView.setText("Sl No");
-		slnoTitleParams=new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		slnoTitleParams.setMargins(MARGIN_LEFT_SLNO, MARGIN_TOP, 30, 30);
+		slnoTitleParams=new RelativeLayout.LayoutParams(WIDTH_SLNO, RelativeLayout.LayoutParams.WRAP_CONTENT);
+		slnoTitleParams.setMargins(MARGIN_LEFT_SLNO, MARGIN_TOP, 0, 0);
 		
 		particularsTitleView=new TextView(this);
 		particularsTitleView.setText("Particulars");
-		particularsTitleParams=new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		particularsTitleParams.setMargins(MARGIN_LEFT_PARTICULARS, MARGIN_TOP, 30, 30);
+		particularsTitleParams=new RelativeLayout.LayoutParams(WIDTH_PARTICULARS, RelativeLayout.LayoutParams.WRAP_CONTENT);
+		particularsTitleParams.setMargins(screenWidth*40/100, MARGIN_TOP, 0, 0);
 		
 		amountTitleView=new TextView(this);
 		amountTitleView.setText("Amount");
-		amountTitleParams=new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		amountTitleParams.setMargins(MARGIN_LEFT_AMOUNT, MARGIN_TOP, 30, 30);
+		amountTitleParams=new RelativeLayout.LayoutParams(WIDTH_AMOUNT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+		amountTitleParams.setMargins(screenWidth*80/100, MARGIN_TOP, 0, 0);
 		
 		titleLayout.addView(slnoTitleView, slnoTitleParams);
 		titleLayout.addView(particularsTitleView, particularsTitleParams);
 		titleLayout.addView(amountTitleView, amountTitleParams);
-		//this.addContentView(titleLayout, titleLayoutParams);
+		this.addContentView(titleLayout, titleLayoutParams);
 	}
 	
 	private void buildBodyLayout()
 	{
 		try
 		{
+			detailsScrollView=(ScrollView)findViewById(R.id.details_scroll);
+			scrollViewParams=(RelativeLayout.LayoutParams)detailsScrollView.getLayoutParams();
+			scrollViewParams.setMargins(0, MARGIN_TOP_SCROLL_VIEW, 0, MARGIN_BOTTOM_SCROLL_VIEW);
+			detailsScrollView.setLayoutParams(scrollViewParams);
+			
 			scrollLayout=(LinearLayout)findViewById(R.id.scroll_layout);
 			scrollLayout.removeAllViews();
 			
@@ -280,21 +323,15 @@ public class DetailsActivity extends Activity
 				itemsView.get(i).get(0).setText(""+(i+1));
 				itemsView.get(i).get(1).setText(particulars.get(i));
 				itemsView.get(i).get(2).setText(amounts.get(i)+"");
+				itemsView.get(i).get(2).setGravity(Gravity.RIGHT);
 				
 				itemsLayoutParams.add(new ArrayList<RelativeLayout.LayoutParams>());
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(130, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, 20, 10, 20);
-				itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, 20, 10, 20);
-				itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, 20, 10, 20);
-				
-				if(i==0)
-				{
-					itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, 0, 30, 30);
-					itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, 0, 30, 30);
-					itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, 0, 30, 30);
-				}
+				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(WIDTH_SLNO, RelativeLayout.LayoutParams.WRAP_CONTENT));
+				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(WIDTH_PARTICULARS, RelativeLayout.LayoutParams.WRAP_CONTENT));
+				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(WIDTH_AMOUNT, RelativeLayout.LayoutParams.WRAP_CONTENT));
+				itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, MARGIN_TOP_ITEMS, 0, 0);
+				itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, MARGIN_TOP_ITEMS, 0, 0);
+				itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, MARGIN_TOP_ITEMS, MARGIN_RIGHT_AMOUNT, 0);
 				
 				itemsLayout.get(i).addView(itemsView.get(i).get(0), itemsLayoutParams.get(i).get(0));
 				itemsLayout.get(i).addView(itemsView.get(i).get(1), itemsLayoutParams.get(i).get(1));
@@ -304,7 +341,7 @@ public class DetailsActivity extends Activity
 		}
 		catch(Exception e)
 		{
-			Toast.makeText(this, "Error In Building Body Layout", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Error In Building Body Layout\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 		
 	}
