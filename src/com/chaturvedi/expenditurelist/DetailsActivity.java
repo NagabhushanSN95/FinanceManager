@@ -6,10 +6,17 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +28,10 @@ public class DetailsActivity extends Activity
 	private final int MARGIN_LEFT_SLNO=10;
 	private final int MARGIN_LEFT_PARTICULARS=70;
 	private final int MARGIN_LEFT_AMOUNT=150;
+
+	private int numEntries;
+	private ArrayList<String> particulars;
+	private ArrayList<String> amounts;
 	
 	private RelativeLayout titleLayout;
 	private ArrayList<RelativeLayout> itemsLayout;
@@ -45,10 +56,12 @@ public class DetailsActivity extends Activity
 	private BufferedReader particularsReader;
 	private BufferedReader amountReader;
 	
-	private int numEntries;
-	private ArrayList<String> particulars;
-	private ArrayList<String> amounts;
-	
+	private ImageButton addButton;
+	private AlertDialog.Builder addDialog;
+	private LayoutInflater dialogLayout;
+	private View dialogView;
+	private EditText particularsField;
+	private EditText amountField;
 	private Intent detailsIntent;
 	
 	@Override
@@ -62,9 +75,9 @@ public class DetailsActivity extends Activity
 		readFile();
 		buildTitleLayout();
 		buildBodyLayout();
-		
+		configureAddButton();
 	}
-	
+
 	private void readFile()
 	{
 		try
@@ -159,6 +172,51 @@ public class DetailsActivity extends Activity
 		catch(Exception e)
 		{
 			
+		}
+		
+	}
+	
+	private void configureAddButton()
+	{
+		addDialog=new AlertDialog.Builder(this);
+		addDialog.setTitle("Add");
+		addDialog.setMessage("Enter Details");
+		dialogLayout=LayoutInflater.from(this);
+		dialogView=dialogLayout.inflate(R.layout.layout_add_dialog, null);
+		addDialog.setView(dialogView);
+		addDialog.setPositiveButton("OK", new DialogListener(1));
+		addDialog.setNegativeButton("Cancel", new DialogListener(0));
+		particularsField=(EditText)findViewById(R.id.edit_particulars);
+		amountField=(EditText)findViewById(R.id.edit_amount);
+		addButton=(ImageButton)findViewById(R.id.button_add);
+		addButton.setOnClickListener(new AddListener());
+	}
+	
+	private class AddListener implements OnClickListener
+	{
+
+		@Override
+		public void onClick(View v)
+		{
+			addDialog.show();
+		}
+		
+	}
+	
+	private class DialogListener implements DialogInterface.OnClickListener
+	{
+		private int action;
+		
+		public DialogListener(int act)
+		{
+			action=act;
+		}
+
+		@Override
+		public void onClick(DialogInterface dialog, int which)
+		{
+			if(action==1)
+				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
 		}
 		
 	}
