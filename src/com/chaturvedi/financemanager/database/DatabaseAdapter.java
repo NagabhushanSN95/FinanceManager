@@ -60,14 +60,14 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Table Create Statements (Change Type Of Date From String To Date/DateTime whichever is available
 	private static String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE " + TABLE_TRANSACTIONS + "("+ 
 			KEY_ID + " INTEGER PRIMARY KEY," + 
-			KEY_CREATED_TIME + " STRING," +
-			KEY_MODIFIED_TIME + " STRING," +
-			KEY_DATE + " STRING," +
-			KEY_TYPE + " STRING," +
+			KEY_CREATED_TIME + " TEXT," +
+			KEY_MODIFIED_TIME + " TEXT," +
+			KEY_DATE + " TEXT," +
+			KEY_TYPE + " TEXT," +
 			KEY_PARTICULARS + " TEXT,"+ 
 			KEY_RATE + " DOUBLE," +
 			KEY_QUANTITY + " DOUBLE," +
-			KEY_AMOUNT + " TEXT" + ")";
+			KEY_AMOUNT + " DOUBLE" + ")";
 	
 	private static String CREATE_BANKS_TABLE = "CREATE TABLE " + TABLE_BANKS + "("+ 
 			KEY_ID + " INTEGER PRIMARY KEY," + 
@@ -101,7 +101,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			KEY_ID + " INTEGER PRIMARY KEY," + 
 			KEY_PARTICULARS + " TEXT,"+ 
 			KEY_TYPE + " STRING," +
-			KEY_AMOUNT + " TEXT" + ")";
+			KEY_AMOUNT + " DOUBLE" + ")";
 	
 	public DatabaseAdapter(Context context)
 	{
@@ -192,9 +192,9 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		if (cursor != null)
 			cursor.moveToFirst();
 		
-		Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
+		Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)), 
 				new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), 
-				cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
+				cursor.getString(5), cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8));
 		db.close();
 		return transaction;
 	}
@@ -212,9 +212,9 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			do
 			{
-				Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
+				Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)), 
 						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), 
-						cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
+						cursor.getString(5), cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8));
 				transactionList.add(transaction);
 			}
 			while (cursor.moveToNext());
@@ -333,8 +333,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
-					cursor.getString(3), cursor.getString(4));
+			Bank bank = new Bank(cursor.getInt(0), cursor.getString(1), cursor.getString(2), 
+					cursor.getDouble(3), cursor.getString(4));
 			Toast.makeText(context, bank.toString(), Toast.LENGTH_LONG).show();
 			db.close();
 			return bank;
@@ -353,20 +353,20 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 					Bank bank;
 					if(cursor.getColumnCount()==5)
 					{
-						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
-								cursor.getString(3), cursor.getString(4));
+						bank = new Bank(cursor.getInt(0), cursor.getString(1), cursor.getString(2), 
+								cursor.getDouble(3), cursor.getString(4));
 					}
 					else if(cursor.getColumnCount()==4)
 					{
 						Toast.makeText(context, "DatabaseAdapter/getAllBanks - NumColumns = 4", 
 								Toast.LENGTH_LONG).show();
-						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
+						bank = new Bank(0, cursor.getString(0), cursor.getString(1), cursor.getDouble(2), 
 								cursor.getString(3));
 					}
 					else
 					{
-						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
-								cursor.getString(3), cursor.getString(4));
+						bank = new Bank(cursor.getInt(0), cursor.getString(1), cursor.getString(2), 
+								cursor.getDouble(3), cursor.getString(4));
 						Toast.makeText(context, "Error In Reading Bank Details\nDatabaseAdapter\\getAllBanks" 
 								+ "\nContact Developer For Assistance\n", Toast.LENGTH_LONG).show();
 					}
@@ -447,7 +447,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			double walletBalance=Double.parseDouble(cursor.getString(2));
+			//double walletBalance=Double.parseDouble(cursor.getString(2));
+			double walletBalance=cursor.getDouble(2);
 			db.close();
 			return walletBalance;
 		}
@@ -818,8 +819,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			Template template = new Template(cursor.getString(0), cursor.getString(1), 
-					cursor.getString(2), cursor.getString(3));
+			Template template = new Template(cursor.getInt(0), cursor.getString(1), 
+					cursor.getString(2), cursor.getDouble(3));
 			db.close();
 			return template;
 		}
@@ -837,8 +838,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				do
 				{
-					Template template = new Template(cursor.getString(0), cursor.getString(1), cursor.getString(2),
-							cursor.getString(3));
+					Template template = new Template(cursor.getInt(0), cursor.getString(1), cursor.getString(2),
+							cursor.getDouble(3));
 					templatesList.add(template);
 				}
 				while (cursor.moveToNext());

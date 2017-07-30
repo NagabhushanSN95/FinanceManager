@@ -31,6 +31,15 @@ public class Bank
 		this.smsName=smsName;
 	}*/
 	
+	public Bank(int id, String name, String accNo, String balance, String smsName)
+	{
+		this.id=id;
+		this.name=name;
+		this.accNo=accNo;
+		this.balance=Double.parseDouble(balance);
+		this.smsName=smsName;
+	}
+	
 	public Bank(String id, String name, String accNo, String balance, String smsName)
 	{
 		this.id=Integer.parseInt(id);
@@ -40,14 +49,14 @@ public class Bank
 		this.smsName=smsName;
 	}
 	
-	public Bank(String name, String accNo, String balance, String smsName)
+	/*public Bank(String name, String accNo, String balance, String smsName)
 	{
 		this.id=0;
 		this.name=name;
 		this.accNo=accNo;
 		this.balance=Double.parseDouble(balance);
 		this.smsName=smsName;
-	}
+	}*/
 
 	/**
 	 * @param id the id to set

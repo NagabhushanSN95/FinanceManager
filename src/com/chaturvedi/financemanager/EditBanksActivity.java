@@ -205,6 +205,7 @@ public class EditBanksActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
+				int id = DatabaseManager.getNumBanks() + 1;
 				String bankName = bankNameField.getText().toString().trim();
 				String bankAccNo = bankAccNoField.getText().toString().trim();
 				String bankBalance = bankBalanceField.getText().toString().trim();
@@ -216,7 +217,7 @@ public class EditBanksActivity extends Activity
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					Bank bank = new Bank(bankName, bankAccNo, bankBalance, bankSmsName);
+					Bank bank = new Bank(id, bankName, bankAccNo, bankBalance, bankSmsName);
 					DatabaseManager.addBank(bank);
 				}
 				else
@@ -284,6 +285,7 @@ public class EditBanksActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
+				int id = bankNo + 1;	// IDs start with 1 but array indexes start with 0
 				String bankName = bankNameField.getText().toString().trim();
 				String bankAccNo = bankAccNoField.getText().toString().trim();
 				String bankBalance = bankBalanceField.getText().toString().trim();
@@ -295,7 +297,7 @@ public class EditBanksActivity extends Activity
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					Bank bank = new Bank(bankName, bankAccNo, bankBalance, bankSmsName);
+					Bank bank = new Bank(id, bankName, bankAccNo, bankBalance, bankSmsName);
 					DatabaseManager.editBank(bankNo, bank);
 					buildLayout();
 				}

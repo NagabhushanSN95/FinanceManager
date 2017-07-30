@@ -1286,7 +1286,7 @@ public class DatabaseManager
 			}
 			if(banks1.get(i).getBalance() != banks2.get(i).getBalance())
 			{
-				Toast.makeText(context, "04 Error: i="+i+", id1="+banks1.get(i).getBalance()+", id2="+banks2.get(i).getBalance(), Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "04 Error: i="+i+", DB Balance="+banks1.get(i).getBalance()+", SD Balance="+banks2.get(i).getBalance(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 			if(!banks1.get(i).getSmsName().equals(banks2.get(i).getSmsName()))

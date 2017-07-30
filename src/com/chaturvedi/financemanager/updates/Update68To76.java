@@ -50,7 +50,7 @@ public class Update68To76 extends SQLiteOpenHelper		// To create Templates Table
 				KEY_ID + " INTEGER PRIMARY KEY," + 
 				KEY_PARTICULARS + " TEXT,"+ 
 				KEY_TYPE + " STRING," +
-				KEY_AMOUNT + " TEXT" + ")";
+				KEY_AMOUNT + " DOUBLE" + ")";
 		
 		// Create The Table
 		SQLiteDatabase db = this.getWritableDatabase();
