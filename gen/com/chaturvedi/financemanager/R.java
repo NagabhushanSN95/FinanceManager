@@ -199,8 +199,10 @@ public final class R {
         public static final int cricket=0x7f040002;
         public static final int currency_symbols=0x7f040003;
         public static final int disclaimer=0x7f040004;
-        public static final int help=0x7f040005;
-        public static final int quotes=0x7f040006;
+        public static final int facts=0x7f040005;
+        public static final int help=0x7f040006;
+        public static final int quotes=0x7f040007;
+        public static final int tips=0x7f040008;
     }
     public static final class string {
         public static final int aboutUs=0x7f060003;
