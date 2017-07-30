@@ -208,7 +208,15 @@ public class Transaction implements Parcelable
 		{
 			Toast.makeText(context, "Unknown Transaction Type\nTransaction/getDisplayParticular()", Toast.LENGTH_LONG).show();
 		}
-		fullParticular += ": " + particular;
+
+		if(particular.equals(""))
+		{
+			fullParticular += ": " + particular;
+		}
+		else
+		{
+			fullParticular = particular;
+		}
 		return fullParticular;
 	}
 

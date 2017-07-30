@@ -188,6 +188,10 @@ public class AddTransactionActivity extends Activity
 				}
 			}
 		});
+		if(action.equals(Constants.ACTION_EDIT))
+		{
+			addButton.setText(getResources().getText(R.string.save));
+		}
 
 		Button cancelButton = (Button) findViewById(R.id.button_cancel);
 		LinearLayout.LayoutParams cancelButtonParams = (LinearLayout.LayoutParams)cancelButton.getLayoutParams();

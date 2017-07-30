@@ -1,5 +1,5 @@
 #Internal package file, do not edit.
-#Sat Dec 31 19:26:58 IST 2016
+#Tue Jan 03 21:32:22 IST 2017
 122.file=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\resources-debug.ap_\\res\\layout\\layout_faq_question.xml
 60.set=ANDROID_RESOURCE
 129.file=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\resources-debug.ap_\\res\\layout\\dialog_wallet_debit.xml

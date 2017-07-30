@@ -685,11 +685,9 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public ArrayList<Transaction> getAllVisibleTransactions()
 	{
 		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
-		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE " + KEY_HIDDEN + " = 'false'";
-		Log.d("SNB", "CP02: " + selectQuery);
+		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE " + KEY_HIDDEN + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
-		Log.d("SNB", "CP03: " + cursor.getCount());
 		if (cursor.moveToFirst())
 		{
 			do
@@ -1713,7 +1711,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	{
 		Template template = null;
 		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES + " WHERE " + KEY_PARTICULARS + " = '" + particulars +
-				"' && " + KEY_TYPE + " = '" + type + "'";
+				"' AND " + KEY_TYPE + " = '" + type + "'";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor != null && cursor.moveToFirst())

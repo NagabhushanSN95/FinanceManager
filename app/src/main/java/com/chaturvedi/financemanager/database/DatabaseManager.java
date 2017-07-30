@@ -746,7 +746,7 @@ public class DatabaseManager
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
 		// ID of the template will not be set. It has to be set now
 		// Check if the template Exists
-		Template oldTemplate = databaseAdapter.getTemplate(template.getParticular(), template.getType());
+		Template oldTemplate = databaseAdapter.getTemplate(template.getParticular());
 		if (oldTemplate == null)
 		{
 			int templateID = databaseAdapter.getIDforNextTemplate();

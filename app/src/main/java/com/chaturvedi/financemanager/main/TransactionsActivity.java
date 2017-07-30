@@ -300,7 +300,7 @@ public class TransactionsActivity extends Activity
 		{
 			transactionsDisplayInterval = preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		}
-		
+
 		if (transactionsDisplayInterval.equals("Month"))
 		{
 			Calendar calendar = Calendar.getInstance();
@@ -318,7 +318,6 @@ public class TransactionsActivity extends Activity
 		else
 		{
 			transactions = databaseAdapter.getAllVisibleTransactions();
-			Log.d("SNB", "CP01: " + transactions.size());
 		}
 	}
 	

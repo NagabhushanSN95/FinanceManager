@@ -1,7 +1,4 @@
-#Sun Jan 01 15:00:44 IST 2017
-base.0=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10\\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe
-renamed.1=classes.dex
-renamed.0=classes2.dex
-file.1=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10\\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd\\classes.dex
-base.1=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10\\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd
-file.0=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10\\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe\\classes.dex
+#Tue Jan 03 22:22:06 IST 2017
+base.0=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\1f\\main
+renamed.0=classes.dex
+file.0=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\1f\\main\\classes.dex

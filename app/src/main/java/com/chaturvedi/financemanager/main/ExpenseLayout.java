@@ -80,8 +80,9 @@ public class ExpenseLayout extends RelativeLayout
 		expenseSourcesSpinner.setAdapter(expenseSourcesAdapter);
 		particularsEditText = (MyAutoCompleteTextView) findViewById(R.id.editText_particulars);
 		expenseTypeSpinner = (Spinner) findViewById(R.id.spinner_expenseType);
-		expenseTypeSpinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
-				expenditureTypesList));
+		final ArrayAdapter<String> expenseTypeAdapter = new ArrayAdapter<String>(getContext(),
+				android.R.layout.simple_spinner_item, expenditureTypesList);
+		expenseTypeSpinner.setAdapter(expenseTypeAdapter);
 		rateEditText = (EditText) findViewById(R.id.editText_rate);
 		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
 		amountEditText = (EditText) findViewById(R.id.editText_amount);
@@ -125,10 +126,13 @@ public class ExpenseLayout extends RelativeLayout
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 			{
 				Template selectedTemplate = databaseAdapter.getTemplate(particularsEditText.getText().toString());
-				String expenseSourceName = (new TransactionTypeParser(getContext(), selectedTemplate.getType())).
-						getExpenseSourceName();
+				TransactionTypeParser parser = new TransactionTypeParser(getContext(), selectedTemplate.getType());
+				String expenseSourceName = parser.getExpenseSourceName();
 				int expenseSourcePosition = expenseSourcesAdapter.getPosition(expenseSourceName);
 				expenseSourcesSpinner.setSelection(expenseSourcePosition);
+				String expenditureTypeName = parser.getExpenditureType().getName();
+				int expenditureTypePosition = expenseTypeAdapter.getPosition(expenditureTypeName);
+				expenseTypeSpinner.setSelection(expenditureTypePosition);
 				rateEditText.setText(String.valueOf(selectedTemplate.getAmount()));
 			}
 		});
