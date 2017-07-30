@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="instruction">The Data Will Be Exported To A Text File Named</string>
+    <string name="hint_export_fileName">Enter The File Name</string>
+    <string name="checkBox_erase_data">Clear Data</string>
+    
+</resources>
