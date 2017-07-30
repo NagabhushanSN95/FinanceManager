@@ -32,23 +32,6 @@ public class Counters
 		this.setWithdrawal(withdrawal);
 	}
 	
-	/*/ Constructor
-	public Counters(int id, Date date, double exp01, double exp02, double exp03, double exp04, double exp05,
-			double amountSpent, double income, double savings, double withdrawal)
-	{
-		this.id = id;
-		this.date = date;
-		this.exp01 = exp01;
-		this.exp02 = exp02;
-		this.exp03 = exp03;
-		this.exp04 = exp04;
-		this.exp05 = exp05;
-		this.setAmountSpent(amountSpent);
-		this.setIncome(income);
-		this.setSavings(savings);
-		this.setWithdrawal(withdrawal);
-	}*/
-	
 	// Constructor
 	public Counters(int id, Date date, double[] exp)
 	{
@@ -123,86 +106,6 @@ public class Counters
 	{
 		return date;
 	}
-
-	/**
-	 * @param exp01
-	 * /
-	public void setExp01(double exp01)
-	{
-		this.exp01 = exp01;
-	}
-
-	/**
-	 * @return exp01
-	 * /
-	public double getExp01()
-	{
-		return exp01;
-	}
-
-	/**
-	 * @param exp02
-	 * /
-	public void setExp02(double exp02)
-	{
-		this.exp02 = exp02;
-	}
-
-	/**
-	 * @return exp02
-	 * /
-	public double getExp02()
-	{
-		return exp02;
-	}
-
-	/**
-	 * @param exp03
-	 * /
-	public void setExp03(double exp03)
-	{
-		this.exp03 = exp03;
-	}
-
-	/**
-	 * @return exp03
-	 * /
-	public double getExp03()
-	{
-		return exp03;
-	}
-
-	/**
-	 * @param exp04
-	 * /
-	public void setExp04(double exp04)
-	{
-		this.exp04 = exp04;
-	}
-
-	/**
-	 * @return exp04
-	 * /
-	public double getExp04()
-	{
-		return exp04;
-	}
-
-	/**
-	 * @param exp05
-	 * /
-	public void setExp05(double exp05)
-	{
-		this.exp05 = exp05;
-	}
-
-	/**
-	 * @return exp05
-	 * /
-	public double getExp05()
-	{
-		return exp05;
-	}*/
 	
 	public void setExp(double[] exp)
 	{
@@ -297,6 +200,28 @@ public class Counters
 				newExp[i+1] = exp[i];
 			}
 		}
+		exp = newExp;
+	}
+	
+	/**
+	 * Delete an Existing Exp Type Value
+	 */
+	public void deleteExpTypeInCounters(int position)
+	{
+		double oldExp = exp[position];
+		double[] newExp = new double[exp.length-1];
+		for(int i=0; i<exp.length-1; i++)
+		{
+			if(i<position)
+			{
+				newExp[i] = exp[i];
+			}
+			else
+			{
+				newExp[i] = exp[i+1];
+			}
+		}
+		newExp[newExp.length-1] += oldExp;
 		exp = newExp;
 	}
 }

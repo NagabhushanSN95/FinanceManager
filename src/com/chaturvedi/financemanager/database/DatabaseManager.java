@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 public class DatabaseManager
@@ -748,6 +749,128 @@ public class DatabaseManager
 	public static ArrayList<String> getAllExpenditureTypes()
 	{
 		return DatabaseManager.expenditureTypes;
+	}
+	
+	/**
+	 * Deletes an existing Expenditure Type
+	 * @param position: 1 for 1st position and so on
+	 */
+	public static void deleteExpType(int position)
+	{
+		position = position-1;	// Make it start from 0
+		Log.d("DatabaseManager/deleteExpType()", position + "|" + expenditureTypes.size());
+		expenditureTypes.remove(position);
+		
+		DecimalFormat formatter = new DecimalFormat("00");
+		// Update Exp Types of all Transactions
+		for(Transaction transaction: transactions)
+		{
+			if(transaction.getType().contains("Wallet Credit"))
+			{
+				
+			}
+			else if(transaction.getType().contains("Wallet Debit"))
+			{
+				int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
+				if(expTypeNo == position)		// Add it to others
+				{
+					transaction.setType("Wallet Debit Exp" + formatter.format(getNumExpTypes()-1));
+				}
+				else if(expTypeNo >= position)
+				{
+					transaction.setType("Wallet Debit Exp" + formatter.format(expTypeNo-1));
+				}
+			}
+			else if(transaction.getType().contains("Bank Credit"))
+			{
+				
+			}
+			else if(transaction.getType().contains("Bank Debit"))
+			{
+				int bankNo = Integer.parseInt(transaction.getType().substring(11, 13));  // Bank Debit 01 Exp01
+				if(transaction.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
+				{
+				
+				}
+				else if(transaction.getType().contains("Exp"))   // Bank Debit 01 Exp01
+				{
+					int expTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
+					if(expTypeNo == position)		// Add it to others
+					{
+						transaction.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + 
+								formatter.format(getNumExpTypes()-1));
+					}
+					else if(expTypeNo >= position)
+					{
+						transaction.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + 
+								formatter.format(expTypeNo-1));
+					}
+				}
+			}
+		}
+		
+		// Update Exp Types of all Templates
+		for(Template template: templates)
+		{
+			if(template.getType().contains("Wallet Credit"))
+			{
+				
+			}
+			else if(template.getType().contains("Wallet Debit"))
+			{
+				int expTypeNo = Integer.parseInt(template.getType().substring(16, 18));   // Wallet Debit Exp01
+				if(expTypeNo == position)		// Add it to others
+				{
+					template.setType("Wallet Debit Exp" + formatter.format(getNumExpTypes()-1));
+				}
+				else if(expTypeNo >= position)
+				{
+					template.setType("Wallet Debit Exp" + formatter.format(expTypeNo-1));
+				}
+			}
+			else if(template.getType().contains("Bank Credit"))
+			{
+				
+			}
+			else if(template.getType().contains("Bank Debit"))
+			{
+				int bankNo = Integer.parseInt(template.getType().substring(11, 13));  // Bank Debit 01 Exp01
+				if(template.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
+				{
+				
+				}
+				else if(template.getType().contains("Exp"))   // Bank Debit 01 Exp01
+				{
+					int expTypeNo = Integer.parseInt(template.getType().substring(17, 19));
+					if(expTypeNo == position)		// Add it to others
+					{
+						template.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + 
+								formatter.format(getNumExpTypes()-1));
+					}
+					else if(expTypeNo >= position)
+					{
+						template.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + 
+								formatter.format(expTypeNo-1));
+					}
+				}
+			}
+		}
+		
+		// Update Counters
+		for(Counters counter: counters)
+		{
+			counter.deleteExpTypeInCounters(position);
+		}
+		
+		// Update the same in Database
+		databaseAdapter.deleteAllTransactions();
+		databaseAdapter.addAllTransactions(transactions);
+		databaseAdapter.deleteAllTemplates();
+		databaseAdapter.addAllTemplates(templates);
+		databaseAdapter.deleteAllExpTypes();
+		databaseAdapter.addAllExpTypes(expenditureTypes);
+		databaseAdapter.readjustCountersTable();
+		databaseAdapter.addAllCountersRows(counters);
 	}
 	
 	public static void readjustCountersTable()
