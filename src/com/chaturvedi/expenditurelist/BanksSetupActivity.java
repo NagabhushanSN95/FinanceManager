@@ -53,7 +53,7 @@ public class BanksSetupActivity extends Activity
 	private int WIDTH_ACC_NO_VIEWS;
 	private int WIDTH_BALANCE_VIEWS;
 	private int WIDTH_SMS_VIEWS;
-	private int WIDTH_REMOVE_BUTTON;
+	//private int WIDTH_REMOVE_BUTTON;
 	private int MARGIN_TOP_VIEWS;
 	
 	private LinearLayout parentLayout;
@@ -85,7 +85,7 @@ public class BanksSetupActivity extends Activity
 	private double walletBalance;
 	private int numBanks=0;
 	private ArrayList<String> bankNames;
-	private ArrayList<Integer> bankAccNos;
+	private ArrayList<String> bankAccNos;
 	private ArrayList<Double> bankBalances;
 	private ArrayList<String> bankSmsNames;
 	
@@ -124,7 +124,7 @@ public class BanksSetupActivity extends Activity
 		WIDTH_ACC_NO_VIEWS=screenWidth*20/100;
 		WIDTH_BALANCE_VIEWS=screenWidth*15/100;
 		WIDTH_SMS_VIEWS=screenWidth*15/100;
-		WIDTH_REMOVE_BUTTON=screenWidth*10/100;
+		//WIDTH_REMOVE_BUTTON=screenWidth*10/100;
 		MARGIN_TOP_VIEWS=5;
 		
 		initializeFields();
@@ -185,7 +185,7 @@ public class BanksSetupActivity extends Activity
 	private void initializeFields()
 	{
 		bankNames = new ArrayList<String>();
-		bankAccNos = new ArrayList<Integer>();
+		bankAccNos = new ArrayList<String>();
 		bankBalances = new ArrayList<Double>();
 		bankSmsNames = new ArrayList<String>();
 	}
@@ -371,7 +371,7 @@ public class BanksSetupActivity extends Activity
 					
 					numBanks++;
 					bankNames.add(bankName);
-					bankAccNos.add(Integer.parseInt(bankAccNo));
+					bankAccNos.add(bankAccNo);
 					bankBalances.add(Double.parseDouble(bankBalance));
 					bankSmsNames.add(bankSmsName);
 					
@@ -591,7 +591,7 @@ public class BanksSetupActivity extends Activity
 						bankAccNo+="0000";
 					
 					bankNames.set(bankNo, bankName);
-					bankAccNos.set(bankNo, Integer.parseInt(bankAccNo));
+					bankAccNos.set(bankNo, bankAccNo);
 					bankBalances.set(bankNo, Double.parseDouble(bankBalance));
 					bankSmsNames.set(bankNo, bankSmsName);
 					

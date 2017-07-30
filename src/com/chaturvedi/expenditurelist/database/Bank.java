@@ -4,7 +4,7 @@ public class Bank
 {
 	private int id;
 	private String name;
-	private int accNo;
+	private String accNo;
 	private double balance;
 	private String smsName;
 	
@@ -13,7 +13,7 @@ public class Bank
 		
 	}
 	
-	public Bank(int id, String name, int accNo, double balance, String smsName)
+	public Bank(int id, String name, String accNo, double balance, String smsName)
 	{
 		this.setID(id);
 		this.setName(name);
@@ -26,7 +26,7 @@ public class Bank
 	{
 		this.id=Integer.parseInt(id);
 		this.name=name;
-		this.accNo=Integer.parseInt(accNo);
+		this.accNo=accNo;
 		this.balance=Double.parseDouble(balance);
 		this.smsName=smsName;
 	}
@@ -66,7 +66,7 @@ public class Bank
 	/**
 	 * @param accNo the accNo to set
 	 */
-	public void setAccNo(int accNo)
+	public void setAccNo(String accNo)
 	{
 		this.accNo = accNo;
 	}
@@ -74,7 +74,7 @@ public class Bank
 	/**
 	 * @return the accNo
 	 */
-	public int getAccNo()
+	public String getAccNo()
 	{
 		return accNo;
 	}

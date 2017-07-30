@@ -56,7 +56,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		private static String CREATE_BANKS_TABLE = "CREATE TABLE " + TABLE_BANKS + "("+ 
 				KEY_ID + " INTEGER PRIMARY KEY," + 
 				KEY_NAME + " TEXT," + 
-				KEY_ACC_NO + " INTEGER," + 
+				KEY_ACC_NO + " TEXT," + 
 				KEY_BALANCE + " DOUBLE," +
 				KEY_SMS_NAME + " TEXT" + ")";
 		

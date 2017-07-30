@@ -19,7 +19,7 @@ public class DatabaseManager
 	private static double income;
 	
 	private static ArrayList<String> bankNames;
-	private static ArrayList<Integer> bankAccNos;
+	private static ArrayList<String> bankAccNos;
 	private static ArrayList<Double> bankBalances;
 	private static ArrayList<String> bankSmsNames;
 	
@@ -78,7 +78,7 @@ public class DatabaseManager
 			if(numBanks>0)
 			{
 				bankNames = new ArrayList<String>();
-				bankAccNos = new ArrayList<Integer>();
+				bankAccNos = new ArrayList<String>();
 				bankBalances = new ArrayList<Double>();
 				bankSmsNames = new ArrayList<String>();
 				ArrayList<Bank> banks = databaseAdapter.getAllBanks();
@@ -498,7 +498,7 @@ public class DatabaseManager
 	/**
 	 * @param bankAccNos the Bank Account Numbers to set
 	 */
-	public static void setAllBankAccNos(ArrayList<Integer> bankAccNos)
+	public static void setAllBankAccNos(ArrayList<String> bankAccNos)
 	{
 		DatabaseManager.bankAccNos = bankAccNos;
 	}
@@ -506,34 +506,24 @@ public class DatabaseManager
 	/**
 	 * @return the Bank Account Numbers
 	 */
-	public static ArrayList<Integer> getAllBankAccNos()
+	public static ArrayList<String> getAllBankAccNos()
 	{
 		return DatabaseManager.bankAccNos;
 	}
 	
-	public static void setBankAccNo(int bankNum, int bankAccNo)
+	public static void setBankAccNo(int bankNum, String bankAccNo)
 	{
 		DatabaseManager.bankAccNos.set(bankNum, bankAccNo);
 	}
 	
-	public static void setBankAccNo(int bankNum, String bankAccNo)
-	{
-		DatabaseManager.bankAccNos.set(bankNum, Integer.parseInt(bankAccNo));
-	}
-	
-	public static int getBankAccNo(int bankNum)
+	public static String getBankAccNo(int bankNum)
 	{
 		return DatabaseManager.bankAccNos.get(bankNum);
 	}
 	
-	public static void addBankAccNo(int bankAccNo)
-	{
-		DatabaseManager.bankAccNos.add(bankAccNo);
-	}
-	
 	public static void addBankAccNo(String bankAccNo)
 	{
-		DatabaseManager.bankAccNos.add(Integer.parseInt(bankAccNo));
+		DatabaseManager.bankAccNos.add(bankAccNo);
 	}
 	
 	public static void deleteBankAccNo(int bankNum)
