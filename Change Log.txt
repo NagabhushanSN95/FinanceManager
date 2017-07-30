@@ -1,0 +1,34 @@
+4.0.6 (113)
+
+4.0.7 (114)
+Double Back Press to exit App
+Bug Fix: In AutoRestore in Splash Activity, newly added fields such as hidden and deleted are not checked. As a result, if there is data corruption of those fields, it is not recovered. Fixed
+
+4.0.8 (115)
+Bug Fix: When a transaction is edited, it will be deleted and added at the bottom in database. But in TransactionsActivity, it will be edited at the displayed position. As a result, when it is edited again, the next transaction will be edited. Fixed
+Toast Texts removed in BackupManager. Instead, return values are used.
+AutoBackup takes considerable amount if time when Data is huge. As a result, App won't be closed as soon as double-back is pressed. To overcome it, AutoBackup will be done in a separate thread insted of UI Thread. So. App will be closed immediately
+
+4.1.0 (116)
+A new method getTransactions() is created in DatabaseAdapter that takes filterRules, hiddenTransactions, offset and numTransactions as parameters. filterRules is an ArrayList of Strings. Not defined how to use yet. It returns 'numTractions' number of transactions from bottom with given offset. 
+TransactionsActivity buildLayout updated to display last 100 transactions by default
+Show More button added which when clicked displays 100 more transactions
+
+4.1.1 (117)
+Created a custom view "ExpandCollapseItem" which is used in Filtering Transactions
+FilterActivity created that lets user filter transactions by date, transaction type, wallets/banks and a search keyword
+Bug Fix: While editing transactions, in DatabaseAdapter, transactionType was not updated. Fixed.
+While displaying particulars in TransactionsActivity, wallets/banks will be prefixed
+For build version, in SplashActivity, app icon will be displayed instead of Krishna Photo. Also, "Shree KRISHNAya Namaha" will be hidden
+In TransactionsActivity, while displaying particulars, source/destination (Wallet/Bank) will be displayed and particular on next line
+
+4.1.2 (118)
+Bug Fix: In TransactionsActivity, after adding a transaction, if that transaction is edited or deleted, instead of selecting that Transaction, some other Transaction was getting selected. Earlier, contextMenuTransactionNo field was used to get transactions and all. Now, for each transactionLayout, a tag of the format "yyyy-id" (Eg: 2017-123) will be set and this tag is used to retrieve transactions as well as layouts
+
+4.1.3 (119)
+ - Bug Fix: When restoring data, selecting the backup file from default File Explorer doesn't used to work. Selecting the file from ES File Explorer used to work. Now, it works with default File Explorer also.
+ - Few more quotes added
+
+4.2.0 (120)
+ - Git Integration added
+ - Change Log Added
