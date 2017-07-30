@@ -291,7 +291,22 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				do
 				{
-					Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
+					Bank bank;
+					if(cursor.getColumnCount()==5)
+					{
+
+						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
+					}
+					else if(cursor.getColumnCount()==4)
+					{
+
+						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+					}
+					else
+					{
+						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
+						Toast.makeText(context, "Error In Reading Bank Details\nDatabaseAdapter\\getAllBanks\nContact Developer For Assistance\n", Toast.LENGTH_LONG).show();
+					}
 					bankList.add(bank);
 				}
 				while (cursor.moveToNext());

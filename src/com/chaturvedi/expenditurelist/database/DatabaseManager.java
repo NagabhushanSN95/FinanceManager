@@ -1099,8 +1099,26 @@ public class DatabaseManager
 		return 0;
 	}
 	
+	public static void addBank(String bankName, String bankAccNo, String bankBalance, String bankSmsName)
+	{
+		DatabaseManager.increamentNumBanks();
+		DatabaseManager.addBankName(bankName);
+		DatabaseManager.addBankAccNo(bankAccNo);
+		DatabaseManager.addBankBalance(bankBalance);
+		DatabaseManager.addBankSmsName(bankSmsName);
+	}
+	
+	public static void editBank(int bankNum, String bankName, String bankAccNo, String bankBalance, String bankSmsName)
+	{
+		DatabaseManager.setBankName(bankNum, bankName);
+		DatabaseManager.setBankAccNo(bankNum, bankAccNo);
+		DatabaseManager.setBankBalance(bankNum, bankBalance);
+		DatabaseManager.setBankSmsName(bankNum, bankSmsName);
+	}
+	
 	public static void deleteBank(int bankNum)
 	{
+		DatabaseManager.decreamentNumBanks();
 		DatabaseManager.deleteBankName(bankNum);
 		DatabaseManager.deleteBankAccNo(bankNum);
 		DatabaseManager.deleteBankBalance(bankNum);

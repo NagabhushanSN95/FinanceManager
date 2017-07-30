@@ -391,7 +391,7 @@ public class BanksSetupActivity extends Activity
 		});
 	}
 
-	protected void addBank()
+	/*protected void addBank()
 	{
 		buildAddBankDialog();
 		addBankDialog.show();
@@ -447,8 +447,8 @@ public class BanksSetupActivity extends Activity
 		});
 		
 		parentLayout.addView(addBankLayout, linearLayoutParams.get(numBanks));
-		numBanks++;*/
-	}
+		numBanks++; * /
+	}*/
 	
 	/*protected void removeBank(View view)
 	{

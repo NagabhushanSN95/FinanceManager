@@ -1,15 +1,15 @@
 State Bank Of India
-SBI
+ATMSBI
 State Bank Of Mysore
-SBI
+ATMSBI
 State Bank Of Maharashtra
-SBI
+ATMSBI
 Union Bank Of India
-Union
+UnionB
 Karnataka Bank
-KTK
+KTKBNK
 Syndicate Bank
-Synd
+SyndBK
 Corporation Bank
 Corp
 Pragathi Grameena Bank
