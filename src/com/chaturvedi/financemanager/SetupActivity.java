@@ -152,6 +152,7 @@ public class SetupActivity extends FragmentActivity
 		DatabaseManager.initialize(walletBalance);
 		DatabaseManager.setAllBanks(banks);
 		DatabaseManager.setAllExpenditureTypes(expTypes);
+		DatabaseManager.readjustCountersTable();
 		
 		// Store Default Preferences
 		CURRENT_APP_VERSION_NO = Integer.parseInt(getResources().getString(R.string.currentAppVersion));

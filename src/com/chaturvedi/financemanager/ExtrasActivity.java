@@ -242,8 +242,12 @@ public class ExtrasActivity extends Activity
 							DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
 							DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 							DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-							DatabaseManager.setAllCounters(restoreManager.getAllCounters());
 							DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+							if(restoreManager.getNumExpTypes() != DatabaseManager.getNumExpTypes())
+							{
+								DatabaseManager.readjustCountersTable();
+							}
+							DatabaseManager.setAllCounters(restoreManager.getAllCounters());
 							DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
 							
 							restoreDialog.dismiss();

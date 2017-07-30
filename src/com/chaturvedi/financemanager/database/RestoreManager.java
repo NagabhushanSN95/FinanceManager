@@ -21,7 +21,7 @@ public class RestoreManager
 	//While Backing Up in v3.0.0(56), Wallet Balance was not Backed-Up. v3.0.2(58) onwards, Wallet Balance 
 	//Will Also Be Saved
 	private int APP_VERSION_NO_58;
-	//In Version 77, backup and restore for Templates was enables
+	//In Version 88, backup and restore for Templates was enables
 	private int APP_VERSION_NO_88;
 	
 	private File backupFolder;
@@ -263,17 +263,13 @@ public class RestoreManager
 			{
 				int ID = Integer.parseInt(countersReader.readLine().trim());
 				Date date = new Date(countersReader.readLine().trim());
-				double exp01 = Double.parseDouble(countersReader.readLine().trim());
-				double exp02 = Double.parseDouble(countersReader.readLine().trim());
-				double exp03 = Double.parseDouble(countersReader.readLine().trim());
-				double exp04 = Double.parseDouble(countersReader.readLine().trim());
-				double exp05 = Double.parseDouble(countersReader.readLine().trim());
-				double amountSpent = Double.parseDouble(countersReader.readLine().trim());
-				double income = Double.parseDouble(countersReader.readLine().trim());
-				double savings = Double.parseDouble(countersReader.readLine().trim());
-				double withdrawal = Double.parseDouble(countersReader.readLine().trim());
+				double[] counters1 = new double[numExpTypes+4];
+				for(int j=0; j<numExpTypes+4; j++)
+				{
+					counters1[j] = Double.parseDouble(countersReader.readLine().trim());
+				}
 				countersReader.readLine().trim();
-				Counters counter = new Counters(ID, date, exp01, exp02, exp03, exp04, exp05, amountSpent, income, savings, withdrawal);
+				Counters counter = new Counters(ID, date, counters1);
 				counters.add(counter);
 			}
 			countersReader.close();

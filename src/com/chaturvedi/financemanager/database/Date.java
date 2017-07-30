@@ -38,6 +38,13 @@ public class Date
 		this.date = calendar.get(Calendar.DATE);
 	}
 	
+	public Date(Date date1)
+	{
+		this.year = date1.getYear();
+		this.month = date1.getMonth();
+		this.date = date1.getDate();
+	}
+	
 	public String getDisplayDate()
 	{
 		String date = this.date + "/" + month + "/" + year;

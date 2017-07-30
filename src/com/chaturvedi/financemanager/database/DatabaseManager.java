@@ -1,5 +1,6 @@
 package com.chaturvedi.financemanager.database;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -56,12 +57,12 @@ public class DatabaseManager
 				transactions = new ArrayList<Transaction>();
 			}
 			
-			ArrayList<ExpenditureTypes> expTypes = databaseAdapter.getAllExpenditureTypes();
-			expenditureTypes = new ArrayList<String>();
+			ArrayList<String> expTypes = databaseAdapter.getAllExpTypes();
+			/*expenditureTypes = new ArrayList<String>();
 			for(ExpenditureTypes expType: expTypes)
 			{
 				expenditureTypes.add(expType.getExpenditureTypeName());
-			}
+			}*/
 
 			int numCountersRows = databaseAdapter.getNumCountersRows();
 			if(numCountersRows>0)
@@ -546,6 +547,11 @@ public class DatabaseManager
 		banks.remove(bankNum);
 		databaseAdapter.deleteBank(banks.get(bankNum));
 	}
+	
+	public static void readjustCountersTable()
+	{
+		databaseAdapter.readjustCountersTable();
+	}
 
 	public static void setAllCounters(ArrayList<Counters> counters)
 	{
@@ -562,34 +568,42 @@ public class DatabaseManager
 	public static void increamentCounters(Date date, int expTypeNo, double amount)
 	{
 		int numCountersRows = counters.size();
-		double[] exp = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+		double[] exp = new double[expenditureTypes.size()+4];
 		exp[expTypeNo] = amount;
 		if(numCountersRows == 0)
 		{
 			counters = new ArrayList<Counters>();
-			counters.add(new Counters(date, exp));
-			numCountersRows++;
+			//counters.add(new Counters(1,date, exp));
 			
-			Counters counter = new Counters(date, exp);
-			counter.setID(1);
+			Counters counter = new Counters(1,date, exp);
+			counters.add(counter);
+			numCountersRows++;
+			//counter.setID(1);
 			databaseAdapter.addCountersRow(counter);
 		}
 		else if(date.getLongDate()<counters.get(0).getDate().getLongDate())
 		{
-			counters.add(0, new Counters(date, exp));
-			numCountersRows++;
+			//counters.add(0, new Counters(1,date, exp));
 			
-			Counters counter = new Counters(date, exp);
-			counter.setID(1);
+			Counters counter = new Counters(1,date, exp);
+			counters.add(0,counter);
+			numCountersRows++;
+			// Update IDs of following counters
+			for(int i=1; i<numCountersRows; i++)
+			{
+				counters.get(i).setID(i+1);
+			}
+			//counter.setID(1);
 			databaseAdapter.insertCountersRow(counter);
 		}
 		else if(date.getLongDate()>counters.get(numCountersRows-1).getDate().getLongDate())
 		{
-			counters.add(new Counters(date, exp));
-			numCountersRows++;
+			//counters.add(new Counters(date, exp));
 			
-			Counters counter = new Counters(date, exp);
-			counter.setID(numCountersRows);			// Which has been increamented already
+			Counters counter = new Counters(numCountersRows+1,date, exp);
+			counters.add(counter);
+			numCountersRows++;
+			//counter.setID(numCountersRows);			// Which has been increamented already
 			databaseAdapter.addCountersRow(counter);
 		}
 		else
@@ -621,10 +635,11 @@ public class DatabaseManager
 			}
 			if(first>last)
 			{
-				counters.add(middle+1, new Counters(date, exp));   // Insert The New Counters Row.
+				//counters.add(middle+1, new Counters(date, exp));   // Insert The New Counters Row.
 				
-				Counters counter = new Counters(date, exp);
-				counter.setID(middle + 2);
+				Counters counter = new Counters(middle+2,date, exp);
+				counters.add(middle+1, counter);   // Insert The New Counters Row.
+				//counter.setID(middle + 2);
 				databaseAdapter.insertCountersRow(counter);
 			}
 		}
@@ -655,7 +670,7 @@ public class DatabaseManager
 				counters.get(middle).decreamentCounters(exp);
 				
 				Counters counter = counters.get(middle);
-				counter.setID(middle + 1);
+				//counter.setID(middle + 1);
 				databaseAdapter.updateCountersRow(counter);
 				break;
 			}
@@ -666,7 +681,7 @@ public class DatabaseManager
 	public static double[] getMonthlyCounters(long month)
 	{
 		int numCountersRows = counters.size();
-		double[] monthlyCounters = new double[9];
+		double[] monthlyCounters = new double[expenditureTypes.size()+4];
 		boolean found = false;
 		for(int i=0; i<numCountersRows; i++)
 		{
@@ -691,11 +706,16 @@ public class DatabaseManager
 			}
 			else if(found && month1 == month)
 			{
-				monthlyCounters[0] += counter1.getExp01();
+				double[] allExpenditures = counter1.getAllExpenditures();
+				for(int j=0; j<expenditureTypes.size(); j++)
+				{
+					monthlyCounters[j] += allExpenditures[j];
+				}
+				/*monthlyCounters[0] += counter1.getExp01();
 				monthlyCounters[1] += counter1.getExp02();
 				monthlyCounters[2] += counter1.getExp03();
 				monthlyCounters[3] += counter1.getExp04();
-				monthlyCounters[4] += counter1.getExp05();
+				monthlyCounters[4] += counter1.getExp05();*/
 				monthlyCounters[5] += counter1.getAmountSpent();
 				monthlyCounters[6] += counter1.getIncome();
 				monthlyCounters[7] += counter1.getSavings();
@@ -713,7 +733,7 @@ public class DatabaseManager
 	public static double[] getYearlyCounters(long year)
 	{
 		int numCountersRows = counters.size();
-		double[] yearlyCounters = new double[9];
+		double[] yearlyCounters = new double[expenditureTypes.size()+4];
 		boolean found = false;
 		for(int i=0; i<numCountersRows; i++)
 		{
@@ -738,11 +758,16 @@ public class DatabaseManager
 			}
 			else if(found && year1 == year)
 			{
-				yearlyCounters[0] += counter1.getExp01();
+				double[] allExpenditures = counter1.getAllExpenditures();
+				for(int j=0; j<expenditureTypes.size(); j++)
+				{
+					yearlyCounters[j] += allExpenditures[j];
+				}
+				/*yearlyCounters[0] += counter1.getExp01();
 				yearlyCounters[1] += counter1.getExp02();
 				yearlyCounters[2] += counter1.getExp03();
 				yearlyCounters[3] += counter1.getExp04();
-				yearlyCounters[4] += counter1.getExp05();
+				yearlyCounters[4] += counter1.getExp05();*/
 				yearlyCounters[5] += counter1.getAmountSpent();
 				yearlyCounters[6] += counter1.getIncome();
 				yearlyCounters[7] += counter1.getSavings();
@@ -760,15 +785,20 @@ public class DatabaseManager
 	public static double[] getTotalCounters()
 	{
 		int numCountersRows = counters.size();
-		double[] totalCounters = new double[9];
+		double[] totalCounters = new double[expenditureTypes.size()+4];
 		for(int i=0; i<numCountersRows; i++)
 		{
 			Counters counter1 = counters.get(i);
-			totalCounters[0] += counter1.getExp01();
+			double[] allExpenditures = counter1.getAllExpenditures();
+			for(int j=0; j<expenditureTypes.size(); j++)
+			{
+				totalCounters[j] += allExpenditures[j];
+			}
+			/*totalCounters[0] += counter1.getExp01();
 			totalCounters[1] += counter1.getExp02();
 			totalCounters[2] += counter1.getExp03();
 			totalCounters[3] += counter1.getExp04();
-			totalCounters[4] += counter1.getExp05();
+			totalCounters[4] += counter1.getExp05();*/
 			totalCounters[5] += counter1.getAmountSpent();
 			totalCounters[6] += counter1.getIncome();
 			totalCounters[7] += counter1.getSavings();
@@ -780,6 +810,132 @@ public class DatabaseManager
 	public static int getNumExpTypes()
 	{
 		return expenditureTypes.size();
+	}
+	
+	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
+	{
+		DatabaseManager.expenditureTypes=expTypes1;
+		
+		/*ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
+		for(int i=0; i<expenditureTypes.size(); i++)
+		{
+			expTypes.add(new ExpenditureTypes(i, expenditureTypes.get(i)));
+		}*/
+		databaseAdapter.deleteAllExpTypes();
+		databaseAdapter.addAllExpTypes(expTypes1);
+	}
+	
+	public static ArrayList<String> getAllExpenditureTypes()
+	{
+		return DatabaseManager.expenditureTypes;
+	}
+	
+	public static void setExpenditureType(int expTypeNo, String expType)
+	{
+		DatabaseManager.expenditureTypes.set(expTypeNo, expType);
+	}
+	
+	public static String getExpenditureType(int expTypeNo)
+	{
+		return DatabaseManager.expenditureTypes.get(expTypeNo);
+	}
+	
+	/**
+	 * Adds a new Expenditure Type
+	 * @param expTypeName
+	 * @param position 1 for 1st position and so on
+	 */
+	public static void addExpType(String expTypeName, int position)
+	{
+		position = position-1;	// Make it start from 0
+		expenditureTypes.add(position, expTypeName);
+		
+		DecimalFormat formatter = new DecimalFormat("00");
+		// Update Exp Types of all Transactions
+		for(Transaction transaction: transactions)
+		{
+			if(transaction.getType().contains("Wallet Credit"))
+			{
+				
+			}
+			else if(transaction.getType().contains("Wallet Debit"))
+			{
+				int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
+				if(expTypeNo >= position)
+				{
+					transaction.setType("Wallet Debit Exp" + formatter.format(expTypeNo+1));
+				}
+			}
+			else if(transaction.getType().contains("Bank Credit"))
+			{
+				
+			}
+			else if(transaction.getType().contains("Bank Debit"))
+			{
+				int bankNo = Integer.parseInt(transaction.getType().substring(11, 13));  // Bank Debit 01 Exp01
+				if(transaction.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
+				{
+				
+				}
+				else if(transaction.getType().contains("Exp"))   // Bank Debit 01 Exp01
+				{
+					int expTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
+					if(expTypeNo >= position)
+					{
+						transaction.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + formatter.format(expTypeNo+1));
+					}
+				}
+			}
+		}
+		
+		// Update Exp Types of all Templates
+		for(Template template: templates)
+		{
+			if(template.getType().contains("Wallet Credit"))
+			{
+				
+			}
+			else if(template.getType().contains("Wallet Debit"))
+			{
+				int expTypeNo = Integer.parseInt(template.getType().substring(16, 18));   // Wallet Debit Exp01
+				if(expTypeNo >= position)
+				{
+					template.setType("Wallet Debit Exp" + formatter.format(expTypeNo+1));
+				}
+			}
+			else if(template.getType().contains("Bank Credit"))
+			{
+				
+			}
+			else if(template.getType().contains("Bank Debit"))
+			{
+				int bankNo = Integer.parseInt(template.getType().substring(11, 13));  // Bank Debit 01 Exp01
+				if(template.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
+				{
+				
+				}
+				else if(template.getType().contains("Exp"))   // Bank Debit 01 Exp01
+				{
+					int expTypeNo = Integer.parseInt(template.getType().substring(17, 19));
+					if(expTypeNo >= position)
+					{
+						template.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + formatter.format(expTypeNo+1));
+					}
+				}
+			}
+		}
+		
+		// Update Counters
+		for(Counters counter: counters)
+		{
+			counter.addNewExpToCounters(position);
+		}
+		
+		// Update the same in Database
+		DatabaseManager.setAllTransactions(transactions);
+		DatabaseManager.setAllTemplates(templates);
+		DatabaseManager.readjustCountersTable();
+		databaseAdapter.addAllCountersRows(counters);
 	}
 	
 	/**
@@ -1161,34 +1317,6 @@ public class DatabaseManager
 		banks.get(bankNum).decreamentBanlance(amount);
 	}
 	
-	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
-	{
-		DatabaseManager.expenditureTypes=expTypes1;
-		
-		ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
-		for(int i=0; i<expenditureTypes.size(); i++)
-		{
-			expTypes.add(new ExpenditureTypes(i, expenditureTypes.get(i)));
-		}
-		databaseAdapter.deleteAllExpenditureTypes();
-		databaseAdapter.addAllExpenditureTypes(expTypes);
-	}
-	
-	public static ArrayList<String> getAllExpenditureTypes()
-	{
-		return DatabaseManager.expenditureTypes;
-	}
-	
-	public static void setExpenditureType(int expTypeNo, String expType)
-	{
-		DatabaseManager.expenditureTypes.set(expTypeNo, expType);
-	}
-	
-	public static String getExpenditureType(int expTypeNo)
-	{
-		return DatabaseManager.expenditureTypes.get(expTypeNo);
-	}
-	
 	// Static Methods to compare two objects like transactions, banks...
 	public static boolean areEqualTransactions(ArrayList<Transaction> transactions1, 
 			ArrayList<Transaction> transactions2)
@@ -1316,7 +1444,14 @@ public class DatabaseManager
 			{
 				return false;
 			}
-			if(counters1.get(i).getExp01() != counters2.get(i).getExp01())
+			for(int j=0; j<expenditureTypes.size(); j++)
+			{
+				if(counters1.get(i).getAllExpenditures()[j] != counters2.get(i).getAllExpenditures()[j])
+				{
+					return false;
+				}
+			}
+			/*if(counters1.get(i).getExp01() != counters2.get(i).getExp01())
 			{
 				return false;
 			}
@@ -1335,7 +1470,7 @@ public class DatabaseManager
 			if(counters1.get(i).getExp05() != counters2.get(i).getExp05())
 			{
 				return false;
-			}
+			}*/
 			if(counters1.get(i).getAmountSpent() != counters2.get(i).getAmountSpent())
 			{
 				return false;

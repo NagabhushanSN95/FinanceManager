@@ -134,11 +134,11 @@ public class BackupManager
 			{
 				countersWriter.write(counter.getID() + "\n");
 				countersWriter.write(counter.getDate().getSavableDate() + "\n");
-				countersWriter.write(counter.getExp01() + "\n");
-				countersWriter.write(counter.getExp02() + "\n");
-				countersWriter.write(counter.getExp03() + "\n");
-				countersWriter.write(counter.getExp04() + "\n");
-				countersWriter.write(counter.getExp05() + "\n");
+				double[] expenditures = counter.getAllExpenditures();
+				for(int j=0; j<expenditures.length; j++)
+				{
+					countersWriter.write(expenditures[j] + "\n");
+				}
 				countersWriter.write(counter.getAmountSpent() + "\n");
 				countersWriter.write(counter.getIncome() + "\n");
 				countersWriter.write(counter.getSavings() + "\n");

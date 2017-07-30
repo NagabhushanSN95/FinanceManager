@@ -1,5 +1,6 @@
 package com.chaturvedi.financemanager.database;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import android.content.ContentValues;
@@ -167,6 +168,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		for(Transaction transaction: transactions)
 		{
 			ContentValues values = new ContentValues();
+			values.put(KEY_ID, transaction.getID());
 			values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
 			values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
 			values.put(KEY_DATE, transaction.getDate().getSavableDate());
@@ -295,6 +297,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			SQLiteDatabase db = this.getWritableDatabase();
 			
 			ContentValues values = new ContentValues();
+			values.put(KEY_ID, bank.getID());
 			values.put(KEY_NAME, bank.getName());
 			values.put(KEY_ACC_NO, bank.getAccNo());
 			values.put(KEY_BALANCE, bank.getBalance());
@@ -314,6 +317,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				//i++;
 				ContentValues values = new ContentValues();
 				//values.put(KEY_ID, i);
+				values.put(KEY_ID, bank.getID());
 				values.put(KEY_NAME, bank.getName());
 				values.put(KEY_ACC_NO, bank.getAccNo());
 				values.put(KEY_BALANCE, bank.getBalance());
@@ -394,6 +398,22 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			db.delete(TABLE_BANKS, KEY_ID + " = ?", new String[] { String.valueOf(bank.getID()) });
+			//Update IDs of next Banks
+			for(int i = bank.getID(); i<=getNumBanks();i++)
+			{
+				ContentValues values = new ContentValues();
+				values.put(KEY_ID, i);
+				// updating row
+				if(db.isOpen())
+				{
+					db.update(TABLE_BANKS, values, KEY_ID + " = ?", new String[] { String.valueOf(i+1) });
+				}
+				else
+				{
+					db = this.getWritableDatabase();
+					db.update(TABLE_BANKS, values, KEY_ID + " = ?", new String[] { String.valueOf(i+1) });
+				}
+			}
 			db.close();
 		}
 		
@@ -454,30 +474,30 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		}
 
 		
-		public void addExpenditureType(ExpenditureTypes expenditureType)
+		public void addExpType(String expTypeName)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			
 			ContentValues values = new ContentValues();
-			values.put(KEY_EXPENDITURE_TYPE_NAME, expenditureType.getExpenditureTypeName());
+			values.put(KEY_EXPENDITURE_TYPE_NAME, expTypeName);
 			db.insert(TABLE_EXPENDITURE_TYPES, null, values);
 			db.close();
 		}
 		
-		public void addAllExpenditureTypes(ArrayList<ExpenditureTypes> expenditureTypes)
+		public void addAllExpTypes(ArrayList<String> expTypesNames)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			
-			for(ExpenditureTypes expenditureType: expenditureTypes)
+			for(String expTypeName: expTypesNames)
 			{
 				ContentValues values = new ContentValues();
-				values.put(KEY_EXPENDITURE_TYPE_NAME, expenditureType.getExpenditureTypeName());
+				values.put(KEY_EXPENDITURE_TYPE_NAME, expTypeName);
 				db.insert(TABLE_EXPENDITURE_TYPES, null, values);
 			}
 			db.close();
 		}
 		
-		public ExpenditureTypes getExpenditureType(int id)
+		public String getExpType(int id)
 		{
 			SQLiteDatabase db = this.getReadableDatabase();
 			Cursor cursor = db.query(TABLE_EXPENDITURE_TYPES, new String[] {KEY_ID, KEY_EXPENDITURE_TYPE_NAME}, 
@@ -485,14 +505,14 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			ExpenditureTypes expenditureType = new ExpenditureTypes(cursor.getString(0), cursor.getString(1));
+			//ExpenditureTypes expenditureType = new ExpenditureTypes(cursor.getString(0), cursor.getString(1));
 			db.close();
-			return expenditureType;
+			return cursor.getString(1);
 		}
 		
-		public ArrayList<ExpenditureTypes> getAllExpenditureTypes()
+		public ArrayList<String> getAllExpTypes()
 		{
-			ArrayList<ExpenditureTypes> expenditureTypes = new ArrayList<ExpenditureTypes>();
+			ArrayList<String> expTypes = new ArrayList<String>();
 			String selectQuery = "SELECT * FROM " + TABLE_EXPENDITURE_TYPES;
 			SQLiteDatabase db = this.getWritableDatabase();
 			Cursor cursor = db.rawQuery(selectQuery, null);
@@ -501,35 +521,49 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				do
 				{
-					ExpenditureTypes expenditureType = new ExpenditureTypes(cursor.getString(0), 
-							cursor.getString(1));
-					expenditureTypes.add(expenditureType);
+					//ExpenditureTypes expenditureType = new ExpenditureTypes(cursor.getString(0), cursor.getString(1));
+					expTypes.add(cursor.getString(1));
 				}
 				while (cursor.moveToNext());
 			}
 			db.close();
-			return expenditureTypes;
+			return expTypes;
 		}
 		
-		public void updateExpenditureType(ExpenditureTypes expenditureType)
+		public void updateExpType(int expTypeNo, String expTypeName)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			ContentValues values = new ContentValues();
-			values.put(KEY_EXPENDITURE_TYPE_NAME, expenditureType.getExpenditureTypeName());
+			values.put(KEY_EXPENDITURE_TYPE_NAME, expTypeName);
 			db.update(TABLE_EXPENDITURE_TYPES, values, KEY_ID + " = ?",
-					new String[] { String.valueOf(expenditureType.getID()) });
+					new String[] { String.valueOf(expTypeNo) });
 			db.close();
 		}
 		
-		public void deleteExpenditureType(ExpenditureTypes expenditureType)
+		public void deleteExpType(int expTypeNo)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
-			db.delete(TABLE_EXPENDITURE_TYPES, KEY_ID + " = ?", new String[] 
-					{ String.valueOf(expenditureType.getID()) });
+			db.delete(TABLE_EXPENDITURE_TYPES, KEY_ID + " = ?", new String[]{ String.valueOf(expTypeNo) });
+			//Update IDs of next Exp Types
+			for(int i = expTypeNo; i<=getNumExpTypes();i++)
+			{
+				ContentValues values = new ContentValues();
+				values.put(KEY_ID, i);
+				// updating row
+				if(db.isOpen())
+				{
+					db.update(TABLE_EXPENDITURE_TYPES, values, KEY_ID + " = ?", new String[] { String.valueOf(i+1) });
+				}
+				else
+				{
+					db = this.getWritableDatabase();
+					db.update(TABLE_EXPENDITURE_TYPES, values, KEY_ID + " = ?", new String[] { String.valueOf(i+1) });
+				}
+			}
 			db.close();
 		}
 		
-		public void deleteAllExpenditureTypes()
+		public void deleteAllExpTypes()
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENDITURE_TYPES);
@@ -537,14 +571,15 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			db.close();
 		}
 		
-		public int getNumExpenditureTypes()
+		public int getNumExpTypes()
 		{
 			String countQuery = "SELECT * FROM " + TABLE_EXPENDITURE_TYPES;
 			SQLiteDatabase db = this.getReadableDatabase();
 			Cursor cursor = db.rawQuery(countQuery, null);
+			int numExpTypes = cursor.getCount();
 			cursor.close();
 			db.close();
-			return cursor.getCount();
+			return numExpTypes;
 		}
 		
 		/**
@@ -556,19 +591,34 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			SQLiteDatabase db = this.getWritableDatabase();
 			
 			ContentValues values = new ContentValues();
+			values.put(KEY_ID, counter.getID());
 			values.put(KEY_DATE, counter.getDate().getSavableDate());
-			values.put(KEY_EXP01, counter.getExp01());
+			DecimalFormat formatter = new DecimalFormat("00");
+			double[] allExps = counter.getAllExpenditures();
+			for(int i=0; i<getNumExpTypes(); i++)
+			{
+				values.put("expenditure_"+formatter.format(i+1), allExps[i]);
+			}
+			/*values.put(KEY_EXP01, counter.getExp01());
 			values.put(KEY_EXP02, counter.getExp02());
 			values.put(KEY_EXP03, counter.getExp03());
 			values.put(KEY_EXP04, counter.getExp04());
-			values.put(KEY_EXP05, counter.getExp05());
+			values.put(KEY_EXP05, counter.getExp05());*/
 			values.put(KEY_AMOUNT_SPENT, counter.getAmountSpent());
 			values.put(KEY_INCOME, counter.getIncome());
 			values.put(KEY_SAVINGS, counter.getSavings());
 			values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
 			
 			// Inserting Row
-			db.insert(TABLE_COUNTERS, null, values);
+			if(db.isOpen())
+			{
+				db.insert(TABLE_COUNTERS, null, values);
+			}
+			else
+			{
+				db = this.getWritableDatabase();
+				db.insert(TABLE_COUNTERS, null, values);
+			}
 			db.close(); // Closing database connection
 		}
 		
@@ -607,18 +657,33 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			for(Counters counter: counters)
 			{
 				ContentValues values = new ContentValues();
+				values.put(KEY_ID, counter.getID());
 				values.put(KEY_DATE, counter.getDate().getSavableDate());
-				values.put(KEY_EXP01, counter.getExp01());
+				DecimalFormat formatter = new DecimalFormat("00");
+				double[] allExps = counter.getAllExpenditures();
+				for(int i=0; i<getNumExpTypes(); i++)
+				{
+					values.put("expenditure_"+formatter.format(i+1), allExps[i]);
+				}
+				/*values.put(KEY_EXP01, counter.getExp01());
 				values.put(KEY_EXP02, counter.getExp02());
 				values.put(KEY_EXP03, counter.getExp03());
 				values.put(KEY_EXP04, counter.getExp04());
-				values.put(KEY_EXP05, counter.getExp05());
+				values.put(KEY_EXP05, counter.getExp05());*/
 				values.put(KEY_AMOUNT_SPENT, counter.getAmountSpent());
 				values.put(KEY_INCOME, counter.getIncome());
 				values.put(KEY_SAVINGS, counter.getSavings());
 				values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
 				
-				db.insert(TABLE_COUNTERS, null, values);
+				if(db.isOpen())
+				{
+					db.insert(TABLE_COUNTERS, null, values);
+				}
+				else
+				{
+					db = this.getWritableDatabase();
+					db.insert(TABLE_COUNTERS, null, values);
+				}
 			}
 			db.close();
 		}
@@ -627,16 +692,33 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		public Counters getCountersRow(int id)
 		{
 			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_COUNTERS, new String[] { KEY_ID, KEY_DATE, KEY_EXP01, KEY_EXP02, 
+			int numExpTypes = getNumExpTypes();
+			DecimalFormat formatter = new DecimalFormat("00");
+			String[] queryStrings = new String[numExpTypes+6];
+			queryStrings[0] = KEY_ID;
+			queryStrings[1] = KEY_DATE;
+			for(int i=0; i<numExpTypes; i++)
+			{
+				queryStrings[i+2] = "expenditure_"+formatter.format(i+1);
+			}
+			queryStrings[numExpTypes+7] = KEY_AMOUNT_SPENT;
+			queryStrings[numExpTypes+8] = KEY_INCOME;
+			queryStrings[numExpTypes+9] = KEY_SAVINGS;
+			queryStrings[numExpTypes+10] = KEY_WITHDRAWAL;
+			/*Cursor cursor = db.query(TABLE_COUNTERS, new String[] { KEY_ID, KEY_DATE, KEY_EXP01, KEY_EXP02, 
 					KEY_EXP03, KEY_EXP04, KEY_EXP05, KEY_AMOUNT_SPENT, KEY_INCOME, KEY_SAVINGS, KEY_WITHDRAWAL}
-			, KEY_ID + "=?", new String[] { String.valueOf(id) }, null, null, null, null);
+			, KEY_ID + "=?", new String[] { String.valueOf(id) }, null, null, null, null);*/
+			Cursor cursor = db.query(TABLE_COUNTERS, queryStrings, KEY_ID + "=?", new String[]{String.valueOf(id)},
+					null, null, null, null);
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			Counters counter = new Counters(cursor.getInt(0), new Date(cursor.getString(1)), 
-					cursor.getDouble(2), cursor.getDouble(3), cursor.getDouble(4), cursor.getDouble(5), 
-					cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getDouble(9), 
-					cursor.getDouble(10));
+			double[] counter1 = new double[numExpTypes+4];
+			for(int i=0; i<numExpTypes+4; i++)
+			{
+				counter1[i] = cursor.getDouble(i+2);
+			}
+			Counters counter = new Counters(cursor.getInt(0), new Date(cursor.getString(1)), counter1);
 			db.close();
 			return counter;
 		}
@@ -645,6 +727,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		public ArrayList<Counters> getAllCountersRows()
 		{
 			ArrayList<Counters> countersRows = new ArrayList<Counters>();
+			int numExpTypes = getNumExpTypes();
 			// Select All Query
 			String selectQuery = "SELECT * FROM " + TABLE_COUNTERS;
 			SQLiteDatabase db = this.getWritableDatabase();
@@ -654,10 +737,16 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				do
 				{
-					Counters counter = new Counters(cursor.getInt(0), new Date(cursor.getString(1)), 
+					double[] counter1 = new double[numExpTypes+4];
+					for(int i=0; i<numExpTypes+4; i++)
+					{
+						counter1[i] = cursor.getDouble(i+2);
+					}
+					Counters counter = new Counters(cursor.getInt(0), new Date(cursor.getString(1)), counter1);
+					/*Counters counter = new Counters(cursor.getInt(0), new Date(cursor.getString(1)), 
 							cursor.getDouble(2), cursor.getDouble(3), cursor.getDouble(4), cursor.getDouble(5), 
 							cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getDouble(9), 
-							cursor.getDouble(10));
+							cursor.getDouble(10));*/
 					countersRows.add(counter);
 				}
 				while (cursor.moveToNext());
@@ -672,18 +761,32 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			SQLiteDatabase db = this.getWritableDatabase();
 			ContentValues values = new ContentValues();
 			values.put(KEY_DATE, counter.getDate().getSavableDate());
-			values.put(KEY_EXP01, counter.getExp01());
+			int numExpTypes = getNumExpTypes();
+			DecimalFormat formatter = new DecimalFormat("00");
+			double[] allExps = counter.getAllExpenditures();
+			for(int i=0; i<numExpTypes; i++)
+			{
+				values.put("expenditure_"+formatter.format(i+1), allExps[i]);
+			}
+			/*values.put(KEY_EXP01, counter.getExp01());
 			values.put(KEY_EXP02, counter.getExp02());
 			values.put(KEY_EXP03, counter.getExp03());
 			values.put(KEY_EXP04, counter.getExp04());
-			values.put(KEY_EXP05, counter.getExp05());
+			values.put(KEY_EXP05, counter.getExp05());*/
 			values.put(KEY_AMOUNT_SPENT, counter.getAmountSpent());
 			values.put(KEY_INCOME, counter.getIncome());
 			values.put(KEY_SAVINGS, counter.getSavings());
 			values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
 			// updating row
-			db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", 
-					new String[] { String.valueOf(counter.getID()) });
+			if(db.isOpen())
+			{
+				db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(counter.getID()) });
+			}
+			else
+			{
+				db = this.getWritableDatabase();
+				db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(counter.getID()) });
+			}
 			db.close();
 		}
 		
@@ -692,6 +795,22 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			db.delete(TABLE_COUNTERS, KEY_ID + " = ?", new String[] { String.valueOf(counter.getID()) });
+			//Update IDs of next Counters
+			for(int i = counter.getID(); i<=getNumCountersRows();i++)
+			{
+				ContentValues values = new ContentValues();
+				values.put(KEY_ID, i);
+				// updating row
+				if(db.isOpen())
+				{
+					db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(i+1) });
+				}
+				else
+				{
+					db = this.getWritableDatabase();
+					db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(i+1) });
+				}
+			}
 			db.close();
 		}
 		
@@ -716,6 +835,37 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			cursor.close();
 			db.close();
 			return numRows;
+		}
+		
+		/**
+		 * Adjusts Counters Table based on Number Of Exp Types
+		 */
+		public void readjustCountersTable()
+		{
+			SQLiteDatabase db = this.getWritableDatabase();
+			db.execSQL("DROP TABLE IF EXISTS " + TABLE_COUNTERS);
+			DecimalFormat formatter = new DecimalFormat("00");
+			CREATE_COUNTERS_TABLE = "CREATE TABLE " + TABLE_COUNTERS + "(" + 
+					KEY_ID + " INTEGER PRIMARY KEY," + 
+					KEY_DATE + " TEXT,";
+			for(int i=0; i<getNumExpTypes(); i++)
+			{
+				CREATE_COUNTERS_TABLE += "expenditure_"+formatter.format(i+1) +  " DOUBLE,";
+			}
+			CREATE_COUNTERS_TABLE += KEY_AMOUNT_SPENT + " DOUBLE," + 
+					KEY_INCOME + " DOUBLE," + 
+					KEY_SAVINGS + " DOUBLE," + 
+					KEY_WITHDRAWAL + " DOUBLE" + ")";
+			if(db.isOpen())
+			{
+				db.execSQL(CREATE_COUNTERS_TABLE);
+			}
+			else
+			{
+				db = this.getWritableDatabase();
+				db.execSQL(CREATE_COUNTERS_TABLE);
+			}
+			db.close();
 		}
 		
 		// Getting Number Of Template

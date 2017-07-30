@@ -4,17 +4,35 @@ public class Counters
 {
 	private int id;
 	private Date date;
-	private double exp01;
+	private double[] exp;
+	/*private double exp01;
 	private double exp02;
 	private double exp03;
 	private double exp04;
-	private double exp05;
+	private double exp05;*/
 	private double amountSpent;
 	private double income;
 	private double savings;
 	private double withdrawal;
 	
 	// Constructor
+	public Counters(int id, Date date, double[] exp, double amountSpent, double income, double savings,
+			double withdrawal)
+	{
+		this.id = id;
+		this.date = new Date(date);
+		this.exp = new double[exp.length];
+		for(int i=0; i<exp.length; i++)
+		{
+			this.exp[i] = exp[i];
+		}
+		this.setAmountSpent(amountSpent);
+		this.setIncome(income);
+		this.setSavings(savings);
+		this.setWithdrawal(withdrawal);
+	}
+	
+	/*/ Constructor
 	public Counters(int id, Date date, double exp01, double exp02, double exp03, double exp04, double exp05,
 			double amountSpent, double income, double savings, double withdrawal)
 	{
@@ -29,49 +47,49 @@ public class Counters
 		this.setIncome(income);
 		this.setSavings(savings);
 		this.setWithdrawal(withdrawal);
-	}
+	}*/
 	
 	// Constructor
-	public Counters(Date date, double[] exp)
+	public Counters(int id, Date date, double[] exp)
 	{
-		this.id = 0;
+		this.id = id;
 		this.date = date;
-		this.exp01 = exp[0];
-		this.exp02 = exp[1];
-		this.exp03 = exp[2];
-		this.exp04 = exp[3];
-		this.exp05 = exp[4];
-		//this.amountSpent = exp[0] + exp[1] + exp[2] + exp[3] + exp[4];
-		this.setAmountSpent(exp[5]);
-		this.setIncome(exp[6]);
-		this.setSavings(exp[7]);
-		this.setWithdrawal(exp[8]);
+		int numExpTypes = exp.length-4;
+		this.exp = new double[numExpTypes];
+		for(int i=0; i<numExpTypes; i++)
+		{
+			this.exp[i] = exp[i];
+		}
+		this.amountSpent = exp[numExpTypes];
+		this.income = exp[numExpTypes+1];
+		this.savings = exp[numExpTypes+2];
+		this.withdrawal = exp[numExpTypes+3];
 	}
 	
 	public void increamentCounters(double[] exp)
 	{
-		this.exp01 += exp[0];
-		this.exp02 += exp[1];
-		this.exp03 += exp[2];
-		this.exp04 += exp[3];
-		this.exp05 += exp[4];
-		this.setAmountSpent(this.getAmountSpent() + exp[5]);
-		this.setIncome(this.getIncome() + exp[6]);
-		this.setSavings(this.getSavings() + exp[7]);
-		this.setWithdrawal(this.getWithdrawal() + exp[8]);
+		int numExpTypes = exp.length-4;
+		for(int i=0; i<numExpTypes; i++)
+		{
+			this.exp[i] += exp[i];
+		}
+		this.amountSpent += exp[numExpTypes];
+		this.income += exp[numExpTypes+1];
+		this.savings += exp[numExpTypes+2];
+		this.withdrawal += exp[numExpTypes+3];
 	}
 	
 	public void decreamentCounters(double[] exp)
 	{
-		this.exp01 -= exp[0];
-		this.exp02 -= exp[1];
-		this.exp03 -= exp[2];
-		this.exp04 -= exp[3];
-		this.exp05 -= exp[4];
-		this.setAmountSpent(this.getAmountSpent() - exp[5]);
-		this.setIncome(this.getIncome() - exp[6]);
-		this.setSavings(this.getSavings() - exp[7]);
-		this.setWithdrawal(this.getWithdrawal() - exp[8]);
+		int numExpTypes = exp.length-4;
+		for(int i=0; i<numExpTypes; i++)
+		{
+			this.exp[i] -= exp[i];
+		}
+		this.amountSpent -= exp[numExpTypes];
+		this.income -= exp[numExpTypes+1];
+		this.savings -= exp[numExpTypes+2];
+		this.withdrawal -= exp[numExpTypes+3];
 	}
 
 	/**
@@ -108,7 +126,7 @@ public class Counters
 
 	/**
 	 * @param exp01
-	 */
+	 * /
 	public void setExp01(double exp01)
 	{
 		this.exp01 = exp01;
@@ -116,7 +134,7 @@ public class Counters
 
 	/**
 	 * @return exp01
-	 */
+	 * /
 	public double getExp01()
 	{
 		return exp01;
@@ -124,7 +142,7 @@ public class Counters
 
 	/**
 	 * @param exp02
-	 */
+	 * /
 	public void setExp02(double exp02)
 	{
 		this.exp02 = exp02;
@@ -132,7 +150,7 @@ public class Counters
 
 	/**
 	 * @return exp02
-	 */
+	 * /
 	public double getExp02()
 	{
 		return exp02;
@@ -140,7 +158,7 @@ public class Counters
 
 	/**
 	 * @param exp03
-	 */
+	 * /
 	public void setExp03(double exp03)
 	{
 		this.exp03 = exp03;
@@ -148,7 +166,7 @@ public class Counters
 
 	/**
 	 * @return exp03
-	 */
+	 * /
 	public double getExp03()
 	{
 		return exp03;
@@ -156,7 +174,7 @@ public class Counters
 
 	/**
 	 * @param exp04
-	 */
+	 * /
 	public void setExp04(double exp04)
 	{
 		this.exp04 = exp04;
@@ -164,7 +182,7 @@ public class Counters
 
 	/**
 	 * @return exp04
-	 */
+	 * /
 	public double getExp04()
 	{
 		return exp04;
@@ -172,7 +190,7 @@ public class Counters
 
 	/**
 	 * @param exp05
-	 */
+	 * /
 	public void setExp05(double exp05)
 	{
 		this.exp05 = exp05;
@@ -180,10 +198,30 @@ public class Counters
 
 	/**
 	 * @return exp05
-	 */
+	 * /
 	public double getExp05()
 	{
 		return exp05;
+	}*/
+	
+	public void setExp(double[] exp)
+	{
+		int numExpTypes = exp.length-4;
+		for(int i=0; i<numExpTypes; i++)
+		{
+			this.exp[i] = exp[i];
+		}
+	}
+	
+	public double[] getAllExpenditures()
+	{
+		int numExpTypes = exp.length;
+		double[] exp1 = new double[numExpTypes];
+		for(int i=0; i<numExpTypes; i++)
+		{
+			exp1[i] += exp[i];
+		}
+		return exp1;
 	}
 
 	/**
@@ -240,5 +278,25 @@ public class Counters
 	 */
 	public void setWithdrawal(double withdrawal) {
 		this.withdrawal = withdrawal;
+	}
+	
+	/**
+	 * Adds new Exp Type Value
+	 */
+	public void addNewExpToCounters(int position)
+	{
+		double[] newExp = new double[exp.length+1];
+		for(int i=0; i<exp.length; i++)
+		{
+			if(i<position)
+			{
+				newExp[i] = exp[i];
+			}
+			else
+			{
+				newExp[i+1] = exp[i];
+			}
+		}
+		exp = newExp;
 	}
 }

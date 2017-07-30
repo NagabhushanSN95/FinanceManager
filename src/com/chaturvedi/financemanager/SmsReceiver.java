@@ -138,20 +138,20 @@ public class SmsReceiver extends BroadcastReceiver
 			summaryActivityIntent.putExtra("Amount", amount);
 			context.startActivity(summaryActivityIntent);
 		}
-		else if(message.toLowerCase().contains("credit"))
-		{
-			summaryActivityIntent.putExtra("Type", "credit");
-			int startIndex = message.indexOf("Rs")+2;
-			double amount = Double.parseDouble(message.substring(startIndex));
-			summaryActivityIntent.putExtra("Amount", amount);
-			context.startActivity(summaryActivityIntent);
-		}
 		else if(message.toLowerCase().contains("purchase"))
 		{
 			summaryActivityIntent.putExtra("Type", "debit");
 			int startIndex = message.indexOf("Rs")+2;
 			int endIndex = message.indexOf("on", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			summaryActivityIntent.putExtra("Amount", amount);
+			context.startActivity(summaryActivityIntent);
+		}
+		else if(message.toLowerCase().contains("credit"))
+		{
+			summaryActivityIntent.putExtra("Type", "credit");
+			int startIndex = message.indexOf("Rs")+2;
+			double amount = Double.parseDouble(message.substring(startIndex));
 			summaryActivityIntent.putExtra("Amount", amount);
 			context.startActivity(summaryActivityIntent);
 		}
