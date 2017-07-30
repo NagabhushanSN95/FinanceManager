@@ -39,3 +39,7 @@ Bug Fix: In TransactionsActivity, after adding a transaction, if that transactio
  
 4.2.2 (122)
  - .gitignore updated to exclude remaining non source code files
+ 
+4.2.3 (123)
+ - .gitignore generated from .gitignore plugin. Now, only recommended files are ignored. 
+ - Some files which were wrongly removed in v4.2.1 added back to GIT
