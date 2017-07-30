@@ -16,7 +16,7 @@
             android:layout_height="wrap_content" >
             
             <EditText
-                android:id="@+id/edit_particulars"
+                android:id="@+id/field_particulars"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:hint="@string/particulars"
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content" >
             
             <EditText
-                android:id="@+id/edit_rate"
+                android:id="@+id/field_rate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:hint="@string/rate"
@@ -49,7 +49,7 @@
                 android:nextFocusDown="@+id/edit_quantity" />
             
             <EditText
-                android:id="@+id/edit_quantity"
+                android:id="@+id/field_quantity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:hint="@string/quantity"
@@ -59,7 +59,7 @@
                 android:nextFocusDown="@+id/edit_amount" />
             
             <EditText
-                android:id="@+id/edit_amount"
+                android:id="@+id/field_amount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:hint="@string/amount"
@@ -80,7 +80,7 @@
                 android:textSize="15sp" />
             
             <EditText
-                android:id="@+id/edit_date"
+                android:id="@+id/field_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"

@@ -18,6 +18,7 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -70,7 +71,11 @@ public class DetailsActivity extends Activity
 	private EditText quantityField;
 	private EditText amountField;
 	private EditText dateField;
+	private Spinner creditTypesList;
+	private Spinner debitTypesList;
 	private ArrayList<RadioButton> banks;
+	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
+	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer", "Card Swipe"};
 	
 	private Intent smsIntent;
 	
@@ -363,9 +368,9 @@ public class DetailsActivity extends Activity
 			}
 		});
 		walletCreditDialog.setNegativeButton("Cancel", null);
-		dateField=(EditText)walletCreditDialogView.findViewById(R.id.edit_date);
-		particularsField=(EditText)walletCreditDialogView.findViewById(R.id.edit_particulars);
-		amountField=(EditText)walletCreditDialogView.findViewById(R.id.edit_amount);
+		dateField=(EditText)walletCreditDialogView.findViewById(R.id.field_date);
+		particularsField=(EditText)walletCreditDialogView.findViewById(R.id.field_particulars);
+		amountField=(EditText)walletCreditDialogView.findViewById(R.id.field_amount);
 		
 		Calendar calendar=Calendar.getInstance();
 		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
@@ -464,13 +469,14 @@ public class DetailsActivity extends Activity
 			}
 		});
 		walletDebitDialog.setNegativeButton("Cancel", null);
-		dateField=(EditText)walletDebitDialogView.findViewById(R.id.edit_date);
+		
+		dateField=(EditText)walletDebitDialogView.findViewById(R.id.field_date);
 		typesList = (Spinner)walletDebitDialogView.findViewById(R.id.list_types);
 		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getExpenditureTypes()));
-		particularsField=(EditText)walletDebitDialogView.findViewById(R.id.edit_particulars);
-		rateField = (EditText)walletDebitDialogView.findViewById(R.id.edit_rate);
-		quantityField = (EditText)walletDebitDialogView.findViewById(R.id.edit_quantity);
-		amountField=(EditText)walletDebitDialogView.findViewById(R.id.edit_amount);
+		particularsField=(EditText)walletDebitDialogView.findViewById(R.id.field_particulars);
+		rateField = (EditText)walletDebitDialogView.findViewById(R.id.field_rate);
+		quantityField = (EditText)walletDebitDialogView.findViewById(R.id.field_quantity);
+		amountField=(EditText)walletDebitDialogView.findViewById(R.id.field_amount);
 		
 		Calendar calendar=Calendar.getInstance();
 		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
@@ -493,8 +499,12 @@ public class DetailsActivity extends Activity
 			banksRadioGroup.addView(banks.get(i));
 		}
 		banks.get(0).setChecked(true);
-		amountField=(EditText)bankCreditDialogView.findViewById(R.id.edit_amount);
-		dateField=(EditText)bankCreditDialogView.findViewById(R.id.edit_date);
+		
+		particularsField = (EditText)bankCreditDialogView.findViewById(R.id.field_particulars);
+		creditTypesList = (Spinner)bankCreditDialogView.findViewById(R.id.list_creditTypes);
+		creditTypesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, creditTypes));
+		amountField=(EditText)bankCreditDialogView.findViewById(R.id.field_amount);
+		dateField=(EditText)bankCreditDialogView.findViewById(R.id.field_date);
 		
 		Calendar calendar=Calendar.getInstance();
 		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
@@ -518,6 +528,8 @@ public class DetailsActivity extends Activity
 				}
 				
 				// Validate Data
+				String particular = particularsField.getText().toString();
+				String type = "Income";
 				String amount = amountField.getText().toString();
 				boolean dataCorrect = false;
 				
@@ -533,12 +545,26 @@ public class DetailsActivity extends Activity
 				
 				if(dataCorrect)
 				{
+					if(particular.length()==0)
+					{
+						particular = DatabaseManager.getBankName(bankNo) + " Credit: "+ creditTypes[creditTypesList.getSelectedItemPosition()];
+					}
+					else
+					{
+						particular = DatabaseManager.getBankName(bankNo) + " Credit: " + particular;
+					}
+					
+					if(creditTypesList.getSelectedItemPosition()==1)
+					{
+						type = "Bank Savings";
+						DatabaseManager.decreamentWalletBalance(amount);
+					}
 					DatabaseManager.increamentBankBalance(bankNo, amount);
 					DatabaseManager.increamentIncome(amount);
 					DatabaseManager.increamentNumTransations();
 					DatabaseManager.addDate(dateField.getText().toString());
-					DatabaseManager.addType("Income");
-					DatabaseManager.addParticular(DatabaseManager.getBankName(bankNo) + " Credit");
+					DatabaseManager.addType(type);
+					DatabaseManager.addParticular(particular);
 					DatabaseManager.addRate(amount);
 					DatabaseManager.addQuantity(1);
 					DatabaseManager.addAmount(amount);
@@ -546,6 +572,7 @@ public class DetailsActivity extends Activity
 				else
 				{
 					buildBankCreditDialog();
+					particularsField.setText(particular);
 					amountField.setText(amount);
 					bankCreditDialog.show();
 				}
@@ -571,11 +598,40 @@ public class DetailsActivity extends Activity
 			banksRadioGroup.addView(banks.get(i));
 		}
 		banks.get(0).setChecked(true);
-		amountField=(EditText)bankDebitDialogView.findViewById(R.id.edit_amount);
-		dateField=(EditText)bankDebitDialogView.findViewById(R.id.edit_date);
+
+		particularsField = (EditText)bankDebitDialogView.findViewById(R.id.field_particulars);
+		debitTypesList = (Spinner)bankDebitDialogView.findViewById(R.id.list_debitTypes);
+		debitTypesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, debitTypes));
+		typesList = (Spinner)bankDebitDialogView.findViewById(R.id.list_types);
+		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getExpenditureTypes()));
+		typesList.setVisibility(View.GONE);
+		amountField=(EditText)bankDebitDialogView.findViewById(R.id.field_amount);
+		dateField=(EditText)bankDebitDialogView.findViewById(R.id.field_date);
 		Calendar calendar=Calendar.getInstance();
 		String date=calendar.get(Calendar.DATE)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+calendar.get(Calendar.YEAR);
 		dateField.setText(date);
+		
+		debitTypesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+		{
+			@Override
+			public void onItemSelected(AdapterView<?> arg0, View arg1, int itemNo, long arg3)
+			{
+				if(itemNo==0)
+				{
+					typesList.setVisibility(View.GONE);
+				}
+				else
+				{
+					typesList.setVisibility(View.VISIBLE);
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> arg0)
+			{
+				
+			}
+		});
 		
 		bankDebitDialog=new AlertDialog.Builder(this);
 		bankDebitDialog.setTitle("Add Bank Debit");
@@ -595,6 +651,8 @@ public class DetailsActivity extends Activity
 				}
 				
 				// Validate Data
+				String particular = particularsField.getText().toString();
+				String type = "Bank Withdraw";
 				String amount = amountField.getText().toString();
 				boolean dataCorrect = false;
 				
@@ -610,15 +668,35 @@ public class DetailsActivity extends Activity
 				
 				if(dataCorrect)
 				{
-					DatabaseManager.decreamentBankBalance(bankNo, amountField.getText().toString());
-					DatabaseManager.increamentWalletBalance(amountField.getText().toString());
+					if(particular.length()==0)
+					{
+						particular = DatabaseManager.getBankName(bankNo) + " Withdrawal: "+ debitTypes[debitTypesList.getSelectedItemPosition()];
+					}
+					else
+					{
+						particular = DatabaseManager.getBankName(bankNo) + " Withdrawal: " + particular;
+					}
+					
+					if(debitTypesList.getSelectedItemPosition()==0)
+					{
+						type = "Bank Withdraw";
+						DatabaseManager.increamentWalletBalance(amount);
+					}
+					else
+					{
+						type = (String) typesList.getSelectedItem();
+						DatabaseManager.increamentAmountSpent(amount);
+						DatabaseManager.increamentCounter(debitTypesList.getSelectedItemPosition(), amount);
+					}
+					
+					DatabaseManager.decreamentBankBalance(bankNo, amount);
 					DatabaseManager.increamentNumTransations();
 					DatabaseManager.addDate(dateField.getText().toString());
-					DatabaseManager.addType("Bank Debit");
-					DatabaseManager.addParticular(DatabaseManager.getBankName(bankNo) + " Withdrawal");
-					DatabaseManager.addRate(0);
-					DatabaseManager.addQuantity(0);
-					DatabaseManager.addAmount(amountField.getText().toString());
+					DatabaseManager.addType(type);
+					DatabaseManager.addParticular(particular);
+					DatabaseManager.addRate(amount);
+					DatabaseManager.addQuantity(1);
+					DatabaseManager.addAmount(amount);
 				}
 				else
 				{
