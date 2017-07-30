@@ -162,18 +162,17 @@ public class DetailsActivity extends Activity
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
 	{
 		super.onCreateContextMenu(menu, view, menuInfo);
-		menu.setHeaderTitle("Options");
-		menu.add(0, view.getId(), 0, "Edit");
-		menu.add(0, view.getId(), 0, "Delete");
 		contextMenuTransactionNo = parentLayout.indexOfChild(view);
-		Toast.makeText(getApplicationContext(), "Transaction Number: "+contextMenuTransactionNo, Toast.LENGTH_LONG).show();
+		menu.setHeaderTitle("Options For Transaction "+(contextMenuTransactionNo+1));
+		//menu.add(0, view.getId(), 0, "Edit");
+		menu.add(0, view.getId(), 0, "Delete");
 	}
 	
 	public boolean onContextItemSelected(MenuItem item)
 	{
 		if(item.getTitle().equals("Edit"))
 		{
-			//contextFunction1(item.getItemId());
+			//editTransaction(contextMenuTransactionNo);
 		}
 		else if(item.getTitle().equals("Delete"))
 		{
