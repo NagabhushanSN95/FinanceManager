@@ -21,16 +21,19 @@
         
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" >
-    
-    	    <LinearLayout
-        	android:id="@+id/layout_parent"
-        	android:layout_width="match_parent"
-        	android:layout_height="wrap_content"
-        	android:background="#FFFFFF"
-        	android:orientation="vertical" >
-	    </LinearLayout>
-    	</LinearLayout>
+            android:layout_height="wrap_content" >
+            
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
+                
+                <TableLayout
+            	    android:id="@+id/layout_statistics"
+            	    android:layout_width="wrap_content"
+            	    android:layout_height="wrap_content" >
+            
+        	</TableLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
     </ScrollView>
 </RelativeLayout>

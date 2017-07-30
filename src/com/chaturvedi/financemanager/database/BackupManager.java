@@ -96,12 +96,12 @@ public class BackupManager
 							,Toast.LENGTH_LONG).show();
 					transaction.setID(i);
 				}
-				else
+				/*else
 				{
 					Toast.makeText(context, "" + i + "th Transaction\n"
 							+ "i=" + i + "id=" + transaction.getID()
 							,Toast.LENGTH_SHORT).show();
-				}
+				}*/
 				transactionsWriter.write(transaction.getID() + "\n");
 				transactionsWriter.write(transaction.getCreatedTime().toString() + "\n");
 				transactionsWriter.write(transaction.getModifiedTime().toString() + "\n");

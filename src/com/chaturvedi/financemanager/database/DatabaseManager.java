@@ -777,6 +777,11 @@ public class DatabaseManager
 		return totalCounters;
 	}
 	
+	public static int getNumExpTypes()
+	{
+		return expenditureTypes.size();
+	}
+	
 	/**
 	 * @return The months in which Transactions were made in the format
 	 * 		January - 2015
@@ -1266,22 +1271,27 @@ public class DatabaseManager
 		{
 			if(banks1.get(i).getID() != banks2.get(i).getID())
 			{
+				Toast.makeText(context, "01 Error: i="+i+", id1="+banks1.get(i).getID()+", id2="+banks2.get(i).getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 			if(!banks1.get(i).getName().equals(banks2.get(i).getName()))
 			{
+				Toast.makeText(context, "02 Error: i="+i+", id1="+banks1.get(i).getName()+", id2="+banks2.get(i).getName(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 			if(!banks1.get(i).getAccNo().equals(banks2.get(i).getAccNo()))
 			{
+				Toast.makeText(context, "03 Error: i="+i+", id1="+banks1.get(i).getAccNo()+", id2="+banks2.get(i).getAccNo(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 			if(banks1.get(i).getBalance() != banks2.get(i).getBalance())
 			{
+				Toast.makeText(context, "04 Error: i="+i+", id1="+banks1.get(i).getBalance()+", id2="+banks2.get(i).getBalance(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 			if(!banks1.get(i).getSmsName().equals(banks2.get(i).getSmsName()))
 			{
+				Toast.makeText(context, "05 Error: i="+i+", id1="+banks1.get(i).getSmsName()+", id2="+banks2.get(i).getSmsName(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
 		}

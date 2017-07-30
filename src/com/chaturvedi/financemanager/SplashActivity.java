@@ -362,8 +362,8 @@ public class SplashActivity extends Activity
 					if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
 							restoreManager.getAllTransactions()))
 					{
-						//DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-						Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Not Recovered",
+						DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
+						Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
 					

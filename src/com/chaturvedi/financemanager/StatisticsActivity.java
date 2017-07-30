@@ -1,7 +1,7 @@
 package com.chaturvedi.financemanager;
 
 import java.text.DecimalFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -12,31 +12,31 @@ import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.util.DisplayMetrics;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TableRow.LayoutParams;
 import android.widget.TextView;
 
 import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.database.Date;
 
 public class StatisticsActivity extends Activity
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
-	private static final String KEY_NUM_EXP_TYPES = "NumExpTypes";
-	private int numExpTypes = 5;
+	//private static final String KEY_NUM_EXP_TYPES = "NumExpTypes";
+	//private int numExpTypes = 5;
 	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	private String currencySymbol = " ";
 	
-	private int screenWidth;
+	/*private int screenWidth;
 	private int screenHeight;
 	private int WIDTH_NAMES;
 	private int WIDTH_AMOUNTS;
-	private int MARGIN_LEFT_PARENT_LAYOUT;
+	private int MARGIN_LEFT_PARENT_LAYOUT;*/
 
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB) //Up Navigation Button is available only after Honeycomb. So, this is required
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -52,13 +52,13 @@ public class StatisticsActivity extends Activity
 			// No Up Button in Action Bar
 		}
 		
-		DisplayMetrics displayMetrics = new DisplayMetrics();
+		/*DisplayMetrics displayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		screenWidth=displayMetrics.widthPixels;
 		screenHeight=displayMetrics.heightPixels;
 		WIDTH_NAMES=screenWidth*50/100;
 		WIDTH_AMOUNTS=screenWidth*30/100;
-		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*10/100;
+		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*10/100;*/
 		
 		buildLayout();
 	}
@@ -88,92 +88,99 @@ public class StatisticsActivity extends Activity
 		{
 			currencySymbol = preferences.getString(KEY_CURRENCY_SYMBOL, " ");
 		}
-		if(preferences.contains(KEY_NUM_EXP_TYPES))
+		/*if(preferences.contains(KEY_NUM_EXP_TYPES))
 		{
 			numExpTypes = preferences.getInt(KEY_NUM_EXP_TYPES, 5);
-		}
+		}*/
 		
 		DecimalFormat formatter = new DecimalFormat("#,##0.##");
 		
-		LinearLayout parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
-		LayoutParams parentLayoutParams = (LayoutParams) parentLayout.getLayoutParams();
-		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, 0, MARGIN_LEFT_PARENT_LAYOUT, 0);
-		parentLayout.setLayoutParams(parentLayoutParams);
+		TableLayout statLayout = (TableLayout) findViewById(R.id.layout_statistics);
 		
-		LayoutInflater monthLayoutInflater = LayoutInflater.from(this);
-		LinearLayout monthHeadingLayout = (LinearLayout) monthLayoutInflater.inflate(R.layout.layout_title_statistics, null);
-		TextView monthHeading = (TextView)monthHeadingLayout.findViewById(R.id.heading);
-		monthHeading.setText("Current Month Statistics");
+		TableRow titleRow = new TableRow(this);
+		TableRow.LayoutParams titleRowParams = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, 
+				TableRow.LayoutParams.WRAP_CONTENT);
+		titleRow.setLayoutParams(titleRowParams);
 		
-		TextView titleView = (TextView)monthHeadingLayout.findViewById(R.id.title_expenditureType);
-		titleView.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
-		titleView = (TextView)monthHeadingLayout.findViewById(R.id.title_amountSpent);
-		titleView.setLayoutParams(new LayoutParams(WIDTH_AMOUNTS, LayoutParams.WRAP_CONTENT));
-		parentLayout.addView(monthHeadingLayout);
-		
-		double[] monthlyCounters = DatabaseManager.getMonthlyCounters(getCurrentYearAndMonth());
-		for(int i=0; i<numExpTypes; i++)
+		TextView monthsTitleView = new TextView(this);
+		monthsTitleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+		monthsTitleView.setText("Months");
+		monthsTitleView.setBackgroundResource(R.drawable.border_black_2dp);
+		titleRow.addView(monthsTitleView);
+		for(int i=0; i<DatabaseManager.getNumExpTypes(); i++)
 		{
-			LayoutInflater statDisplayInflater = LayoutInflater.from(this);
-			LinearLayout statDisplayLayout = (LinearLayout) statDisplayInflater.inflate(R.layout.layout_display_statistics, null);
-			/*LayoutParams layoutParams = (LayoutParams) statDisplayLayout.getLayoutParams();
-			layoutParams.setMargins(MARGIN_LEFT_STAT_DISPLAY_LAYOUTS, 0, 0, 0);
-			statDisplayLayout.setLayoutParams(layoutParams);*/
+			TextView expTypeTitleView = new TextView(this);
+			expTypeTitleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+			expTypeTitleView.setText(DatabaseManager.getAllExpenditureTypes().get(i));
+			expTypeTitleView.setBackgroundResource(R.drawable.border_black_2dp);
+			titleRow.addView(expTypeTitleView);
+		}
+		TextView totalExpTitleView = new TextView(this);
+		totalExpTitleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+		totalExpTitleView.setText("Total Expenses");
+		totalExpTitleView.setBackgroundResource(R.drawable.border_black_2dp);
+		titleRow.addView(totalExpTitleView);
+		TextView incomeTitleView = new TextView(this);
+		incomeTitleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+		incomeTitleView.setText("Total Income");
+		incomeTitleView.setBackgroundResource(R.drawable.border_black_2dp);
+		titleRow.addView(incomeTitleView);
+		TextView savingsTitleView = new TextView(this);
+		savingsTitleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+		savingsTitleView.setText("Savings");
+		savingsTitleView.setBackgroundResource(R.drawable.border_black_2dp);
+		titleRow.addView(savingsTitleView);
+		TextView withdrawTitleView = new TextView(this);
+		withdrawTitleView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+		withdrawTitleView.setText("Withdrawals");
+		withdrawTitleView.setBackgroundResource(R.drawable.border_black_2dp);
+		titleRow.addView(withdrawTitleView);
+		statLayout.addView(titleRow);
+		
+		ArrayList<String> months = DatabaseManager.getExportableMonths();
+		for(int i=0; i<months.size(); i++)
+		{
+			TableRow monthRow = new TableRow(this);
+			TableRow.LayoutParams monthRowParams = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, 
+					TableRow.LayoutParams.WRAP_CONTENT);
+			monthRow.setLayoutParams(monthRowParams);
 			
-			TextView expenditureTypeName = (TextView)statDisplayLayout.findViewById(R.id.expendtureTypeName);
-			expenditureTypeName.setText(DatabaseManager.getAllExpenditureTypes().get(i));
-			expenditureTypeName.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
+			TextView monthView = new TextView(this);
+			monthView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+			monthView.setText(months.get(i));
+			monthView.setBackgroundResource(R.drawable.border_black_1dp);
+			monthRow.addView(monthView);
+			long month = Date.getLongMonth(months.get(i));
 			
-			TextView currencySymbolView = (TextView)statDisplayLayout.findViewById(R.id.currencySymbol);
-			currencySymbolView.setText(currencySymbol);
-			
-			TextView expenditureTypeAmount = (TextView)statDisplayLayout.findViewById(R.id.amount);
-			expenditureTypeAmount.setText(formatter.format(monthlyCounters[i]));
-			expenditureTypeAmount.setLayoutParams(new LayoutParams(WIDTH_AMOUNTS, LayoutParams.WRAP_CONTENT));
-			
-			parentLayout.addView(statDisplayLayout);
+			for(int j=0; j<DatabaseManager.getNumExpTypes()+4; j++)//+4 for Total Expenses,Incomes,Savings and Withdrawals
+			{
+				TextView expValueView = new TextView(this);
+				expValueView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+				expValueView.setText(currencySymbol + formatter.format(DatabaseManager.getMonthlyCounters(month)[j]));
+				expValueView.setBackgroundResource(R.drawable.border_black_1dp);
+				monthRow.addView(expValueView);
+			}
+			statLayout.addView(monthRow);
 		}
 		
-		LayoutInflater overallLayoutInflater = LayoutInflater.from(this);
-		LinearLayout overallHeadingLayout = (LinearLayout) overallLayoutInflater.inflate(R.layout.layout_title_statistics, null);
-		TextView overallHeading = (TextView)overallHeadingLayout.findViewById(R.id.heading);
-		overallHeading.setText("Overall Statistics");
+		// Totals Row
+		TableRow totalsRow = new TableRow(this);
+		totalsRow.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
 		
-		titleView = (TextView)overallHeadingLayout.findViewById(R.id.title_expenditureType);
-		titleView.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
-		titleView = (TextView)overallHeadingLayout.findViewById(R.id.title_amountSpent);
-		titleView.setLayoutParams(new LayoutParams(WIDTH_AMOUNTS, LayoutParams.WRAP_CONTENT));
-		parentLayout.addView(overallHeadingLayout);
+		TextView totalView = new TextView(this);
+		totalView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+		totalView.setText("Total");
+		totalView.setBackgroundResource(R.drawable.border_black_1dp);
+		totalsRow.addView(totalView);
 		
-		double[] totalCounters = DatabaseManager.getTotalCounters();
-		for(int i=0; i<numExpTypes; i++)
+		for(int j=0; j<DatabaseManager.getNumExpTypes()+4; j++)//+4 for Total Expenses,Incomes,Savings and Withdrawals
 		{
-			LayoutInflater statDisplayInflater = LayoutInflater.from(this);
-			LinearLayout statDisplayLayout = (LinearLayout) statDisplayInflater.inflate(R.layout.layout_display_statistics, null);
-			/*LayoutParams layoutParams = (LayoutParams) statDisplayLayout.getLayoutParams();
-			layoutParams.setMargins(MARGIN_LEFT_STAT_DISPLAY_LAYOUTS, 0, 0, 0);
-			statDisplayLayout.setLayoutParams(layoutParams);*/
-			
-			TextView expenditureTypeName = (TextView)statDisplayLayout.findViewById(R.id.expendtureTypeName);
-			expenditureTypeName.setText(DatabaseManager.getAllExpenditureTypes().get(i));
-			expenditureTypeName.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
-			
-			TextView currencySymbolView = (TextView)statDisplayLayout.findViewById(R.id.currencySymbol);
-			currencySymbolView.setText(currencySymbol);
-			
-			TextView expenditureTypeAmount = (TextView)statDisplayLayout.findViewById(R.id.amount);
-			expenditureTypeAmount.setText(formatter.format(totalCounters[i]));
-			expenditureTypeAmount.setLayoutParams(new LayoutParams(WIDTH_AMOUNTS, LayoutParams.WRAP_CONTENT));
-			
-			parentLayout.addView(statDisplayLayout);
+			TextView expValueView = new TextView(this);
+			expValueView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+			expValueView.setText(currencySymbol + formatter.format(DatabaseManager.getTotalCounters()[j]));
+			expValueView.setBackgroundResource(R.drawable.border_black_1dp);
+			totalsRow.addView(expValueView);
 		}
-	}
-
-	private long getCurrentYearAndMonth()
-	{
-		Calendar calendar = Calendar.getInstance();
-		int year = calendar.get(Calendar.YEAR);
-		int month = calendar.get(Calendar.MONTH) + 1;
-		return year*100+month;
+		statLayout.addView(totalsRow);
 	}
 }
