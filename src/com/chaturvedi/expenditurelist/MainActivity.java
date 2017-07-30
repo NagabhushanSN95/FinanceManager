@@ -81,7 +81,11 @@ public class MainActivity extends Activity
 				startActivityForResult(detailsIntent, 0);
 				return true;
 				
-				
+			case R.id.action_export:
+				ExpenditureExporter exporter=new ExpenditureExporter();
+				exporter.export();
+				Toast.makeText(getApplicationContext(), "Data Has Been Exported Successfully", Toast.LENGTH_LONG).show();
+				refresh();
 		}
 		return true;
 	}
@@ -90,6 +94,11 @@ public class MainActivity extends Activity
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		super.onActivityResult(requestCode, resultCode, data);
+		refresh();
+	}
+	
+	private void refresh()
+	{
 		readData();
 		setData();
 	}

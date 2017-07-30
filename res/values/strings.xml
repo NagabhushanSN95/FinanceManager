@@ -8,5 +8,6 @@
     <string name="action_details">View Details</string>
     <string name="debit">Expenditure</string>
     <string name="credit">ATM Withdrawal</string>
+    <string name="action_export">Export Data To SD Card</string>
 
 </resources>
