@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
@@ -329,56 +330,78 @@ public class StartupActivity extends FragmentActivity
 	
 	private void restoreData()
 	{
-		RestoreManager restoreManager = new RestoreManager(StartupActivity.this);
-		int result = restoreManager.readBackups("Finance Manager/Backups");
-		if(result == 0)
+		AlertDialog.Builder restoreDialogBuilder = new AlertDialog.Builder(this);
+		LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
+		View restoreView = inflater.inflate(R.layout.dialog_restore, null);
+		restoreDialogBuilder.setView(restoreView);
+		final AlertDialog restoreDialog = restoreDialogBuilder.show();
+		// Restore in a seperate (non-ui) thread
+		Thread restoreThread = new Thread(new Runnable()
 		{
-			DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-			DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-			DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-			DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-			DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
-			DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
-			
-			// Store Default Preferences
-			SharedPreferences.Editor editor = preferences.edit();
-			int appVersionNo;
-			try
+			@Override
+			public void run()
 			{
-				appVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
+				RestoreManager restoreManager = new RestoreManager(StartupActivity.this);
+				int result = restoreManager.readBackups("Finance Manager/Backups");
+				if(result == 0)
+				{
+					DatabaseManager.initialize(restoreManager.getWalletBalance());
+					//DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
+					DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
+					DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+					DatabaseManager.setAllCounters(restoreManager.getAllCounters());
+					DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+					DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+					
+					// Store Default Preferences
+					SharedPreferences.Editor editor = preferences.edit();
+					int appVersionNo;
+					try
+					{
+						appVersionNo = StartupActivity.this.getPackageManager().
+								getPackageInfo(StartupActivity.this.getPackageName(), 0).versionCode;
+					}
+					catch (NameNotFoundException e)
+					{
+						appVersionNo = CURRENT_APP_VERSION_NO;
+						Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
+								"StartupActivity/restoreData\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+					}
+					editor.putInt(KEY_APP_VERSION, appVersionNo);
+					editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+					editor.putInt(KEY_SPLASH_DURATION, splashDuration);
+					editor.putInt(KEY_QUOTE_NO, 0);
+					editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+					editor.putString(KEY_CURRENCY_SYMBOL, " ");
+					editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
+					editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
+					editor.commit();
+					
+					//Toast.makeText(getApplicationContext(), "Data Restored Successfully", Toast.LENGTH_LONG).show();
+					startActivity(summaryIntent);
+					restoreDialog.dismiss();
+					StartupActivity.this.finish();
+				}
+				else if(result == 1)
+				{
+					Toast.makeText(getApplicationContext(), "No Backups Were Found.\nMake sure the Backup Files " + 
+							"are located in\nChaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();
+				}
+				else if(result == 2)
+				{
+					Toast.makeText(getApplicationContext(), "Old Data. Cannot be Restored. Sorry!", 
+							Toast.LENGTH_LONG).show();
+				}
+				else if(result == 3)
+				{
+					Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block", 
+							Toast.LENGTH_LONG).show();
+				}
 			}
-			catch (NameNotFoundException e)
-			{
-				appVersionNo = CURRENT_APP_VERSION_NO;
-				Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
-						"StartupActivity/restoreData\n" + e.getMessage(), Toast.LENGTH_LONG).show();
-			}
-			editor.putInt(KEY_APP_VERSION, appVersionNo);
-			editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
-			editor.putInt(KEY_SPLASH_DURATION, splashDuration);
-			editor.putInt(KEY_QUOTE_NO, 0);
-			editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
-			editor.putString(KEY_CURRENCY_SYMBOL, " ");
-			editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
-			editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
-			editor.commit();
-			
-			startActivity(summaryIntent);
-			super.onBackPressed();
-		}
-		else if(result == 1)
-		{
-			Toast.makeText(this, "No Backups Were Found.\nMake sure the Backup Files are located in\n" + 
-					"Chaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();
-		}
-		else if(result == 2)
-		{
-			Toast.makeText(this, "Old Data. Cannot be Restored. Sorry!", Toast.LENGTH_LONG).show();
-		}
-		else if(result == 3)
-		{
-			Toast.makeText(this, "Error in Restoring Data\nControl Entered Catch Block", Toast.LENGTH_LONG).show();
-		}
+		});
+		restoreThread.start();
+		
+		
 	}
 	
 	private void skipSetup()

@@ -94,7 +94,7 @@ public class DatabaseManager
 		}
 		catch(Exception e)
 		{
-			Toast.makeText(context, "Error In Reading Database\n"+e.getMessage(), Toast.LENGTH_LONG).show();
+			Toast.makeText(context, "Error In Reading Database\nDatabaseManager/readDatabase\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 	}
 	
