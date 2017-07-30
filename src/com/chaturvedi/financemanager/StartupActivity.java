@@ -37,12 +37,12 @@ public class StartupActivity extends FragmentActivity
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_QUOTE_NO = "QuoteNo";
+	private static final String KEY_NUM_EXP_TYPES = "NumExpTypes";
+	private final int NUM_EXP_TYPES=5;
 	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
 	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
 	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
-
-	private final int NUM_EXP_TYPES=5;
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -94,7 +94,7 @@ public class StartupActivity extends FragmentActivity
 		WIDTH_BUTTON = screenWidth*60/100;
 		HEIGHT_BUTTON = screenHeight*10/100;
 		
-		setupIntent = new Intent(StartupActivity.this, BanksSetupActivity.class);
+		setupIntent = new Intent(StartupActivity.this, SetupActivity.class);
 		summaryIntent = new Intent(StartupActivity.this, SummaryActivity.class);
 		
 	}
@@ -371,6 +371,7 @@ public class StartupActivity extends FragmentActivity
 					editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
 					editor.putInt(KEY_SPLASH_DURATION, splashDuration);
 					editor.putInt(KEY_QUOTE_NO, 0);
+					editor.putInt(KEY_NUM_EXP_TYPES, NUM_EXP_TYPES);
 					editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 					editor.putString(KEY_CURRENCY_SYMBOL, " ");
 					editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
@@ -436,6 +437,7 @@ public class StartupActivity extends FragmentActivity
 		editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
 		editor.putInt(KEY_SPLASH_DURATION, splashDuration);
 		editor.putInt(KEY_QUOTE_NO, 0);
+		editor.putInt(KEY_NUM_EXP_TYPES, NUM_EXP_TYPES);
 		editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		editor.putString(KEY_CURRENCY_SYMBOL, " ");
 		editor.putString(KEY_RESPOND_BANK_SMS, "Popup");

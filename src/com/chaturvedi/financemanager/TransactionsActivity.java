@@ -31,12 +31,14 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -126,6 +128,7 @@ public class TransactionsActivity extends Activity
 		calculateDimensions();
 		readPreferences();
 		buildTitleLayout();
+		readPreferences();
 		buildBodyLayout();
 		buildButtonPanel();
 		
@@ -144,7 +147,7 @@ public class TransactionsActivity extends Activity
 		{
 			DatabaseManager.setContext(TransactionsActivity.this);
 			DatabaseManager.readDatabase();
-			buildBodyLayout();
+			refreshBodyLayout();
 		}
 	}
 
@@ -168,10 +171,14 @@ public class TransactionsActivity extends Activity
 				templatesIntent = new Intent(TransactionsActivity.this, TemplatesActivity.class);
 				startActivityForResult(templatesIntent, 0);
 				return true;
+				
+			case R.id.action_transactionsDisplayOptions:
+				displayOptions();
+				return true;
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
@@ -179,7 +186,7 @@ public class TransactionsActivity extends Activity
 		calculateDimensions();
 		readPreferences();
 		buildTitleLayout();
-		buildBodyLayout();
+		refreshBodyLayout();
 		buildButtonPanel();
 	}
 	
@@ -295,9 +302,15 @@ public class TransactionsActivity extends Activity
 		amountTitleView.setLayoutParams(amountTitleParams);
 	}
 	
-	private void buildBodyLayout()
+	private void refreshBodyLayout()
 	{
 		readPreferences();						// This will get the transactions
+		buildBodyLayout();
+	}
+	
+	private void buildBodyLayout()
+	{
+		
 		try
 		{
 			parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
@@ -519,7 +532,7 @@ public class TransactionsActivity extends Activity
 					dateField.setText(date);
 					walletCreditDialog.show();
 				}
-				buildBodyLayout();
+				refreshBodyLayout();
 			}
 		});
 		walletCreditDialog.setNegativeButton("Cancel", null);
@@ -605,7 +618,7 @@ public class TransactionsActivity extends Activity
 					templateCheckBox.setChecked(saveAsTemplate);
 					walletDebitDialog.show();
 				}
-				buildBodyLayout();
+				refreshBodyLayout();
 			}
 		});
 		walletDebitDialog.setNegativeButton("Cancel", null);
@@ -767,7 +780,7 @@ public class TransactionsActivity extends Activity
 					dateField.setText(date);
 					bankCreditDialog.show();
 				}
-				buildBodyLayout();
+				refreshBodyLayout();
 			}
 		});
 		bankCreditDialog.setNegativeButton("Cancel", null);
@@ -923,7 +936,7 @@ public class TransactionsActivity extends Activity
 					bankDebitDialog.show();
 				}
 				
-				buildBodyLayout();
+				refreshBodyLayout();
 			}
 		});
 		bankDebitDialog.setNegativeButton("Cancel", null);
@@ -945,7 +958,7 @@ public class TransactionsActivity extends Activity
 			{
 				DatabaseManager.deleteTransaction(transactions.get(contextMenuTransactionNo));
 				//transactions = DatabaseManager.getAllTransactions();
-				buildBodyLayout();
+				refreshBodyLayout();
 			}
 		});
 		deleteDialog.setNegativeButton("Cancel", null);
@@ -1000,7 +1013,7 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						walletCreditDialog.show();
 					}
-					buildBodyLayout();
+					refreshBodyLayout();
 				}
 			});
 			walletCreditDialog.show();
@@ -1059,7 +1072,7 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						walletDebitDialog.show();
 					}
-					buildBodyLayout();
+					refreshBodyLayout();
 				}
 			});
 			walletDebitDialog.show();
@@ -1147,7 +1160,7 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						bankCreditDialog.show();
 					}
-					buildBodyLayout();
+					refreshBodyLayout();
 				}
 			});
 			bankCreditDialog.show();
@@ -1264,7 +1277,7 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						bankDebitDialog.show();
 					}
-					buildBodyLayout();
+					refreshBodyLayout();
 				}
 			});
 			bankDebitDialog.show();
@@ -1521,5 +1534,132 @@ public class TransactionsActivity extends Activity
 		}
 		
 		return templateStrings;
+	}
+	
+	private void displayOptions()
+	{
+		final ArrayList<String> expTypes = DatabaseManager.getAllExpenditureTypes();
+		
+		AlertDialog.Builder optionsDialogBuilder = new AlertDialog.Builder(this);
+		optionsDialogBuilder.setTitle("Select Which Transactions To Display");
+		LayoutInflater inflater = LayoutInflater.from(this);
+		
+		final RelativeLayout optionsDialogLayout = (RelativeLayout) inflater.inflate(R.layout.layout_transactions_display_options, null);
+		final LinearLayout expendituresLayout = (LinearLayout) optionsDialogLayout.findViewById(R.id.expendituresLayout);
+		final LinearLayout bankTransactionsLayout = (LinearLayout) optionsDialogLayout.findViewById(R.id.bankTransactionsLayout);
+		final ArrayList<CheckBox> checkBoxes = new ArrayList<CheckBox>();
+		CheckBox incomesCheckBox = (CheckBox) optionsDialogLayout.findViewById(R.id.checkBox_incomes);
+		checkBoxes.add(incomesCheckBox);
+		for(String expType: expTypes)
+		{
+			CheckBox cb1 = new CheckBox(this);
+			cb1.setId(expTypes.indexOf(expType));
+			cb1.setText(expType);
+			expendituresLayout.addView(cb1);
+			checkBoxes.add(cb1);
+		}
+		CheckBox bankIncomeCheckBox = new CheckBox(this);
+		bankIncomeCheckBox.setText("Incomes (A/C Transfer)");
+		bankTransactionsLayout.addView(bankIncomeCheckBox);
+		checkBoxes.add(bankIncomeCheckBox);
+		CheckBox bankSavingsCheckBox = new CheckBox(this);
+		bankSavingsCheckBox.setText("Bank Savings");
+		bankTransactionsLayout.addView(bankSavingsCheckBox);
+		checkBoxes.add(bankSavingsCheckBox);
+		CheckBox bankWithdrawCheckBox = new CheckBox(this);
+		bankWithdrawCheckBox.setText("Bank Withdrawals");
+		bankTransactionsLayout.addView(bankWithdrawCheckBox);
+		checkBoxes.add(bankWithdrawCheckBox);
+		for(String expType: expTypes)
+		{
+			CheckBox cb1 = new CheckBox(this);
+			cb1.setId(expTypes.indexOf(expType) + 10);
+			cb1.setText(expType + "A/C Transfer");
+			bankTransactionsLayout.addView(cb1);
+			checkBoxes.add(cb1);
+		}
+		
+		CheckBox expendituresCheckBox = (CheckBox) optionsDialogLayout.findViewById(R.id.checkBox_expenditures);
+		expendituresCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+		{
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+			{
+				if(isChecked)
+				{
+					for(int i=0; i<expTypes.size(); i++)
+					{
+						CheckBox cb1 = (CheckBox) expendituresLayout.findViewById(i);
+						cb1.setChecked(true);
+						CheckBox cb2 = (CheckBox) bankTransactionsLayout.findViewById(i + 10);
+						cb2.setChecked(true);
+					}
+				}
+			}
+		});
+		
+		optionsDialogBuilder.setView(optionsDialogLayout);
+		
+		optionsDialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				DecimalFormat formatter = new DecimalFormat("00");
+				ArrayList<String> types = new ArrayList<String>();
+				if(checkBoxes.get(0).isChecked())
+				{
+					types.add("Wallet Credit");
+					Toast.makeText(getApplicationContext(), "Check-Point 04", Toast.LENGTH_SHORT).show();
+				}
+				for(int i=0; i<expTypes.size(); i++)
+				{
+					if(checkBoxes.get(i+1).isChecked())
+					{
+						types.add("Wallet Debit Exp " + formatter.format(i));
+					}
+				}
+				if(checkBoxes.get(expTypes.size()+1).isChecked())
+				{
+					int numBanks = DatabaseManager.getNumBanks();
+					for(int j=0; j<numBanks; j++)
+					{
+						types.add("Bank Credit " + formatter.format(j) + " Income");
+					}
+				}
+				if(checkBoxes.get(expTypes.size()+2).isChecked())
+				{
+					int numBanks = DatabaseManager.getNumBanks();
+					for(int j=0; j<numBanks; j++)
+					{
+						types.add("Bank Credit " + formatter.format(j) + " Savings");
+					}
+				}
+				if(checkBoxes.get(expTypes.size()+3).isChecked())
+				{
+					int numBanks = DatabaseManager.getNumBanks();
+					for(int j=0; j<numBanks; j++)
+					{
+						types.add("Bank Debit " + formatter.format(j) + " Withdraw");
+					}
+				}
+				for(int i=0; i<expTypes.size(); i++)
+				{
+					if(checkBoxes.get(expTypes.size()+4+i).isChecked())
+					{
+						int numBanks = DatabaseManager.getNumBanks();
+						for(int j=0; j<numBanks; j++)
+						{
+							types.add("Bank Debit " + formatter.format(j) + " Exp" + formatter.format(i));
+						}
+					}
+				}
+				transactions = DatabaseManager.getTransactions("all", types, null);
+				//Toast.makeText(getApplicationContext(), ""+transactions.size(), Toast.LENGTH_SHORT).show();
+				buildBodyLayout();
+			}
+		});
+		optionsDialogBuilder.setNegativeButton("Cancel", null);
+		optionsDialogBuilder.show();
 	}
 }

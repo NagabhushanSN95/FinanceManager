@@ -41,6 +41,23 @@ public class Transaction
 	}
 
 	/**
+	 * Clone a Transaction
+	 * @param transaction
+	 */
+	public Transaction(Transaction transaction)
+	{
+		this.id = transaction.id;
+		this.createdTime = transaction.createdTime;
+		this.modifiedTime = transaction.modifiedTime;
+		this.date = transaction.date;
+		this.type = transaction.type;
+		this.particular = transaction.particular;
+		this.rate = transaction.rate;
+		this.quantity = transaction.quantity;
+		this.amount = transaction.amount;
+	}
+
+	/**
 	 * @param id the id to set
 	 */
 	public void setID(int id)

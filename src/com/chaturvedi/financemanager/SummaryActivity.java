@@ -72,8 +72,7 @@ public class SummaryActivity extends Activity
 	private static ArrayList<TextView> amountViews;
 	
 	private Intent transactionsIntent;
-	private Intent editBanksIntent;
-	private Intent editExpenditureTypesIntent;
+	private Intent editIntent;
 	private Intent statisticsIntent;
 	private Intent settingsIntent;
 	private Intent helpIntent;
@@ -130,8 +129,7 @@ public class SummaryActivity extends Activity
 		doTransactionsActivityOperations();
 		
 		transactionsIntent=new Intent(this, TransactionsActivity.class);
-		editBanksIntent=new Intent(this, EditBanksActivity.class);
-		editExpenditureTypesIntent = new Intent(this, EditExpenditureTypesActivity.class);
+		editIntent=new Intent(this, EditActivity.class);
 		statisticsIntent=new Intent(this, StatisticsActivity.class);
 		settingsIntent=new Intent(this, SettingsActivity.class);
 		helpIntent = new Intent(this, HelpActivity.class);
@@ -156,13 +154,15 @@ public class SummaryActivity extends Activity
 	public void onResume()
 	{
 		super.onResume();
-		if(DatabaseManager.getNumTransactions()==0)
+		// If some other app is opened while using Finance Manager and then returned, the RAM might be cleared.
+		// So, transactions might have been lost. So, read the database Again
+		/*if(DatabaseManager.getNumTransactions()==0)
 		{
 			DatabaseManager.setContext(SummaryActivity.this);
 			DatabaseManager.readDatabase();
 			buildBodyLayout();
 			setData();
-		}
+		}*/
 	}
 	
 	@Override
@@ -188,12 +188,8 @@ public class SummaryActivity extends Activity
 				startActivityForResult(transactionsIntent, 0);
 				return true;
 				
-			case R.id.action_edit_banks:
-				startActivityForResult(editBanksIntent, 0);
-				return true;
-				
-			case R.id.action_edit_expenditure_types:
-				startActivity(editExpenditureTypesIntent);
+			case R.id.action_edit:
+				startActivityForResult(editIntent, 0);
 				return true;
 				
 			case R.id.action_statistics:

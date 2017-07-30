@@ -75,17 +75,7 @@ public class EditBanksActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
-		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_edit_banks);
-		}
-		else
-		{
-			setContentView(R.layout.activity_edit_banks);
-			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
-		}
+		setContentView(R.layout.activity_edit_banks);
 		
 		displayMetrics=new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);

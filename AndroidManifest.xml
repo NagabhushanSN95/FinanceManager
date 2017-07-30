@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.chaturvedi.financemanager"
-    android:versionCode="80"
-    android:versionName="3.2.6" >
+    android:versionCode="81"
+    android:versionName="3.2.7" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -25,6 +25,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.chaturvedi.financemanager.StartupActivity"> </activity>
+        <activity android:name="com.chaturvedi.financemanager.SetupActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.BanksSetupActivity"> </activity>
         <activity android:name="com.chaturvedi.financemanager.ExpenditureSetupActivity"> </activity>
         <activity 
@@ -47,7 +48,30 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.chaturvedi.financemanager.SummaryActivity" />
         </activity>
-        <activity android:name="com.chaturvedi.financemanager.EditBanksActivity"> </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.EditActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.SummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.SummaryActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.EditWalletBalanceActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.EditActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.EditActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.EditBanksActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.EditActivity"> 
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.EditActivity" />
+        </activity>
         <activity android:name="com.chaturvedi.financemanager.EditExpenditureTypesActivity"> </activity>
         <activity 
             android:name="com.chaturvedi.financemanager.StatisticsActivity"

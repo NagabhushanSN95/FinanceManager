@@ -1,6 +1,7 @@
 package com.chaturvedi.financemanager.database;
 
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.widget.Toast;
@@ -10,22 +11,12 @@ public class DatabaseManager
 	private static Context context;
 	private static DatabaseAdapter databaseAdapter;
 	
-	/*private static int numBanks;
-	private static int numTransactions;
-	private static int numCountersRows;*/
-	
 	private static double walletBalance;
 	private static ArrayList<Bank> banks;
 	private static ArrayList<Transaction> transactions;
 	private static ArrayList<String> expenditureTypes;
 	private static ArrayList<Counters> counters;
 	private static ArrayList<Template> templates;
-	
-	/*private static boolean transactionsTableEdited;
-	private static boolean transactionTableAdded;
-	private static boolean banksTableEdited;
-	private static boolean banksTableAdded;
-	private static boolean walletTableEdited;*/
 	
 	public DatabaseManager(Context cxt)
 	{
@@ -177,7 +168,6 @@ public class DatabaseManager
 		
 		if(transaction.getType().contains("Wallet Credit"))
 		{
-			//DatabaseManager.increamentNumTransations();
 			DatabaseManager.increamentWalletBalance(transaction.getAmount());
 			DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmount());
 		}
@@ -185,7 +175,6 @@ public class DatabaseManager
 		{
 			int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
 			
-			//DatabaseManager.increamentNumTransations();
 			DatabaseManager.decreamentWalletBalance(transaction.getAmount());
 			DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmount());
 			DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmount());
@@ -204,7 +193,6 @@ public class DatabaseManager
 			}
 			
 			DatabaseManager.increamentBankBalance(bankNo, transaction.getAmount());
-			//DatabaseManager.increamentNumTransations();
 			
 			// Save the new Bank Balance in Database
 			Bank bank = banks.get(bankNo);
@@ -226,7 +214,6 @@ public class DatabaseManager
 			}
 			
 			DatabaseManager.decreamentBankBalance(bankNo, transaction.getAmount());
-			//DatabaseManager.increamentNumTransations();
 			
 			// Save the new Bank Balance in Database
 			Bank bank = banks.get(bankNo);
@@ -464,6 +451,74 @@ public class DatabaseManager
 			if(month1 == month)
 			{
 				transactions1.add(transaction);
+			}
+		}
+		return transactions1;
+	}
+	
+	/**
+	 * Returns transactions with the given parameters
+	 * @param interval: What is the interval of transactions e.g. year-2015 or month-201508
+	 * @param types: Types of transactions e.g. incomes or {bank savings, exp04}
+	 * @param sortOrder: Sorting Type and Order e.g. date-ascending or amount-descending
+	 * @return
+	 */
+	public static ArrayList<Transaction> getTransactions(String interval, ArrayList<String> types, String sortOrder)
+	{
+		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
+
+		Toast.makeText(context, "Check-Point 01", Toast.LENGTH_SHORT).show();
+		StringTokenizer tokens = new StringTokenizer(interval, "-");
+		String interval1 = tokens.nextToken();
+		if(interval1.equals("all"))
+		{
+			Toast.makeText(context, "Check-Point 02:" + types.size(), Toast.LENGTH_SHORT).show();
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				for(String expType: types)
+				{
+					if(transaction.getType().equals(expType))
+					{
+						transactions1.add(new Transaction(transaction));
+					}
+				}
+				Toast.makeText(context, "Check-Point 03:"+transactions1.size(), Toast.LENGTH_SHORT).show();
+			}
+		}
+		else if(interval1.equals("month"))
+		{
+			long month = Long.parseLong(tokens.nextToken());
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				long month1 = (long) Math.floor(transaction.getDate().getLongDate()/100);
+				if(month1 == month)
+				{
+					for(String expType: types)
+					{
+						if(transaction.getType().equals(expType))
+						{
+							transactions1.add(new Transaction(transaction));
+						}
+					}
+				}
+			}
+		}
+		else if(interval1.equals("year"))
+		{
+			long year = Long.parseLong(tokens.nextToken());
+			for(Transaction transaction : DatabaseManager.transactions)
+			{
+				long year1 = (long) Math.floor(transaction.getDate().getLongDate()/10000);
+				if(year1 == year)
+				{
+					for(String expType: types)
+					{
+						if(transaction.getType().equals(expType))
+						{
+							transactions1.add(new Transaction(transaction));
+						}
+					}
+				}
 			}
 		}
 		return transactions1;

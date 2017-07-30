@@ -32,29 +32,7 @@
             android:background="#FFFFFF" />
         
         <TextView
-            android:id="@+id/bankAccNo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#000000" />
-        
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="#FFFFFF" />
-        
-        <TextView
             android:id="@+id/bankBalance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#000000" />
-        
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="#FFFFFF" />
-        
-        <TextView
-            android:id="@+id/bankSmsName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#000000" />

@@ -1,7 +1,3 @@
-// Shree KRISHNAya Namaha
-// Author: Nagabhushan S N
-// Line 195
-
 package com.chaturvedi.financemanager;
 
 import java.io.BufferedReader;
@@ -10,23 +6,20 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
-import android.os.Build.VERSION;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -34,36 +27,29 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.Bank;
-import com.chaturvedi.financemanager.database.DatabaseManager;
 
-public class BanksSetupActivity extends Activity
+public class BanksSetupFragment extends Fragment
 {
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
-	private int MARGIN_RIGHT_WALLET_LAYOUT;
 	private int MARGIN_TOP_PARENT_LAYOUT;
 	private int MARGIN_BOTTOM_PARENT_LAYOUT;
 	private int MARGIN_LEFT_PARENT_LAYOUT;
 	private int MARGIN_RIGHT_PARENT_LAYOUT;
 	private int WIDTH_NAME_VIEWS;
-	private int WIDTH_ACC_NO_VIEWS;
 	private int WIDTH_BALANCE_VIEWS;
-	private int WIDTH_SMS_VIEWS;
-	//private int WIDTH_REMOVE_BUTTON;
 	private int MARGIN_TOP_VIEWS;
+	
+	private Context context;
+	private View banksSetupView;
 	
 	private LinearLayout parentLayout;
 	private LayoutParams parentLayoutParams;
-	private TextView walletView;
-	private LayoutParams walletViewParams;
-	private EditText walletField;
-	private LayoutParams walletFieldParams;
 	private Button addBankButton;
 	
 	private AlertDialog.Builder addBankDialog;
@@ -72,112 +58,60 @@ public class BanksSetupActivity extends Activity
 	private EditText bankBalanceField;
 	private AutoCompleteTextView bankSmsNameField;
 
-	private double walletBalance;
-	private ArrayList<Bank> banks;
+	private static ArrayList<Bank> banks;
 	
-	private Intent expendituresSetupIntent;
 	private ArrayList<String> bankNameSuggestions;
 	private ArrayList<String> predictionSmsNames;
 	private ArrayList<String> smsNameSuggestions;
 	private int contextMenuBankNo;
-
+	
 	@Override
-	protected void onCreate(Bundle savedInstanceState)
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
-		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_setup_banks);
-		}
-		else
-		{
-			setContentView(R.layout.activity_setup_banks);
-			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
-		}
+		banksSetupView = inflater.inflate(R.layout.fragment_setup_banks, container, false);
+		getActivity().setTheme(android.R.style.Theme);
 		
 		displayMetrics=new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		screenWidth=displayMetrics.widthPixels;
 		screenHeight=displayMetrics.heightPixels;
-		MARGIN_RIGHT_WALLET_LAYOUT=screenWidth*2/100;
 		MARGIN_TOP_PARENT_LAYOUT=screenHeight*5/100;
 		MARGIN_BOTTOM_PARENT_LAYOUT=20;
 		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*3/100;
 		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*3/100;
-		WIDTH_NAME_VIEWS=screenWidth*40/100;
-		WIDTH_ACC_NO_VIEWS=screenWidth*20/100;
-		WIDTH_BALANCE_VIEWS=screenWidth*15/100;
-		WIDTH_SMS_VIEWS=screenWidth*15/100;
+		WIDTH_NAME_VIEWS=screenWidth*60/100;			//40+20
+		//WIDTH_ACC_NO_VIEWS=screenWidth*20/100;
+		WIDTH_BALANCE_VIEWS=screenWidth*30/100;			//15+15
+		//WIDTH_SMS_VIEWS=screenWidth*15/100;
 		//WIDTH_REMOVE_BUTTON=screenWidth*10/100;
 		MARGIN_TOP_VIEWS=5;
 		
 		banks = new ArrayList<Bank>();
 		readBankNames();
 		buildLayout();
-		displayDisclaimer();
-		expendituresSetupIntent=new Intent(this, ExpenditureSetupActivity.class);
-	}
-
-	private void displayDisclaimer()
-	{
-		// If debug version, don't display Disclaimer.
-		if((this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0)
-		{
-			return;
-		}
-		
-		String disclaimerText = "";
-		InputStream inputStream = getResources().openRawResource(R.raw.disclaimer);
-		BufferedReader disclaimerReader = new BufferedReader(new InputStreamReader(inputStream));
-		try
-		{
-			String line=disclaimerReader.readLine();
-			while(line!=null)
-			{
-				disclaimerText += line + "\n";
-				line=disclaimerReader.readLine();
-			}
-		}
-		catch(Exception e)
-		{
-			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-		}
-		
-		AlertDialog.Builder disclaimerDialog = new AlertDialog.Builder(this);
-		disclaimerDialog.setTitle("AGREEMENT!");
-		disclaimerDialog.setMessage(disclaimerText);
-		disclaimerDialog.setCancelable(false);
-		disclaimerDialog.setPositiveButton("Accept", null);
-		disclaimerDialog.show().getWindow().setLayout((int) (screenWidth*0.9), (int) (screenHeight*0.5));
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		if(VERSION.SDK_INT>10)
-		{
-			getMenuInflater().inflate(R.menu.activity_startup_banks, menu);
-		}
-		return true;
+		return banksSetupView;
 	}
 	
-	public boolean onOptionsItemSelected(MenuItem item)
+	public static BanksSetupFragment newInstance()//(int screenWidth, int screenHeight)
 	{
-		switch(item.getItemId())
-		{
-			case R.id.next:
-				saveToDatabase();
-		}
-		return true;
+		BanksSetupFragment f = new BanksSetupFragment();
+		/*Bundle bundle = new Bundle();
+		bundle.putInt("ScreenWidth", screenWidth);
+		bundle.putInt("ScreenHeight", screenHeight);
+		f.setArguments(bundle);*/
+		return f;
+	}
+	
+	public static ArrayList<Bank> getAllBanks()
+	{
+		return banks;
+		
 	}
 	
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
 	{
 		super.onCreateContextMenu(menu, view, menuInfo);
-		contextMenuBankNo = parentLayout.indexOfChild(view)-1;		// Wallet View is the first view
+		contextMenuBankNo = parentLayout.indexOfChild(view);
 		menu.setHeaderTitle("Options For Bank "+(contextMenuBankNo+1));
 		menu.add(0, view.getId(), 0, "Edit");
 		menu.add(0, view.getId(), 0, "Delete");
@@ -204,36 +138,14 @@ public class BanksSetupActivity extends Activity
 
 	private void buildLayout()
 	{
-		// If Release Version, Make Krishna TextView Invisible
-		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
-		{
-			TextView krishna = (TextView) findViewById(R.id.krishna);
-			krishna.setVisibility(View.INVISIBLE);
-		}
-		
-		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
-		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
+		parentLayout=(LinearLayout) banksSetupView.findViewById(R.id.parentLayout);
+		LinearLayout.LayoutParams parentLayoutParams=(LinearLayout.LayoutParams) parentLayout.getLayoutParams();
 		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT, MARGIN_BOTTOM_PARENT_LAYOUT);
 		parentLayout.setLayoutParams(parentLayoutParams);
 		
-		LinearLayout walletLayout = (LinearLayout)findViewById(R.id.walletLayout);
-		LayoutParams walletLayoutParams = (LayoutParams)walletLayout.getLayoutParams();
-		walletLayoutParams.setMargins(0, 0, MARGIN_RIGHT_WALLET_LAYOUT, 0);
-		walletLayout.setLayoutParams(walletLayoutParams);
-		
 		parentLayout.removeAllViews();
-		parentLayout.addView(walletLayout);
 		
-		walletView=(TextView)findViewById(R.id.wallet_view);
-		walletViewParams=new LayoutParams(WIDTH_NAME_VIEWS-20, LayoutParams.WRAP_CONTENT);
-		walletViewParams.setMargins(20, 0, 0, 0);
-		walletView.setLayoutParams(walletViewParams);
-		walletField=(EditText)findViewById(R.id.wallet_field);
-		walletFieldParams=new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams.WRAP_CONTENT);
-		walletFieldParams.setMargins(0, MARGIN_TOP_VIEWS, 0, 0);
-		walletField.setLayoutParams(walletFieldParams);
-		
-		addBankButton=(Button)findViewById(R.id.add_bank);
+		addBankButton=(Button)banksSetupView.findViewById(R.id.button_addBank);
 		addBankButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -248,23 +160,28 @@ public class BanksSetupActivity extends Activity
 		
 		for(int i=0; i<banks.size(); i++)
 		{
-			LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
+			final String bankName    = banks.get(i).getName();
+			final String bankAccNo   = banks.get(i).getAccNo();
+			final double bankBalance = banks.get(i).getBalance();
+			final String bankSmsName = banks.get(i).getSmsName();
+			
+			LayoutInflater layoutInflater = LayoutInflater.from(getActivity().getApplicationContext());
 			LinearLayout layout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_bank, null);
 			TextView bankNameView = (TextView) layout.findViewById(R.id.bankName);
-			TextView bankAccNoView = (TextView) layout.findViewById(R.id.bankAccNo);
+			//TextView bankAccNoView = (TextView) layout.findViewById(R.id.bankAccNo);
 			TextView bankBalanceView = (TextView) layout.findViewById(R.id.bankBalance);
-			TextView bankSmsNameView = (TextView) layout.findViewById(R.id.bankSmsName);
+			//TextView bankSmsNameView = (TextView) layout.findViewById(R.id.bankSmsName);
 			
 			bankNameView.setText(banks.get(i).getName());
 			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_NAME_VIEWS, 0, 0, 0);
 			bankNameView.setLayoutParams(nameViewParams);
 			
-			bankAccNoView.setText(banks.get(i).getAccNo().toString());
+			/*bankAccNoView.setText(banks.get(i).getAccNo().toString());
 			LayoutParams accNoViewParams = new LayoutParams(WIDTH_ACC_NO_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_ACC_NO_VIEWS, 0, 0, 0);
 			bankAccNoView.setLayoutParams(accNoViewParams);
-			bankAccNoView.setGravity(Gravity.CENTER);
+			bankAccNoView.setGravity(Gravity.CENTER);*/
 			
 			bankBalanceView.setText(formatter.format(banks.get(i).getBalance()));
 			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams.WRAP_CONTENT);
@@ -272,10 +189,10 @@ public class BanksSetupActivity extends Activity
 			bankBalanceView.setLayoutParams(balanceViewParams);
 			bankBalanceView.setGravity(Gravity.RIGHT);
 			
-			bankSmsNameView.setText(banks.get(i).getSmsName());
+			/*bankSmsNameView.setText(banks.get(i).getSmsName());
 			LayoutParams smsViewParams = new LayoutParams(WIDTH_SMS_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_SMS_VIEWS, 0, 0, 0);
-			bankSmsNameView.setLayoutParams(smsViewParams);
+			bankSmsNameView.setLayoutParams(smsViewParams);*/
 			
 			if(i%2==0)
 				layout.setBackgroundColor(Color.parseColor("#88CC00CC"));
@@ -284,17 +201,28 @@ public class BanksSetupActivity extends Activity
 			
 			parentLayout.addView(layout);
 			registerForContextMenu(layout);
-		}
-		
-		if(VERSION.SDK_INT<=10)
-		{
-			Button nextButton = (Button)findViewById(R.id.button_next);
-			nextButton.setOnClickListener(new View.OnClickListener() 
+			
+			//Display Bank Details when the Layout is Touched/Clicked
+			layout.setOnClickListener(new View.OnClickListener()
 			{
 				@Override
 				public void onClick(View v)
 				{
-					saveToDatabase();
+					LayoutInflater inflater = LayoutInflater.from(getActivity());
+					View bankDetailsView = inflater.inflate(R.layout.dialog_bank_details, null);
+					TextView bankNameView = (TextView) bankDetailsView.findViewById(R.id.value_bankName);
+					bankNameView.setText(bankName);
+					TextView bankAccNoView = (TextView) bankDetailsView.findViewById(R.id.value_bankAccNo);
+					bankAccNoView.setText(bankAccNo);
+					TextView bankBalanceView = (TextView) bankDetailsView.findViewById(R.id.value_bankBalance);
+					bankBalanceView.setText(""+bankBalance);
+					TextView bankSmsNameView = (TextView) bankDetailsView.findViewById(R.id.value_bankSmsName);
+					bankSmsNameView.setText(bankSmsName);
+					
+					AlertDialog.Builder bankDetailsBuilder = new AlertDialog.Builder(getActivity());
+					bankDetailsBuilder.setTitle("Bank Details");
+					bankDetailsBuilder.setView(bankDetailsView);
+					bankDetailsBuilder.show();
 				}
 			});
 		}
@@ -302,15 +230,15 @@ public class BanksSetupActivity extends Activity
 	
 	private void buildAddBankDialog()
 	{
-		addBankDialog = new AlertDialog.Builder(this);
+		addBankDialog = new AlertDialog.Builder(getActivity());
 		addBankDialog.setTitle("Add A Bank Account");
 		addBankDialog.setMessage("Enter The Particulars");
-		LayoutInflater layoutInflater=LayoutInflater.from(this);
+		LayoutInflater layoutInflater=LayoutInflater.from(getActivity());
 		final LinearLayout addBankLayout=(LinearLayout)layoutInflater.inflate(R.layout.dialog_add_bank, null);
 		addBankDialog.setView(addBankLayout);
 		
 		bankNameField = (AutoCompleteTextView) addBankLayout.findViewById(R.id.bankName);
-		ArrayAdapter<String> bankNameSuggestionAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, bankNameSuggestions);
+		ArrayAdapter<String> bankNameSuggestionAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, bankNameSuggestions);
 		bankNameField.setAdapter(bankNameSuggestionAdapter);
 		bankNameField.setThreshold(1);
 		
@@ -318,7 +246,7 @@ public class BanksSetupActivity extends Activity
 		bankBalanceField = (EditText) addBankLayout.findViewById(R.id.bankBalance);
 		
 		bankSmsNameField = (AutoCompleteTextView) addBankLayout.findViewById(R.id.bankSmsName);
-		ArrayAdapter<String> bankSmsNameSuggestionAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, smsNameSuggestions);
+		ArrayAdapter<String> bankSmsNameSuggestionAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, smsNameSuggestions);
 		bankSmsNameField.setAdapter(bankSmsNameSuggestionAdapter);
 		bankSmsNameField.setThreshold(1);
 		bankNameField.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -404,31 +332,7 @@ public class BanksSetupActivity extends Activity
 		}
 		catch(Exception e)
 		{
-			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-		}
-	}
-	
-	private void saveToDatabase()
-	{
-		boolean dataEntered=true;
-		if(walletField.getText().toString().length()!=0)
-		{
-			walletBalance=Double.parseDouble(walletField.getText().toString());
-		}
-		else
-		{
-			Toast.makeText(getApplicationContext(), "Enter The Amount In Your Wallet", Toast.LENGTH_LONG).show();
-			dataEntered=false;
-		}
-		
-		if(dataEntered)
-		{
-			DatabaseManager.initialize(walletBalance);
-			DatabaseManager.setAllBanks(banks);
-			
-			// Start The Next Activity And Finish This Activity
-			startActivity(expendituresSetupIntent);
-			finish();
+			Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 	}
 	
@@ -441,10 +345,10 @@ public class BanksSetupActivity extends Activity
 	private void editBank(final int bankNo)
 	{
 		buildAddBankDialog();
-		bankNameField.setText(banks.get(bankNo).getName());
+		bankNameField.setText(banks.get(bankNo).getName() + " ");
 		bankAccNoField.setText(""+banks.get(bankNo).getAccNo());
 		bankBalanceField.setText(""+banks.get(bankNo).getBalance());
-		bankSmsNameField.setText(banks.get(bankNo).getSmsName());
+		bankSmsNameField.setText(banks.get(bankNo).getSmsName() + " ");
 		
 		addBankDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 		{
@@ -487,17 +391,17 @@ public class BanksSetupActivity extends Activity
 		boolean dataCorrect = false;
 		if(bankName.length()==0)
 		{
-			Toast.makeText(getApplicationContext(), "Please Enter The Bank Name", Toast.LENGTH_LONG).show();
+			Toast.makeText(getActivity(), "Please Enter The Bank Name", Toast.LENGTH_LONG).show();
 			dataCorrect = false;
 		}
 		else if(bankBalance.length()==0)
 		{
-			Toast.makeText(getApplicationContext(), "Please Enter The Bank Balance", Toast.LENGTH_LONG).show();
+			Toast.makeText(getActivity(), "Please Enter The Bank Balance", Toast.LENGTH_LONG).show();
 			dataCorrect = false;
 		}
 		else if(bankSmsName.length()==0)
 		{
-			Toast.makeText(getApplicationContext(), "Please Enter The Bank Sms Name", Toast.LENGTH_LONG).show();
+			Toast.makeText(getActivity(), "Please Enter The Bank Sms Name", Toast.LENGTH_LONG).show();
 			dataCorrect = false;
 		}
 		else

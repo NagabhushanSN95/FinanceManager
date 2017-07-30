@@ -1,0 +1,216 @@
+<html>
+<body><h1>August-2015</h1>
+<table border="1" style="width:600px"><tr>
+	<td>Sl No</td>	<td>Date</td>	<td>Type</td>	<td>Particulars</td>	<td>Rate</td>	<td>Quantity</td>	<td>Amount</td></tr>
+<tr>
+	<td>1</td>	<td>1/8/2015</td>	<td>Studies</td>	<td>Note Books 200 Page Long Ruled</td>	<td>27.0</td>	<td>4.0</td>	<td>108.0</td></tr>
+<tr>
+	<td>2</td>	<td>1/8/2015</td>	<td>Studies</td>	<td>Note Books 100 Page Long Ruled</td>	<td>16.0</td>	<td>2.0</td>	<td>32.0</td></tr>
+<tr>
+	<td>3</td>	<td>1/8/2015</td>	<td>Studies</td>	<td>Pencil Lead Box 0.5mm</td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>4</td>	<td>1/8/2015</td>	<td>Food</td>	<td>Bhel</td>	<td>20.0</td>	<td>0.5</td>	<td>10.0</td></tr>
+<tr>
+	<td>5</td>	<td>1/8/2015</td>	<td>Food</td>	<td>Sweet Lassi</td>	<td>8.0</td>	<td>1.0</td>	<td>8.0</td></tr>
+<tr>
+	<td>6</td>	<td>2/8/2015</td>	<td>Food</td>	<td>Minute Maid</td>	<td>30.0</td>	<td>1.0</td>	<td>30.0</td></tr>
+<tr>
+	<td>7</td>	<td>2/8/2015</td>	<td>Others</td>	<td>Union Bank Of India Withdrawal: Account Transfer: Shoes</td>	<td>999.0</td>	<td>1.0</td>	<td>999.0</td></tr>
+<tr>
+	<td>8</td>	<td>2/8/2015</td>	<td>Food</td>	<td>Union Bank Of India Withdrawal: Account Transfer: Badam 500g At Bigg Bazaar</td>	<td>585.0</td>	<td>1.0</td>	<td>585.0</td></tr>
+<tr>
+	<td>9</td>	<td>2/8/2015</td>	<td>Travels</td>	<td>PESIT To Bigg Bazaar Bus</td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>10</td>	<td>2/8/2015</td>	<td>Travels</td>	<td>Bigg Bazaar To PESIT Bus</td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>11</td>	<td>3/8/2015</td>	<td>Income</td>	<td>Circuithon 2.0 1st Place Prize</td>	<td>500.0</td>	<td>1.0</td>	<td>500.0</td></tr>
+<tr>
+	<td>12</td>	<td>4/8/2015</td>	<td>Travels</td>	<td>PESIT To Vijayanagar Bus</td>	<td>14.0</td>	<td>1.0</td>	<td>14.0</td></tr>
+<tr>
+	<td>13</td>	<td>4/8/2015</td>	<td>Income</td>	<td>Battu Uncle Paid Appa's Medicine Amount</td>	<td>500.0</td>	<td>1.0</td>	<td>500.0</td></tr>
+<tr>
+	<td>14</td>	<td>4/8/2015</td>	<td>Travels</td>	<td>Vijayanagar To PESIT Bus</td>	<td>14.0</td>	<td>1.0</td>	<td>14.0</td></tr>
+<tr>
+	<td>15</td>	<td>4/8/2015</td>	<td>Others</td>	<td>No Change Given By Conductor</td>	<td>2.0</td>	<td>1.0</td>	<td>2.0</td></tr>
+<tr>
+	<td>16</td>	<td>4/8/2015</td>	<td>Others</td>	<td>Finance Manager Print Out Of May 2015</td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>17</td>	<td>4/8/2015</td>	<td>Others</td>	<td>Finance Manager Print Out Of July 2015</td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>18</td>	<td>4/8/2015</td>	<td>Others</td>	<td>Calendar Of Events 7th Sem Print Out</td>	<td>1.0</td>	<td>3.0</td>	<td>3.0</td></tr>
+<tr>
+	<td>19</td>	<td>4/8/2015</td>	<td>Others</td>	<td>Resume Print Out</td>	<td>3.0</td>	<td>1.0</td>	<td>3.0</td></tr>
+<tr>
+	<td>20</td>	<td>4/8/2015</td>	<td>Others</td>	<td>Carbon Sheet</td>	<td>3.0</td>	<td>0.333333</td>	<td>1.0</td></tr>
+<tr>
+	<td>21</td>	<td>4/8/2015</td>	<td>Income</td>	<td>Sold A Pen To Ganesh</td>	<td>3.0</td>	<td>1.0</td>	<td>3.0</td></tr>
+<tr>
+	<td>22</td>	<td>5/8/2015</td>	<td>Food</td>	<td>Bhel</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>23</td>	<td>7/8/2015</td>	<td>Food</td>	<td>Good Day Biscuit</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>24</td>	<td>7/8/2015</td>	<td>Food</td>	<td>Hide And Seek Biscuit</td>	<td>25.0</td>	<td>1.0</td>	<td>25.0</td></tr>
+<tr>
+	<td>25</td>	<td>8/8/2015</td>	<td>Studies</td>	<td>Resume Print Out</td>	<td>3.0</td>	<td>3.0</td>	<td>9.0</td></tr>
+<tr>
+	<td>26</td>	<td>9/8/2015</td>	<td>Travels</td>	<td>Union Bank Of India Withdrawal: Account Transfer: Train Ticket From Bengaluru To Ballari</td>	<td>252.8</td>	<td>1.0</td>	<td>252.8</td></tr>
+<tr>
+	<td>27</td>	<td>9/8/2015</td>	<td>Travels</td>	<td>Union Bank Of India Withdrawal: Account Transfer: Train Ticket Bengaluru To Ballari</td>	<td>252.8</td>	<td>1.0</td>	<td>252.8</td></tr>
+<tr>
+	<td>28</td>	<td>9/8/2015</td>	<td>Travels</td>	<td>Union Bank Of India Withdrawal: Account Transfer: Train Ticket Ballari To Bengaluru</td>	<td>252.8</td>	<td>1.0</td>	<td>252.8</td></tr>
+<tr>
+	<td>29</td>	<td>10/8/2015</td>	<td>Studies</td>	<td>MWR Lab Manual</td>	<td>7.0</td>	<td>1.0</td>	<td>7.0</td></tr>
+<tr>
+	<td>30</td>	<td>10/8/2015</td>	<td>Studies</td>	<td>AMMVLSI Lab Manual</td>	<td>45.0</td>	<td>1.0</td>	<td>45.0</td></tr>
+<tr>
+	<td>31</td>	<td>10/8/2015</td>	<td>Food</td>	<td>Tender Coconut Water</td>	<td>25.0</td>	<td>1.0</td>	<td>25.0</td></tr>
+<tr>
+	<td>32</td>	<td>10/8/2015</td>	<td>Food</td>	<td>Salt Lassi</td>	<td>6.0</td>	<td>2.0</td>	<td>12.0</td></tr>
+<tr>
+	<td>33</td>	<td>9/8/2015</td>	<td>Food</td>	<td>Bhel</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>34</td>	<td>13/8/2015</td>	<td>Others</td>	<td>Envelope</td>	<td>1.25</td>	<td>4.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>35</td>	<td>13/8/2015</td>	<td>Others</td>	<td>Post To Appa</td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>36</td>	<td>15/8/2015</td>	<td>Travels</td>	<td>PESIT To Hosakere Halli Cross</td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>37</td>	<td>15/8/2015</td>	<td>Travels</td>	<td>Hosakere Halli Cross To Shreenivasa Nagar</td>	<td>12.0</td>	<td>1.0</td>	<td>12.0</td></tr>
+<tr>
+	<td>38</td>	<td>15/8/2015</td>	<td>Others</td>	<td>Vidyapeetha</td>	<td>101.0</td>	<td>2.0</td>	<td>202.0</td></tr>
+<tr>
+	<td>39</td>	<td>15/8/2015</td>	<td>Travels</td>	<td>Shreenivasa Nagar To Hosakere Halli Cross</td>	<td>12.0</td>	<td>1.0</td>	<td>12.0</td></tr>
+<tr>
+	<td>40</td>	<td>15/8/2015</td>	<td>Food</td>	<td>Salt Lassi</td>	<td>6.0</td>	<td>1.0</td>	<td>6.0</td></tr>
+<tr>
+	<td>41</td>	<td>12/8/2015</td>	<td>Food</td>	<td>Bhel</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>42</td>	<td>13/8/2015</td>	<td>Others</td>	<td>5th Sem Marks Card Lamination</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>43</td>	<td>15/8/2015</td>	<td>Mobile</td>	<td>Docomo Half Rate Pack</td>	<td>48.0</td>	<td>1.0</td>	<td>48.0</td></tr>
+<tr>
+	<td>44</td>	<td>12/8/2015</td>	<td>Mobile</td>	<td>Docomo Full Talk Time</td>	<td>200.0</td>	<td>1.0</td>	<td>200.0</td></tr>
+<tr>
+	<td>45</td>	<td>15/8/2015</td>	<td>Food</td>	<td>Good Day Biscuit</td>	<td>25.0</td>	<td>1.0</td>	<td>25.0</td></tr>
+<tr>
+	<td>46</td>	<td>15/8/2015</td>	<td>Food</td>	<td>Milk Bikis Biscuit</td>	<td>15.0</td>	<td>1.0</td>	<td>15.0</td></tr>
+<tr>
+	<td>47</td>	<td>16/8/2015</td>	<td>Food</td>	<td>Kurkure Masala</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>48</td>	<td>16/8/2015</td>	<td>Food</td>	<td>Potato Chips</td>	<td>15.0</td>	<td>2.0</td>	<td>30.0</td></tr>
+<tr>
+	<td>49</td>	<td>18/8/2015</td>	<td>Food</td>	<td>Ice Cream Cone Butter Scotch</td>	<td>30.0</td>	<td>1.0</td>	<td>30.0</td></tr>
+<tr>
+	<td>50</td>	<td>19/8/2015</td>	<td>Studies</td>	<td>Resume Print Out</td>	<td>3.0</td>	<td>6.0</td>	<td>18.0</td></tr>
+<tr>
+	<td>51</td>	<td>19/8/2015</td>	<td>Studies</td>	<td>Library Fine</td>	<td>2.0</td>	<td>2.0</td>	<td>4.0</td></tr>
+<tr>
+	<td>52</td>	<td>19/8/2015</td>	<td>Others</td>	<td>Library Xerox Anna To Me</td>	<td>2.0</td>	<td>1.0</td>	<td>2.0</td></tr>
+<tr>
+	<td>53</td>	<td>20/8/2015</td>	<td>Others</td>	<td>Chocolate For Nandakka And Avani</td>	<td>5.0</td>	<td>2.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>54</td>	<td>20/8/2015</td>	<td>Others</td>	<td>Gift Cover</td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>55</td>	<td>20/8/2015</td>	<td>Food</td>	<td>Pic Nic</td>	<td>5.0</td>	<td>1.0</td>	<td>5.0</td></tr>
+<tr>
+	<td>56</td>	<td>21/8/2015</td>	<td>Travels</td>	<td>PESIT To Vidyapeetha Auto</td>	<td>45.0</td>	<td>1.0</td>	<td>45.0</td></tr>
+<tr>
+	<td>57</td>	<td>21/8/2015</td>	<td>Others</td>	<td>Pramit Namakarana</td>	<td>501.0</td>	<td>1.0</td>	<td>501.0</td></tr>
+<tr>
+	<td>58</td>	<td>21/8/2015</td>	<td>Others</td>	<td>Hastodaka At Vidyapeetha</td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>59</td>	<td>21/8/2015</td>	<td>Others</td>	<td>Ootada Dakshine At Pramit Namakarana</td>	<td>30.0</td>	<td>1.0</td>	<td>30.0</td></tr>
+<tr>
+	<td>60</td>	<td>21/8/2015</td>	<td>Others</td>	<td>Foot Wear Stand At Vidyapeetha</td>	<td>2.0</td>	<td>1.0</td>	<td>2.0</td></tr>
+<tr>
+	<td>61</td>	<td>21/8/2015</td>	<td>Travels</td>	<td>Shreenivasa Nagar To Hosakere Halli Cross Bus</td>	<td>12.0</td>	<td>1.0</td>	<td>12.0</td></tr>
+<tr>
+	<td>62</td>	<td>22/8/2015</td>	<td>Food</td>	<td>Kurkure Masala</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>63</td>	<td>22/8/2015</td>	<td>Others</td>	<td>Drawing Book Gift For Prajwal</td>	<td>40.0</td>	<td>1.0</td>	<td>37.0</td></tr>
+<tr>
+	<td>64</td>	<td>22/8/2015</td>	<td>Others</td>	<td>Colour Pencils Gift For Prajwal</td>	<td>25.0</td>	<td>1.0</td>	<td>23.0</td></tr>
+<tr>
+	<td>65</td>	<td>22/8/2015</td>	<td>Others</td>	<td>Gift Wrapper</td>	<td>5.0</td>	<td>3.0</td>	<td>15.0</td></tr>
+<tr>
+	<td>66</td>	<td>22/8/2015</td>	<td>Others</td>	<td>Rin Soap</td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>67</td>	<td>23/8/2015</td>	<td>Travels</td>	<td>Hosakere Halli Cross To Shreenivasa Nagar</td>	<td>12.0</td>	<td>1.0</td>	<td>12.0</td></tr>
+<tr>
+	<td>68</td>	<td>23/8/2015</td>	<td>Travels</td>	<td>Shreenivasa Nagar To Vidyanagar Bus</td>	<td>12.0</td>	<td>1.0</td>	<td>12.0</td></tr>
+<tr>
+	<td>69</td>	<td>22/8/2015</td>	<td>Others</td>	<td>Recharge For Amma</td>	<td>50.0</td>	<td>1.0</td>	<td>50.0</td></tr>
+<tr>
+	<td>70</td>	<td>24/8/2015</td>	<td>Others</td>	<td>Cake For Karan's Birthday</td>	<td>350.0</td>	<td>0.25</td>	<td>87.5</td></tr>
+<tr>
+	<td>71</td>	<td>24/8/2015</td>	<td>Others</td>	<td>Potato Chips For Karan's Birthday</td>	<td>30.0</td>	<td>0.25</td>	<td>7.5</td></tr>
+<tr>
+	<td>72</td>	<td>24/8/2015</td>	<td>Others</td>	<td>Match Box</td>	<td>1.0</td>	<td>1.0</td>	<td>1.0</td></tr>
+<tr>
+	<td>73</td>	<td>24/8/2015</td>	<td>Others</td>	<td>Vicks</td>	<td>1.0</td>	<td>4.0</td>	<td>4.0</td></tr>
+<tr>
+	<td>74</td>	<td>24/8/2015</td>	<td>Food</td>	<td>Bhel</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>75</td>	<td>26/8/2015</td>	<td>Food</td>	<td>Tender Coconut Water</td>	<td>25.0</td>	<td>1.0</td>	<td>25.0</td></tr>
+<tr>
+	<td>76</td>	<td>26/8/2015</td>	<td>Studies</td>	<td>Union Bank Of India Withdrawal: Account Transfer: College Fees DD</td>	<td>14120.0</td>	<td>1.0</td>	<td>14120.0</td></tr>
+<tr>
+	<td>77</td>	<td>26/8/2015</td>	<td>Food</td>	<td>Tender Coconut Water</td>	<td>25.0</td>	<td>1.0</td>	<td>25.0</td></tr>
+<tr>
+	<td>78</td>	<td>27/8/2015</td>	<td>Food</td>	<td>Masala Dosa At Food Point</td>	<td>30.0</td>	<td>1.0</td>	<td>30.0</td></tr>
+<tr>
+	<td>79</td>	<td>27/8/2015</td>	<td>Food</td>	<td>Plate Idli At Food Point</td>	<td>15.0</td>	<td>1.0</td>	<td>15.0</td></tr>
+<tr>
+	<td>80</td>	<td>27/8/2015</td>	<td>Food</td>	<td>Happy Happy Cream Biscuit</td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>81</td>	<td>27/8/2015</td>	<td>Food</td>	<td>Bourbon Biscuit</td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>82</td>	<td>27/8/2015</td>	<td></td>	<td>Union Bank Of India Withdrawal: To Wallet:</td>	<td>400.0</td>	<td>1.0</td>	<td>400.0</td></tr>
+<tr>
+	<td>83</td>	<td>27/8/2015</td>	<td>Food</td>	<td>Bhel</td>	<td>20.0</td>	<td>1.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>84</td>	<td>27/8/2015</td>	<td>Others</td>	<td>A4 Size Sheets</td>	<td>0.5</td>	<td>50.0</td>	<td>25.0</td></tr>
+<tr>
+	<td>85</td>	<td>27/8/2015</td>	<td>Others</td>	<td>Note Books 200 Page Long Ruled</td>	<td>27.0</td>	<td>1.0</td>	<td>27.0</td></tr>
+<tr>
+	<td>86</td>	<td>27/8/2015</td>	<td>Studies</td>	<td>Ruled Sheets</td>	<td>0.666667</td>	<td>12.0</td>	<td>8.0</td></tr>
+<tr>
+	<td>87</td>	<td>27/8/2015</td>	<td>Food</td>	<td>Milk Pedha 250gm</td>	<td>80.0</td>	<td>1.0</td>	<td>80.0</td></tr>
+<tr>
+	<td>88</td>	<td>28/8/2015</td>	<td>Studies</td>	<td>AWP Notes Xerox</td>	<td>7.0</td>	<td>1.0</td>	<td>7.0</td></tr>
+<tr>
+	<td>89</td>	<td>28/8/2015</td>	<td></td>	<td>Union Bank Of India Withdrawal: To Wallet:</td>	<td>400.0</td>	<td>1.0</td>	<td>400.0</td></tr>
+<tr>
+	<td>90</td>	<td>28/8/2015</td>	<td>Studies</td>	<td>AWP Adhikari Sir Notes Xerox</td>	<td>95.0</td>	<td>0.9473684210526315</td>	<td>90.0</td></tr>
+<tr>
+	<td>91</td>	<td>28/8/2015</td>	<td>Studies</td>	<td>Previous Year Question Papers Xerox</td>	<td>15.0</td>	<td>0.6666666666666666</td>	<td>10.0</td></tr>
+<tr>
+	<td>92</td>	<td>28/8/2015</td>	<td>Food</td>	<td>Salt Lassi</td>	<td>6.0</td>	<td>1.0</td>	<td>6.0</td></tr>
+<tr>
+	<td>93</td>	<td>30/8/2015</td>	<td>Others</td>	<td>Panchamruta At Rayara Matha</td>	<td>50.0</td>	<td>1.0</td>	<td>50.0</td></tr>
+<tr>
+	<td>94</td>	<td>30/8/2015</td>	<td>Others</td>	<td>Rayara Matha</td>	<td>2.0</td>	<td>1.0</td>	<td>2.0</td></tr>
+<tr>
+	<td>95</td>	<td>30/8/2015</td>	<td>Others</td>	<td>Footstand At Rayara Matha</td>	<td>2.0</td>	<td>1.0</td>	<td>2.0</td></tr>
+<tr>
+	<td>96</td>	<td>30/8/2015</td>	<td>Studies</td>	<td>Polar Graph Print Out</td>	<td>1.0</td>	<td>2.0</td>	<td>2.0</td></tr>
+<tr>
+	<td>97</td>	<td>30/8/2015</td>	<td>Food</td>	<td>Dosa Outside</td>	<td>10.0</td>	<td>2.0</td>	<td>20.0</td></tr>
+<tr>
+	<td>98</td>	<td>30/8/2015</td>	<td>Food</td>	<td>Dil Pasand</td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>99</td>	<td>30/8/2015</td>	<td>Food</td>	<td>Lays Masala</td>	<td>10.0</td>	<td>1.0</td>	<td>10.0</td></tr>
+<tr>
+	<td>100</td>	<td>30/8/2015</td>	<td>Food</td>	<td>50-50 Masala Biscuit</td>	<td>10.0</td>	<td>2.0</td>	<td>20.0</td></tr>
+</table><table border="1" style="width:600px"><tr>
+	<td>Total Income In This Month</td>	<td> 1003.0</td></tr>
+<tr>
+	<td>Total Amount Spent In This Month</td>	<td> 18985.4</td></tr>
+<tr>
+	<td>Amount In wallet</td>	<td> 755.0</td></tr>
+<tr>
+	<td>Amount In Union Bank Of India</td>	<td> 84736.28</td></tr>
+<tr>
+	<td>Amount In State Bank Of India</td>	<td> 10590.0</td></tr>
+</table></html>
+</body>
