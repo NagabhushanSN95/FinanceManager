@@ -31,11 +31,11 @@ public final class R {
     }
     public static final class id {
         public static final int action_bar=0x7f090000;
-        public static final int action_details=0x7f09001f;
-        public static final int action_edit=0x7f090020;
-        public static final int action_export=0x7f090021;
+        public static final int action_details=0x7f090020;
+        public static final int action_edit=0x7f090021;
+        public static final int action_export=0x7f090022;
         public static final int action_settings=0x7f090023;
-        public static final int activity_main=0x7f09000e;
+        public static final int activity_main=0x7f090013;
         public static final int add_bank=0x7f09000d;
         public static final int app_icon=0x7f090001;
         public static final int app_name=0x7f090002;
@@ -46,21 +46,21 @@ public final class R {
         public static final int button_remove=0x7f09001e;
         public static final int button_wallet_debit=0x7f090007;
         public static final int checkBox_erase_data=0x7f090019;
-        public static final int checkBox_splash=0x7f09000f;
+        public static final int checkBox_splash=0x7f09000e;
         public static final int details_scroll=0x7f090004;
         public static final int dialog_bank_debit=0x7f090014;
         public static final int dialog_layout=0x7f09001a;
         public static final int editText_export_fileName=0x7f090018;
         public static final int edit_amount=0x7f090016;
         public static final int edit_particulars=0x7f09001b;
-        public static final int finish=0x7f090022;
+        public static final int finish=0x7f09001f;
         public static final int instruction=0x7f090017;
         public static final int krishna=0x7f090003;
-        public static final int loading=0x7f090012;
+        public static final int loading=0x7f090011;
         public static final int parentLayout=0x7f090009;
-        public static final int photo_krishna=0x7f090010;
-        public static final int progress_line=0x7f090013;
-        public static final int quote=0x7f090011;
+        public static final int photo_krishna=0x7f09000f;
+        public static final int progress_line=0x7f090012;
+        public static final int quote=0x7f090010;
         public static final int radioGroup_banks=0x7f090015;
         public static final int scroll_layout=0x7f090005;
         public static final int wallet_field=0x7f09000c;
@@ -70,19 +70,18 @@ public final class R {
     public static final class layout {
         public static final int activity_details=0x7f030000;
         public static final int activity_edit=0x7f030001;
-        public static final int activity_main=0x7f030002;
-        public static final int activity_settings=0x7f030003;
-        public static final int activity_splash=0x7f030004;
-        public static final int activity_startup=0x7f030005;
+        public static final int activity_settings=0x7f030002;
+        public static final int activity_splash=0x7f030003;
+        public static final int activity_startup=0x7f030004;
+        public static final int activity_summary=0x7f030005;
         public static final int dialog_bank_debit=0x7f030006;
         public static final int dialog_export=0x7f030007;
         public static final int dialog_wallet_debit=0x7f030008;
         public static final int layout_add_bank=0x7f030009;
     }
     public static final class menu {
-        public static final int activity_main=0x7f080000;
-        public static final int activity_startup=0x7f080001;
-        public static final int activity_summary=0x7f080002;
+        public static final int activity_startup=0x7f080000;
+        public static final int activity_summary=0x7f080001;
     }
     public static final class raw {
         public static final int splash_screen_quotes=0x7f040000;

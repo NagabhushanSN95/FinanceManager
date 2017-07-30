@@ -70,7 +70,7 @@ public class ExportActivity extends Activity
 		calendar=Calendar.getInstance();
 		currentMonth=getMonth(calendar.get(Calendar.MONTH));
 		currentYear=calendar.get(Calendar.YEAR)+"";
-		exportFileName=currentMonth+"-"+currentYear+".txt";
+		exportFileName=currentMonth+"-"+currentYear+".doc";
 		readFile();
 		
 		exportDialogLayout=LayoutInflater.from(this);
@@ -155,7 +155,6 @@ public class ExportActivity extends Activity
 	private void readFile()
 	{
 		String line;
-		
 		try
 		{
 			expenditureFolderName="Expenditure List/.temp";
@@ -207,13 +206,13 @@ public class ExportActivity extends Activity
 		}
 		catch(Exception e)
 		{
-			//Toast.makeText(this, "Error In Reading File", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Error In Reading File", Toast.LENGTH_SHORT).show();
 		}
 	}
 	
 	private void saveData()
 	{
-		String spaces="";
+		//String spaces="";
 		try
 		{
 			expenditureFolderName="Expenditure List";
@@ -224,19 +223,35 @@ public class ExportActivity extends Activity
 			
 			exportFile=new File(expenditureFolder, exportFileName);
 			exportWriter=new BufferedWriter(new FileWriter(exportFile));
+			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
 			for(int i=0; i<numEntries; i++)
 			{
-				spaces="";
-				for(int j=0; j<(20-(particulars.get(i).length()/4)); j++)
-					spaces+="\t";
-				exportWriter.write(particulars.get(i)+spaces);
-				exportWriter.write(amounts.get(i)+"\n");
+				exportWriter.write("<tr>\n");
+				exportWriter.write("\t<td>"+(i+1)+"</td>");
+				exportWriter.write("\t<td>"+particulars.get(i)+"</td>");
+				exportWriter.write("\t<td>"+amounts.get(i)+"</td>");
+				exportWriter.write("</tr>\n");
 			}
-			exportWriter.write("\n\n");
-			exportWriter.write("Total Amount Spent In This Month=Rs"+amountSpent+"\n");
-			exportWriter.write("Amount In wallet=Rs"+walletBalance+"\n");
+			exportWriter.write("</table>");
+			
+			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
+			exportWriter.write("<tr>\n");
+			exportWriter.write("\t<td>"+"Total Amount Spent In This Month"+"</td>");
+			exportWriter.write("\t<td>"+"Rs "+amountSpent+"</td>");
+			exportWriter.write("</tr>\n");
+			exportWriter.write("<tr>\n");
+			exportWriter.write("\t<td>"+"Amount In wallet"+"</td>");
+			exportWriter.write("\t<td>"+"Rs "+walletBalance+"</td>");
+			exportWriter.write("</tr>\n");
 			for(int i=0; i<numBanks; i++)
-				exportWriter.write("Amount In "+bankNames.get(i)+"=Rs"+bankBalances.get(i)+"\n");
+			{
+				exportWriter.write("<tr>\n");
+				exportWriter.write("\t<td>"+"Amount In "+bankNames.get(i)+"</td>");
+				exportWriter.write("\t<td>"+"Rs "+bankBalances.get(i)+"</td>");
+				exportWriter.write("</tr>\n");
+			}
+			exportWriter.write("</table>");
+			
 			exportWriter.close();
 			
 			Toast.makeText(getApplicationContext(), "Data Has Been Exported Successfully", Toast.LENGTH_LONG).show();

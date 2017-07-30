@@ -83,7 +83,7 @@ public class StartupActivity extends Activity
 		
 		buildLayout();
 		
-		summaryIntent=new Intent(this, MainActivity.class);
+		summaryIntent=new Intent(this, SummaryActivity.class);
 	}
 
 	@Override
@@ -115,7 +115,8 @@ public class StartupActivity extends Activity
 		parentLayout.setLayoutParams(parentLayoutParams);
 		
 		walletView=(TextView)findViewById(R.id.wallet_view);
-		walletViewParams=new LayoutParams(WIDTH_NAME_FIELDS, LayoutParams.WRAP_CONTENT);
+		walletViewParams=new LayoutParams(WIDTH_NAME_FIELDS-20, LayoutParams.WRAP_CONTENT);
+		walletViewParams.setMargins(20, 0, 0, 0);
 		walletView.setLayoutParams(walletViewParams);
 		walletField=(EditText)findViewById(R.id.wallet_field);
 		walletFieldParams=new LayoutParams(WIDTH_AMOUNT_FIELDS, LayoutParams.WRAP_CONTENT);

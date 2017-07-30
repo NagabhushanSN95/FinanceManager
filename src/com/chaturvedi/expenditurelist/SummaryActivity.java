@@ -24,7 +24,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity
+public class SummaryActivity extends Activity
 {
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -73,11 +73,11 @@ public class MainActivity extends Activity
 		if(VERSION.SDK_INT<=10)
 		{
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_main);
+			setContentView(R.layout.activity_summary);
 		}
 		else
 		{
-			setContentView(R.layout.activity_main);
+			setContentView(R.layout.activity_summary);
 			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
 			actionBar.setVisibility(View.GONE);
 		}
@@ -122,13 +122,14 @@ public class MainActivity extends Activity
 				startActivityForResult(editIntent, 0);
 				return true;
 				
+			case R.id.action_settings:
+				startActivity(settingsIntent);
+				return true;
+				
 			case R.id.action_export:
 				startActivity(exportIntent);
 				refresh();
-				
-			case R.id.action_settings:
-				startActivity(settingsIntent);
-				refresh();
+				return true;
 		}
 		return true;
 	}
@@ -241,7 +242,5 @@ public class MainActivity extends Activity
 		{
 			
 		}
-		
 	}
-
 }

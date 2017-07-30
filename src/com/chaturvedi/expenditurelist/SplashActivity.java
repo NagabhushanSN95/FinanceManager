@@ -52,55 +52,62 @@ public class SplashActivity extends Activity
 		setContentView(R.layout.activity_splash);
 		readFile();
 		startSplash();
-		
-		
 	}
 	
 	private void startSplash()
 	{
-		quoteView=(TextView)findViewById(R.id.quote);
-		quoteStrings=new ArrayList<String>();
-		quoteStream=getResources().openRawResource(R.raw.splash_screen_quotes);
-		quoteReader=new InputStreamReader(quoteStream);
-		reader=new BufferedReader(quoteReader);
-		randomNumber=new Random();
-		try
+		if(showSplash)
 		{
-			String line=reader.readLine();
-			while(line!=null)
+			quoteView=(TextView)findViewById(R.id.quote);
+			quoteStrings=new ArrayList<String>();
+			quoteStream=getResources().openRawResource(R.raw.splash_screen_quotes);
+			quoteReader=new InputStreamReader(quoteStream);
+			reader=new BufferedReader(quoteReader);
+			randomNumber=new Random();
+			try
 			{
-				quoteStrings.add(line);
-				line=reader.readLine();
+				String line=reader.readLine();
+				while(line!=null)
+				{
+					quoteStrings.add(line);
+					line=reader.readLine();
+				}
 			}
-		}
-		catch(Exception e)
-		{
+			catch(Exception e)
+			{
+				
+			}
+			quoteText=quoteStrings.get(randomNumber.nextInt(quoteStrings.size()));
+			quoteView.setText(quoteText);
 			
-		}
-		quoteText=quoteStrings.get(randomNumber.nextInt(quoteStrings.size()));
-		quoteView.setText(quoteText);
-		
-		new Handler().postDelayed(new Runnable() 
-		{
-			@Override
-			public void run()
+			new Handler().postDelayed(new Runnable() 
 			{
-				startActivity(nextActivityIntent);
-				finish();
-			}
-		} ,splashTime);
-		
-		progressLine=(View)findViewById(R.id.progress_line);
-		DisplayMetrics metrics = new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		
-		deviceWidth=metrics.widthPixels;
-		lp=new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
-		progressLine.setLayoutParams(lp);
-		Timer timer=new Timer();
-		Refresh refresher= new Refresh();
-		int refreshTime=5000/deviceWidth+1;
-		timer.scheduleAtFixedRate(refresher, 0, refreshTime);
+				@Override
+				public void run()
+				{
+					startActivity(nextActivityIntent);
+					finish();
+				}
+			} ,splashTime);
+			
+			progressLine=(View)findViewById(R.id.progress_line);
+			DisplayMetrics metrics = new DisplayMetrics();
+			getWindowManager().getDefaultDisplay().getMetrics(metrics);
+			
+			deviceWidth=metrics.widthPixels;
+			lp=new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
+			progressLine.setLayoutParams(lp);
+			Timer timer=new Timer();
+			Refresh refresher= new Refresh();
+			int refreshTime=5000/deviceWidth+1;
+			timer.scheduleAtFixedRate(refresher, 0, refreshTime);
+		}
+		else
+		{
+			startActivity(nextActivityIntent);
+			finish();
+		}
+			
 	}
 	
 	private void readFile()
@@ -121,18 +128,16 @@ public class SplashActivity extends Activity
 			if(line.contains("false"))
 			{
 				showSplash=false;
-				splashTime=0;
 			}
 			else
 			{
 				showSplash=true;
-				splashTime=5000;
 			}
 			settingsReader.close();
 			
 			File prefFile = new File(expenditureFolder, prefFileName);
 			if(prefFile.exists())
-				nextActivityIntent=new Intent(this, MainActivity.class);
+				nextActivityIntent=new Intent(this, SummaryActivity.class);
 			else
 				nextActivityIntent=new Intent(this, StartupActivity.class);
 		}

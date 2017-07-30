@@ -39,7 +39,7 @@
 	android:gravity="center"
 	android:layout_marginLeft="75dp"
         android:text="@string/krishna" />
-    
+        
     <LinearLayout 
         android:id="@+id/parentLayout"
         android:layout_width="match_parent"
@@ -47,5 +47,4 @@
         android:orientation="vertical" >
         
     </LinearLayout>
-
 </LinearLayout>
