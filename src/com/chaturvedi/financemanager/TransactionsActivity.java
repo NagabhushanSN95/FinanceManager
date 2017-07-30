@@ -39,7 +39,6 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -107,6 +106,7 @@ public class TransactionsActivity extends Activity
 	private ArrayList<Template> templates;
 	private int contextMenuTransactionNo;
 	private DecimalFormat formatterTextFields;
+	private DecimalFormat formatterDisplay;
 	private Intent templatesIntent;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -270,6 +270,28 @@ public class TransactionsActivity extends Activity
 		}
 	}
 	
+	private void getTransactionsToDisplay()
+	{
+		if(transactionsDisplayInterval.equals("Month"))
+		{
+			Calendar calendar = Calendar.getInstance();
+			int year = calendar.get(Calendar.YEAR);
+			int month = calendar.get(Calendar.MONTH) + 1;
+			long currentMonth = year*100+month;
+			transactions = DatabaseManager.getMonthlyTransactions(currentMonth);
+		}
+		else if(transactionsDisplayInterval.equals("Year"))
+		{
+			Calendar calendar = Calendar.getInstance();
+			int year = calendar.get(Calendar.YEAR);
+			transactions = DatabaseManager.getYearlyTransactions(year);
+		}
+		else
+		{
+			transactions = DatabaseManager.getAllTransactions();
+		}
+	}
+	
 	private void buildTitleLayout()
 	{
 		// To be removed later
@@ -305,73 +327,98 @@ public class TransactionsActivity extends Activity
 	
 	private void refreshBodyLayout()
 	{
-		readPreferences();						// This will get the transactions
+		getTransactionsToDisplay();						// This will get the transactions
 		buildBodyLayout();
 	}
 	
 	private void buildBodyLayout()
 	{
-		
 		try
 		{
 			parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
 			parentLayout.removeAllViews();
 			
-			DecimalFormat formatterDisplay = new DecimalFormat("#,##0.##");
+			formatterDisplay = new DecimalFormat("#,##0.##");
 			formatterTextFields = new DecimalFormat("##0.##");
 			for(int i=0; i<transactions.size(); i++)
 			{
-				LayoutInflater layoutInflater = LayoutInflater.from(this);
-				LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
-
-				TextView slnoView = (TextView)linearLayout.findViewById(R.id.slno);
-				LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();
-				slnoParams.width = WIDTH_SLNO;
-				slnoView.setLayoutParams(slnoParams);
-				slnoView.setText(""+(i+1));
-				//slnoView.setMinLines(MIN_LINES);
-				
-				TextView dateView = (TextView)linearLayout.findViewById(R.id.date);
-				LayoutParams dateParams = (LayoutParams) dateView.getLayoutParams();
-				dateParams.width = WIDTH_DATE;
-				dateView.setLayoutParams(dateParams);
-				dateView.setText(transactions.get(i).getDate().getShortDate());
-				//dateView.setMinLines(MIN_LINES);
-				
-				TextView particularsView = (TextView)linearLayout.findViewById(R.id.particulars);
-				LayoutParams particularsParams = (LayoutParams) particularsView.getLayoutParams();
-				particularsParams.width = WIDTH_PARTICULARS;
-				particularsView.setLayoutParams(particularsParams);
-				particularsView.setText(transactions.get(i).getParticular());
-				//particularsView.setMinLines(MIN_LINES);
-				
-				TextView amountView = (TextView)linearLayout.findViewById(R.id.amount);
-				LayoutParams amountParams = (LayoutParams) amountView.getLayoutParams();
-				amountParams.width = WIDTH_AMOUNT;
-				amountView.setLayoutParams(amountParams);
-				amountView.setText(formatterDisplay.format(transactions.get(i).getAmount()));
-				//amountView.setMinLines(MIN_LINES);
-
-				parentLayout.addView(linearLayout);
-				registerForContextMenu(linearLayout);
+				displayNewTransaction(i+1,transactions.get(i));
 			}
 			
 			// Scroll the ScrollView To Bottom
-			final ScrollView transactionsScrollView = (ScrollView) findViewById(R.id.scrollView_transactions);
-			transactionsScrollView.post(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					transactionsScrollView.fullScroll(View.FOCUS_DOWN);
-					//transactionsScrollView.smoothScrollTo(0, transactionsScrollView.getBottom());
-				}
-			});
+			int lastViewNo = parentLayout.getChildCount()-1;
+			parentLayout.getChildAt(lastViewNo).requestFocus();
 		}
 		catch(Exception e)
 		{
 			Toast.makeText(this, "Error In Building Body Layout\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	private void displayNewTransaction(int slNo, Transaction transaction)
+	{
+		LayoutInflater layoutInflater = LayoutInflater.from(this);
+		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
+
+		TextView slnoView = (TextView)linearLayout.findViewById(R.id.slno);
+		LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();
+		slnoParams.width = WIDTH_SLNO;
+		slnoView.setLayoutParams(slnoParams);
+		slnoView.setText(""+slNo);
+		
+		TextView dateView = (TextView)linearLayout.findViewById(R.id.date);
+		LayoutParams dateParams = (LayoutParams) dateView.getLayoutParams();
+		dateParams.width = WIDTH_DATE;
+		dateView.setLayoutParams(dateParams);
+		dateView.setText(transaction.getDate().getShortDate());
+		
+		TextView particularsView = (TextView)linearLayout.findViewById(R.id.particulars);
+		LayoutParams particularsParams = (LayoutParams) particularsView.getLayoutParams();
+		particularsParams.width = WIDTH_PARTICULARS;
+		particularsView.setLayoutParams(particularsParams);
+		particularsView.setText(transaction.getParticular());
+		
+		TextView amountView = (TextView)linearLayout.findViewById(R.id.amount);
+		LayoutParams amountParams = (LayoutParams) amountView.getLayoutParams();
+		amountParams.width = WIDTH_AMOUNT;
+		amountView.setLayoutParams(amountParams);
+		amountView.setText(formatterDisplay.format(transaction.getAmount()));
+
+		linearLayout.setFocusable(true);
+		linearLayout.setFocusableInTouchMode(true);
+		parentLayout.addView(linearLayout);
+		registerForContextMenu(linearLayout);
+	}
+	
+	private void displayNewTransaction(Transaction transaction)
+	{
+		int slNo = parentLayout.getChildCount()+1;
+		displayNewTransaction(slNo, transaction);
+		parentLayout.getChildAt(slNo-1).requestFocus();
+	}
+	
+	private void deleteTransactionFromLayout(int transactionNo)
+	{
+		parentLayout.removeViewAt(transactionNo);
+		for(int i=transactionNo; i<parentLayout.getChildCount(); i++)
+		{
+			TextView slnoView = (TextView) parentLayout.getChildAt(i).findViewById(R.id.slno);
+			slnoView.setText("" + (i+1));
+		}
+	}
+	
+	private void editDisplayedTransaction(int transactionNo, Transaction transaction)
+	{
+		LinearLayout layout = (LinearLayout) parentLayout.getChildAt(transactionNo);
+		
+		TextView dateView = (TextView)layout.findViewById(R.id.date);
+		dateView.setText(transaction.getDate().getShortDate());
+		
+		TextView particularsView = (TextView)layout.findViewById(R.id.particulars);
+		particularsView.setText(transaction.getParticular());
+		
+		TextView amountView = (TextView)layout.findViewById(R.id.amount);
+		amountView.setText(formatterDisplay.format(transaction.getAmount()));
 	}
 	
 	/**
@@ -524,6 +571,8 @@ public class TransactionsActivity extends Activity
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
 					}
+					displayNewTransaction(transaction);
+					getTransactionsToDisplay();
 				}
 				else
 				{
@@ -533,7 +582,6 @@ public class TransactionsActivity extends Activity
 					dateField.setText(date);
 					walletCreditDialog.show();
 				}
-				refreshBodyLayout();
 			}
 		});
 		walletCreditDialog.setNegativeButton("Cancel", null);
@@ -606,6 +654,8 @@ public class TransactionsActivity extends Activity
 								transaction.getRate());
 						DatabaseManager.addTemplate(template);
 					}
+					displayNewTransaction(transaction);
+					getTransactionsToDisplay();
 				}
 				else
 				{
@@ -619,7 +669,6 @@ public class TransactionsActivity extends Activity
 					templateCheckBox.setChecked(saveAsTemplate);
 					walletDebitDialog.show();
 				}
-				refreshBodyLayout();
 			}
 		});
 		walletDebitDialog.setNegativeButton("Cancel", null);
@@ -770,6 +819,8 @@ public class TransactionsActivity extends Activity
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
 					}
+					displayNewTransaction(transaction);
+					getTransactionsToDisplay();
 				}
 				else
 				{
@@ -781,7 +832,6 @@ public class TransactionsActivity extends Activity
 					dateField.setText(date);
 					bankCreditDialog.show();
 				}
-				refreshBodyLayout();
 			}
 		});
 		bankCreditDialog.setNegativeButton("Cancel", null);
@@ -924,6 +974,8 @@ public class TransactionsActivity extends Activity
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
 					}
+					displayNewTransaction(transaction);
+					getTransactionsToDisplay();
 				}
 				else
 				{
@@ -936,8 +988,6 @@ public class TransactionsActivity extends Activity
 					dateField.setText(date);
 					bankDebitDialog.show();
 				}
-				
-				refreshBodyLayout();
 			}
 		});
 		bankDebitDialog.setNegativeButton("Cancel", null);
@@ -958,14 +1008,14 @@ public class TransactionsActivity extends Activity
 			public void onClick(DialogInterface dialog, int which)
 			{
 				DatabaseManager.deleteTransaction(transactions.get(contextMenuTransactionNo));
-				//transactions = DatabaseManager.getAllTransactions();
-				refreshBodyLayout();
+				deleteTransactionFromLayout(contextMenuTransactionNo);
+				getTransactionsToDisplay();
 			}
 		});
 		deleteDialog.setNegativeButton("Cancel", null);
 		deleteDialog.show();
 	}
-	
+
 	private void editTransaction(final int transactionNo)
 	{
 		final Transaction oldTransaction = transactions.get(transactionNo);
@@ -1005,6 +1055,8 @@ public class TransactionsActivity extends Activity
 									newTransaction.getType(), newTransaction.getAmount());
 							DatabaseManager.addTemplate(template);
 						}
+						editDisplayedTransaction(transactionNo, newTransaction);
+						getTransactionsToDisplay();
 					}
 					else
 					{
@@ -1014,7 +1066,6 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						walletCreditDialog.show();
 					}
-					refreshBodyLayout();
 				}
 			});
 			walletCreditDialog.show();
@@ -1061,6 +1112,8 @@ public class TransactionsActivity extends Activity
 									newTransaction.getType(), newTransaction.getRate());
 							DatabaseManager.addTemplate(template);
 						}
+						editDisplayedTransaction(transactionNo, newTransaction);
+						getTransactionsToDisplay();
 					}
 					else
 					{
@@ -1073,7 +1126,6 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						walletDebitDialog.show();
 					}
-					refreshBodyLayout();
 				}
 			});
 			walletDebitDialog.show();
@@ -1150,6 +1202,8 @@ public class TransactionsActivity extends Activity
 									newTransaction.getType(), newTransaction.getAmount());
 							DatabaseManager.addTemplate(template);
 						}
+						editDisplayedTransaction(transactionNo, newTransaction);
+						getTransactionsToDisplay();
 					}
 					else
 					{
@@ -1161,7 +1215,6 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						bankCreditDialog.show();
 					}
-					refreshBodyLayout();
 				}
 			});
 			bankCreditDialog.show();
@@ -1266,6 +1319,8 @@ public class TransactionsActivity extends Activity
 									newTransaction.getAmount());
 							DatabaseManager.addTemplate(template);
 						}
+						editDisplayedTransaction(transactionNo, newTransaction);
+						getTransactionsToDisplay();
 					}
 					else
 					{
@@ -1278,7 +1333,6 @@ public class TransactionsActivity extends Activity
 						dateField.setText(date);
 						bankDebitDialog.show();
 					}
-					refreshBodyLayout();
 				}
 			});
 			bankDebitDialog.show();

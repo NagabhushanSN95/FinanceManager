@@ -15,3 +15,4 @@ Goto Help page if you face any difficulties in using the app or mail the develop
 You can Backup/Restore Data in the Extras Page
 It is recommended that you export your Transactions every month or Half Yearly or Yearly. It will be saved as a Document in SD Card(Internal)/Chaturvedi/Finance Manager Folder
 You can clear your data (Only Transactions and Statistics, not Bank Data) in the Extras Page.
+You can set Finance Manager to show transactions of only the current month or current year or all in the setting
