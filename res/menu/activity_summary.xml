@@ -1,0 +1,69 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/action_details"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_details"/>
+    
+    <item
+        android:id="@+id/action_edit_banks"
+        android:orderInCategory="200"
+        android:showAsAction="never"
+        android:title="@string/action_edit_banks"/>
+    
+    <item
+        android:id="@+id/action_edit_expenditure_types"
+        android:orderInCategory="300"
+        android:showAsAction="never"
+        android:title="@string/action_edit_expenditure_types"/>
+    
+    <item
+        android:id="@+id/action_statistics"
+        android:orderInCategory="400"
+        android:showAsAction="never"
+        android:title="@string/action_statistics"/>
+    
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="500"
+        android:showAsAction="never"
+        android:title="@string/action_settings"/>
+    
+    <item
+        android:id="@+id/action_help"
+        android:orderInCategory="600"
+        android:showAsAction="never"
+        android:title="@string/action_help"/>
+    
+    <item
+        android:id="@+id/action_about"
+        android:orderInCategory="700"
+        android:showAsAction="never"
+        android:title="@string/action_about"/>
+    
+    <item
+        android:id="@+id/action_export"
+        android:orderInCategory="800"
+        android:showAsAction="never"
+        android:title="@string/action_export"/>
+    
+    <item
+        android:id="@+id/action_backup"
+        android:orderInCategory="900"
+        android:showAsAction="never"
+        android:title="@string/action_backup"/>
+    
+    <item
+        android:id="@+id/action_restore"
+        android:orderInCategory="1000"
+        android:showAsAction="never"
+        android:title="@string/action_restore"/>
+    
+    <item
+        android:id="@+id/action_clearData"
+        android:orderInCategory="1100"
+        android:showAsAction="never"
+        android:title="@string/action_clearData"/>
+
+</menu>

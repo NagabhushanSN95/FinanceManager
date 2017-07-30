@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_activity_settings" >
+    
+    <RelativeLayout
+        android:id="@+id/action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#444444" >
+
+        <ImageView
+            android:id="@+id/app_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:src="@drawable/app_icon" />
+
+        <TextView
+            android:id="@+id/app_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/app_icon"
+            android:text="@string/app_name"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/krishna"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+	android:layout_below="@+id/action_bar"
+	android:layout_centerHorizontal="true"
+        android:text="@string/krishna" />
+
+    <CheckBox
+        android:id="@+id/checkBox_splash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/krishna"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:text="@string/checkBox_splash" />
+
+    <CheckBox
+        android:id="@+id/checkBox_bank_sms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBox_splash"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:text="@string/checkBox_bank_sms" />
+    
+    <LinearLayout
+        android:id="@+id/layout_currencySymbols"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/checkBox_bank_sms"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:orientation="horizontal" >
+        
+        <TextView
+            android:id="@+id/textView_currencySymbols"
+            android:layout_width="wrap_content"
+    	    android:layout_height="wrap_content"
+    	    android:text="@string/currencySymbols" />
+        
+        <Spinner
+            android:id="@+id/list_currencySymbols"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />"
+    </LinearLayout>
+    
+    <LinearLayout
+        android:id="@+id/layout_transactionsDisplayOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/layout_currencySymbols"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:orientation="horizontal" >
+        
+        <TextView
+            android:id="@+id/textView_transactionsDisplayOptions"
+            android:layout_width="wrap_content"
+    	    android:layout_height="wrap_content"
+    	    android:text="@string/transactionsDisplayOptions" />
+        
+        <Spinner
+            android:id="@+id/list_transactionsDisplayOptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />"
+    </LinearLayout>
+    
+</RelativeLayout>
