@@ -246,7 +246,7 @@ public class SummaryActivity extends Activity
 		//Toast.makeText(getApplicationContext(), "Check-Point 02 "+bankNames, Toast.LENGTH_SHORT).show();
 		ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
 		//Toast.makeText(getApplicationContext(), "Check-Point 03 "+bankBalances, Toast.LENGTH_SHORT).show();
-		DecimalFormat formatter = new DecimalFormat("###,##0");
+		DecimalFormat formatter = new DecimalFormat("###,##0.##");
 		try
 		{
 			// Set The Data

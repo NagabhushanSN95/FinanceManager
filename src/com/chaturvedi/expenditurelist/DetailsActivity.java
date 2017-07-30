@@ -83,6 +83,7 @@ public class DetailsActivity extends Activity
 	private int contextMenuTransactionNo;
 	
 	private Intent smsIntent;
+	private DecimalFormat formatterTextFields;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -132,14 +133,14 @@ public class DetailsActivity extends Activity
 			{
 				buildBankCreditDialog();
 				banks.get(bankNo).setChecked(true);
-				amountField.setText(String.valueOf(amount));
+				amountField.setText(formatterTextFields.format(amount));
 				bankCreditDialog.show();
 			}
 			else
 			{
 				buildBankDebitDialog();
 				banks.get(bankNo).setChecked(true);
-				amountField.setText(String.valueOf(amount));
+				amountField.setText(formatterTextFields.format(amount));
 				bankDebitDialog.show();
 			}
 		}
@@ -218,7 +219,8 @@ public class DetailsActivity extends Activity
 			ArrayList<String> dates = DatabaseManager.getDates();
 			ArrayList<String> particulars = DatabaseManager.getParticulars();
 			ArrayList<Double> amounts = DatabaseManager.getAmounts();
-			DecimalFormat formatter = new DecimalFormat("#,##0");
+			DecimalFormat formatterDisplay = new DecimalFormat("#,##0.##");
+			formatterTextFields = new DecimalFormat("##0.##");
 			for(int i=0; i<DatabaseManager.getNumTransactions(); i++)
 			{
 				LayoutInflater layoutInflater = LayoutInflater.from(this);
@@ -242,7 +244,7 @@ public class DetailsActivity extends Activity
 				TextView amountView = (TextView)linearLayout.findViewById(R.id.amount);
 				LayoutParams amountParams = new LayoutParams(WIDTH_AMOUNT, LayoutParams.WRAP_CONTENT);
 				amountView.setLayoutParams(amountParams);
-				amountView.setText(formatter.format(amounts.get(i)));
+				amountView.setText(formatterDisplay.format(amounts.get(i)));
 
 				//itemsLayout.add(linearLayout);
 				parentLayout.addView(linearLayout);
@@ -797,7 +799,7 @@ public class DetailsActivity extends Activity
 			final double backupAmount = DatabaseManager.getAmount(transactionNo);
 			buildWalletCreditDialog();
 			particularsField.setText(DatabaseManager.getParticular(transactionNo));
-			amountField.setText(String.valueOf(backupAmount));
+			amountField.setText(formatterTextFields.format(backupAmount));
 			dateField.setText(DatabaseManager.getDate(transactionNo));
 			walletCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
@@ -869,9 +871,9 @@ public class DetailsActivity extends Activity
 				buildWalletDebitDialog();
 				particularsField.setText(DatabaseManager.getParticular(transactionNo));
 				typesList.setSelection(expTypeNumBackup);
-				rateField.setText(String.valueOf(rateBackup));
-				quantityField.setText(String.valueOf(quantityBackup));
-				amountField.setText(String.valueOf(amountBackup));
+				rateField.setText(formatterTextFields.format(rateBackup));
+				quantityField.setText(formatterTextFields.format(quantityBackup));
+				amountField.setText(formatterTextFields.format(amountBackup));
 				dateField.setText(DatabaseManager.getDate(transactionNo));
 				
 				walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
@@ -985,7 +987,7 @@ public class DetailsActivity extends Activity
 			buildBankCreditDialog();
 			particularsField.setText(particularBackup);
 			creditTypesList.setSelection(0);
-			amountField.setText(""+DatabaseManager.getAmount(transactionNo));
+			amountField.setText(formatterTextFields.format(DatabaseManager.getAmount(transactionNo)));
 			dateField.setText(DatabaseManager.getDate(transactionNo));
 			
 			// Determine Which Bank
@@ -1096,7 +1098,7 @@ public class DetailsActivity extends Activity
 			buildBankCreditDialog();
 			particularsField.setText(particularBackup);
 			creditTypesList.setSelection(1);
-			amountField.setText(""+DatabaseManager.getAmount(transactionNo));
+			amountField.setText(formatterTextFields.format(DatabaseManager.getAmount(transactionNo)));
 			dateField.setText(DatabaseManager.getDate(transactionNo));
 			
 			// Determine Which Bank
@@ -1207,7 +1209,7 @@ public class DetailsActivity extends Activity
 			buildBankDebitDialog();
 			particularsField.setText(particularBackup);
 			debitTypesList.setSelection(0);
-			amountField.setText(""+DatabaseManager.getAmount(transactionNo));
+			amountField.setText(formatterTextFields.format(DatabaseManager.getAmount(transactionNo)));
 			dateField.setText(DatabaseManager.getDate(transactionNo));
 			
 			debitTypesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
@@ -1363,7 +1365,7 @@ public class DetailsActivity extends Activity
 				particularsField.setText(DatabaseManager.getParticular(transactionNo));
 				debitTypesList.setSelection(1);
 				typesList.setSelection(expTypeNumBackup);
-				amountField.setText(String.valueOf(amountBackup));
+				amountField.setText(formatterTextFields.format(amountBackup));
 				dateField.setText(DatabaseManager.getDate(transactionNo));
 				
 				bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()

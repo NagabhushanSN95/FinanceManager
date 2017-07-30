@@ -53,7 +53,7 @@ public class StatisticsActivity extends Activity
 	
 	private void buildLayout()
 	{
-		DecimalFormat formatter = new DecimalFormat("#,##0");
+		DecimalFormat formatter = new DecimalFormat("#,##0.##");
 		
 		LinearLayout parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
 		LayoutParams parentLayoutParams = (LayoutParams) parentLayout.getLayoutParams();

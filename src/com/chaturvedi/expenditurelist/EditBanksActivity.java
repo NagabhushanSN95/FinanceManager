@@ -200,7 +200,7 @@ public class EditBanksActivity extends Activity
 	
 	private void setData()
 	{
-		DecimalFormat formatter = new DecimalFormat("###0");
+		DecimalFormat formatter = new DecimalFormat("###0.##");
 		walletField.setText(formatter.format(DatabaseManager.getWalletBalance()));
 		int numBanks = DatabaseManager.getNumBanks();
 		ArrayList<String> bankNames = DatabaseManager.getBankNames();
