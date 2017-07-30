@@ -9,5 +9,6 @@
     <string name="debit">Expenditure</string>
     <string name="credit">ATM Withdrawal</string>
     <string name="action_export">Export Data To SD Card</string>
+    <string name="action_advanced_settings">Advanced Settings</string>
 
 </resources>

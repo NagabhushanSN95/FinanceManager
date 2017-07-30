@@ -289,6 +289,14 @@ public class DetailsActivity extends Activity
 	
 	private void buildButtonPanel()
 	{
+		debitButton=(Button)findViewById(R.id.button_debit);
+		debitButton.setOnClickListener(new DebitListener());
+		creditButton=(Button)findViewById(R.id.button_atm_withdrawal);
+		creditButton.setOnClickListener(new CreditListener());
+	}
+	
+	private void buildExpenditureDialog()
+	{
 		expenditureDialog=new AlertDialog.Builder(this);
 		expenditureDialog.setTitle("Add Expenditure");
 		expenditureDialog.setMessage("Enter Details");
@@ -299,7 +307,10 @@ public class DetailsActivity extends Activity
 		expenditureDialog.setNegativeButton("Cancel", new ExpenditureDialogListener(0));
 		particularsField=(EditText)expenditureDialogView.findViewById(R.id.edit_particulars);
 		amountField=(EditText)expenditureDialogView.findViewById(R.id.edit_amount);
-		
+	}
+	
+	private void buildWithdrawalDialog()
+	{
 		atmWithdrawalDialog=new AlertDialog.Builder(this);
 		atmWithdrawalDialog.setTitle("Add ATM Withdrawal");
 		atmWithdrawalDialog.setMessage("Enter Details");
@@ -321,11 +332,6 @@ public class DetailsActivity extends Activity
 		}
 		banks.get(0).setChecked(true);
 		withdrawalAmountField=(EditText)atmWithdrawalDialogView.findViewById(R.id.edit_amount);
-		
-		debitButton=(Button)findViewById(R.id.button_debit);
-		debitButton.setOnClickListener(new DebitListener());
-		creditButton=(Button)findViewById(R.id.button_atm_withdrawal);
-		creditButton.setOnClickListener(new CreditListener());
 	}
 	
 	private class DebitListener implements OnClickListener
@@ -334,6 +340,7 @@ public class DetailsActivity extends Activity
 		@Override
 		public void onClick(View v)
 		{
+			buildExpenditureDialog();
 			expenditureDialog.show();
 		}
 		
@@ -345,6 +352,7 @@ public class DetailsActivity extends Activity
 		@Override
 		public void onClick(View v)
 		{
+			buildWithdrawalDialog();
 			atmWithdrawalDialog.show();
 		}
 		
@@ -376,7 +384,6 @@ public class DetailsActivity extends Activity
 				buildBodyLayout();
 				buildButtonPanel();
 				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
-				
 			}
 		}
 		

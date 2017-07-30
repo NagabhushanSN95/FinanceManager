@@ -50,6 +50,7 @@ public class MainActivity extends Activity
 	private static TextView balanceBank03View;
 	
 	private Intent detailsIntent;
+	private Intent advancedSettingsIntent;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -63,6 +64,7 @@ public class MainActivity extends Activity
 		detailsIntent=new Intent(this, DetailsActivity.class);
 		detailsIntent.putExtra("Number Of Entries", numEntries);
 		detailsIntent.putExtra("Number Of Banks", numBanks);
+		advancedSettingsIntent=new Intent(this, AdvancedSettingsActivity.class);
 	}
 
 	@Override
@@ -79,6 +81,10 @@ public class MainActivity extends Activity
 		{
 			case R.id.action_details:
 				startActivityForResult(detailsIntent, 0);
+				return true;
+				
+			case R.id.action_advanced_settings:
+				startActivityForResult(advancedSettingsIntent, 0);
 				return true;
 				
 			case R.id.action_export:
