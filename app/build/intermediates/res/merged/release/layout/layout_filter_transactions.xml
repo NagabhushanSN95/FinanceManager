@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+			<Spinner
+				android:id="@+id/spinner_intervalType"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="20dp"
+				android:layout_marginStart="20dp"
+				android:layout_marginTop="20dp">
+			</Spinner>
+
+			<LinearLayout
+				android:id="@+id/monthYearSelectorLayout"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal">
+
+				<Spinner
+					android:id="@+id/spinner_monthSelector"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="20dp"
+					android:layout_marginStart="20dp">
+				</Spinner>
+
+				<Spinner
+					android:id="@+id/spinner_yearSelector"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginLeft="20dp"
+					android:layout_marginStart="20dp">
+				</Spinner>
+			</LinearLayout>
+
+			<RelativeLayout
+				android:id="@+id/customIntervalSelectorLayout"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="20dp"
+				android:layout_marginStart="20dp">
+
+				<TextView
+					android:id="@+id/textView_fromDateText"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_alignParentTop="true"
+					android:layout_alignParentLeft="true"
+					android:layout_alignParentStart="true"
+					android:text="@string/from"/>
+
+				<TextView
+					android:id="@+id/textView_fromDate"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_alignTop="@+id/textView_fromDateText"
+					android:layout_toRightOf="@+id/textView_fromDateText"
+					android:layout_toEndOf="@+id/textView_fromDateText"
+					android:layout_marginLeft="10dp"
+					android:layout_marginStart="10dp"/>
+
+				<Button
+					android:id="@+id/button_fromDate"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/change"
+					android:layout_alignTop="@+id/textView_fromDate"
+					android:layout_toRightOf="@+id/textView_fromDate"
+					android:layout_toEndOf="@+id/textView_fromDate"
+					android:layout_marginLeft="10dp"
+					android:layout_marginStart="10dp"/>
+
+				<TextView
+					android:id="@+id/textView_toDateText"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_below="@+id/button_fromDate"
+					android:layout_alignLeft="@+id/textView_fromDateText"
+					android:layout_alignStart="@+id/textView_fromDateText"
+					android:text="@string/from"/>
+
+				<TextView
+					android:id="@+id/textView_toDate"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_alignTop="@+id/textView_toDateText"
+					android:layout_toRightOf="@+id/textView_toDateText"
+					android:layout_toEndOf="@+id/textView_toDateText"
+					android:layout_marginLeft="10dp"
+					android:layout_marginStart="10dp"/>
+
+				<Button
+					android:id="@+id/button_toDate"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/change"
+					android:layout_alignTop="@+id/textView_toDate"
+					android:layout_toRightOf="@+id/textView_toDate"
+					android:layout_toEndOf="@+id/textView_toDate"
+					android:layout_marginLeft="10dp"
+					android:layout_marginStart="10dp"/>
+			</RelativeLayout>
+
+    	    <CheckBox
+				android:id="@+id/checkBox_incomes"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="20dp"
+				android:layout_marginStart="20dp"
+				android:layout_marginTop="20dp"
+				android:text="@string/incomes" />
+
+    	    <CheckBox
+				android:id="@+id/checkBox_expenditures"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="20dp"
+				android:layout_marginStart="20dp"
+				android:text="@string/expenditures" />
+
+    	    <LinearLayout
+				android:id="@+id/expendituresLayout"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="40dp"
+				android:layout_marginStart="40dp"
+				android:layout_marginTop="20dp"
+				android:orientation="vertical" >
+    	    </LinearLayout>
+
+    	    <CheckBox
+				android:id="@+id/checkBox_allBankTransactions"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="20dp"
+				android:layout_marginLeft="20dp"
+				android:layout_marginStart="20dp"
+				android:text="@string/allBankTransactions" />
+
+    	    <LinearLayout
+				android:id="@+id/bankTransactionsLayout"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="20dp"
+				android:layout_marginLeft="40dp"
+				android:layout_marginStart="40dp"
+				android:orientation="vertical" >
+    	    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    
+
+</RelativeLayout>

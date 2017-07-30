@@ -25,7 +25,8 @@ public class DatabaseManager
 	public static final int ACTION_DATABASE_READ_PROGRESS = 101;
 	public static final int ACTION_INITIALIZATION_COMPLETE = 102;
 	public static final int ACTION_NEW_TRANSACTION_FOUND = 103;
-	public static final int ACTION_TOAST_MESSAGE = 104;
+	public static final int ACTION_ALL_TRANSACTIONS_FOUND = 104;
+	public static final int ACTION_TOAST_MESSAGE = 105;
 	
 	public DatabaseManager(Context cxt)
 	{
@@ -463,7 +464,8 @@ public class DatabaseManager
 	{
 		return transactions;
 	}
-	
+
+
 	public static ArrayList<Transaction> getYearlyTransactions(long year)
 	{
 		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
@@ -478,7 +480,10 @@ public class DatabaseManager
 		}
 		return transactions1;
 	}
-	
+
+	/**
+	 * ToDo: To be Deprecated
+	 */
 	public static ArrayList<Transaction> getMonthlyTransactions(long month)
 	{
 		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();

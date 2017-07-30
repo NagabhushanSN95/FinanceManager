@@ -1,0 +1,5 @@
+By Installing and Continuing to use this App, you hereby agree to the terms and conditions stated below.
+01) The data you enter in this App, is stored in the device only and will not be shared or accessed anywhere else other than your device. So, actions like Clearing App Data, Force-Stop, may result in data loss and the App may not work properly unless re-installed completely. So, it is advised to the user that care should be taken that such actions will not be performed.
+02) Your data is private to you and will not be shared anywhere without your permission. But, other people accessing your phone might get access to your data stored in your phone. So, it is your responsibility to prevent such actions, in case you need your data to be private.
+03) This App is nowhere connected to banks. Any Bank details you enter in this App will not be misused by the developer. The App has access only to the messages sent by the bank. The message will be read only to enter the Transaction and will not be shared.
+04) The developer will not be responsible for any problems stated/unstated above. Hereby, you accept that you are responsible for everything.

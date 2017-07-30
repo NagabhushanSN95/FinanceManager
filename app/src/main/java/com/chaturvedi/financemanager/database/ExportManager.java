@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Environment;
 import android.widget.Toast;
 
@@ -82,7 +83,28 @@ public class ExportManager
 			{
 				Transaction transaction = transactions.get(i);
 				int transactionNo = DatabaseManager.getAllTransactions().indexOf(transaction);
+
+				// Set the colour
+				String colour = "black";
+				if (transaction.getType().contains("Debit"))
+				{
+					colour = "red";
+				}
+				else if (transaction.getType().contains("Credit"))
+				{
+					colour = "green";
+				}
+				else if (transaction.getType().contains("Withdraw") || transaction.getType().contains("Savings"))
+				{
+					colour = "blue";
+				}
+				else
+				{
+					colour = "black";
+				}
+
 				exportWriter.write("<tr>\n");
+				exportWriter.write("<font color=\"" + colour + "\">");
 				exportWriter.write("\t<td>"+(i+1)+"</td>");
 				exportWriter.write("\t<td>"+transaction.getDate().getDisplayDate()+"</td>");
 				exportWriter.write("\t<td>"+DatabaseManager.getExactExpType(transactionNo)+"</td>");
@@ -90,6 +112,7 @@ public class ExportManager
 				exportWriter.write("\t<td>"+transaction.getRate()+"</td>");
 				exportWriter.write("\t<td>"+transaction.getQuantity()+"</td>");
 				exportWriter.write("\t<td>"+transaction.getAmount()+"</td>");
+				exportWriter.write("</font>");
 				exportWriter.write("</tr>\n");
 			}
 			exportWriter.write("</table>");

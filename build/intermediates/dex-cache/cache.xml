@@ -1,3 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<items version="2" />
+<items version="2" >
 
+    <item
+        jar="C:\Program Files\Android\sdk\extras\android\m2repository\com\android\support\support-v4\19.1.0\support-v4-19.1.0.jar"
+        jumboMode="false"
+        revision="23.0.2"
+        sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\release\support-v4-19.1.0_25c31f909aefd2b01057c3020630746b92282e1d.jar" />
+    </item>
+
+</items>
