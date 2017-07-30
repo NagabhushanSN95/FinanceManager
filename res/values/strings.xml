@@ -10,5 +10,8 @@
     <string name="credit">ATM Withdrawal</string>
     <string name="action_export">Export Data To SD Card</string>
     <string name="action_advanced_settings">Advanced Settings</string>
+    <string name="slno">Sl No</string>
+    <string name="particulars">Particulars</string>
+    <string name="amount">Amount</string>
 
 </resources>

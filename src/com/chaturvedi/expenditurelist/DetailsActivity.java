@@ -30,8 +30,8 @@ public class DetailsActivity extends Activity
 	private final int MARGIN_TOP=100;
 	private final int MARGIN_LEFT=50;
 	private final int MARGIN_LEFT_SLNO=10;
-	private final int MARGIN_LEFT_PARTICULARS=70;
-	private final int MARGIN_LEFT_AMOUNT=150;
+	private final int MARGIN_LEFT_PARTICULARS=40;
+	private final int MARGIN_LEFT_AMOUNT=190;
 
 	private int walletBalance;
 	private int amountSpent;
@@ -246,7 +246,7 @@ public class DetailsActivity extends Activity
 		titleLayout.addView(slnoTitleView, slnoTitleParams);
 		titleLayout.addView(particularsTitleView, particularsTitleParams);
 		titleLayout.addView(amountTitleView, amountTitleParams);
-		this.addContentView(titleLayout, titleLayoutParams);
+		//this.addContentView(titleLayout, titleLayoutParams);
 	}
 	
 	private void buildBodyLayout()
@@ -254,6 +254,7 @@ public class DetailsActivity extends Activity
 		try
 		{
 			scrollLayout=(LinearLayout)findViewById(R.id.scroll_layout);
+			scrollLayout.removeAllViews();
 			
 			itemsLayout=new ArrayList<RelativeLayout>();
 			itemsView=new ArrayList<ArrayList<TextView>>();
@@ -266,17 +267,24 @@ public class DetailsActivity extends Activity
 				itemsView.get(i).add(new TextView(this));
 				itemsView.get(i).add(new TextView(this));
 				itemsView.get(i).add(new TextView(this));
-				itemsView.get(i).get(0).setText("0"+(i+1));
+				itemsView.get(i).get(0).setText(""+(i+1));
 				itemsView.get(i).get(1).setText(particulars.get(i));
 				itemsView.get(i).get(2).setText(amounts.get(i)+"");
 				
 				itemsLayoutParams.add(new ArrayList<RelativeLayout.LayoutParams>());
 				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
+				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(130, RelativeLayout.LayoutParams.WRAP_CONTENT));
 				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).add(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
-				itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, 20, 30, 30);
-				itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, 20, 30, 30);
-				itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, 20, 30, 30);
+				itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, 20, 10, 20);
+				itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, 20, 10, 20);
+				itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, 20, 10, 20);
+				
+				if(i==0)
+				{
+					itemsLayoutParams.get(i).get(0).setMargins(MARGIN_LEFT_SLNO, 0, 30, 30);
+					itemsLayoutParams.get(i).get(1).setMargins(MARGIN_LEFT_PARTICULARS, 0, 30, 30);
+					itemsLayoutParams.get(i).get(2).setMargins(MARGIN_LEFT_AMOUNT, 0, 30, 30);
+				}
 				
 				itemsLayout.get(i).addView(itemsView.get(i).get(0), itemsLayoutParams.get(i).get(0));
 				itemsLayout.get(i).addView(itemsView.get(i).get(1), itemsLayoutParams.get(i).get(1));
@@ -339,6 +347,22 @@ public class DetailsActivity extends Activity
 		banks.get(0).setChecked(true);
 		withdrawalAmountField=(EditText)atmWithdrawalDialogView.findViewById(R.id.edit_amount);
 	}
+	
+	/*private String breakParticularsString(String line)
+	{
+		ArrayList<String> lines=new ArrayList<String>();
+		for(int i=0; i<line.length()/10; i++)
+		{
+			lines.add(line.substring(0, 10));
+			line=line.substring(10);
+		}
+		line="";
+		for(int i=0; i<lines.size(); i++)
+		{
+			line+=lines.get(i)+"\n";
+		}
+		return line;
+	}*/
 	
 	private class DebitListener implements OnClickListener
 	{
