@@ -4,13 +4,13 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import com.chaturvedi.financemanager.SplashActivity;
-
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.chaturvedi.financemanager.SplashActivity;
 
 public class DatabaseManager
 {

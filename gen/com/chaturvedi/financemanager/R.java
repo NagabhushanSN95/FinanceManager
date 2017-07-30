@@ -68,10 +68,11 @@ public final class R {
         public static final int button_remove=0x7f02001c;
         public static final int krishna=0x7f02001d;
         public static final int nagabhushan=0x7f02001e;
-        public static final int remove_symbol=0x7f02001f;
-        public static final int remove_symbol_pressed=0x7f020020;
-        public static final int wallet_credit=0x7f020021;
-        public static final int wallet_debit=0x7f020022;
+        public static final int progress_bar_pink=0x7f02001f;
+        public static final int remove_symbol=0x7f020020;
+        public static final int remove_symbol_pressed=0x7f020021;
+        public static final int wallet_credit=0x7f020022;
+        public static final int wallet_debit=0x7f020023;
     }
     public static final class id {
         public static final int action_bar=0x7f0b0017;

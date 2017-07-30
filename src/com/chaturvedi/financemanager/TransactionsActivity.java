@@ -357,6 +357,26 @@ public class TransactionsActivity extends Activity
 	
 	private void displayNewTransaction(int slNo, Transaction transaction)
 	{
+		int colour = 0;
+		if(transaction.getType().contains("Debit"))
+		{
+			colour = Color.RED;
+		}
+		else if(transaction.getType().contains("Credit"))
+		{
+			colour = Color.parseColor("#00CC00");
+		}
+		else
+		{
+			colour = Color.BLUE;
+		}
+		
+		if(transaction.getType().contains("Withdraw") || transaction.getType().contains("Savings"))
+		{
+			colour = Color.BLUE;
+		}
+		
+		
 		LayoutInflater layoutInflater = LayoutInflater.from(this);
 		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
 
@@ -377,6 +397,7 @@ public class TransactionsActivity extends Activity
 		particularsParams.width = WIDTH_PARTICULARS;
 		particularsView.setLayoutParams(particularsParams);
 		particularsView.setText(transaction.getParticular());
+		particularsView.setTextColor(colour);
 		
 		TextView amountView = (TextView)linearLayout.findViewById(R.id.amount);
 		LayoutParams amountParams = (LayoutParams) amountView.getLayoutParams();

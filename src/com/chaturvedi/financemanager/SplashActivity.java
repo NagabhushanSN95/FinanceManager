@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -341,6 +342,15 @@ public class SplashActivity extends Activity
 		
 		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar_loading);
 		progressBar.setMax(deviceWidth);
+		
+		/** Change the colour (from blue) to pink for higher versions of android
+		    For lower versions, green colour is good */
+		if(android.os.Build.VERSION.SDK_INT>11)
+		{
+			Drawable progressBarDrawable = this.getResources().getDrawable(R.drawable.progress_bar_pink);
+			progressBar.setProgressDrawable(progressBarDrawable);
+			progressBar.getLayoutParams().height = 6;
+		}
 		
 		// Calculate the refresh time to update the ProgressBar
 		int refreshTime=(splashDuration/deviceWidth)+1;

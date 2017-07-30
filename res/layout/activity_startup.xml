@@ -89,7 +89,7 @@
         android:layout_marginTop="25dp"
         android:background="@drawable/button_green"
         android:text="@string/skip"
-        android:textColor="#FFFFFF"
+        android:textColor="#000000"
         android:textStyle="bold" />
 
     <ImageButton

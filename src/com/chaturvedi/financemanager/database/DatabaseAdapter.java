@@ -694,7 +694,6 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		// Getting single Row Of Counters
 		public Counters getCountersRow(int id)
 		{
-			SQLiteDatabase db = this.getReadableDatabase();
 			int numExpTypes = getNumExpTypes();
 			DecimalFormat formatter = new DecimalFormat("00");
 			String[] queryStrings = new String[numExpTypes+6];
@@ -704,13 +703,14 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				queryStrings[i+2] = "expenditure_"+formatter.format(i+1);
 			}
-			queryStrings[numExpTypes+7] = KEY_AMOUNT_SPENT;
-			queryStrings[numExpTypes+8] = KEY_INCOME;
-			queryStrings[numExpTypes+9] = KEY_SAVINGS;
-			queryStrings[numExpTypes+10] = KEY_WITHDRAWAL;
+			queryStrings[numExpTypes+2] = KEY_AMOUNT_SPENT;
+			queryStrings[numExpTypes+3] = KEY_INCOME;
+			queryStrings[numExpTypes+4] = KEY_SAVINGS;
+			queryStrings[numExpTypes+5] = KEY_WITHDRAWAL;
 			/*Cursor cursor = db.query(TABLE_COUNTERS, new String[] { KEY_ID, KEY_DATE, KEY_EXP01, KEY_EXP02, 
 					KEY_EXP03, KEY_EXP04, KEY_EXP05, KEY_AMOUNT_SPENT, KEY_INCOME, KEY_SAVINGS, KEY_WITHDRAWAL}
 			, KEY_ID + "=?", new String[] { String.valueOf(id) }, null, null, null, null);*/
+			SQLiteDatabase db = this.getReadableDatabase();
 			Cursor cursor = db.query(TABLE_COUNTERS, queryStrings, KEY_ID + "=?", new String[]{String.valueOf(id)},
 					null, null, null, null);
 			if (cursor != null)
