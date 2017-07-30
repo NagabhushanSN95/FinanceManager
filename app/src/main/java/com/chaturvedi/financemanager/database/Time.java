@@ -1,5 +1,6 @@
 package com.chaturvedi.financemanager.database;
 
+import java.text.DecimalFormat;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 
@@ -148,5 +149,13 @@ public class Time
 			return true;
 		else
 			return false;
+	}
+
+	public String getTimeForFileName()
+	{
+		DecimalFormat formatter = new DecimalFormat("00");
+		return formatter.format(year) + "" + formatter.format(month) + "" + formatter.format(date) + "" +
+				formatter.format(hour) + "" + formatter.format(minute) + "" + formatter.format(second) + "" +
+				formatter.format(millis);
 	}
 }

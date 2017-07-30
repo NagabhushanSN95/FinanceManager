@@ -200,20 +200,20 @@ public class TemplatesActivity extends Activity
 				slnoView.setLayoutParams(slnoParams);
 				slnoView.setText(""+(i+1));
 				//slnoView.setMinLines(MIN_LINES);
-				
+
 				TextView typeView = (TextView)linearLayout.findViewById(R.id.type);
 				LayoutParams typeParams = (LayoutParams) typeView.getLayoutParams();
 				typeParams.width = WIDTH_TYPE;
 				typeView.setLayoutParams(typeParams);
 				typeView.setText(templates.get(i).getType());
-				
+
 				TextView particularsView = (TextView)linearLayout.findViewById(R.id.particulars);
 				LayoutParams particularsParams = (LayoutParams) particularsView.getLayoutParams();
 				particularsParams.width = WIDTH_PARTICULARS;
 				particularsView.setLayoutParams(particularsParams);
 				particularsView.setText(templates.get(i).getParticular());
 				//particularsView.setMinLines(MIN_LINES);
-				
+
 				TextView amountView = (TextView)linearLayout.findViewById(R.id.amount);
 				LayoutParams amountParams = (LayoutParams) amountView.getLayoutParams();
 				amountParams.width = WIDTH_AMOUNT;

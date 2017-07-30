@@ -40,6 +40,20 @@ public class Transaction
 		this.setAmount(Double.parseDouble(amount));
 	}
 
+	// Constructor
+	public Transaction(String id, String createdTime, String modifiedTime, String date, String type, String particular, String rate, String quantity, String amount)
+	{
+		this.setID(Integer.parseInt(id));
+		this.setCreatedTime(new Time(createdTime));
+		this.setModifiedTime(new Time(modifiedTime));
+		this.setDate(new Date(date));
+		this.setType(type);
+		this.setParticular(particular);
+		this.setRate(Double.parseDouble(rate));
+		this.setQuantity(Double.parseDouble(quantity));
+		this.setAmount(Double.parseDouble(amount));
+	}
+
 	/**
 	 * Clone a Transaction
 	 * @param transaction
@@ -74,7 +88,7 @@ public class Transaction
 	}
 
 	/**
-	 * @param time The Time at which the transaction is created
+	 * @param createdTime The Time at which the transaction is created
 	 */
 	public void setCreatedTime(Time createdTime)
 	{
@@ -90,7 +104,7 @@ public class Transaction
 	}
 
 	/**
-	 * @param time The Time at which the transaction is created
+	 * @param modifiedTime The Time at which the transaction is modified
 	 */
 	public void setModifiedTime(Time modifiedTime)
 	{

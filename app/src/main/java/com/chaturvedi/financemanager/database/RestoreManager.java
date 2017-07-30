@@ -1,5 +1,14 @@
 package com.chaturvedi.financemanager.database;
 
+import android.content.Context;
+import android.util.Log;
+import android.widget.Toast;
+
+import com.chaturvedi.financemanager.functions.Constants;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,48 +16,350 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.chaturvedi.financemanager.R;
-
-import android.content.Context;
-import android.os.Environment;
-import android.widget.Toast;
-
 public class RestoreManager
 {
 	private Context context;
-	//Backup Data introduced in v3.0.0(56)
+	/*//Backup Data introduced in v3.0.0(56)
 	private int APP_VERSION_NO_56;
 	//While Backing Up in v3.0.0(56), Wallet Balance was not Backed-Up. v3.0.2(58) onwards, Wallet Balance 
 	//Will Also Be Saved
 	private int APP_VERSION_NO_58;
-	//In Version 88, backup and restore for Templates was enables
+	//In Version 88, backup and restore for Templates was enabled
 	private int APP_VERSION_NO_88;
 	
 	private File backupFolder;
-	private String extension;
-	
+	private String extension;*/
+
+	// In version 107, all backup files were clubbed into a single file. Settings was saved as a JSON Object
+	private static final int APP_VERSION_107 = 107;
+	private int result;
+
 	private int appVersionNo;
 	private int numTransactions;
 	private int numBanks;
 	private int numCountersRows;
 	private int numExpTypes;
 	private int numTemplates;
-	
-	private ArrayList<Transaction> transactions;
+
 	private ArrayList<Bank> banks;
+	private ArrayList<Transaction> transactions;
 	private ArrayList<Counters> counters;
 	private ArrayList<String> expTypes;
 	private double walletBalance;
 	private ArrayList<Template> templates;
+
+	private boolean databaseInitialized;
+	private int splashDuration;
+	private int quoteNo;
+	private String transactionsDisplayInterval;
+	private String currencySymbol;
+	private String respondBankSms;
+	private boolean hasBankSmsArrived;
 	
-	public RestoreManager(Context cxt)
+	/*public RestoreManager(Context cxt)
 	{
 		context = cxt;
 		APP_VERSION_NO_56 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_56));
 		APP_VERSION_NO_58 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_58));
 		APP_VERSION_NO_88 = Integer.parseInt(context.getResources().getString(R.string.APP_VERSION_88));
+	}*/
+
+	/**
+	 *
+	 * @param cxt	Context Eg: ExtrasActivity.this
+	 * @param filePath
+	 * @param data	true if Data needs to be restored
+	 *              false if Settings need to be restored
+	 */
+	public RestoreManager(Context cxt, String filePath, boolean data)
+	{
+		context = cxt;
+		if(data)
+		{
+			result = readDataBackup(filePath);
+		}
+		else
+		{
+			result = readSettingsBackup(filePath);
+		}
+
 	}
 	
+	/**
+	 * Reads the backed up data
+	 * @param path:
+	 * @return
+	 * 		0 If Read Properly
+	 * 		1 If No Backup Exists
+	 * 		2 Old Data
+	 * 		3 Error in Catch Block
+	 */
+	public int readDataBackup(String path)
+	{
+		File backupFile = new File(path);
+
+		if(!backupFile.exists())
+		{
+			return 1;
+		}
+		
+		try
+		{
+			BufferedReader backupReader = new BufferedReader(new FileReader(backupFile));
+			
+			// Read The KEY DATA
+			backupReader.readLine();
+			appVersionNo = Integer.parseInt(backupReader.readLine().trim());
+
+			if(appVersionNo < APP_VERSION_107)
+			{
+				return 2;
+			}
+			numBanks = Integer.parseInt(backupReader.readLine().trim());
+			numTransactions = Integer.parseInt(backupReader.readLine().trim());
+			numCountersRows = Integer.parseInt(backupReader.readLine().trim());
+			numExpTypes = Integer.parseInt(backupReader.readLine().trim());
+			numTemplates = Integer.parseInt(backupReader.readLine().trim());
+			backupReader.readLine();
+
+			// Read Wallet Balance
+			backupReader.readLine();
+			walletBalance = Double.parseDouble(backupReader.readLine());
+			backupReader.readLine();
+
+			// Read Bank Details
+			backupReader.readLine();
+			banks = new ArrayList<Bank>(numBanks);
+			for(int i=0; i<numBanks; i++)
+			{
+				Bank bank = new Bank(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
+						backupReader.readLine(),backupReader.readLine());
+				banks.add(bank);
+				backupReader.readLine();
+			}
+
+			// Read Transactions
+			backupReader.readLine();
+			transactions = new ArrayList<Transaction>(numTransactions);
+			for(int i=0; i<numTransactions; i++)
+			{
+				Transaction transaction = new Transaction(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
+						backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),backupReader.readLine()
+						,backupReader.readLine(),backupReader.readLine());
+				transactions.add(transaction);
+				backupReader.readLine();
+			}
+
+			// Read Counters
+			backupReader.readLine();
+			counters = new ArrayList<Counters>(numCountersRows);
+			for(int i=0; i<numCountersRows; i++)
+			{
+				int ID = Integer.parseInt(backupReader.readLine().trim());
+				Date date = new Date(backupReader.readLine().trim());
+				double[] counters1 = new double[numExpTypes+4];
+				for(int j=0; j<numExpTypes+4; j++)
+				{
+					counters1[j] = Double.parseDouble(backupReader.readLine().trim());
+				}
+				Counters counter = new Counters(ID, date, counters1);
+				counters.add(counter);
+				backupReader.readLine();
+			}
+
+			// Read Expenditure Types
+			backupReader.readLine();
+			expTypes = new ArrayList<String>(numExpTypes);
+			for(int i=0; i<numExpTypes ; i++)
+			{
+				expTypes.add(backupReader.readLine().trim());
+			}
+			backupReader.readLine();
+
+			// Read templates
+			backupReader.readLine();
+			templates = new ArrayList<Template>();
+			for(int i=0; i<numTemplates; i++)
+			{
+				int ID = Integer.parseInt(backupReader.readLine().trim());
+				String particulars = backupReader.readLine().trim();
+				String type = backupReader.readLine().trim();
+				double amount = Double.parseDouble(backupReader.readLine().trim());
+				backupReader.readLine();
+				Template template = new Template(ID, particulars, type, amount);
+				templates.add(template);
+			}
+			backupReader.close();
+			return 0;
+		}
+		catch(IOException e)
+		{
+			Toast.makeText(context, "Error in Backing Up Data\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			return 3;
+		}
+	}
+
+	/**
+	 * Reads the backed up data
+	 * @param path:
+	 * @return
+	 * 		0 If Read Properly
+	 * 		1 If No Backup Exists
+	 * 		2 Old Data
+	 * 		3 Error in Catch Block
+	 */
+	private int readSettingsBackup(String path)
+	{
+		File backupFile = new File(path);
+		if(!backupFile.exists())
+		{
+			return 1;
+		}
+
+		try
+		{
+			BufferedReader reader = new BufferedReader(new FileReader(backupFile));
+			String rawData = "";
+			String line = reader.readLine();
+			while(line != null)
+			{
+				rawData += line;
+				line = reader.readLine();
+			}
+			JSONObject jsonObject = new JSONObject(rawData);
+
+			appVersionNo = jsonObject.getInt(Constants.KEY_APP_VERSION);
+			if(appVersionNo < APP_VERSION_107)
+			{
+				return 2;
+			}
+			databaseInitialized = jsonObject.getBoolean(Constants.KEY_DATABASE_INITIALIZED);
+			splashDuration = jsonObject.getInt(Constants.KEY_SPLASH_DURATION);
+			quoteNo = jsonObject.getInt(Constants.KEY_QUOTE_NO);
+			transactionsDisplayInterval = jsonObject.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL);
+			currencySymbol = jsonObject.getString(Constants.KEY_CURRENCY_SYMBOL);
+			respondBankSms = jsonObject.getString(Constants.KEY_RESPOND_BANK_SMS);
+			hasBankSmsArrived = jsonObject.getBoolean(Constants.KEY_BANK_SMS_ARRIVED);
+
+			return 0;
+		}
+		catch (FileNotFoundException e)
+		{
+			Log.d("Settings Restore", e.getMessage(), e.fillInStackTrace());
+			return 3;
+		}
+		catch (IOException e)
+		{
+			Log.d("Settings Restore", e.getMessage(), e.fillInStackTrace());
+			return 3;
+		}
+		catch (JSONException e)
+		{
+			Log.d("Settings Restore", e.getMessage(), e.fillInStackTrace());
+			return 3;
+		}
+	}
+
+	public int getResult()
+	{
+		return result;
+	}
+
+	public int getAppVersionNo()
+	{
+		return appVersionNo;
+	}
+
+	public int getNumTransactions()
+	{
+		return numTransactions;
+	}
+
+	public int getNumBanks()
+	{
+		return numBanks;
+	}
+
+	public int getNumCountersRows()
+	{
+		return numCountersRows;
+	}
+
+	public int getNumExpTypes()
+	{
+		return numExpTypes;
+	}
+
+	public int getNumTemplates()
+	{
+		return numTemplates;
+	}
+
+	public ArrayList<Transaction> getAllTransactions()
+	{
+		return transactions;
+	}
+
+	public ArrayList<Bank> getAllBanks()
+	{
+		return banks;
+	}
+
+	public ArrayList<Counters> getAllCounters()
+	{
+		return counters;
+	}
+
+	public ArrayList<String> getAllExpTypes()
+	{
+		return expTypes;
+	}
+
+	public double getWalletBalance()
+	{
+		return walletBalance;
+	}
+
+	public ArrayList<Template> getAllTemplates()
+	{
+		return templates;
+
+	}
+
+	public boolean isDatabaseInitialized()
+	{
+		return databaseInitialized;
+	}
+
+	public int getSplashDuration()
+	{
+		return splashDuration;
+	}
+
+	public int getQuoteNo()
+	{
+		return quoteNo;
+	}
+
+	public String getTransactionsDisplayInterval()
+	{
+		return transactionsDisplayInterval;
+	}
+
+	public String getCurrencySymbol()
+	{
+		return currencySymbol;
+	}
+
+	public String getRespondBankSms()
+	{
+		return respondBankSms;
+	}
+
+	public boolean isHasBankSmsArrived()
+	{
+		return hasBankSmsArrived;
+	}
 	/**
 	 * Reads the backed up data
 	 * @param backupFolderName: Finance Manager/Auto Backup
@@ -57,7 +368,7 @@ public class RestoreManager
 	 * 		1 If No Backup Exists
 	 * 		2 Old Data
 	 * 		3 Error in Catch Block
-	 */
+	 * /
 	public int readBackups(String backupFolderName)
 	{
 		backupFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), backupFolderName);
@@ -66,18 +377,18 @@ public class RestoreManager
 			return 1;
 		}
 		extension = ".snb";
-		
+
 		String keyDataFileName = "Key Data";
 		File keyDataFile = new File(backupFolder, keyDataFileName+extension);
 		if(!keyDataFile.exists())
 		{
 			return 1;
 		}
-		
+
 		try
 		{
 			BufferedReader keyDataReader = new BufferedReader(new FileReader(keyDataFile));
-			
+
 			// Read The KEY DATA
 			appVersionNo = Integer.parseInt(keyDataReader.readLine().trim());
 			if(appVersionNo < APP_VERSION_NO_56)
@@ -115,7 +426,7 @@ public class RestoreManager
 				readWalletBalance();
 				readTemplates();
 			}
-			
+
 			keyDataReader.close();
 			return 0;
 		}
@@ -388,66 +699,5 @@ public class RestoreManager
 					"Error In RestoreManager/readtemplates()\n" + 
 					e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-	}
-	
-	public int getAppVersionNo()
-	{
-		return appVersionNo;
-	}
-	
-	public int getNumTransactions()
-	{
-		return numTransactions;
-	}
-	
-	public int getNumBanks()
-	{
-		return numBanks;
-	}
-	
-	public int getNumCountersRows()
-	{
-		return numCountersRows;
-	}
-	
-	public int getNumExpTypes()
-	{
-		return numExpTypes;
-	}
-	
-	public int getNumTemplates()
-	{
-		return numTemplates;
-	}
-	
-	public ArrayList<Transaction> getAllTransactions()
-	{
-		return transactions;
-	}
-	
-	public ArrayList<Bank> getAllBanks()
-	{
-		return banks;
-	}
-	
-	public ArrayList<Counters> getAllCounters()
-	{
-		return counters;
-	}
-	
-	public ArrayList<String> getAllExpTypes()
-	{
-		return expTypes;
-	}
-	
-	public double getWalletBalance()
-	{
-		return walletBalance;
-	}
-	
-	public ArrayList<Template> getAllTemplates()
-	{
-		return templates;
-		
-	}
+	}*/
 }

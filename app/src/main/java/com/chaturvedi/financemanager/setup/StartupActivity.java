@@ -1,13 +1,12 @@
 package com.chaturvedi.financemanager.setup;
 
-import java.util.ArrayList;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
@@ -23,15 +22,20 @@ import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.SummaryActivity;
-import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
 
+import java.util.ArrayList;
+
 public class StartupActivity extends FragmentActivity
 {
+	private static final int CODE_SETUP_ACTIVITY = 101;
+	private static final int CODE_FILE_CHOOSER = 102;
+
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private SharedPreferences preferences;
 	private static final String KEY_APP_VERSION = "AppVersionNo";
@@ -84,6 +88,35 @@ public class StartupActivity extends FragmentActivity
 		buildInfoButtons();
 		setAnimation();
 	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+	{
+		super.onActivityResult(requestCode, resultCode, intent);
+
+		switch (requestCode)
+		{
+			case CODE_SETUP_ACTIVITY:
+				if(preferences.contains(KEY_DATABASE_INITIALIZED))
+				{
+					if(preferences.getBoolean(KEY_DATABASE_INITIALIZED, false))
+					{
+						// Finish This Activity
+						finish();
+					}
+				}
+				break;
+
+			case CODE_FILE_CHOOSER:
+				if(resultCode == RESULT_OK)
+				{
+					// Get the Uri of the selected file
+					Uri uri = intent.getData();
+					restoreData(uri.getPath());
+				}
+				break;
+		}
+	}
 	
 	/**
 	 * Calculate the values of various Dimension Fields
@@ -131,7 +164,7 @@ public class StartupActivity extends FragmentActivity
 			@Override
 			public void onClick(View v)
 			{
-				startActivityForResult(setupIntent, 0);
+				startActivityForResult(setupIntent, CODE_SETUP_ACTIVITY);
 			}
 		});
 		
@@ -145,7 +178,9 @@ public class StartupActivity extends FragmentActivity
 			@Override
 			public void onClick(View v)
 			{
-				restoreData();
+				Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+				fileIntent.setType("file/*"); // intent type to filter application based on your requirement
+				startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
 			}
 		});
 		
@@ -317,25 +352,15 @@ public class StartupActivity extends FragmentActivity
 			letter.setLayoutParams(letterParams);
 		}*/
 	}
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
-	{
-		super.onActivityResult(requestCode, resultCode, data);
-		if(preferences.contains(KEY_DATABASE_INITIALIZED))
-		{
-			if(preferences.getBoolean(KEY_DATABASE_INITIALIZED, false))
-			{
-				// Finish This Activity
-				//super.onBackPressed();
-				finish();
-			}
-		}
-	}
 	
-	private void restoreData()
+	private void restoreData(final String path)
 	{
+		// TODO: CREATE a new Activity for Restoring. Give 2 options there. To select Data Backup file
+		// TODO: and settings backup file. Restore both
+
 		IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(this);
 		restoreDialogBuilder.setWaitText("Restoring Data. This may take few minutes depending on the Size of your Data");
+		restoreDialogBuilder.setCancelable(false);
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();
 		
 		/** Restore in a seperate (non-ui) thread */
@@ -344,24 +369,25 @@ public class StartupActivity extends FragmentActivity
 			@Override
 			public void run()
 			{
-				RestoreManager restoreManager = new RestoreManager(StartupActivity.this);
-				int result = restoreManager.readBackups("Finance Manager/Backups");
+				// Restore Data
+				RestoreManager restoreManager = new RestoreManager(StartupActivity.this, path, true);
+				int result = restoreManager.getResult();
 				if(result == 0)
 				{
 					DatabaseManager.initialize(restoreManager.getWalletBalance());
-					//DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-					DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
+					DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
 					DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+					DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 					DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
 					// Initially, in DatabaseAdapter, Counters Table is configured to have 5 Exp Types By Deafult
 					if(restoreManager.getNumExpTypes() != 5)
 					{
-						Log.d("ExtrasActivity/restoreData()","Readjusting Counters Table");
+						Log.d("restoreData()","Readjusting Counters Table");
 						DatabaseManager.readjustCountersTable();
 					}
 					DatabaseManager.setAllCounters(restoreManager.getAllCounters());
 					DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
-					
+
 					// Store Default Preferences
 					SharedPreferences.Editor editor = preferences.edit();
 					int appVersionNo;

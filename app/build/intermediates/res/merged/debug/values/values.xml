@@ -8,6 +8,7 @@
     <color name="button_extras_pressed">#CCCCCC</color>
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <string name="APP_VERSION_107">107</string>
     <string name="APP_VERSION_56">56</string>
     <string name="APP_VERSION_58">58</string>
     <string name="APP_VERSION_64">64</string>
