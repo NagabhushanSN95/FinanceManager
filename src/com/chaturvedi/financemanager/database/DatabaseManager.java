@@ -1081,46 +1081,48 @@ public class DatabaseManager
 		// Go on comparing every fields. Whenever you find a difference, return false;
 		if(transactions1.size() != transactions2.size())
 		{
+			Toast.makeText(context, "Check-Point 01", Toast.LENGTH_SHORT).show();
 			return false;
 		}
 		
 		int numTransactions = transactions1.size();
 		for(int i=0; i<numTransactions; i++)
 		{
-			if(transactions1.get(i).getID() != transactions2.get(i).getID())
-			{
-				//return false;
-				//Toast.makeText(context, "Transaction No " + i + "has different IDs", Toast.LENGTH_SHORT).show();
-			}
-			if(transactions1.get(i).getCreatedTime() != transactions2.get(i).getCreatedTime())
+			Transaction transaction1 = transactions1.get(i);
+			Transaction transaction2 = transactions2.get(i);
+			if(transaction1.getID() != transaction2.getID())
 			{
 				return false;
 			}
-			if(transactions1.get(i).getModifiedTime() != transactions2.get(i).getModifiedTime())
+			if(transaction1.getCreatedTime().isNotEqualTo(transaction2.getCreatedTime()))
 			{
 				return false;
 			}
-			if(transactions1.get(i).getDate() != transactions2.get(i).getDate())
+			if(transaction1.getModifiedTime().isNotEqualTo(transaction2.getModifiedTime()))
 			{
 				return false;
 			}
-			if(transactions1.get(i).getType() != transactions2.get(i).getType())
+			if(transaction1.getDate().isNotEqualTo(transaction2.getDate()))
 			{
 				return false;
 			}
-			if(transactions1.get(i).getParticular() != transactions2.get(i).getParticular())
+			if(!transaction1.getType().equals(transaction2.getType()))
 			{
 				return false;
 			}
-			if(transactions1.get(i).getRate() != transactions2.get(i).getRate())
+			if(!transaction1.getParticular().equals(transaction2.getParticular()))
 			{
 				return false;
 			}
-			if(transactions1.get(i).getQuantity() != transactions2.get(i).getQuantity())
+			if(transaction1.getRate() != transaction2.getRate())
 			{
 				return false;
 			}
-			if(transactions1.get(i).getAmount() != transactions2.get(i).getAmount())
+			if(transaction1.getQuantity() != transaction2.getQuantity())
+			{
+				return false;
+			}
+			if(transaction1.getAmount() != transaction2.getAmount())
 			{
 				return false;
 			}
@@ -1140,14 +1142,13 @@ public class DatabaseManager
 		{
 			if(banks1.get(i).getID() != banks2.get(i).getID())
 			{
-				//Toast.makeText(context, "Bank No " + i + "has different IDs", Toast.LENGTH_SHORT).show();
-				//return false;
+				return false;
 			}
-			if(banks1.get(i).getName() != banks2.get(i).getName())
+			if(!banks1.get(i).getName().equals(banks2.get(i).getName()))
 			{
 				return false;
 			}
-			if(banks1.get(i).getAccNo() != banks2.get(i).getAccNo())
+			if(!banks1.get(i).getAccNo().equals(banks2.get(i).getAccNo()))
 			{
 				return false;
 			}
@@ -1155,7 +1156,7 @@ public class DatabaseManager
 			{
 				return false;
 			}
-			if(banks1.get(i).getSmsName() != banks2.get(i).getSmsName())
+			if(!banks1.get(i).getSmsName().equals(banks2.get(i).getSmsName()))
 			{
 				return false;
 			}
@@ -1175,8 +1176,7 @@ public class DatabaseManager
 		{
 			if(counters1.get(i).getID() != counters2.get(i).getID())
 			{
-				//Toast.makeText(context, "Counter No " + i + " has different IDs", Toast.LENGTH_SHORT).show();
-				//return false;
+				return false;
 			}
 			if(counters1.get(i).getExp01() != counters2.get(i).getExp01())
 			{
@@ -1228,12 +1228,7 @@ public class DatabaseManager
 		int numExpTypes = expTypes1.size();
 		for(int i=0; i<numExpTypes; i++)
 		{
-			/*if(expTypes1.get(i).getID() != expTypes2.get(i).getID())
-			{
-				Toast.makeText(context, "ExpTypes No " + i + "has different IDs", Toast.LENGTH_SHORT).show();
-				//return false;
-			}*/
-			if(expTypes1.get(i) != expTypes2.get(i))
+			if(!expTypes1.get(i).equals(expTypes2.get(i)))
 			{
 				return false;
 			}

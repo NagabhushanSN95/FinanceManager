@@ -108,4 +108,45 @@ public class Time
 	public void setMillis(int millis) {
 		this.millis = millis;
 	}
+	
+	public boolean isEqualTo(Time time2)
+	{
+		if(this.getYear() != time2.getYear())
+		{
+			return false;
+		}
+		if(this.getMonth() != time2.getMonth())
+		{
+			return false;
+		}
+		if(this.getDate() != time2.getDate())
+		{
+			return false;
+		}
+		if(this.getHour() != time2.getHour())
+		{
+			return false;
+		}
+		if(this.getMinute() != time2.getMinute())
+		{
+			return false;
+		}
+		if(this.getSecond() != time2.getSecond())
+		{
+			return false;
+		}
+		if(this.getMillis() != time2.getMillis())
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean isNotEqualTo(Time time2)
+	{
+		if(!this.isEqualTo(time2))
+			return true;
+		else
+			return false;
+	}
 }

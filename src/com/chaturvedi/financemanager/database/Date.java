@@ -62,25 +62,33 @@ public class Date
 		return date;
 	}
 	
-	public boolean isGreaterThan(Date date1, Date date2)
+	/*public boolean isGreaterThan(Date date2)
 	{
-		if(date1.getLongDate()>date2.getLongDate())
+		if(this.getLongDate()>date2.getLongDate())
 			return true;
 		else
 			return false;
 	}
 	
-	public boolean isLesserThan(Date date1, Date date2)
+	public boolean isLesserThan(Date date2)
 	{
-		if(date1.getLongDate()<date2.getLongDate())
+		if(this.getLongDate()<date2.getLongDate())
 			return true;
 		else
 			return false;
 	}
 	
-	public boolean isEqualTo(Date date1, Date date2)
+	public boolean isEqualTo(Date date2)
 	{
-		if(date1.getLongDate()==date2.getLongDate())
+		if(this.getLongDate()==date2.getLongDate())
+			return true;
+		else
+			return false;
+	}*/
+	
+	public boolean isNotEqualTo(Date date2)
+	{
+		if(this.getLongDate()!=date2.getLongDate())
 			return true;
 		else
 			return false;

@@ -35,6 +35,7 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -347,6 +348,18 @@ public class TransactionsActivity extends Activity
 				parentLayout.addView(linearLayout);
 				registerForContextMenu(linearLayout);
 			}
+			
+			// Scroll the ScrollView To Bottom
+			final ScrollView transactionsScrollView = (ScrollView) findViewById(R.id.scrollView_transactions);
+			transactionsScrollView.post(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					transactionsScrollView.fullScroll(View.FOCUS_DOWN);
+					//transactionsScrollView.smoothScrollTo(0, transactionsScrollView.getBottom());
+				}
+			});
 		}
 		catch(Exception e)
 		{
@@ -503,6 +516,7 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
+						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else
@@ -583,6 +597,7 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getRate());
 						DatabaseManager.addTemplate(template);
+						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else
@@ -743,6 +758,7 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
+						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else
@@ -895,6 +911,7 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
+						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else

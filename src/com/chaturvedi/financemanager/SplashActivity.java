@@ -355,8 +355,6 @@ public class SplashActivity extends Activity
 						Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
 								Toast.LENGTH_SHORT).show();
 					}
-					//Toast.makeText(getApplicationContext(), restoreManager.getAllTemplates().get(0).getParticular()
-					//		, Toast.LENGTH_SHORT).show();
 				}
 			}
 			if(!showSplash)

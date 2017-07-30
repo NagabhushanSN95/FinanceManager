@@ -47,7 +47,7 @@
         android:background="#000000" />
 
     <ScrollView
-        android:id="@+id/details_scroll"
+        android:id="@+id/scrollView_transactions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
