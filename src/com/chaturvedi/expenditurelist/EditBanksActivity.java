@@ -332,8 +332,6 @@ public class EditBanksActivity extends Activity
 		if(dataEntered)
 		{
 			DatabaseManager.setWalletBalance(walletBalance);
-			DatabaseManager.setAmountSpent(0);
-			DatabaseManager.setIncome(0);
 			DatabaseManager.setNumBanks(numBanks);
 			DatabaseManager.setBankNames(bankNames);
 			DatabaseManager.setBankBalances(bankBalances);

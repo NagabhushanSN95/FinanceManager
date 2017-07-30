@@ -584,6 +584,16 @@ public class DatabaseManager
 		}
 		DatabaseManager.dates.add(date);
 	}
+	
+	public static void setDate(int transactionNo, String date)
+	{
+		DatabaseManager.dates.set(transactionNo, date);
+	}
+	
+	public static String getDate(int transactionNo)
+	{
+		return DatabaseManager.dates.get(transactionNo);
+	}
 
 	/**
 	 * @param types the types to set
@@ -618,6 +628,21 @@ public class DatabaseManager
 		}
 		DatabaseManager.types.add(type);
 	}
+	
+	public static void setType(int transactionNo, int expTypeNo)
+	{
+		DatabaseManager.types.set(transactionNo, expenditureTypes.get(expTypeNo));
+	}
+	
+	public static void setType(int transactionNo, String type)
+	{
+		DatabaseManager.types.set(transactionNo, type);
+	}
+	
+	public static String getType(int transactionNo)
+	{
+		return DatabaseManager.types.get(transactionNo);
+	}
 
 	/**
 	 * @param particulars the particulars to set
@@ -642,6 +667,16 @@ public class DatabaseManager
 			DatabaseManager.particulars = new ArrayList<String>();
 		}
 		DatabaseManager.particulars.add(particular);
+	}
+	
+	public static void setParticular(int transactionNo, String particular)
+	{
+		DatabaseManager.particulars.set(transactionNo, particular);
+	}
+	
+	public static String getParticular(int transactionNo)
+	{
+		return DatabaseManager.particulars.get(transactionNo);
 	}
 
 	/**
@@ -677,7 +712,22 @@ public class DatabaseManager
 		}
 		DatabaseManager.rates.add(Double.parseDouble(rate));
 	}
-
+	
+	public static void setRate(int transactionNo, double rate)
+	{
+		DatabaseManager.rates.set(transactionNo, rate);
+	}
+	
+	public static void setRate(int transactionNo, String rate)
+	{
+		DatabaseManager.rates.set(transactionNo, Double.parseDouble(rate));
+	}
+	
+	public static double getRate(int transactionNo)
+	{
+		return DatabaseManager.rates.get(transactionNo);
+	}
+	
 	/**
 	 * @param quantities the quantities to set
 	 */
@@ -701,6 +751,21 @@ public class DatabaseManager
 			DatabaseManager.quantities = new ArrayList<Integer>();
 		}
 		DatabaseManager.quantities.add(quantity);
+	}
+	
+	public static void setQuantity(int transactionNo, int quantity)
+	{
+		DatabaseManager.quantities.set(transactionNo, quantity);
+	}
+	
+	public static void setQuantity(int transactionNo, String quantity)
+	{
+		DatabaseManager.quantities.set(transactionNo, Integer.parseInt(quantity));
+	}
+	
+	public static int getQuantity(int transactionNo)
+	{
+		return DatabaseManager.quantities.get(transactionNo);
 	}
 	
 	public static void addQuantity(String quantity)
@@ -744,6 +809,21 @@ public class DatabaseManager
 			DatabaseManager.amounts = new ArrayList<Double>();
 		}
 		DatabaseManager.amounts.add(Double.parseDouble(amount));
+	}
+	
+	public static void setAmount(int transactionNo, double amount)
+	{
+		DatabaseManager.amounts.set(transactionNo, amount);
+	}
+	
+	public static void setAmount(int transactionNo, String amount)
+	{
+		DatabaseManager.amounts.set(transactionNo, Double.parseDouble(amount));
+	}
+	
+	public static double getAmount(int transactionNo)
+	{
+		return DatabaseManager.amounts.get(transactionNo);
 	}
 	
 	public static void setExpenditureTypes(ArrayList<String> expTypes)

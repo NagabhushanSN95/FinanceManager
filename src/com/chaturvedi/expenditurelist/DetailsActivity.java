@@ -78,7 +78,7 @@ public class DetailsActivity extends Activity
 	private Spinner debitTypesList;
 	private ArrayList<RadioButton> banks;
 	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
-	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer", "Card Swipe"};
+	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
 	
 	private int contextMenuTransactionNo;
 	
@@ -164,7 +164,7 @@ public class DetailsActivity extends Activity
 		super.onCreateContextMenu(menu, view, menuInfo);
 		contextMenuTransactionNo = parentLayout.indexOfChild(view);
 		menu.setHeaderTitle("Options For Transaction "+(contextMenuTransactionNo+1));
-		//menu.add(0, view.getId(), 0, "Edit");
+		menu.add(0, view.getId(), 0, "Edit");
 		menu.add(0, view.getId(), 0, "Delete");
 	}
 	
@@ -172,7 +172,7 @@ public class DetailsActivity extends Activity
 	{
 		if(item.getTitle().equals("Edit"))
 		{
-			//editTransaction(contextMenuTransactionNo);
+			editTransaction(contextMenuTransactionNo);
 		}
 		else if(item.getTitle().equals("Delete"))
 		{
@@ -361,6 +361,7 @@ public class DetailsActivity extends Activity
 			{
 				String particulars = particularsField.getText().toString().trim();
 				String amount = amountField.getText().toString();
+				String date = dateField.getText().toString();
 				boolean dataCorrect= false;
 				
 				if(particulars.length()==0)
@@ -373,6 +374,11 @@ public class DetailsActivity extends Activity
 					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
 					dataCorrect = false;
 				}
+				else if(date.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
 				else
 				{
 					dataCorrect = true;
@@ -383,7 +389,7 @@ public class DetailsActivity extends Activity
 					DatabaseManager.increamentNumTransations();
 					DatabaseManager.increamentWalletBalance(amount);
 					DatabaseManager.increamentIncome(amount);
-					DatabaseManager.addDate(dateField.getText().toString());
+					DatabaseManager.addDate(date);
 					DatabaseManager.addType("Income");
 					DatabaseManager.addParticular(particularsField.getText().toString());
 					DatabaseManager.addRate(amount);
@@ -395,6 +401,7 @@ public class DetailsActivity extends Activity
 					buildWalletCreditDialog();
 					particularsField.setText(particulars);
 					amountField.setText(amount);
+					dateField.setText(date);
 					walletCreditDialog.show();
 				}
 				buildBodyLayout();
@@ -424,14 +431,21 @@ public class DetailsActivity extends Activity
 			public void onClick(DialogInterface dialog, int which)
 			{
 				String particulars = particularsField.getText().toString();
+				int expTypeNo = typesList.getSelectedItemPosition();
 				String rate = rateField.getText().toString();
 				String quantity = quantityField.getText().toString();
 				String amount = amountField.getText().toString();
+				String date = dateField.getText().toString();
 				boolean dataCorrect = false;
 				
 				if(particulars.length()==0)
 				{
 					Toast.makeText(getApplicationContext(), "Please Enter The Particulars", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else if(date.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
 					dataCorrect = false;
 				}
 				else if(amount.length()==0)
@@ -481,21 +495,23 @@ public class DetailsActivity extends Activity
 					DatabaseManager.increamentNumTransations();
 					DatabaseManager.decreamentWalletBalance(amount);
 					DatabaseManager.increamentAmountSpent(amount);
-					DatabaseManager.addDate(dateField.getText().toString());
-					DatabaseManager.addType(typesList.getSelectedItemPosition());
+					DatabaseManager.addDate(date);
+					DatabaseManager.addType(expTypeNo);
 					DatabaseManager.addParticular(particulars);
 					DatabaseManager.addRate(rate);
 					DatabaseManager.addQuantity(quantity);
 					DatabaseManager.addAmount(amount);
-					DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amount);
+					DatabaseManager.increamentCounter(expTypeNo, amount);
 				}
 				else
 				{
 					buildWalletDebitDialog();
 					particularsField.setText(particulars);
+					typesList.setSelection(expTypeNo);
 					rateField.setText(rate);
 					quantityField.setText(quantity);
 					amountField.setText(amount);
+					dateField.setText(date);
 					walletDebitDialog.show();
 				}
 				buildBodyLayout();
@@ -563,12 +579,19 @@ public class DetailsActivity extends Activity
 				// Validate Data
 				String particular = particularsField.getText().toString();
 				String type = "Income Bank";
+				int creditTypesNo = creditTypesList.getSelectedItemPosition();
 				String amount = amountField.getText().toString();
+				String date = dateField.getText().toString();
 				boolean dataCorrect = false;
 				
 				if(amount.length()==0)
 				{
 					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else if(date.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
 					dataCorrect = false;
 				}
 				else
@@ -587,19 +610,19 @@ public class DetailsActivity extends Activity
 						particular = DatabaseManager.getBankName(bankNo) + " Credit: " + particular;
 					}
 
-					if(creditTypesList.getSelectedItemPosition()==0)
+					if(creditTypesNo==0)
 					{
 						type = "Income Bank";
 						DatabaseManager.increamentIncome(amount);
 					}
-					else if(creditTypesList.getSelectedItemPosition()==1)
+					else if(creditTypesNo==1)
 					{
 						type = "Bank Savings";
 						DatabaseManager.decreamentWalletBalance(amount);
 					}
 					DatabaseManager.increamentBankBalance(bankNo, amount);
 					DatabaseManager.increamentNumTransations();
-					DatabaseManager.addDate(dateField.getText().toString());
+					DatabaseManager.addDate(date);
 					DatabaseManager.addType(type);
 					DatabaseManager.addParticular(particular);
 					DatabaseManager.addRate(amount);
@@ -609,8 +632,11 @@ public class DetailsActivity extends Activity
 				else
 				{
 					buildBankCreditDialog();
+					banks.get(bankNo).setChecked(true);
 					particularsField.setText(particular);
+					creditTypesList.setSelection(creditTypesNo);
 					amountField.setText(amount);
+					dateField.setText(date);
 					bankCreditDialog.show();
 				}
 				buildBodyLayout();
@@ -690,12 +716,20 @@ public class DetailsActivity extends Activity
 				// Validate Data
 				String particular = particularsField.getText().toString();
 				String type = "Bank Withdraw";
+				int debitTypesNo = debitTypesList.getSelectedItemPosition();
+				int expTypeNo = 0;
 				String amount = amountField.getText().toString();
+				String date = dateField.getText().toString();
 				boolean dataCorrect = false;
 				
 				if(amount.length()==0)
 				{
 					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else if(date.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
 					dataCorrect = false;
 				}
 				else
@@ -714,21 +748,22 @@ public class DetailsActivity extends Activity
 						particular = DatabaseManager.getBankName(bankNo) + " Withdrawal: " + particular;
 					}
 					
-					if(debitTypesList.getSelectedItemPosition()==0)
+					if(debitTypesNo==0)
 					{
 						type = "Bank Withdraw";
 						DatabaseManager.increamentWalletBalance(amount);
 					}
-					else
+					else if(debitTypesNo==1)
 					{
 						type = (String) typesList.getSelectedItem() + " Bank";
+						expTypeNo = typesList.getSelectedItemPosition();
 						DatabaseManager.increamentAmountSpent(amount);
 						DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amount);
 					}
 					
 					DatabaseManager.decreamentBankBalance(bankNo, amount);
 					DatabaseManager.increamentNumTransations();
-					DatabaseManager.addDate(dateField.getText().toString());
+					DatabaseManager.addDate(date);
 					DatabaseManager.addType(type);
 					DatabaseManager.addParticular(particular);
 					DatabaseManager.addRate(amount);
@@ -738,7 +773,12 @@ public class DetailsActivity extends Activity
 				else
 				{
 					buildBankDebitDialog();
+					banks.get(bankNo).setChecked(true);
+					particularsField.setText(particular);
+					debitTypesList.setSelection(debitTypesNo);
+					typesList.setSelection(expTypeNo);
 					amountField.setText(amount);
+					dateField.setText(date);
 					bankDebitDialog.show();
 				}
 				
@@ -746,5 +786,675 @@ public class DetailsActivity extends Activity
 			}
 		});
 		bankDebitDialog.setNegativeButton("Cancel", null);
+	}
+	
+	private void editTransaction(final int transactionNo)
+	{
+		String expType = DatabaseManager.getType(transactionNo);
+		
+		if(expType.equals("Income"))
+		{
+			final double backupAmount = DatabaseManager.getAmount(transactionNo);
+			buildWalletCreditDialog();
+			particularsField.setText(DatabaseManager.getParticular(transactionNo));
+			amountField.setText(String.valueOf(backupAmount));
+			dateField.setText(DatabaseManager.getDate(transactionNo));
+			walletCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					String particulars = particularsField.getText().toString().trim();
+					String amount = amountField.getText().toString();
+					String date = dateField.getText().toString();
+					boolean dataCorrect= false;
+					
+					if(particulars.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Particulars", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else if(amount.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else if(date.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else
+					{
+						dataCorrect = true;
+					}
+					
+					if(dataCorrect)
+					{
+						double newAmount = Double.parseDouble(amount);
+						double netAmount = newAmount-backupAmount;
+						DatabaseManager.setDate(transactionNo, date);
+						DatabaseManager.setParticular(transactionNo, particulars);
+						if(newAmount!=DatabaseManager.getAmount(transactionNo))
+						{
+							DatabaseManager.increamentIncome(netAmount);
+							DatabaseManager.increamentWalletBalance(netAmount);
+							DatabaseManager.setRate(transactionNo, amount);
+							DatabaseManager.setAmount(transactionNo, amount);
+						}
+					}
+					else
+					{
+						buildWalletCreditDialog();
+						particularsField.setText(particulars);
+						amountField.setText(amount);
+						dateField.setText(date);
+						walletCreditDialog.show();
+					}
+					buildBodyLayout();
+				}
+			});
+			walletCreditDialog.show();
+		}
+		
+		for(int i=0; i<5; i++)
+		{
+			if(expType.equals(DatabaseManager.getExpenditureTypes().get(i)))
+			{
+				final int expTypeNumBackup = i;
+				final double rateBackup = DatabaseManager.getRate(transactionNo);
+				final int quantityBackup = DatabaseManager.getQuantity(transactionNo);
+				final double amountBackup = DatabaseManager.getAmount(transactionNo);
+				
+				buildWalletDebitDialog();
+				particularsField.setText(DatabaseManager.getParticular(transactionNo));
+				typesList.setSelection(expTypeNumBackup);
+				rateField.setText(String.valueOf(rateBackup));
+				quantityField.setText(String.valueOf(quantityBackup));
+				amountField.setText(String.valueOf(amountBackup));
+				dateField.setText(DatabaseManager.getDate(transactionNo));
+				
+				walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+				{
+					@Override
+					public void onClick(DialogInterface dialog, int which)
+					{
+						String particulars = particularsField.getText().toString();
+						int exptypeNo = typesList.getSelectedItemPosition();
+						String rate = rateField.getText().toString();
+						String quantity = quantityField.getText().toString();
+						String amount = amountField.getText().toString();
+						String date = dateField.getText().toString();
+						boolean dataCorrect = false;
+						
+						if(particulars.length()==0)
+						{
+							Toast.makeText(getApplicationContext(), "Please Enter The Particulars", Toast.LENGTH_LONG).show();
+							dataCorrect = false;
+						}
+						else if(date.length()==0)
+						{
+							Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
+							dataCorrect = false;
+						}
+						else if(amount.length()==0)
+						{
+							if(rate.length()==0)
+							{
+								Toast.makeText(getApplicationContext(), "Please Enter The Rate And Amount", Toast.LENGTH_LONG).show();
+								dataCorrect = false;
+							}
+							else if(quantity.length()==0)
+							{
+								amount = rate;
+								quantity = String.valueOf(1);
+								dataCorrect = true;
+							}
+							else
+							{
+								amount = ""+Double.parseDouble(rate)*Double.parseDouble(quantity);
+								dataCorrect = true;
+							}
+						}
+						else if(rate.length()==0)
+						{
+							if(quantity.length()==0)
+							{
+								rate = amount;
+								quantity = String.valueOf(1);
+							}
+							else
+							{
+								rate = ""+Double.parseDouble(amount)/Double.parseDouble(quantity);
+							}
+							dataCorrect = true;
+						}
+						else if(quantity.length()==0)
+						{
+							quantity = ""+Math.round(Double.parseDouble(amount)/Double.parseDouble(rate));
+							dataCorrect = true;
+						}
+						else
+						{
+							dataCorrect = true;
+						}
+						
+						if(dataCorrect)
+						{
+							int newExpTypeNo = typesList.getSelectedItemPosition();
+							double newRate = Double.parseDouble(rate);
+							int newQuantity = Integer.parseInt(quantity);
+							double newAmount = Double.parseDouble(amount);
+							if(newExpTypeNo!=expTypeNumBackup || newRate!=rateBackup || newQuantity!=quantityBackup || newAmount!=amountBackup)
+							{
+								double netAmount = newAmount - amountBackup;
+								DatabaseManager.decreamentCounter(expTypeNumBackup, amountBackup);
+								DatabaseManager.increamentCounter(newExpTypeNo, newAmount);
+								DatabaseManager.increamentAmountSpent(netAmount);
+								DatabaseManager.decreamentWalletBalance(netAmount);
+							}
+							DatabaseManager.setDate(transactionNo, date);
+							DatabaseManager.setType(transactionNo, newExpTypeNo);
+							DatabaseManager.setParticular(transactionNo, particulars);
+							DatabaseManager.setRate(transactionNo, rate);
+							DatabaseManager.setQuantity(transactionNo, quantity);
+							DatabaseManager.setAmount(transactionNo, amount);
+						}
+						else
+						{
+							buildWalletDebitDialog();
+							particularsField.setText(particulars);
+							typesList.setSelection(exptypeNo);
+							rateField.setText(rate);
+							quantityField.setText(quantity);
+							amountField.setText(amount);
+							dateField.setText(date);
+							walletDebitDialog.show();
+						}
+						buildBodyLayout();
+					}
+				});
+				walletDebitDialog.show();
+			}
+		}
+		
+		if(expType.equals("Income Bank"))
+		{
+			String particularBackup = DatabaseManager.getParticular(transactionNo);
+			final double amountBackup = DatabaseManager.getAmount(transactionNo);
+			buildBankCreditDialog();
+			particularsField.setText(particularBackup);
+			creditTypesList.setSelection(0);
+			amountField.setText(""+DatabaseManager.getAmount(transactionNo));
+			dateField.setText(DatabaseManager.getDate(transactionNo));
+			
+			// Determine Which Bank
+			int bankNo=0;
+			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+			{
+				if(particularBackup.contains(DatabaseManager.getBankName(i)))
+				{
+					banks.get(i).setChecked(true);
+					bankNo = i;
+					break;
+				}
+			}
+			final int bankNoBackup = bankNo;
+			
+			bankCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					// Determine Which Bank Is Selected
+					int newBankNo=0;
+					for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+					{
+						if(banks.get(i).isChecked())
+							newBankNo=i;
+					}
+					
+					// Validate Data
+					String particular = particularsField.getText().toString();
+					String type = "Income Bank";
+					int creditTypeNo = creditTypesList.getSelectedItemPosition();
+					String amount = amountField.getText().toString();
+					String date = dateField.getText().toString();
+					boolean dataCorrect = false;
+					
+					if(amount.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else if(date.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else
+					{
+						dataCorrect = true;
+					}
+					
+					if(dataCorrect)
+					{
+						if(particular.length()==0)
+						{
+							particular = DatabaseManager.getBankName(newBankNo) + " Credit: "+ creditTypes[creditTypesList.getSelectedItemPosition()];
+						}
+						else
+						{
+							particular = DatabaseManager.getBankName(newBankNo) + " Credit: " + particular;
+						}
+						DatabaseManager.setParticular(transactionNo, particular);
+						DatabaseManager.setDate(transactionNo, date);
+						
+						double newAmount = Double.parseDouble(amount);
+						if(bankNoBackup!=newBankNo || newAmount!=amountBackup || creditTypesList.getSelectedItemPosition()!=0)
+						{
+							DatabaseManager.decreamentIncome(amountBackup);
+							DatabaseManager.decreamentBankBalance(bankNoBackup, amountBackup);
+							
+							if(creditTypesList.getSelectedItemPosition()==0)
+							{
+								type = "Income Bank";
+								DatabaseManager.increamentIncome(amount);
+							}
+							else if(creditTypesList.getSelectedItemPosition()==1)
+							{
+								type = "Bank Savings";
+								DatabaseManager.decreamentWalletBalance(amount);
+							}
+							DatabaseManager.increamentBankBalance(newBankNo, amount);
+							DatabaseManager.setType(transactionNo, type);
+							DatabaseManager.setRate(transactionNo, amount);
+							DatabaseManager.setQuantity(transactionNo, 1);
+							DatabaseManager.setAmount(transactionNo, amount);
+						}
+					}
+					else
+					{
+						buildBankCreditDialog();
+						banks.get(newBankNo).setChecked(true);
+						particularsField.setText(particular);
+						creditTypesList.setSelection(creditTypeNo);
+						amountField.setText(amount);
+						dateField.setText(date);
+						bankCreditDialog.show();
+					}
+					buildBodyLayout();
+				}
+			});
+			bankCreditDialog.show();
+		}
+		
+		if(expType.equals("Bank Savings"))
+		{
+			String particularBackup = DatabaseManager.getParticular(transactionNo);
+			final double amountBackup = DatabaseManager.getAmount(transactionNo);
+			buildBankCreditDialog();
+			particularsField.setText(particularBackup);
+			creditTypesList.setSelection(1);
+			amountField.setText(""+DatabaseManager.getAmount(transactionNo));
+			dateField.setText(DatabaseManager.getDate(transactionNo));
+			
+			// Determine Which Bank
+			int bankNo=0;
+			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+			{
+				if(particularBackup.contains(DatabaseManager.getBankName(i)))
+				{
+					banks.get(i).setChecked(true);
+					bankNo = i;
+					break;
+				}
+			}
+			final int bankNoBackup = bankNo;
+			
+			bankCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					// Determine Which Bank Is Selected
+					int newBankNo=0;
+					for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+					{
+						if(banks.get(i).isChecked())
+							newBankNo=i;
+					}
+					
+					// Validate Data
+					String particular = particularsField.getText().toString();
+					String type = "Bank Savings";
+					int creditTypeNo = creditTypesList.getSelectedItemPosition();
+					String amount = amountField.getText().toString();
+					String date = dateField.getText().toString();
+					boolean dataCorrect = false;
+					
+					if(amount.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else if(date.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else
+					{
+						dataCorrect = true;
+					}
+					
+					if(dataCorrect)
+					{
+						if(particular.length()==0)
+						{
+							particular = DatabaseManager.getBankName(newBankNo) + " Credit: "+ creditTypes[creditTypesList.getSelectedItemPosition()];
+						}
+						else
+						{
+							particular = DatabaseManager.getBankName(newBankNo) + " Credit: " + particular;
+						}
+						DatabaseManager.setParticular(transactionNo, particular);
+						DatabaseManager.setDate(transactionNo, date);
+						
+						double newAmount = Double.parseDouble(amount);
+						if(bankNoBackup!=newBankNo || newAmount!=amountBackup || creditTypeNo!=1)
+						{
+							DatabaseManager.increamentWalletBalance(amountBackup);
+							DatabaseManager.decreamentBankBalance(bankNoBackup, amountBackup);
+							
+							if(creditTypeNo==0)
+							{
+								type = "Income Bank";
+								DatabaseManager.increamentIncome(amount);
+							}
+							else if(creditTypeNo==1)
+							{
+								type = "Bank Savings";
+								DatabaseManager.decreamentWalletBalance(amount);
+							}
+							DatabaseManager.increamentBankBalance(newBankNo, amount);
+							DatabaseManager.setType(transactionNo, type);
+							DatabaseManager.setRate(transactionNo, amount);
+							DatabaseManager.setQuantity(transactionNo, 1);
+							DatabaseManager.setAmount(transactionNo, amount);
+						}
+					}
+					else
+					{
+						buildBankCreditDialog();
+						banks.get(newBankNo).setChecked(true);
+						particularsField.setText(particular);
+						creditTypesList.setSelection(creditTypeNo);
+						amountField.setText(amount);
+						dateField.setText(date);
+						bankCreditDialog.show();
+					}
+					buildBodyLayout();
+				}
+			});
+			bankCreditDialog.show();
+		}
+		
+		if(expType.equals("Bank Withdraw"))
+		{
+			String particularBackup = DatabaseManager.getParticular(transactionNo);
+			final double amountBackup = DatabaseManager.getAmount(transactionNo);
+			buildBankDebitDialog();
+			particularsField.setText(particularBackup);
+			debitTypesList.setSelection(0);
+			amountField.setText(""+DatabaseManager.getAmount(transactionNo));
+			dateField.setText(DatabaseManager.getDate(transactionNo));
+			
+			debitTypesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+			{
+				@Override
+				public void onItemSelected(AdapterView<?> arg0, View arg1, int itemNo, long arg3)
+				{
+					if(itemNo==0)
+					{
+						typesList.setVisibility(View.GONE);
+					}
+					else
+					{
+						typesList.setVisibility(View.VISIBLE);
+					}
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> arg0)
+				{
+					
+				}
+			});
+			
+			// Determine Which Bank
+			int bankNo=0;
+			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+			{
+				if(particularBackup.contains(DatabaseManager.getBankName(i)))
+				{
+					banks.get(i).setChecked(true);
+					bankNo = i;
+					break;
+				}
+			}
+			final int bankNoBackup = bankNo;
+			
+			bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick(DialogInterface dialog, int which)
+				{
+					// Determine Which Bank Is Selected
+					int newBankNo=0;
+					for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+					{
+						if(banks.get(i).isChecked())
+							newBankNo=i;
+					}
+					
+					// Validate Data
+					String particular = particularsField.getText().toString();
+					String type = "Bank Withdraw";
+					int debitTypeNo = debitTypesList.getSelectedItemPosition();
+					int expTypeNo = 0;
+					String amount = amountField.getText().toString();
+					String date = dateField.getText().toString();
+					boolean dataCorrect = false;
+					
+					if(amount.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else if(date.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else
+					{
+						dataCorrect = true;
+					}
+					
+					if(dataCorrect)
+					{
+						if(particular.length()==0)
+						{
+							particular = DatabaseManager.getBankName(newBankNo) + " Withdrawal: "+ debitTypes[debitTypesList.getSelectedItemPosition()];
+						}
+						else
+						{
+							particular = DatabaseManager.getBankName(newBankNo) + " Withdrawal: " + particular;
+						}
+						DatabaseManager.setParticular(transactionNo, particular);
+						DatabaseManager.setDate(transactionNo, date);
+						
+						double newAmount = Double.parseDouble(amount);
+						if(bankNoBackup!=newBankNo || newAmount!=amountBackup || debitTypeNo!=0)
+						{
+							DatabaseManager.decreamentWalletBalance(amountBackup);
+							DatabaseManager.increamentBankBalance(bankNoBackup, amountBackup);
+							
+							if(debitTypeNo==0)
+							{
+								type = "Bank Withdraw";
+								DatabaseManager.increamentWalletBalance(amount);
+							}
+							else
+							{
+								type = (String) typesList.getSelectedItem() + " Bank";
+								expTypeNo = typesList.getSelectedItemPosition();
+								DatabaseManager.increamentAmountSpent(amount);
+								DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amount);
+							}
+							
+							DatabaseManager.decreamentBankBalance(newBankNo, amount);
+							DatabaseManager.setType(transactionNo, type);
+							DatabaseManager.setRate(transactionNo, amount);
+							DatabaseManager.setQuantity(transactionNo, 1);
+							DatabaseManager.setAmount(transactionNo, amount);
+						}
+					}
+					else
+					{
+						buildBankDebitDialog();
+						banks.get(newBankNo).setChecked(true);
+						particularsField.setText(particular);
+						debitTypesList.setSelection(debitTypeNo);
+						typesList.setSelection(expTypeNo);
+						amountField.setText(amount);
+						dateField.setText(date);
+						bankDebitDialog.show();
+					}
+					buildBodyLayout();
+				}
+			});
+			bankDebitDialog.show();
+		}
+		
+		for(int i=0; i<5; i++)
+		{
+			if(expType.equals(DatabaseManager.getExpenditureTypes().get(i) + " Bank"))
+			{
+				final int expTypeNumBackup = i;
+				String particularBackup = DatabaseManager.getParticular(transactionNo);
+				final double amountBackup = DatabaseManager.getAmount(transactionNo);
+				buildBankDebitDialog();
+				// Determine Which Bank
+				int bankNo=0;
+				for(int j=0; j<DatabaseManager.getNumBanks(); j++)
+				{
+					if(particularBackup.contains(DatabaseManager.getBankName(j)))
+					{
+						banks.get(j).setChecked(true);
+						bankNo = j;
+						break;
+					}
+				}
+				final int bankNoBackup = bankNo;
+				
+				banks.get(bankNoBackup).setChecked(true);
+				particularsField.setText(DatabaseManager.getParticular(transactionNo));
+				debitTypesList.setSelection(1);
+				typesList.setSelection(expTypeNumBackup);
+				amountField.setText(String.valueOf(amountBackup));
+				dateField.setText(DatabaseManager.getDate(transactionNo));
+				
+				bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+				{
+					@Override
+					public void onClick(DialogInterface dialog, int which)
+					{
+						// Determine Which Bank Is Selected
+						int bankNo=0;
+						for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+						{
+							if(banks.get(i).isChecked())
+								bankNo=i;
+						}
+						
+						// Validate Data
+						String particular = particularsField.getText().toString();
+						String type = DatabaseManager.getExpenditureTypes().get(0) + " Bank";
+						int debitTypeNo = debitTypesList.getSelectedItemPosition();
+						int expTypeNo = 0;
+						String amount = amountField.getText().toString();
+						String date = dateField.getText().toString();
+						boolean dataCorrect = false;
+						
+						if(amount.length()==0)
+						{
+							Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+							dataCorrect = false;
+						}
+						else if(date.length()==0)
+						{
+							Toast.makeText(getApplicationContext(), "Please Enter The Date", Toast.LENGTH_LONG).show();
+							dataCorrect = false;
+						}
+						else
+						{
+							dataCorrect = true;
+						}
+						
+						if(dataCorrect)
+						{
+							DatabaseManager.decreamentAmountSpent(amountBackup);
+							DatabaseManager.decreamentCounter(expTypeNumBackup, amountBackup);
+							DatabaseManager.increamentBankBalance(bankNoBackup, amountBackup);
+							if(particular.length()==0)
+							{
+								particular = DatabaseManager.getBankName(bankNo) + " Withdrawal: "+ debitTypes[debitTypeNo];
+							}
+							else
+							{
+								particular = DatabaseManager.getBankName(bankNo) + " Withdrawal: " + particular;
+							}
+							
+							if(debitTypeNo==0)
+							{
+								type = "Bank Withdraw";
+								DatabaseManager.increamentWalletBalance(amount);
+							}
+							else if(debitTypeNo==1)
+							{
+								type = (String) typesList.getSelectedItem() + " Bank";
+								expTypeNo = typesList.getSelectedItemPosition();
+								DatabaseManager.increamentAmountSpent(amount);
+								DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amount);
+							}
+							
+							DatabaseManager.decreamentBankBalance(bankNo, amount);
+							DatabaseManager.setDate(transactionNo, dateField.getText().toString());
+							DatabaseManager.setType(transactionNo, type);
+							DatabaseManager.setParticular(transactionNo, particular);
+							DatabaseManager.setRate(transactionNo, amount);
+							DatabaseManager.setQuantity(transactionNo, 1);
+							DatabaseManager.setAmount(transactionNo, amount);
+						}
+						else
+						{
+							buildBankDebitDialog();
+							banks.get(bankNo).setChecked(true);
+							particularsField.setText(particular);
+							debitTypesList.setSelection(debitTypeNo);
+							typesList.setSelection(expTypeNo);
+							amountField.setText(amount);
+							dateField.setText(date);
+							bankDebitDialog.show();
+						}
+						
+						buildBodyLayout();
+					}
+				});
+				bankDebitDialog.show();
+			}
+		}
 	}
 }

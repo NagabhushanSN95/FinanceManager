@@ -110,6 +110,16 @@ public class EditExpenditureTypesActivity extends Activity
 		typeTextFields.add((EditText) findViewById(R.id.expenditure_type5));
 		
 		expenditureTypes = DatabaseManager.getExpenditureTypes();
+		/*if(expenditureTypes.size()<5)
+		{
+			expenditureTypes = new ArrayList<String>();
+			expenditureTypes.add("Studies");
+			expenditureTypes.add("Food");
+			expenditureTypes.add("Travels");
+			expenditureTypes.add("Mobile & Laptop");
+			expenditureTypes.add("Others");
+			DatabaseManager.setExpenditureTypes(expenditureTypes);
+		}*/
 		typeFieldParams = new ArrayList<LayoutParams>();
 		for(int i=0; i<NUM_EXPENDITURE_TYPES; i++)
 		{
