@@ -183,14 +183,14 @@ ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\Andro
 		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:138:9-59
 	android:name
 		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:136:9-43
-activity#com.chaturvedi.financemanager.main.ExtrasActivity
+activity#com.chaturvedi.financemanager.extras.ExtrasActivity
 ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:143:5-150:16
 	android:label
 		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:145:9-45
 	android:parentActivityName
 		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:146:9-59
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:144:9-44
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:144:9-46
 receiver#com.chaturvedi.financemanager.main.SmsReceiver
 ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:151:5-155:16
 	android:name

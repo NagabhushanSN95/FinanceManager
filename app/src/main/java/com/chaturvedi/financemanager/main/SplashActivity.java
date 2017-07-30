@@ -23,7 +23,7 @@ import android.widget.Toast;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.database.RestoreManager;
+import com.chaturvedi.financemanager.extras.RestoreManager;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.setup.StartupActivity;

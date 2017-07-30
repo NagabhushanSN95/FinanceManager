@@ -22,7 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.Wallet;
+import com.chaturvedi.financemanager.datastructures.Wallet;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;

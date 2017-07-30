@@ -5,10 +5,10 @@ package com.chaturvedi.financemanager.functions;
 import android.content.Context;
 import android.widget.Toast;
 
-import com.chaturvedi.financemanager.database.Bank;
+import com.chaturvedi.financemanager.datastructures.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.ExpenditureType;
-import com.chaturvedi.financemanager.database.Wallet;
+import com.chaturvedi.financemanager.datastructures.ExpenditureType;
+import com.chaturvedi.financemanager.datastructures.Wallet;
 
 public class TransactionTypeParser
 {

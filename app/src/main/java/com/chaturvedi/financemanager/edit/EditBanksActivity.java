@@ -23,9 +23,8 @@ import android.widget.Toast;
 
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.Bank;
+import com.chaturvedi.financemanager.datastructures.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.Wallet;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

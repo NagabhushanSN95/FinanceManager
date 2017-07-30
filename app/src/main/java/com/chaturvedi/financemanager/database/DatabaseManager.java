@@ -5,6 +5,13 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.util.Log;
 
+import com.chaturvedi.financemanager.datastructures.Bank;
+import com.chaturvedi.financemanager.datastructures.Counters;
+import com.chaturvedi.financemanager.datastructures.Date;
+import com.chaturvedi.financemanager.datastructures.ExpenditureType;
+import com.chaturvedi.financemanager.datastructures.Template;
+import com.chaturvedi.financemanager.datastructures.Transaction;
+import com.chaturvedi.financemanager.datastructures.Wallet;
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 
 import static android.media.CamcorderProfile.get;

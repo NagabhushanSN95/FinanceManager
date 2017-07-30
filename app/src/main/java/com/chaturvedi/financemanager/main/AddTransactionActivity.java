@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,7 +19,7 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 

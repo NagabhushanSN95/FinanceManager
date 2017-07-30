@@ -21,10 +21,10 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.ExpenditureType;
-import com.chaturvedi.financemanager.database.Wallet;
+import com.chaturvedi.financemanager.datastructures.ExpenditureType;
+import com.chaturvedi.financemanager.datastructures.Wallet;
 import com.chaturvedi.financemanager.main.SummaryActivity;
-import com.chaturvedi.financemanager.database.Bank;
+import com.chaturvedi.financemanager.datastructures.Bank;
 
 public class SetupActivity extends FragmentActivity
 {

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <TextView
+        android:id="@+id/label_bankName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/label_bankName" />
+
+    <TextView
+        android:id="@+id/label_bankAccNo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/label_bankName"
+        android:layout_below="@+id/label_bankName"
+        android:layout_marginTop="10dp"
+        android:text="@string/label_bankAccNo" />
+
+    <TextView
+        android:id="@+id/label_bankBalance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/label_bankName"
+        android:layout_below="@+id/label_bankAccNo"
+        android:layout_marginTop="10dp"
+        android:text="@string/label_bankBalance" />
+
+    <TextView
+        android:id="@+id/label_bankSmsName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/label_bankName"
+        android:layout_below="@+id/label_bankBalance"
+        android:layout_marginTop="10dp"
+        android:text="@string/label_bankSmsName" />
+
+    <TextView
+        android:id="@+id/textView_colon1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankName"
+        android:layout_alignBottom="@+id/label_bankName"
+        android:layout_toRightOf="@+id/label_bankName"
+        android:layout_marginLeft="5dp"
+        android:text="@string/colon" />
+
+    <TextView
+        android:id="@+id/textView_colon2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankAccNo"
+        android:layout_alignBottom="@+id/label_bankAccNo"
+        android:layout_toRightOf="@+id/label_bankAccNo"
+        android:layout_alignLeft="@+id/textView_colon1"
+        android:text="@string/colon" />
+
+    <TextView
+        android:id="@+id/textView_colon3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankBalance"
+        android:layout_alignBottom="@+id/label_bankBalance"
+        android:layout_toRightOf="@+id/label_bankBalance"
+        android:layout_alignLeft="@+id/textView_colon1"
+        android:text="@string/colon" />
+
+    <TextView
+        android:id="@+id/textView_colon4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankSmsName"
+        android:layout_alignBottom="@+id/label_bankSmsName"
+        android:layout_toRightOf="@+id/label_bankSmsName"
+        android:layout_alignLeft="@+id/textView_colon1"
+        android:text="@string/colon" />
+
+    <TextView
+        android:id="@+id/value_bankName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankName"
+        android:layout_alignBottom="@+id/label_bankName"
+        android:layout_toRightOf="@+id/label_bankName"
+        android:layout_marginLeft="20dp" />
+
+    <TextView
+        android:id="@+id/value_bankAccNo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankAccNo"
+        android:layout_alignBottom="@+id/label_bankAccNo"
+        android:layout_alignLeft="@+id/value_bankName" />
+
+    <TextView
+        android:id="@+id/value_bankBalance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankBalance"
+        android:layout_alignBottom="@+id/label_bankBalance"
+        android:layout_alignLeft="@+id/value_bankName" />
+
+    <TextView
+        android:id="@+id/value_bankSmsName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/label_bankSmsName"
+        android:layout_alignBottom="@+id/label_bankSmsName"
+        android:layout_alignLeft="@+id/value_bankName" />
+
+</RelativeLayout>

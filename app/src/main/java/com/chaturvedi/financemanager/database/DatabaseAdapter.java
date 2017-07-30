@@ -7,6 +7,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.chaturvedi.financemanager.datastructures.Bank;
+import com.chaturvedi.financemanager.datastructures.Counters;
+import com.chaturvedi.financemanager.datastructures.Date;
+import com.chaturvedi.financemanager.datastructures.ExpenditureType;
+import com.chaturvedi.financemanager.datastructures.Template;
+import com.chaturvedi.financemanager.datastructures.Time;
+import com.chaturvedi.financemanager.datastructures.Transaction;
+import com.chaturvedi.financemanager.datastructures.Wallet;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -761,6 +770,65 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		db.close();
 		return transactionList;
 	}
+
+	/**
+	 * To get transactions that satisfy certain criteria
+	 *
+	 * @param rules           		A list of rules. A transaction will be selected only if it satisfies atleast one of the rules
+	 * @param hiddenTransactions   	If false, hidden transactions are not returned.
+	 *                              If true, all transactions are returned.
+	 * @param offset          		Once all the transactions that satisfy the rules are retrieved, numTransactions number of
+	 *                              transactions from the bottom are selected after offset number of transactions.
+	 *                        		Eg, if offset is 200, numTransactions is 100 and total number of transactions are 1000,
+	 *                        		then transactions 701-800 are returned
+	 * @param numTransactions 		Number of transactions to return
+	 * @return an ArrayList of Transactions
+	 */
+	public ArrayList<Transaction> getTransactions(ArrayList<String> rules, boolean hiddenTransactions,
+												  int offset, int numTransactions)
+	{
+		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
+		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE ";
+		if (hiddenTransactions)
+		{
+			// This is unnecessary. But if there are no rules, then there won't be any conditions after 'WHERE'.
+			// This will cause a syntax error. To prevent that, this dummy statement is used.
+			selectQuery += "(" + KEY_HIDDEN + " LIKE '%') ";
+		}
+		else
+		{
+			selectQuery += "(" + KEY_HIDDEN + " = 0) ";
+		}
+
+		int actualOffset = getNumTransactions() - offset - numTransactions;
+		if (actualOffset < 0)
+		{
+			// This happens in the following case
+			// Total Number of Transactions = 25; Offset = 20; NumTransactions = 10;
+			// In this case, only first 5 transactions have to be returned.
+			// So, Offset = 0; NumTransactions = 5 = (10-5) = numTransactions + actualOffset
+			numTransactions += actualOffset;
+			actualOffset = 0;
+		}
+		selectQuery += " LIMIT " + actualOffset + ", " + numTransactions;
+
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				Transaction transaction = new Transaction(cursor.getInt(0), new Time(cursor.getString(1)),
+						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), cursor.getString(5),
+						cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getString(9).equals("1"));
+				transactionList.add(transaction);
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return transactionList;
+	}
 	
 	// Updating single Transaction
 	public void updateTransaction(Transaction transaction)
@@ -1143,7 +1211,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			values.put(KEY_INCOME, counter.getIncome());
 			values.put(KEY_SAVINGS, counter.getSavings());
 			values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
-			if(!db.isOpen())
+			if (!db.isOpen())
 			{
 				db = this.getWritableDatabase();
 			}
@@ -1307,7 +1375,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				KEY_INCOME + " DOUBLE DEFAULT 0," +
 				KEY_SAVINGS + " DOUBLE DEFAULT 0," +
 				KEY_WITHDRAWAL + " DOUBLE DEFAULT 0" + ")";
-		if(!db.isOpen())
+		if (!db.isOpen())
 		{
 			db = this.getWritableDatabase();
 		}
@@ -1315,7 +1383,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 
 		// Get Earlier numExpTypes
 		Cursor cursor = db.rawQuery("SELECT * FROM " + oldTableName, null);
-		int oldNumExpTypes = cursor.getColumnCount()-6;
+		int oldNumExpTypes = cursor.getColumnCount() - 6;
 		cursor.close();
 		// Fill in old values
 		String queryString = "INSERT INTO " + TABLE_COUNTERS + " (" + KEY_ID + ", " + KEY_DATE + ", ";
@@ -1332,7 +1400,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		queryString += KEY_AMOUNT_SPENT + ", " + KEY_INCOME + ", " + KEY_SAVINGS + ", " + KEY_WITHDRAWAL;
 		queryString += " FROM " + oldTableName + "; ";
 		Log.d("Readjust Counters Table", queryString);
-		if(!db.isOpen())
+		if (!db.isOpen())
 		{
 			db = this.getWritableDatabase();
 		}
@@ -1388,7 +1456,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
 		{
-			for(int i=0; i<getNumVisibleExpenditureTypes()+4; i++)
+			for (int i = 0; i < getNumVisibleExpenditureTypes() + 4; i++)
 			{
 				counters[i] = cursor.getDouble(i);
 			}
@@ -1424,7 +1492,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
 		{
-			for(int i=0; i<getNumVisibleExpenditureTypes()+4; i++)
+			for (int i = 0; i < getNumVisibleExpenditureTypes() + 4; i++)
 			{
 				counters[i] = cursor.getDouble(i);
 			}
@@ -1445,7 +1513,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		String countQuery = "SELECT sum(" + KEY_AMOUNT_SPENT + ") FROM " + TABLE_COUNTERS;
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
-		if(cursor.moveToFirst())
+		if (cursor.moveToFirst())
 		{
 			amountSpent = cursor.getLong(0);
 		}
@@ -1467,7 +1535,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				KEY_DATE + " LIKE '" + year + "%'";
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
-		if(cursor.moveToFirst())
+		if (cursor.moveToFirst())
 		{
 			amountSpent = cursor.getLong(0);
 		}
@@ -1489,7 +1557,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				KEY_DATE + " LIKE '" + month + "%'";
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
-		if(cursor.moveToFirst())
+		if (cursor.moveToFirst())
 		{
 			amountSpent = cursor.getLong(0);
 		}
@@ -1509,7 +1577,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		String countQuery = "SELECT sum(" + KEY_INCOME + ") FROM " + TABLE_COUNTERS;
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
-		if(cursor.moveToFirst())
+		if (cursor.moveToFirst())
 		{
 			income = cursor.getLong(0);
 		}
@@ -1531,7 +1599,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				KEY_DATE + " LIKE '" + year + "%'";
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
-		if(cursor.moveToFirst())
+		if (cursor.moveToFirst())
 		{
 			income = cursor.getLong(0);
 		}
@@ -1554,7 +1622,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		;
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
-		if(cursor.moveToFirst())
+		if (cursor.moveToFirst())
 		{
 			income = cursor.getLong(0);
 		}

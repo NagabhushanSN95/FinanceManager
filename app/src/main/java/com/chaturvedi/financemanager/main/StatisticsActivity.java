@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TableLayout;
@@ -23,7 +22,7 @@ import android.widget.TextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.database.Date;
+import com.chaturvedi.financemanager.datastructures.Date;
 
 public class StatisticsActivity extends Activity
 {

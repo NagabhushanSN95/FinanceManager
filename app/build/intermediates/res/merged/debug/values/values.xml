@@ -104,6 +104,7 @@
     <string name="restoreData">Restore Data</string>
     <string name="save">Save</string>
     <string name="setup">Set Up</string>
+    <string name="showMoreTransactions">Show More</string>
     <string name="skip">Skip</string>
     <string name="slno">Sl No</string>
     <string name="splashDuration">Duration Of Splash Screen</string>
@@ -124,14 +125,10 @@
     <string name="wallet_view">Amount In Wallet</string>
     <string name="welcomeNote">Welcome. Let\'s Begin</string>
     <style name="AppBaseTheme" parent="android:Theme.Light">
-        <!--
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
-        -->
+        
     </style>
     <style name="AppTheme" parent="AppBaseTheme">
-        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+        
     </style>
     <style name="dialog_animation">
         <item name="android:windowEnterAnimation">@anim/dialog_slide_up</item>

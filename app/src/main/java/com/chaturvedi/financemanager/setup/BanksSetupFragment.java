@@ -31,8 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.Bank;
-import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.datastructures.Bank;
 
 public class BanksSetupFragment extends Fragment
 {

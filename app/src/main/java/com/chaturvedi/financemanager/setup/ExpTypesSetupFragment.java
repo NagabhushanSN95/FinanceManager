@@ -20,7 +20,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.ExpenditureType;
+import com.chaturvedi.financemanager.datastructures.ExpenditureType;
 
 public class ExpTypesSetupFragment extends Fragment
 {

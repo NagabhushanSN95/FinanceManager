@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
@@ -20,11 +19,9 @@ import android.widget.TextView;
 import com.chaturvedi.customviews.InputDialog;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.ExpenditureType;
+import com.chaturvedi.financemanager.datastructures.ExpenditureType;
 
 import java.util.ArrayList;
-
-import static com.chaturvedi.financemanager.R.id.expType;
 
 public class EditExpTypesActivity extends Activity
 {

@@ -5,40 +5,33 @@
     density="xxhdpi"
     format="8"
     plugin-version="2.2.3"
-    timestamp="598963168684889"
+    timestamp="729323905906194"
     token="7151892063185074182"
-    verifier="COLD_SWAP_REQUESTED" >
+    verifier="MANIFEST_FILE_CHANGE" >
 
     <task
         name="javac"
-        duration="477" />
+        duration="2275" />
     <task
         name="instant-run-dex"
         duration="0" />
     <task
         name="instant-run-transform"
-        duration="11" />
+        duration="38" />
     <task
         name="verifier"
-        duration="2" />
+        duration="3" />
 
     <artifact
-        location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\5\slice_6\classes.dex"
-        type="DEX" />
+        location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\outputs\apk\app-debug.apk"
+        type="MAIN" />
 
     <build
-        timestamp="598929737330779"
-        verifier="FULL_BUILD_REQUESTED" >
+        timestamp="729323905906194"
+        verifier="MANIFEST_FILE_CHANGE" >
         <artifact
             location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\outputs\apk\app-debug.apk"
             type="MAIN" />
-    </build>
-    <build
-        timestamp="598963168684889"
-        verifier="COLD_SWAP_REQUESTED" >
-        <artifact
-            location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\5\slice_6\classes.dex"
-            type="DEX" />
     </build>
 
 </instant-run>

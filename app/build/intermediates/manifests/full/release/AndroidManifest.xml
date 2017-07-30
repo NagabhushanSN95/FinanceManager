@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.chaturvedi.financemanager"
+    android:versionCode="115"
+    android:versionName="4.0.8" >
+
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="19" />
+
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/app_icon"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="com.chaturvedi.financemanager.main.SplashActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.chaturvedi.financemanager.setup.StartupActivity" />
+        <activity android:name="com.chaturvedi.financemanager.setup.SetupActivity" />
+        <activity
+            android:name="com.chaturvedi.financemanager.main.SummaryActivity"
+            android:label="@string/app_name" >
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.main.TransactionsActivity"
+            android:label="@string/label_transactions"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.main.AddTransactionActivity"
+            android:label="@string/label_addTransaction"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity"
+            android:windowSoftInputMode="stateHidden" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.main.TemplatesActivity"
+            android:label="@string/label_templates"
+            android:parentActivityName="com.chaturvedi.financemanager.main.TransactionsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.edit.EditActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.edit.EditWalletsActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.edit.EditActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".edit.EditActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.edit.EditBanksActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.edit.EditActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".edit.EditActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.edit.EditExpTypesActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.edit.EditActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.edit.EditActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.main.StatisticsActivity"
+            android:label="@string/label_statistics"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.main.SettingsActivity"
+            android:label="@string/label_settings"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.help.HelpActivity"
+            android:label="@string/label_help"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.help.GuideActivity"
+            android:label="@string/label_help"
+            android:parentActivityName="com.chaturvedi.financemanager.help.HelpActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".help.HelpActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.help.FAQSummaryActivity"
+            android:label="@string/label_help"
+            android:parentActivityName="com.chaturvedi.financemanager.help.HelpActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".help.HelpActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.help.FAQAnswerActivity"
+            android:label="@string/label_help"
+            android:parentActivityName="com.chaturvedi.financemanager.help.FAQAnswerActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".help.FAQSummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.help.AboutActivity"
+            android:label="@string/label_aboutDeveloper"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+        <activity
+            android:name="com.chaturvedi.financemanager.main.ExtrasActivity"
+            android:label="@string/label_extras"
+            android:parentActivityName="com.chaturvedi.financemanager.main.SummaryActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".main.SummaryActivity" />
+        </activity>
+
+        <receiver android:name="com.chaturvedi.financemanager.main.SmsReceiver" >
+            <intent-filter android:priority="100" >
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

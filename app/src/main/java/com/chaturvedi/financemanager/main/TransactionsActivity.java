@@ -22,26 +22,27 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.database.Template;
-import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.datastructures.Template;
+import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class TransactionsActivity extends Activity
 {
 	private String transactionsDisplayInterval = "Month";
+	private ArrayList<String> filterRules = null;
 	private boolean filteredState = false;    // true if Filtering and Search is applied. Else false.
 	// This is used in onBackPressed() method.
 	
@@ -223,15 +224,15 @@ public class TransactionsActivity extends Activity
 		switch (requestCode)
 		{
 			case Constants.REQUEST_CODE_ADD_TRANSACTION:
-				if(resultCode == RESULT_OK)
+				if (resultCode == RESULT_OK)
 				{
-					displayNewTransaction((Transaction)intent.getParcelableExtra(Constants.TRANSACTION));
+					displayNewTransaction((Transaction) intent.getParcelableExtra(Constants.TRANSACTION));
 					getTransactionsToDisplay();
 				}
 				break;
 
 			case Constants.REQUEST_CODE_EDIT_TRANSACTION:
-				if(resultCode == RESULT_OK)
+				if (resultCode == RESULT_OK)
 				{
 					editDisplayedTransaction(contextMenuTransactionNo, (Transaction) intent.getParcelableExtra(
 							Constants.TRANSACTION));
@@ -303,8 +304,17 @@ public class TransactionsActivity extends Activity
 	
 	private void getTransactionsToDisplay()
 	{
+		int numTransactionsToRetrieve = 100;
+		if (transactions != null)
+		{
+			numTransactionsToRetrieve = parentLayout.getChildCount();
+		}
+		int offset = 0;
+		Log.d("SNB", "CP01: " + numTransactionsToRetrieve);
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
-		DecimalFormat formatter = new DecimalFormat("00");
+		transactions = databaseAdapter.getTransactions(filterRules, false, offset, numTransactionsToRetrieve);
+		Log.d("SNB", "CP02: " + transactions.size());
+		/*DecimalFormat formatter = new DecimalFormat("00");
 		if (transactionsDisplayInterval.equals("Month"))
 		{
 			Calendar calendar = Calendar.getInstance();
@@ -322,7 +332,19 @@ public class TransactionsActivity extends Activity
 		else
 		{
 			transactions = databaseAdapter.getAllVisibleTransactions();
-		}
+		}*/
+	}
+
+	private ArrayList<Transaction> getMoreTransactionsToDisplay()
+	{
+		int numTransactionsToRetrieve = 100;
+		int offset = parentLayout.getChildCount();
+		Log.d("SNB", "CP03: " + numTransactionsToRetrieve);
+		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
+		ArrayList<Transaction> newTransactions = databaseAdapter.getTransactions(filterRules, false, offset, numTransactionsToRetrieve);
+		transactions.addAll(0, newTransactions);
+		Log.d("SNB", "CP04: " + transactions.size());
+		return  newTransactions;
 	}
 	
 	private void buildTitleLayout()
@@ -363,6 +385,24 @@ public class TransactionsActivity extends Activity
 	
 	private void buildBodyLayout()
 	{
+		Button showMoreButton = (Button) findViewById(R.id.button_showMoreTransactions);
+		showMoreButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				ArrayList<Transaction> newTransactions = getMoreTransactionsToDisplay();
+				for(int i=0; i<newTransactions.size(); i++)
+				{
+					insertTransaction(i, i+1, newTransactions.get(i));
+				}
+				for(int i=newTransactions.size(); i<transactions.size(); i++)
+				{
+					TextView slnoView = (TextView) parentLayout.getChildAt(i).findViewById(R.id.slno);
+					slnoView.setText(String.valueOf(i + 1));
+				}
+			}
+		});
 		try
 		{
 			parentLayout = (LinearLayout) findViewById(R.id.layout_parent);
@@ -444,6 +484,56 @@ public class TransactionsActivity extends Activity
 		int slNo = parentLayout.getChildCount() + 1;
 		displayNewTransaction(slNo, transaction);
 		parentLayout.getChildAt(slNo - 1).requestFocus();
+	}
+
+	private void insertTransaction(int position, int slNo, Transaction transaction)
+	{
+		int colour = 0;
+		if (transaction.getType().contains("Debit"))
+		{
+			colour = Color.RED;
+		}
+		else if (transaction.getType().contains("Credit"))
+		{
+			colour = Color.parseColor("#00CC00");
+		}
+		else
+		{
+			colour = Color.BLUE;
+		}
+
+		LayoutInflater layoutInflater = LayoutInflater.from(this);
+		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
+
+		TextView slnoView = (TextView) linearLayout.findViewById(R.id.slno);
+		LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();
+		slnoParams.width = WIDTH_SLNO;
+		slnoView.setLayoutParams(slnoParams);
+		slnoView.setText(String.valueOf(slNo));
+
+		TextView dateView = (TextView) linearLayout.findViewById(R.id.date);
+		LayoutParams dateParams = (LayoutParams) dateView.getLayoutParams();
+		dateParams.width = WIDTH_DATE;
+		dateView.setLayoutParams(dateParams);
+		dateView.setText(transaction.getDate().getDisplayDate());
+
+		TextView particularsView = (TextView) linearLayout.findViewById(R.id.particulars);
+		LayoutParams particularsParams = (LayoutParams) particularsView.getLayoutParams();
+		particularsParams.width = WIDTH_PARTICULARS;
+		particularsView.setLayoutParams(particularsParams);
+		particularsView.setText(transaction.getDisplayParticular(TransactionsActivity.this));
+		particularsView.setTextColor(colour);
+
+		TextView amountView = (TextView) linearLayout.findViewById(R.id.amount);
+		LayoutParams amountParams = (LayoutParams) amountView.getLayoutParams();
+		amountParams.width = WIDTH_AMOUNT;
+		amountView.setLayoutParams(amountParams);
+		amountView.setText(formatterDisplay.format(transaction.getAmount()));
+
+		linearLayout.setFocusable(true);
+		linearLayout.setFocusableInTouchMode(true);
+		parentLayout.addView(linearLayout, position);
+		registerForContextMenu(linearLayout);
 	}
 	
 	private void deleteTransactionFromLayout(int transactionNo)
@@ -1055,7 +1145,7 @@ public class TransactionsActivity extends Activity
 	 *
 	 * @param transactionNo Number of the transaction to be deleted
 	 */
-	private void deleteTransaction(int transactionNo)
+	private void deleteTransaction(final int transactionNo)
 	{
 		AlertDialog.Builder deleteDialog = new AlertDialog.Builder(this);
 		deleteDialog.setTitle("Delete Transaction");
@@ -1065,8 +1155,8 @@ public class TransactionsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.deleteTransaction(TransactionsActivity.this, transactions.get(contextMenuTransactionNo), true);
-				deleteTransactionFromLayout(contextMenuTransactionNo);
+				DatabaseManager.deleteTransaction(TransactionsActivity.this, transactions.get(transactionNo), true);
+				deleteTransactionFromLayout(transactionNo);
 				getTransactionsToDisplay();
 			}
 		});
