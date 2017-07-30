@@ -57,16 +57,19 @@ public class SmsReceiver extends BroadcastReceiver
 						detailsIntent.putExtra("Bank Sms", true);
 						detailsIntent.putExtra("Bank Number", i);
 						
-						if(sender.toLowerCase().contains("union"))
-							readUBIMessage();
-						else if(sender.toLowerCase().contains("sbi"))
+						if(sender.toUpperCase().contains("SBI"))
 							readSBIMessage();
-						else if(sender.toUpperCase().contains("ANDBNK"))
+						else if(sender.toUpperCase().contains("UNION"))
+							readUBIMessage();
+						else if(sender.toUpperCase().contains("SYND"))
+							readSyndicateBankMessage();
+						else if(sender.toUpperCase().contains("KTK"))
+							readKarnatakaBankMessage();
+						else if(sender.toUpperCase().contains("AND"))
 							readAndhraBankMessage();
 						else
 							readBankMessage();
 						
-						context.startActivity(detailsIntent);
 						break;
 					}
 				}
@@ -83,6 +86,7 @@ public class SmsReceiver extends BroadcastReceiver
 			int endIndex = message.indexOf("on", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
 			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
@@ -91,11 +95,12 @@ public class SmsReceiver extends BroadcastReceiver
 			int endIndex = message.indexOf("on", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
 			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
 		}
-		else
+		/*else
 		{
 			detailsIntent.putExtra("Bank Sms", false);
-		}
+		}*/
 	}
 	
 	private void readSBIMessage()
@@ -106,6 +111,16 @@ public class SmsReceiver extends BroadcastReceiver
 			int startIndex = message.indexOf("Rs")+2;
 			double amount = Double.parseDouble(message.substring(startIndex));
 			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
+		}
+		else if(message.toLowerCase().contains("withdraw"))
+		{
+			detailsIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("Rs")+2;
+			int endIndex = message.indexOf("from", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
@@ -113,11 +128,64 @@ public class SmsReceiver extends BroadcastReceiver
 			int startIndex = message.indexOf("Rs")+2;
 			double amount = Double.parseDouble(message.substring(startIndex));
 			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
 		}
-		else
+		/*else
 		{
 			detailsIntent.putExtra("Bank Sms", false);
+		}*/
+	}
+	
+	private void readSyndicateBankMessage()
+	{
+		if(message.toLowerCase().contains("debit"))
+		{
+			detailsIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("INR")+4;
+			int endIndex = message.indexOf("has", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
 		}
+		else if(message.toLowerCase().contains("credit"))
+		{
+			detailsIntent.putExtra("Type", "credit");
+			int startIndex = message.indexOf("INR")+4;
+			int endIndex = message.indexOf("has", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
+		}
+		/*else
+		{
+			detailsIntent.putExtra("Bank Sms", false);
+		}*/
+	}
+	
+	private void readKarnatakaBankMessage()
+	{
+		if(message.toLowerCase().contains("debit"))
+		{
+			detailsIntent.putExtra("Type", "debit");
+			int startIndex = message.indexOf("Rs")+2;
+			int endIndex = message.indexOf("on", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
+		}
+		else if(message.toLowerCase().contains("credit"))
+		{
+			detailsIntent.putExtra("Type", "credit");
+			int startIndex = message.indexOf("Rs")+2;
+			int endIndex = message.indexOf("on", startIndex)-1;
+			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
+			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
+		}
+		/*else
+		{
+			detailsIntent.putExtra("Bank Sms", false);
+		}*/
 	}
 	
 	private void readAndhraBankMessage()
@@ -129,6 +197,7 @@ public class SmsReceiver extends BroadcastReceiver
 			int endIndex = message.indexOf("is")-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
 			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
@@ -137,11 +206,12 @@ public class SmsReceiver extends BroadcastReceiver
 			int endIndex = message.indexOf("is")-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
 			detailsIntent.putExtra("Amount", amount);
+			context.startActivity(detailsIntent);
 		}
-		else
+		/*else
 		{
 			detailsIntent.putExtra("Bank Sms", false);
-		}
+		}*/
 	}
 	
 	private void readBankMessage()
@@ -150,16 +220,18 @@ public class SmsReceiver extends BroadcastReceiver
 		{
 			detailsIntent.putExtra("Type", "debit");
 			detailsIntent.putExtra("Amount", 0);
+			context.startActivity(detailsIntent);
 		}
 		else if(message.toLowerCase().contains("credit"))
 		{
 			detailsIntent.putExtra("Type", "credit");
 			detailsIntent.putExtra("Amount", 0);
+			context.startActivity(detailsIntent);
 		}
-		else
+		/*else
 		{
 			detailsIntent.putExtra("Bank Sms", false);
-		}
+		}*/
 	}
 
 	private void readPreferences()

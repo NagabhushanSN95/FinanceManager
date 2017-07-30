@@ -1,3 +1,5 @@
 SBI
 Union
-ANDBNK
+AND
+SYND
+KTK
