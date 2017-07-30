@@ -13,7 +13,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -89,6 +88,7 @@ public class DetailsActivity extends Activity
 	private View atmWithdrawalDialogView;
 	private EditText particularsField;
 	private EditText amountField;
+	ArrayList<RadioButton> banks;
 	private EditText withdrawalAmountField;
 	private Intent detailsIntent;
 	
@@ -308,17 +308,18 @@ public class DetailsActivity extends Activity
 		atmWithdrawalDialog.setView(atmWithdrawalDialogView);
 		atmWithdrawalDialog.setPositiveButton("OK", new AtmWithdrawalDialogListener(1));
 		atmWithdrawalDialog.setNegativeButton("Cancel", new AtmWithdrawalDialogListener(0));
-		ArrayList<RadioButton> banks=new ArrayList<RadioButton>();
-		/*banks.add((RadioButton)atmWithdrawalDialogView.findViewById(R.id.bank_01));
+		banks=new ArrayList<RadioButton>();
+		banks.add((RadioButton)atmWithdrawalDialogView.findViewById(R.id.bank_01));
 		banks.add((RadioButton)atmWithdrawalDialogView.findViewById(R.id.bank_02));
 		banks.add((RadioButton)atmWithdrawalDialogView.findViewById(R.id.bank_03));
 		banks.get(2).setVisibility(View.GONE);
 		for(int i=0; i<numBanks; i++)
 		{
 			banks.get(i).setText(bankNames.get(i));
-		}*/
-			
-		
+			banks.get(i).setTextSize(20);
+			banks.get(i).setTextColor(999999999);
+		}
+		banks.get(0).setChecked(true);
 		withdrawalAmountField=(EditText)atmWithdrawalDialogView.findViewById(R.id.edit_amount);
 		
 		debitButton=(Button)findViewById(R.id.button_debit);
@@ -394,7 +395,29 @@ public class DetailsActivity extends Activity
 		public void onClick(DialogInterface dialog, int which)
 		{
 			if(action==1)
+			{
+				int bankNo=0;
+				int withdrawalAmount=Integer.parseInt(withdrawalAmountField.getText().toString());
+				if(banks.get(0).isChecked())
+					bankNo=0;
+				else if(banks.get(1).isChecked())
+					bankNo=1;
+				else if(banks.get(2).isChecked())
+					bankNo=2;
+				
+				bankBalances.set(bankNo, bankBalances.get(bankNo)-withdrawalAmount);
+				walletBalance+=withdrawalAmount;
+				numEntries++;
+				particulars.add(bankNames.get(bankNo)+" withdrawal");
+				amounts.add(withdrawalAmount);
+				saveData();
+				//readFile();
+				buildTitleLayout();
+				buildBodyLayout();
+				buildButtonPanel();
 				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
+			}
+			//Toast.makeText(getApplicationContext(), banks.get(0).getText()+banks.get(0).toString(), Toast.LENGTH_SHORT).show();
 		}
 		
 	}
