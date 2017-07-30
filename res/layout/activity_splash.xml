@@ -28,21 +28,15 @@
         android:layout_below="@+id/photo_krishna"
         android:layout_centerHorizontal="true"
         android:padding="25dip"/>
-
-    <LinearLayout 
-        android:id="@+id/layout_loading"
+    
+    <ProgressBar
+        android:id="@+id/progressBar_loading"
         android:layout_width="match_parent"
-        android:layout_height="3dp"
+        android:layout_height="wrap_content"
         android:layout_below="@+id/quote"
         android:layout_margin="20dp"
-        android:orientation="horizontal" >
-        
-        <View 
-            android:id="@+id/progress_line"
-	    android:layout_width="1dp"
-	    android:layout_height="match_parent"
-	    android:background="#FFFF00FF" />
-    </LinearLayout>
+        android:indeterminate="false"
+        style="?android:attr/progressBarStyleHorizontal" />
     
     
 

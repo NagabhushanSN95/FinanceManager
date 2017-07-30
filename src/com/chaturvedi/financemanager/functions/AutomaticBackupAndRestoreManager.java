@@ -34,4 +34,32 @@ public class AutomaticBackupAndRestoreManager
 	{
 		return (value == 4);
 	}
+	
+	/**
+	 * Returns the percentage of progress that has to be allotted to Database Reading Process
+	 * @return
+	 */
+	public int getDatabaseReadingMaxProgress()
+	{
+		switch(value)
+		{
+			case 0:
+				return 100;
+				
+			case 1:
+				return 100;
+				
+			case 2:
+				return 60;
+				
+			case 3:
+				return 40;
+				
+			case 4:
+				return 40;
+				
+			default:
+				return 50;
+		}
+	}
 }

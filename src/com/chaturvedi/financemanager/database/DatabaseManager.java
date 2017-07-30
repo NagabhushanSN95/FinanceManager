@@ -4,7 +4,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import com.chaturvedi.financemanager.SplashActivity;
+
 import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -88,6 +92,85 @@ public class DatabaseManager
 			{
 				templates = new ArrayList<Template>();
 			}
+		}
+		catch(Exception e)
+		{
+			Toast.makeText(context, "Error In Reading Database\nDatabaseManager/readDatabase\n"+e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+	}
+	
+	/**
+	 * Reads the data from database. Also, it updates the progress.
+	 * @param databaseHandler: A handler to update the progress on Splash Screen
+	 * @param maxProgress: Maximum Progress to be displayed on Splash Screen after completion of Database Read Operation
+	 */
+	public static void readDatabase(Handler databaseHandler, int maxProgress)
+	{
+		try
+		{
+			int numBanks = databaseAdapter.getNumBanks();
+			Message databaseMessage;
+			
+			setWalletBalance(databaseAdapter.getWalletBalance());
+			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+					10*maxProgress/100,0); // Database Reading 10% Complete
+			databaseMessage.sendToTarget();
+			
+			if(numBanks>0)
+			{
+				banks = databaseAdapter.getAllBanks();
+			}
+			else
+			{
+				banks = new ArrayList<Bank>();
+			}
+			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+					20*maxProgress/100,0); // Database Reading 20% Complete
+			databaseMessage.sendToTarget();
+
+			int numTransactions = databaseAdapter.getNumTransactions();
+			if(numTransactions>0)
+			{
+				transactions = databaseAdapter.getAllTransactions();
+			}
+			else
+			{
+				transactions = new ArrayList<Transaction>();
+			}
+			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+					50*maxProgress/100,0); // Database Reading 50% Complete
+			databaseMessage.sendToTarget();
+			
+			expenditureTypes = databaseAdapter.getAllExpTypes();
+			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+					60*maxProgress/100,0); // Database Reading 60% Complete
+			databaseMessage.sendToTarget();
+			
+			int numCountersRows = databaseAdapter.getNumCountersRows();
+			if(numCountersRows>0)
+			{
+				counters = databaseAdapter.getAllCountersRows();
+			}
+			else
+			{
+				counters = new ArrayList<Counters>();
+			}
+			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+					80*maxProgress/100,0); // Database Reading 80% Complete
+			databaseMessage.sendToTarget();
+			
+			int numTemplates = databaseAdapter.getNumTemplates();
+			if(numTemplates>0)
+			{
+				templates = databaseAdapter.getAllTemplates();
+			}
+			else
+			{
+				templates = new ArrayList<Template>();
+			}
+			databaseMessage = databaseHandler.obtainMessage(SplashActivity.ACTION_DATABASE_READ_PROGRESS,
+					100*maxProgress/100,0); // Database Reading 100% Complete
+			databaseMessage.sendToTarget();
 		}
 		catch(Exception e)
 		{

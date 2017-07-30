@@ -20,9 +20,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.DisplayMetrics;
-import android.view.View;
-import android.widget.LinearLayout.LayoutParams;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,12 +50,18 @@ public class SplashActivity extends Activity
 	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	private AutomaticBackupAndRestoreManager autoRestoreManager;
 	
+	public static final int ACTION_DATABASE_READ_PROGRESS = 101;
+	public static final int ACTION_INITIALIZATION_COMPLETE = 102;
+	public static final int ACTION_TOAST_MESSAGE = 103;
+	private boolean splashComplete = false;				// Completion Of Splash Duration
+	private boolean initializationComplete = false;		// Completion Of Database Reading & Auto Restore
+	private boolean activityAlive = true;				// Set to false when back button is pressed. So, next activity will ot be started
+	
 	private TextView quoteView;
 	private String quoteText;
-	private View progressLine;
-	private LayoutParams progressLineParams;
 	private int deviceWidth=1000;
-	private int progressStatus=00;
+	private int timerProgress = 0;
+	private int databaseReadProgress = 0;
 	
 	private int quotesNo = 0;
 	private int NUM_TIPS = 0;
@@ -65,6 +71,7 @@ public class SplashActivity extends Activity
 	private int NUM_CRICKET_QUOTES = 0;
 	private int NUM_MOVIE_QUOTES = 0;*/
 	
+	private Handler databaseHandler;
 	private Intent nextActivityIntent;
 	
 	@Override
@@ -78,12 +85,13 @@ public class SplashActivity extends Activity
 		new DatabaseManager(this);
 		readQuotes();
 		startSplash();
+		defineHandler();
 		
 		// Read the database in a seperate (non-ui) thread
 		Thread databaseReaderThread = new Thread(new DatabaseReaderRunnable());
 		databaseReaderThread.start();
 	}
-	
+
 	private void checkForUpdates()
 	{
 		int currentVersionNo = 0, previousVersionNo = 0;
@@ -198,6 +206,11 @@ public class SplashActivity extends Activity
 			int value = preferences.getInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
 			autoRestoreManager = new AutomaticBackupAndRestoreManager(value);
 		}
+		else
+		{
+			autoRestoreManager = new AutomaticBackupAndRestoreManager(3);
+			editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+		}
 		editor.commit();
 	}
 	
@@ -304,27 +317,31 @@ public class SplashActivity extends Activity
 		quoteView.setText(quoteText);
 		
 		// Schedule to start the NextActivity after the specified time (splashTime)
-		if(splashDuration > 0)
+		//if(splashDuration > 0)
 		{
 			new Handler().postDelayed(new Runnable() 
 			{
 				@Override
 				public void run()
 				{
-					startActivity(nextActivityIntent);
-					finish();
+					splashComplete = true;
+					if(activityAlive && initializationComplete)
+					{
+						startActivity(nextActivityIntent);
+						finish();
+					}
 				}
 			} ,splashDuration);
 		}
 		
-		// Get a reference to Progress Line View
-		progressLine=(View)findViewById(R.id.progress_line);
-		progressLineParams=(LayoutParams) progressLine.getLayoutParams();
 		// Calculate the device width in pixels
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
 		deviceWidth=metrics.widthPixels;
-
+		
+		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar_loading);
+		progressBar.setMax(deviceWidth);
+		
 		// Calculate the refresh time to update the ProgressBar
 		int refreshTime=(splashDuration/deviceWidth)+1;
 		// Schedule to increment the length of ProgressBar repeatedly at intervals calculated above
@@ -340,13 +357,51 @@ public class SplashActivity extends Activity
 					public void run()
 					{
 						// Increment the length of ProgressBar by 1dp and update
-						progressStatus++;
-						progressLineParams=new LayoutParams(progressStatus, LayoutParams.MATCH_PARENT);
-						progressLine.setLayoutParams(progressLineParams);
+						timerProgress++;
+						// databaseReadProgress will be in percentage, so normalize it w.r.t deviceWidth
+						// Find the progress (minimum of timerProgress and dataaseReadProgress)
+						int progress = Math.min(timerProgress, databaseReadProgress*deviceWidth/100);
+						progressBar.setProgress(progress);
 					}
 				});
 			}
 		}, 0, refreshTime);
+	}
+	
+	private void defineHandler()
+	{
+		databaseHandler = new Handler(Looper.getMainLooper())
+		{
+			@Override
+			public void handleMessage(Message databaseMessage)
+			{
+				// Get the Percentage Of Database Read Completion
+				switch(databaseMessage.what)
+				{
+					case ACTION_DATABASE_READ_PROGRESS:
+						databaseReadProgress = databaseMessage.arg1;
+						break;
+						
+					case ACTION_INITIALIZATION_COMPLETE:
+						initializationComplete = true;
+						if(activityAlive && splashComplete)
+						{
+							startActivity(nextActivityIntent);
+							finish();
+						}
+						break;
+						
+					case ACTION_TOAST_MESSAGE:
+						String message = (String) databaseMessage.obj;
+						Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+						break;
+						
+					default:
+						super.handleMessage(databaseMessage);
+				}
+				
+			}
+		};
 	}
 	
 	/**
@@ -355,7 +410,8 @@ public class SplashActivity extends Activity
 	@Override
 	public void onBackPressed()
 	{
-		
+		activityAlive = false;
+		super.onBackPressed();
 	}
 	
 	private class DatabaseReaderRunnable implements Runnable
@@ -368,9 +424,10 @@ public class SplashActivity extends Activity
 			
 			if(databaseInitialized)
 			{
-				DatabaseManager.readDatabase();
+				int databaseReadingMaxProgress = autoRestoreManager.getDatabaseReadingMaxProgress();
+				DatabaseManager.readDatabase(databaseHandler,databaseReadingMaxProgress);
 				
-				//if(autoRestoreManager.isAutomaticBackup())
+				if(autoRestoreManager.getValue() > 1)
 				{
 					// Read the backups and see if there is any change
 					RestoreManager restoreManager = new RestoreManager(SplashActivity.this);
@@ -386,15 +443,18 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-								Toast.makeText(getApplicationContext(), "Error Found In Wallet Balance. Data Recovered",
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Wallet Balance. Data Recovered");
+								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Toast.makeText(getApplicationContext(), "Error Found In Wallet Balance. " + 
-										"Data Not Recovered", Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Wallet Balance. Data Not Recovered");
+								databaseMessage.sendToTarget();
 							}
 						}
+						databaseReadProgress = 55;
 						// Transactions
 						if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
 								restoreManager.getAllTransactions()))
@@ -402,15 +462,18 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-								Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Transactions. Data Recovered");
+								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Toast.makeText(getApplicationContext(), "Error Found In Transactions. " + 
-										"Data Not Recovered", Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Transactions. Data Not Recovered");
+								databaseMessage.sendToTarget();
 							}
 						}
+						databaseReadProgress = 70;
 						
 						// Banks
 						if(!DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(), 
@@ -419,15 +482,18 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-								Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Recovered", 
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Banks. Data Recovered");
+								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Not Recovered", 
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Banks. Data Not Recovered");
+								databaseMessage.sendToTarget();
 							}
 						}
+						databaseReadProgress = 75;
 						
 						// Expenditure Types
 						if(!DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
@@ -436,15 +502,18 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
-								Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Recovered",
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Exp Types. Data Recovered");
+								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Not Recovered",
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Exp Types. Data Not Recovered");
+								databaseMessage.sendToTarget();
 							}
 						}
+						databaseReadProgress = 80;
 						
 						// Counters
 						if(!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
@@ -453,15 +522,18 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-								Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Counters. Data Recovered");
+								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Not Recovered",
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Counters. Data Not Recovered");
+								databaseMessage.sendToTarget();
 							}
 						}
+						databaseReadProgress = 90;
 						
 						// Templates
 						if(!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(), 
@@ -470,31 +542,31 @@ public class SplashActivity extends Activity
 							if(autoRestoreManager.isAutomaticRestore())
 							{
 								DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
-								Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Templates. Data Recovered");
+								databaseMessage.sendToTarget();
 							}
 							else
 							{
-								Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Not Recovered", 
-										Toast.LENGTH_SHORT).show();
+								Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+										"Error Found In Templates. Data Not Recovered");
+								databaseMessage.sendToTarget();
 							}
 						}
+						databaseReadProgress = 100;
 					}
 					else
 					{
-						Toast.makeText(getApplicationContext(), "Error In Automatic Restore\n" + 
-								"Error Code: " + restoreResult, Toast.LENGTH_LONG).show();
+						Message databaseMessage = databaseHandler.obtainMessage(ACTION_TOAST_MESSAGE,
+								"Error In Automatic Restore\n" + "Error Code: " + restoreResult);
+						databaseMessage.sendToTarget();
 					}
 				}
 			}
-			if(splashDuration == 0)
-			{
-				startActivity(nextActivityIntent);
-				finish();
-			}
+			Message databaseMessage = databaseHandler.obtainMessage(ACTION_INITIALIZATION_COMPLETE);
+			databaseMessage.sendToTarget();
 			Looper.loop();
 			Looper.myLooper().quit();
-			//new Looper().quit();
 		}
 	}
 }
