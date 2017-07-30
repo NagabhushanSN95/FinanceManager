@@ -10,8 +10,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="36dp"
-        android:text="The Data Will Be Exported To A Text File Named" />
+        android:layout_marginTop="10dp"
+        android:text="@string/instruction" />
 
     <EditText
         android:id="@+id/editText_export_fileName"
@@ -19,10 +19,20 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/instruction"
         android:layout_centerHorizontal="true"
-        android:hint="Enter The File Name"
+        android:layout_marginTop="10dp"
+        android:hint="@string/hint_export_fileName"
         android:ems="15" >
 
         <requestFocus />
     </EditText>
+
+    <CheckBox
+        android:id="@+id/checkBox_erase_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editText_export_fileName"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="@string/checkBox_erase_data" />
 
 </RelativeLayout>

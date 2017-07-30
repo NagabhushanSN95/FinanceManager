@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +43,7 @@ public class ExportActivity extends Activity
 	private BufferedWriter exportWriter;
 	
 	private TextView exportFileNameField;
+	private CheckBox clearDataCheckBox;
 	private LayoutInflater exportDialogLayout;
 	private View exportDialogView;
 	private AlertDialog.Builder exportDialog;
@@ -75,6 +77,7 @@ public class ExportActivity extends Activity
 		exportDialogView=exportDialogLayout.inflate(R.layout.dialog_export, null);
 		exportFileNameField=(TextView)exportDialogView.findViewById(R.id.editText_export_fileName);
 		exportFileNameField.setText(exportFileName);
+		clearDataCheckBox=(CheckBox)exportDialogView.findViewById(R.id.checkBox_erase_data);
 		
 		exportDialog=new AlertDialog.Builder(this);
 		exportDialog.setTitle("Export Data");
@@ -86,6 +89,8 @@ public class ExportActivity extends Activity
 			{
 				exportFileName=exportFileNameField.getText().toString();
 				saveData();
+				if(clearDataCheckBox.isChecked())
+					clearData();
 				finish();
 			}
 		});
@@ -234,6 +239,18 @@ public class ExportActivity extends Activity
 				exportWriter.write("Amount In "+bankNames.get(i)+"=Rs"+bankBalances.get(i)+"\n");
 			exportWriter.close();
 			
+			Toast.makeText(getApplicationContext(), "Data Has Been Exported Successfully", Toast.LENGTH_LONG).show();
+		}
+		catch(Exception e)
+		{
+			Toast.makeText(getApplicationContext(), "Error In Saving To File", Toast.LENGTH_SHORT).show();
+		}
+	}
+	
+	private void clearData()
+	{
+		try
+		{
 			// Empty the Particulars
 			expenditureFolderName="Expenditure List/.temp";
 			prefFileName="preferences.txt";
@@ -260,11 +277,11 @@ public class ExportActivity extends Activity
 			prefWriter.close();
 			walletWriter.close();
 			
-			Toast.makeText(getApplicationContext(), "Data Has Been Exported Successfully", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Data Has Been Cleared Successfully", Toast.LENGTH_LONG).show();
 		}
 		catch(Exception e)
 		{
-			Toast.makeText(this, "Error In Saving To File", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), "Error In Clearing Data", Toast.LENGTH_SHORT).show();
 		}
 	}
 }
