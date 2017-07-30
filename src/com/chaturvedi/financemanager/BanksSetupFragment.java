@@ -79,11 +79,8 @@ public class BanksSetupFragment extends Fragment
 		MARGIN_BOTTOM_PARENT_LAYOUT=20;
 		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*3/100;
 		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*3/100;
-		WIDTH_NAME_VIEWS=screenWidth*60/100;			//40+20
-		//WIDTH_ACC_NO_VIEWS=screenWidth*20/100;
-		WIDTH_BALANCE_VIEWS=screenWidth*30/100;			//15+15
-		//WIDTH_SMS_VIEWS=screenWidth*15/100;
-		//WIDTH_REMOVE_BUTTON=screenWidth*10/100;
+		WIDTH_NAME_VIEWS=screenWidth*60/100;
+		WIDTH_BALANCE_VIEWS=screenWidth*30/100;
 		MARGIN_TOP_VIEWS=5;
 		
 		banks = new ArrayList<Bank>();

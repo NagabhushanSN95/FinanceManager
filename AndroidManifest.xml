@@ -72,6 +72,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.chaturvedi.financemanager.EditActivity" />
         </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.EditExpTypesActivity"
+            android:label="@string/label_edit"
+            android:parentActivityName="com.chaturvedi.financemanager.EditActivity"> 
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.EditActivity" />
+        </activity>
         <activity android:name="com.chaturvedi.financemanager.EditExpenditureTypesActivity"> </activity>
         <activity 
             android:name="com.chaturvedi.financemanager.StatisticsActivity"
