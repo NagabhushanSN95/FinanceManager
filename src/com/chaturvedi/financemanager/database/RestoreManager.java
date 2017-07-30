@@ -74,7 +74,7 @@ public class RestoreManager
 			BufferedReader keyDataReader = new BufferedReader(new FileReader(keyDataFile));
 			
 			// Read The KEY DATA
-			appVersionNo = Integer.parseInt(keyDataReader.readLine());
+			appVersionNo = Integer.parseInt(keyDataReader.readLine().trim());
 			if(appVersionNo < APP_VERSION_NO_56)
 			{
 				keyDataReader.close();
@@ -130,12 +130,12 @@ public class RestoreManager
 			BufferedReader keyDataReader = new BufferedReader(new FileReader(keyDataFile));
 			
 			// Read the Data
-			appVersionNo = Integer.parseInt(keyDataReader.readLine());			// Empty ReadLine to Read the Version No and move to next line
-			numTransactions = Integer.parseInt(keyDataReader.readLine());
-			numBanks = Integer.parseInt(keyDataReader.readLine());
-			numCountersRows = Integer.parseInt(keyDataReader.readLine());
-			numExpTypes = Integer.parseInt(keyDataReader.readLine());
-			numTemplates = Integer.parseInt(keyDataReader.readLine());
+			appVersionNo = Integer.parseInt(keyDataReader.readLine().trim());			// Empty ReadLine to Read the Version No and move to next line
+			numTransactions = Integer.parseInt(keyDataReader.readLine().trim());
+			numBanks = Integer.parseInt(keyDataReader.readLine().trim());
+			numCountersRows = Integer.parseInt(keyDataReader.readLine().trim());
+			numExpTypes = Integer.parseInt(keyDataReader.readLine().trim());
+			numTemplates = Integer.parseInt(keyDataReader.readLine().trim());
 			keyDataReader.close();
 		}
 		catch(FileNotFoundException e)
@@ -171,15 +171,15 @@ public class RestoreManager
 			transactions = new ArrayList<Transaction>();
 			for(int i=0; i<numTransactions; i++)
 			{
-				int ID = Integer.parseInt(transactionsReader.readLine());
-				Time createdTime = new Time(transactionsReader.readLine());
-				Time modifiedTime = new Time(transactionsReader.readLine());
-				Date date = new Date(transactionsReader.readLine());
-				String type = transactionsReader.readLine();
-				String particular = transactionsReader.readLine();
-				double rate = Double.parseDouble(transactionsReader.readLine());
-				double quantity = Double.parseDouble(transactionsReader.readLine());
-				double amount = Double.parseDouble(transactionsReader.readLine());
+				int ID = Integer.parseInt(transactionsReader.readLine().trim());
+				Time createdTime = new Time(transactionsReader.readLine().trim());
+				Time modifiedTime = new Time(transactionsReader.readLine().trim());
+				Date date = new Date(transactionsReader.readLine().trim());
+				String type = transactionsReader.readLine().trim();
+				String particular = transactionsReader.readLine().trim();
+				double rate = Double.parseDouble(transactionsReader.readLine().trim());
+				double quantity = Double.parseDouble(transactionsReader.readLine().trim());
+				double amount = Double.parseDouble(transactionsReader.readLine().trim());
 				transactionsReader.readLine();
 				Transaction transaction = new Transaction(ID, createdTime, modifiedTime, date, type, particular, rate, quantity, amount);
 				transactions.add(transaction);
@@ -218,11 +218,11 @@ public class RestoreManager
 			banks = new ArrayList<Bank>();
 			for(int i=0; i<numBanks; i++)
 			{
-				int ID = Integer.parseInt(banksReader.readLine());
-				String bankName = banksReader.readLine();
-				String accNo = banksReader.readLine();
-				double balance = Double.parseDouble(banksReader.readLine());
-				String smsName = banksReader.readLine();
+				int ID = Integer.parseInt(banksReader.readLine().trim());
+				String bankName = banksReader.readLine().trim();
+				String accNo = banksReader.readLine().trim();
+				double balance = Double.parseDouble(banksReader.readLine().trim());
+				String smsName = banksReader.readLine().trim();
 				banksReader.readLine();
 				Bank bank = new Bank(ID, bankName, accNo, balance, smsName);
 				banks.add(bank);
@@ -255,18 +255,18 @@ public class RestoreManager
 			counters = new ArrayList<Counters>();
 			for(int i=0; i<numCountersRows; i++)
 			{
-				int ID = Integer.parseInt(countersReader.readLine());
-				Date date = new Date(countersReader.readLine());
-				double exp01 = Double.parseDouble(countersReader.readLine());
-				double exp02 = Double.parseDouble(countersReader.readLine());
-				double exp03 = Double.parseDouble(countersReader.readLine());
-				double exp04 = Double.parseDouble(countersReader.readLine());
-				double exp05 = Double.parseDouble(countersReader.readLine());
-				double amountSpent = Double.parseDouble(countersReader.readLine());
-				double income = Double.parseDouble(countersReader.readLine());
-				double savings = Double.parseDouble(countersReader.readLine());
-				double withdrawal = Double.parseDouble(countersReader.readLine());
-				countersReader.readLine();
+				int ID = Integer.parseInt(countersReader.readLine().trim());
+				Date date = new Date(countersReader.readLine().trim());
+				double exp01 = Double.parseDouble(countersReader.readLine().trim());
+				double exp02 = Double.parseDouble(countersReader.readLine().trim());
+				double exp03 = Double.parseDouble(countersReader.readLine().trim());
+				double exp04 = Double.parseDouble(countersReader.readLine().trim());
+				double exp05 = Double.parseDouble(countersReader.readLine().trim());
+				double amountSpent = Double.parseDouble(countersReader.readLine().trim());
+				double income = Double.parseDouble(countersReader.readLine().trim());
+				double savings = Double.parseDouble(countersReader.readLine().trim());
+				double withdrawal = Double.parseDouble(countersReader.readLine().trim());
+				countersReader.readLine().trim();
 				Counters counter = new Counters(ID, date, exp01, exp02, exp03, exp04, exp05, amountSpent, income, savings, withdrawal);
 				counters.add(counter);
 			}
@@ -304,7 +304,7 @@ public class RestoreManager
 			expTypes = new ArrayList<String>();
 			for(int i=0; i<numExpTypes ; i++)
 			{
-				expTypes.add(expTypesReader.readLine());
+				expTypes.add(expTypesReader.readLine().trim());
 			}
 			expTypesReader.close();
 		}
@@ -329,7 +329,7 @@ public class RestoreManager
 			String walletFileName = "Wallet";
 			File walletFile = new File(backupFolder, walletFileName+extension);
 			BufferedReader walletReader = new BufferedReader(new FileReader(walletFile));
-			walletBalance = Double.parseDouble(walletReader.readLine());
+			walletBalance = Double.parseDouble(walletReader.readLine().trim());
 			walletReader.close();
 		}
 		catch(FileNotFoundException e)
@@ -358,10 +358,10 @@ public class RestoreManager
 			templates = new ArrayList<Template>();
 			for(int i=0; i<numTemplates; i++)
 			{
-				int ID = Integer.parseInt(templatesReader.readLine());
-				String particulars = templatesReader.readLine();
-				String type = templatesReader.readLine();
-				double amount = Double.parseDouble(templatesReader.readLine());
+				int ID = Integer.parseInt(templatesReader.readLine().trim());
+				String particulars = templatesReader.readLine().trim();
+				String type = templatesReader.readLine().trim();
+				double amount = Double.parseDouble(templatesReader.readLine().trim());
 				templatesReader.readLine();
 				Template template = new Template(ID, particulars, type, amount);
 				templates.add(template);

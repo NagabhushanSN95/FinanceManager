@@ -101,7 +101,6 @@ public class TransactionsActivity extends Activity
 	
 	private ArrayList<Transaction> transactions;
 	private ArrayList<Template> templates;
-	private ArrayList<String> templateStrings;
 	private int contextMenuTransactionNo;
 	private DecimalFormat formatterTextFields;
 	private Intent templatesIntent;
@@ -123,7 +122,6 @@ public class TransactionsActivity extends Activity
 		}
 		
 		calculateDimensions();
-		readTemplates();
 		readPreferences();
 		buildTitleLayout();
 		buildBodyLayout();
@@ -173,7 +171,6 @@ public class TransactionsActivity extends Activity
 	{
 		super.onActivityResult(requestCode, resultCode, data);
 		calculateDimensions();
-		readTemplates();
 		readPreferences();
 		buildTitleLayout();
 		buildBodyLayout();
@@ -256,16 +253,6 @@ public class TransactionsActivity extends Activity
 		else
 		{
 			transactions = DatabaseManager.getAllTransactions();
-		}
-	}
-	
-	private void readTemplates()
-	{
-		templates = DatabaseManager.getAllTemplates();
-		templateStrings = new ArrayList<String>();
-		for(int i=0; i<templates.size(); i++)
-		{
-			templateStrings.add(templates.get(i).getParticular());
 		}
 	}
 	
@@ -516,7 +503,6 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
-						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else
@@ -537,7 +523,8 @@ public class TransactionsActivity extends Activity
 		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
 		// Related to Templates
 		templateCheckBox = (CheckBox)walletCreditDialogView.findViewById(R.id.checkBox_template);
-		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, templateStrings);
+		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, 
+				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Wallet Credit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -546,9 +533,10 @@ public class TransactionsActivity extends Activity
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 			{
 				int selectedTemplateNo=0;
+				ArrayList<String> templateStrings = getTemplateStrings("All");
 				for(int i=0; i<templateStrings.size(); i++)
 				{
-					if(particularsField.getText().toString().trim().equalsIgnoreCase(templateStrings.get(i).trim()))
+					if(particularsField.getText().toString().trim().equalsIgnoreCase(templateStrings.get(i)))
 					{
 						selectedTemplateNo=i;
 						break;
@@ -597,7 +585,6 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getRate());
 						DatabaseManager.addTemplate(template);
-						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else
@@ -627,7 +614,8 @@ public class TransactionsActivity extends Activity
 		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
 		// Related to Templates
 		templateCheckBox = (CheckBox)walletDebitDialogView.findViewById(R.id.checkBox_template);
-		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, templateStrings);
+		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, 
+				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Wallet Debit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -636,6 +624,7 @@ public class TransactionsActivity extends Activity
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 			{
 				int selectedTemplateNo=0;
+				ArrayList<String> templateStrings = getTemplateStrings("All");
 				for(int i=0; i<templateStrings.size(); i++)
 				{
 					if(particularsField.getText().toString().trim().equalsIgnoreCase(templateStrings.get(i).trim()))
@@ -678,7 +667,8 @@ public class TransactionsActivity extends Activity
 		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
 		// Related to Templates
 		templateCheckBox = (CheckBox)bankCreditDialogView.findViewById(R.id.checkBox_template);
-		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, templateStrings);
+		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, 
+				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Bank Credit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -687,6 +677,7 @@ public class TransactionsActivity extends Activity
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 			{
 				int selectedTemplateNo=0;
+				ArrayList<String> templateStrings = getTemplateStrings("All");
 				for(int i=0; i<templateStrings.size(); i++)
 				{
 					if(particularsField.getText().toString().trim().equalsIgnoreCase(templateStrings.get(i).trim()))
@@ -758,7 +749,6 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
-						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else
@@ -805,7 +795,8 @@ public class TransactionsActivity extends Activity
 		dateField.setText(new Date(Calendar.getInstance()).getDisplayDate());
 		// Related to Templates
 		templateCheckBox = (CheckBox)bankDebitDialogView.findViewById(R.id.checkBox_template);
-		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, templateStrings);
+		ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(this, 
+				android.R.layout.simple_dropdown_item_1line, getTemplateStrings("Bank Debit"));
 		particularsField.setAdapter(templatesAdapter);
 		particularsField.setThreshold(1);
 		particularsField.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -814,6 +805,7 @@ public class TransactionsActivity extends Activity
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
 			{
 				int selectedTemplateNo=0;
+				ArrayList<String> templateStrings = getTemplateStrings("All");
 				for(int i=0; i<templateStrings.size(); i++)
 				{
 					if(particularsField.getText().toString().trim().equalsIgnoreCase(templateStrings.get(i).trim()))
@@ -911,7 +903,6 @@ public class TransactionsActivity extends Activity
 						Template template = new Template(0, transaction.getParticular(), transaction.getType(), 
 								transaction.getAmount());
 						DatabaseManager.addTemplate(template);
-						templates = DatabaseManager.getAllTemplates();
 					}
 				}
 				else
@@ -979,6 +970,7 @@ public class TransactionsActivity extends Activity
 					String type = "Wallet Credit";
 					String particulars = particularsField.getText().toString().trim();
 					String amount = amountField.getText().toString();
+					boolean saveAsTemplate = templateCheckBox.isChecked();
 					Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
 					Transaction newTransaction = null;
 					boolean validData = isValidData(data);
@@ -987,6 +979,12 @@ public class TransactionsActivity extends Activity
 					{
 						newTransaction = completeData(data);
 						DatabaseManager.editTransaction(oldTransaction, newTransaction);
+						if(saveAsTemplate)
+						{
+							Template template = new Template(0, newTransaction.getParticular(), 
+									newTransaction.getType(), newTransaction.getAmount());
+							DatabaseManager.addTemplate(template);
+						}
 					}
 					else
 					{
@@ -1028,6 +1026,7 @@ public class TransactionsActivity extends Activity
 					String rate = rateField.getText().toString();
 					String quantity = quantityField.getText().toString();
 					String amount = amountField.getText().toString();
+					boolean saveAsTemplate = templateCheckBox.isChecked();
 					Object[] data = {id, time, time, date, type, particulars, rate, quantity, amount};
 					Transaction newTransaction;
 					boolean validData = isValidData(data);
@@ -1036,6 +1035,12 @@ public class TransactionsActivity extends Activity
 					{
 						newTransaction = completeData(data);
 						DatabaseManager.editTransaction(oldTransaction, newTransaction);
+						if(saveAsTemplate)
+						{
+							Template template = new Template(0, newTransaction.getParticular(), 
+									newTransaction.getType(), newTransaction.getRate());
+							DatabaseManager.addTemplate(template);
+						}
 					}
 					else
 					{
@@ -1110,6 +1115,7 @@ public class TransactionsActivity extends Activity
 					}
 					String particulars = particularsField.getText().toString();
 					String amount = amountField.getText().toString();
+					boolean saveAsTemplate = templateCheckBox.isChecked();
 					Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
 					Transaction newTransaction;
 					boolean validData = isValidData(data);
@@ -1118,6 +1124,12 @@ public class TransactionsActivity extends Activity
 					{
 						newTransaction = completeData(data);
 						DatabaseManager.editTransaction(oldTransaction, newTransaction);
+						if(saveAsTemplate)
+						{
+							Template template = new Template(0, newTransaction.getParticular(), 
+									newTransaction.getType(), newTransaction.getAmount());
+							DatabaseManager.addTemplate(template);
+						}
 					}
 					else
 					{
@@ -1219,6 +1231,7 @@ public class TransactionsActivity extends Activity
 					}
 					String particulars = particularsField.getText().toString();
 					String amount = amountField.getText().toString();
+					boolean saveAsTemplate = templateCheckBox.isChecked();
 					Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
 					Transaction newTransaction;
 					boolean validData = isValidData(data);
@@ -1227,6 +1240,12 @@ public class TransactionsActivity extends Activity
 					{
 						newTransaction = completeData(data);
 						DatabaseManager.editTransaction(oldTransaction, newTransaction);
+						if(saveAsTemplate)
+						{
+							Template template = new Template(0, newTransaction.getParticular(), newTransaction.getType(), 
+									newTransaction.getAmount());
+							DatabaseManager.addTemplate(template);
+						}
 					}
 					else
 					{
@@ -1470,30 +1489,28 @@ public class TransactionsActivity extends Activity
 		return transaction;	
 	}
 	
-	/* *
-	 * Takes the details of the sms from the intent and performs the necessary transaction
-	 * /
-	private void performSMSTransaction()
+	private ArrayList<String> getTemplateStrings(String type)
 	{
-		int bankNo = smsIntent.getIntExtra("Bank Number", 0);
-		String type = smsIntent.getStringExtra("Type");
-		double amount = smsIntent.getDoubleExtra("Amount", 0);
-		
-		if(type.equals("credit"))
+		templates = DatabaseManager.getAllTemplates();
+		ArrayList<String> templateStrings = new ArrayList<String>();
+		if(type.equalsIgnoreCase("All"))
 		{
-			buildBankCreditDialog();
-			banks.get(bankNo).setChecked(true);
-			amountField.setText(formatterTextFields.format(amount));
-			bankCreditDialog.setCancelable(false);
-			bankCreditDialog.show();
+			for(int i=0; i<templates.size(); i++)
+			{
+				templateStrings.add(templates.get(i).getParticular().trim());
+			}
 		}
 		else
 		{
-			buildBankDebitDialog();
-			banks.get(bankNo).setChecked(true);
-			amountField.setText(formatterTextFields.format(amount));
-			bankDebitDialog.setCancelable(false);
-			bankDebitDialog.show();
+			for(int i=0; i<templates.size(); i++)
+			{
+				if(templates.get(i).getType().contains(type))
+				{
+					templateStrings.add(templates.get(i).getParticular().trim());
+				}
+			}
 		}
-	}*/
+		
+		return templateStrings;
+	}
 }

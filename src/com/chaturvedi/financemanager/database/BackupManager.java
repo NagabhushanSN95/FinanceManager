@@ -80,8 +80,16 @@ public class BackupManager
 			
 			// Backup The Transactions
 			ArrayList<Transaction> transactions = DatabaseManager.getAllTransactions();
+			int i=0;				// For Debug Purposes Only
 			for(Transaction transaction : transactions)
 			{
+				i++;
+				if(transaction.getID() != i)
+				{
+					transaction.setID(i);
+					Toast.makeText(context, "ID Error in " + i + "th Transaction\n" + "BackupManager/backup", 
+							Toast.LENGTH_LONG).show();
+				}
 				transactionsWriter.write(transaction.getID() + "\n");
 				transactionsWriter.write(transaction.getCreatedTime().toString() + "\n");
 				transactionsWriter.write(transaction.getModifiedTime().toString() + "\n");
