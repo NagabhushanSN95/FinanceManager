@@ -9,6 +9,7 @@ import java.util.Calendar;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -48,6 +49,10 @@ import com.chaturvedi.financemanager.database.Transaction;
 
 public class TransactionsActivity extends Activity
 {
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
+	private String transactionsDisplayInterval = "Month";
+	
 	/*private final int DISPLAY_TRANSACTIONS_ALL = 0;
 	private final int DISPLAY_TRANSACTIONS_YEAR = 1;
 	private final int DISPLAY_TRANSACTIONS_MONTH = 2;
@@ -94,10 +99,6 @@ public class TransactionsActivity extends Activity
 	private ArrayList<RadioButton> banks;
 	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
 	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
-	
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "transactions_display_interval";
-	private String transactionsDisplayInterval = "Month";
 	
 	private ArrayList<Transaction> transactions;
 	private ArrayList<Template> templates;
@@ -229,7 +230,7 @@ public class TransactionsActivity extends Activity
 	
 	private void readPreferences()
 	{
-		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		
 		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 		{

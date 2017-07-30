@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.Calendar;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Build.VERSION;
@@ -21,8 +22,8 @@ import com.chaturvedi.financemanager.database.DatabaseManager;
 
 public class StatisticsActivity extends Activity
 {
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	private String currencySymbol = " ";
 	
 	private int screenWidth;
@@ -67,7 +68,7 @@ public class StatisticsActivity extends Activity
 			krishna.setVisibility(View.INVISIBLE);
 		}
 		
-		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		if(preferences.contains(KEY_CURRENCY_SYMBOL))
 		{
 			currencySymbol = preferences.getString(KEY_CURRENCY_SYMBOL, " ");

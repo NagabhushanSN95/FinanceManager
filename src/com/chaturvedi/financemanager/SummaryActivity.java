@@ -10,11 +10,11 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Build.VERSION;
@@ -47,20 +47,16 @@ import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.Template;
 import com.chaturvedi.financemanager.database.Time;
 import com.chaturvedi.financemanager.database.Transaction;
-import com.chaturvedi.financemanager.updates.Update68To75;
 
 public class SummaryActivity extends Activity
 {
-	private static final String SHARED_PREFERENCES_VERSION = "app_version";
-	private static final String KEY_VERSION = "version";
-	private static int VERSION_NO;
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private SharedPreferences preferences;
+	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	private String currencySymbol = " ";
-	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "transactions_display_interval";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
 	private String transactionsDisplayInterval = "Month";
-	private static final String SHARED_PREFERENCES_SMS = "Bank_SMS";
-	private static final String KEY_BANK_SMS_ARRIVED = "sms_arrived";
+	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -123,7 +119,6 @@ public class SummaryActivity extends Activity
 	private Intent smsIntent;
 	private DecimalFormat formatterTextFields;
 	private ArrayList<Template> templates;
-	private ArrayList<String> templateStrings;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -141,38 +136,7 @@ public class SummaryActivity extends Activity
 			actionBar.setVisibility(View.GONE);
 		}
 		
-		// Get the Version No Of The App
-		try
-		{
-			VERSION_NO = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
-		}
-		catch (NameNotFoundException e)
-		{
-			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
-					"SummaryActivity\\onCreate\n" + e.getMessage(), Toast.LENGTH_LONG).show();
-		}
-		// Get the version no stored in the preferences. This contains the version no of the app, when it was 
-		// previously opened. So, it the app is updated now, this field contains version no of old app.
-		// So, update classes can be run
-		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
-		SharedPreferences.Editor versionEditor = versionPreferences.edit();
-		new Update68To75(this);								// Remove This
-		if(versionPreferences.contains(KEY_VERSION))
-		{
-			int versionNo = versionPreferences.getInt(KEY_VERSION, 0);
-			if(versionNo != VERSION_NO)
-			{
-				runUpdateClasses(versionNo);
-				versionEditor.putInt(KEY_VERSION, VERSION_NO);
-			}
-		}
-		else
-		{
-			runUpdateClasses(0);
-			versionEditor.putInt(KEY_VERSION, VERSION_NO);
-		}
-		versionEditor.commit();
-		
+		preferences = this.getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		calculateDimensions();
 		buildBodyLayout();
 		setData();
@@ -190,18 +154,15 @@ public class SummaryActivity extends Activity
 		smsIntent = getIntent();
 		if(smsIntent.getBooleanExtra("Bank Sms", false))
 		{
-			SharedPreferences smsPreferences = this.getSharedPreferences(SHARED_PREFERENCES_SMS, 0);
-			boolean newSmsArrived = smsPreferences.getBoolean(KEY_BANK_SMS_ARRIVED, false);
+			boolean newSmsArrived = preferences.getBoolean(KEY_BANK_SMS_ARRIVED, false);
 			if(newSmsArrived)
 			{
-				SharedPreferences.Editor editor = smsPreferences.edit();
+				SharedPreferences.Editor editor = preferences.edit();
 				editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
 				editor.commit();
 				performSMSTransaction();
 			}
 		}
-		
-		//DatabaseManager.updateTemplates();
 	}
 	
 	@Override
@@ -304,7 +265,6 @@ public class SummaryActivity extends Activity
 			krishna.setVisibility(View.INVISIBLE);
 		}
 		
-		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 		if(preferences.contains(KEY_CURRENCY_SYMBOL))
 		{
 			currencySymbol = preferences.getString(KEY_CURRENCY_SYMBOL, " ");
@@ -378,8 +338,6 @@ public class SummaryActivity extends Activity
 			nameViews.get(numBanks+1).setText("Amount Spent");
 			nameViews.get(numBanks+2).setText("Income");
 			amountViews.get(numBanks).setText(""+formatter.format(DatabaseManager.getWalletBalance()));
-			
-			SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 			
 			if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 			{

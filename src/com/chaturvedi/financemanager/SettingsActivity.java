@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Build.VERSION;
@@ -21,11 +22,12 @@ import android.widget.Toast;
 
 public class SettingsActivity extends Activity
 {
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_ENABLE_SPLASH = "enable_splash";
-	private static final String KEY_BANK_SMS = "respond_bank_messages";
-	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
-	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "transactions_display_interval";
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private static final String KEY_SPLASH_DURATION = "SplashDuration";
+	private int splashDuration = 5000;
+	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
+	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	
 	private CheckBox splashCheckBox;
 	private static boolean enableSplash=true;
@@ -104,14 +106,14 @@ public class SettingsActivity extends Activity
 	
 	private void readPreferences()
 	{
-		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
-		if(preferences.contains(KEY_ENABLE_SPLASH))
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		if(preferences.contains(KEY_SPLASH_DURATION))
 		{
-			enableSplash=preferences.getBoolean(KEY_ENABLE_SPLASH, true);
+			enableSplash = preferences.getInt(KEY_SPLASH_DURATION, splashDuration) == splashDuration;
 		}
-		if(preferences.contains(KEY_BANK_SMS))
+		if(preferences.contains(KEY_RESPOND_BANK_SMS))
 		{
-			respondBankMessages=preferences.getBoolean(KEY_BANK_SMS, true);
+			respondBankMessages=preferences.getBoolean(KEY_RESPOND_BANK_SMS, true);
 		}
 		if(preferences.contains(KEY_CURRENCY_SYMBOL))
 		{
@@ -132,10 +134,10 @@ public class SettingsActivity extends Activity
 			currencySymbolSelected = " ";
 		transactionsDisplayInterval = (String) transactionsDisplayOptionsList.getSelectedItem();
 		
-		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, 0);
 		SharedPreferences.Editor editor = preferences.edit();
-		editor.putBoolean(KEY_ENABLE_SPLASH, enableSplash);
-		editor.putBoolean(KEY_BANK_SMS, respondBankMessages);
+		editor.putInt(KEY_SPLASH_DURATION, enableSplash ? splashDuration : 0);
+		editor.putBoolean(KEY_RESPOND_BANK_SMS, respondBankMessages);
 		editor.putString(KEY_CURRENCY_SYMBOL, currencySymbolSelected);
 		editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, transactionsDisplayInterval);
 		editor.commit();

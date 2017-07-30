@@ -3,6 +3,7 @@ package com.chaturvedi.financemanager;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -25,21 +26,25 @@ import com.chaturvedi.financemanager.database.DatabaseManager;
 
 public class ExpenditureSetupActivity extends Activity
 {
-	private final int NUM_EXPENDITURE_TYPES=5;
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_ENABLE_SPLASH = "enable_splash";
-	private static final String KEY_BANK_SMS = "respond_bank_messages";
-	private static final String SHARED_PREFERENCES_VERSION = "app_version";
-	private static final String KEY_VERSION = "version";
-	private static int VERSION_NO;
-	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
-	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private static final String KEY_APP_VERSION = "AppVersionNo";
+	private final int CURRENT_APP_VERSION_NO = 75;
+	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
+	private static final String KEY_SPLASH_DURATION = "SplashDuration";
+	private int splashDuration = 5000;
+	private static final String KEY_QUOTE_NO = "QuoteNo";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
+	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
+	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
+	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
 	
 	private int screenWidth;
 	private int screenHeight;
 	private int WIDTH_TEXT_FIELDS;
 	private int MARGIN_TOP_TEXT_FIELDS;
 	private int MARGIN_LEFT_TEXT_FIELDS;
+
+	private final int NUM_EXPENDITURE_TYPES=5;
 	
 	private ArrayList<EditText> typeTextFields;
 	private ArrayList<LayoutParams> typeFieldParams;
@@ -164,30 +169,28 @@ public class ExpenditureSetupActivity extends Activity
 		
 		DatabaseManager.setAllExpenditureTypes(expenditureTypes);
 		
-		SharedPreferences settingsPreferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
-		SharedPreferences.Editor settingsEditor = settingsPreferences.edit();
-		settingsEditor.putBoolean(KEY_ENABLE_SPLASH, true);
-		settingsEditor.putBoolean(KEY_BANK_SMS, true);
-		settingsEditor.commit();
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = preferences.edit();
 		
-
-		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
-		SharedPreferences.Editor versionEditor = versionPreferences.edit();
+		int appVersionNo;
 		try
 		{
-			VERSION_NO = this.getPackageManager().getPackageInfo(this.getLocalClassName(), 0).versionCode;
+			appVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
 		}
 		catch (NameNotFoundException e)
 		{
+			appVersionNo = CURRENT_APP_VERSION_NO;
 			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
 					"ExpenditureSetupActivity\\saveToDatabase\n" + e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-		versionEditor.putInt(KEY_VERSION, VERSION_NO);
-		versionEditor.commit();
-		
-		SharedPreferences databasePreferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
-		SharedPreferences.Editor databaseEditor = databasePreferences.edit();
-		databaseEditor.putBoolean(KEY_DATABASE_INITIALIZED, true);
-		databaseEditor.commit();
+		editor.putInt(KEY_APP_VERSION, appVersionNo);
+		editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+		editor.putInt(KEY_SPLASH_DURATION, splashDuration);
+		editor.putInt(KEY_QUOTE_NO, 0);
+		editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+		editor.putString(KEY_CURRENCY_SYMBOL, " ");
+		editor.putBoolean(KEY_RESPOND_BANK_SMS, true);
+		editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
+		editor.commit();
 	}
 }

@@ -13,10 +13,10 @@ import com.chaturvedi.financemanager.database.DatabaseManager;
 
 public class SmsReceiver extends BroadcastReceiver
 {
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_BANK_SMS = "respond_bank_messages";
-	private static final String SHARED_PREFERENCES_SMS = "Bank_SMS";
-	private static final String KEY_BANK_SMS_ARRIVED = "sms_arrived";
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private SharedPreferences preferences;
+	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
+	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
 	private boolean respondBankMessages = true;
 	
 	private Context context;
@@ -28,8 +28,8 @@ public class SmsReceiver extends BroadcastReceiver
 	@Override
 	public void onReceive(Context context, Intent intent)
 	{
-		new DatabaseManager(context);
 		this.context = context;
+		new DatabaseManager(context);
 		DatabaseManager.readDatabase();
 		readPreferences();
 		
@@ -55,7 +55,7 @@ public class SmsReceiver extends BroadcastReceiver
 					if(sender.toLowerCase().contains(DatabaseManager.getBank(i).getSmsName().toLowerCase()))
 					{
 						// Set the flag in the Preferences that a SMS has arrived
-						SharedPreferences.Editor editor = context.getSharedPreferences(SHARED_PREFERENCES_SMS, 0).edit();
+						SharedPreferences.Editor editor = preferences.edit();
 						editor.putBoolean(KEY_BANK_SMS_ARRIVED, true);
 						editor.commit();
 						
@@ -244,10 +244,10 @@ public class SmsReceiver extends BroadcastReceiver
 
 	private void readPreferences()
 	{
-		SharedPreferences preferences = context.getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
-		if(preferences.contains(KEY_BANK_SMS))
+		preferences = context.getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		if(preferences.contains(KEY_RESPOND_BANK_SMS))
 		{
-			respondBankMessages=preferences.getBoolean(KEY_BANK_SMS, true);
+			respondBankMessages=preferences.getBoolean(KEY_RESPOND_BANK_SMS, true);
 		}
 	}
 }

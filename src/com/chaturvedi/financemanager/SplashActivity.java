@@ -12,9 +12,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,20 +29,18 @@ import android.widget.Toast;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
 //import android.view.ViewGroup.LayoutParams;
+import com.chaturvedi.financemanager.updates.Update68To75;
 
 public class SplashActivity extends Activity 
 {
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_ENABLE_SPLASH = "enable_splash";
-	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
-	private static final String SHARED_PREFERENCES_DATABASE_INITIALIZED = "DatabaseInitialized";
-	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
-	private static final String SHARED_PREFERENCES_APP = "Other App Preferences";
-	private static final String KEY_QUOTE_NUMREADS = "quote_numReads";
-	
-	private static boolean showSplash=true;
-	private static int splashTime=5000;
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private static final String KEY_APP_VERSION = "AppVersionNo";
+	private static final int APP_VERSION_NO_75 = 75;
+	private static final String KEY_SPLASH_DURATION = "SplashDuration";
+	private int splashDuration = 5000;
+	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
 	private boolean databaseInitialized = true;
+	private static final String KEY_QUOTE_NO = "QuoteNo";
 	
 	private TextView quoteView;
 	private String quoteText;
@@ -49,12 +49,13 @@ public class SplashActivity extends Activity
 	private int deviceWidth=1000;
 	private int progressStatus=00;
 	
-	private int quotesNumReads = 0;
+	private int quotesNo = 0;
 	private int NUM_TIPS = 0;
-	private int NUM_QUOTES = 0;
+	private int NUM_TOTAL_QUOTES = 0;
+	/*private int NUM_QUOTES = 0;
 	private int NUM_FACTS = 0;
 	private int NUM_CRICKET_QUOTES = 0;
-	private int NUM_MOVIE_QUOTES = 0;
+	private int NUM_MOVIE_QUOTES = 0;*/
 	
 	private Intent nextActivityIntent;
 	
@@ -63,7 +64,8 @@ public class SplashActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash);
-
+		
+		checkForUpdates();
 		readPreferences();
 		new DatabaseManager(this);
 		readQuotes();
@@ -74,21 +76,74 @@ public class SplashActivity extends Activity
 		databaseReaderThread.start();
 	}
 	
-	private void readPreferences()
+	private void checkForUpdates()
 	{
-		// Read If Splash Screen Is Enabled By The User
-		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
-		if(preferences.contains(KEY_ENABLE_SPLASH))
+		int currentVersionNo = 0, previousVersionNo = 0;
+		
+		// Get the Current Version No Of The App
+		try
 		{
-			showSplash=preferences.getBoolean(KEY_ENABLE_SPLASH, true);
+			currentVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
+		}
+		catch (NameNotFoundException e)
+		{
+			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In\n" + 
+					"SplashActivity\\checkForUpdates\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		
+		// Get the version no stored in the preferences. This contains the version no of the app, when it was 
+		// previously opened. So, it the app is updated now, this field contains version no of old app.
+		// So, update classes can be run
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = preferences.edit();
+		if(preferences.contains(KEY_APP_VERSION))
+		{
+			previousVersionNo = preferences.getInt(KEY_APP_VERSION, 0);
 		}
 		else
 		{
-			showSplash = true;
+			// From v3.2.1 and onwards all Preferences are stored in a single SharedPreferences file
+			// But, in previous versions, AppVersionNo was stored in app_version file
+			SharedPreferences versionPreferences = getSharedPreferences("app_version", 0);
+			if(versionPreferences.contains("version"))
+			{
+				previousVersionNo = versionPreferences.getInt("version", 0);
+			}
+			else
+			{
+				previousVersionNo = -1;				// Denotes App has been opened for first time
+			}
+		}
+		
+		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
+		if(canProceed && (previousVersionNo != currentVersionNo))
+		{
+			if(previousVersionNo < APP_VERSION_NO_75)
+			{
+				new Update68To75(SplashActivity.this);
+			}
+			editor.putInt(KEY_APP_VERSION, currentVersionNo);
+			editor.commit();
+		}
+	}
+	
+	private void readPreferences()
+	{
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = preferences.edit();
+
+		// Read the Splash Duration set by the user
+		if(preferences.contains(KEY_SPLASH_DURATION))
+		{
+			splashDuration=preferences.getInt(KEY_SPLASH_DURATION, 5000);
+		}
+		else
+		{
+			splashDuration = 5000;
+			editor.putInt(KEY_SPLASH_DURATION, 5000);
 		}
 		
 		// Check If The Database Is Initialized
-		preferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
 		if(preferences.contains(KEY_DATABASE_INITIALIZED))
 		{
 			// Since Database Is Initialized, Read the Database And start The SummaryActivity 
@@ -99,48 +154,23 @@ public class SplashActivity extends Activity
 		}
 		else
 		{
-			// In the update 3.1.0, the name of the Shared Preferences Changed 
-			// From DatabaseInitialized to Database.
-			// So, check if that preferences file is there 
-			SharedPreferences preferences_copy = getSharedPreferences(SHARED_PREFERENCES_DATABASE_INITIALIZED, 0);
-			if(preferences_copy.contains(KEY_DATABASE_INITIALIZED))
-			{
-				// Since Database Is Initialized, Read the Database And start The SummaryActivity 
-				//(Home Screen Of The App) and save it in Database Preferences File
-				//DatabaseManager.readDatabase();
-				databaseInitialized = true;
-				nextActivityIntent = new Intent(this, SummaryActivity.class);
-				SharedPreferences.Editor editor = preferences.edit();
-				editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
-				editor.commit();
-			}
-			else
-			{
-				// Since Database is not Initialized, Start the Setup
-				databaseInitialized = false;
-				nextActivityIntent = new Intent(this, StartupActivity.class);
-			}
+			// Database is not initialized. So, start StartupActivity
+			databaseInitialized = false;
+			nextActivityIntent = new Intent(this, StartupActivity.class);
 		}
 		
 		// Retrieve Num Quote Reads
-		preferences = getSharedPreferences(SHARED_PREFERENCES_APP, 0);
-		if(preferences.contains(KEY_QUOTE_NUMREADS))
+		if(preferences.contains(KEY_QUOTE_NO))
 		{
-			quotesNumReads=preferences.getInt(KEY_QUOTE_NUMREADS, 0);
+			quotesNo=preferences.getInt(KEY_QUOTE_NO, 0);
+			editor.putInt(KEY_QUOTE_NO, quotesNo+1);
 		}
 		else
 		{
-			quotesNumReads = 0;
+			quotesNo = 0;
+			editor.putInt(KEY_QUOTE_NO, 1);
 		}
-		
-		// If Splash Screen is Enabled, increament quoteNumReads and save it
-		if(showSplash)
-		{
-			quotesNumReads++;
-			SharedPreferences.Editor editor = preferences.edit();
-			editor.putInt(KEY_QUOTE_NUMREADS, quotesNumReads);
-			editor.commit();
-		}
+		editor.commit();
 	}
 	
 	/**
@@ -176,7 +206,7 @@ public class SplashActivity extends Activity
 			while(line!=null)
 			{
 				quotes.add(line);
-				NUM_QUOTES++;
+				NUM_TOTAL_QUOTES++;
 				line=quotesReader.readLine();
 			}
 			
@@ -185,7 +215,7 @@ public class SplashActivity extends Activity
 			while(line!=null)
 			{
 				quotes.add(line);
-				NUM_FACTS++;
+				NUM_TOTAL_QUOTES++;
 				line=factsReader.readLine();
 			}
 			
@@ -194,7 +224,7 @@ public class SplashActivity extends Activity
 			while(line!=null)
 			{
 				quotes.add(line);
-				NUM_CRICKET_QUOTES++;
+				NUM_TOTAL_QUOTES++;
 				line=cricketReader.readLine();
 			}
 			
@@ -203,7 +233,7 @@ public class SplashActivity extends Activity
 			while(line!=null)
 			{
 				quotes.add(line);
-				NUM_MOVIE_QUOTES++;
+				NUM_TOTAL_QUOTES++;
 				line=moviesReader.readLine();
 			}
 		}
@@ -215,17 +245,16 @@ public class SplashActivity extends Activity
 		// If Debug Version, Don't display Tips
 		if(0 != (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
 		{
-			quotesNumReads += NUM_TIPS;
+			quotesNo += NUM_TIPS;
 		}	
 				
-		int NUM_TOTAL_QUOTES = NUM_QUOTES + NUM_FACTS + NUM_CRICKET_QUOTES + NUM_MOVIE_QUOTES;
-		// Select A Random Quote depending on Number Of Quote Reads
-		if(quotesNumReads<=NUM_TIPS)
+		// Select A Random Quote depending on Number Of Quote Number To Be Displayed
+		if(quotesNo<=NUM_TIPS*2)
 		{
 			// Very less reads. So, display only Tips in order
-			quoteText=quotes.get(quotesNumReads);
+			quoteText=quotes.get(quotesNo%NUM_TIPS);
 		}
-		else if(quotesNumReads<=1000)
+		else if(quotesNo<=1000)
 		{
 			// Average reads. So, display both tips and quotes
 			quoteText=quotes.get(randomNumber.nextInt(NUM_TIPS + NUM_TOTAL_QUOTES));
@@ -247,7 +276,7 @@ public class SplashActivity extends Activity
 		quoteView.setText(quoteText);
 		
 		// Schedule to start the NextActivity after the specified time (splashTime)
-		if(showSplash)
+		if(splashDuration > 0)
 		{
 			new Handler().postDelayed(new Runnable() 
 			{
@@ -257,7 +286,7 @@ public class SplashActivity extends Activity
 					startActivity(nextActivityIntent);
 					finish();
 				}
-			} ,splashTime);
+			} ,splashDuration);
 		}
 		
 		// Get a reference to Progress Line View
@@ -269,7 +298,7 @@ public class SplashActivity extends Activity
 		deviceWidth=metrics.widthPixels;
 
 		// Calculate the refresh time to update the ProgressBar
-		int refreshTime=(splashTime/deviceWidth)+1;
+		int refreshTime=(splashDuration/deviceWidth)+1;
 		// Schedule to increment the length of ProgressBar repeatedly at intervals calculated above
 		Timer timer=new Timer();
 		timer.scheduleAtFixedRate(new TimerTask()
@@ -379,7 +408,7 @@ public class SplashActivity extends Activity
 							"Error Code: " + restoreResult, Toast.LENGTH_LONG).show();
 				}
 			}
-			if(!showSplash)
+			if(splashDuration == 0)
 			{
 				startActivity(nextActivityIntent);
 				finish();

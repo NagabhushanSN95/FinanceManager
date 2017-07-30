@@ -2,6 +2,7 @@ package com.chaturvedi.financemanager;
 
 import java.util.ArrayList;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -22,15 +23,20 @@ import com.chaturvedi.financemanager.database.RestoreManager;
 
 public class StartupActivity extends FragmentActivity
 {
+	private static final String ALL_PREFERENCES = "AllPreferences";
+	private SharedPreferences preferences;
+	private static final String KEY_APP_VERSION = "AppVersionNo";
+	private final int CURRENT_APP_VERSION_NO = 75;
+	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
+	private static final String KEY_SPLASH_DURATION = "SplashDuration";
+	private int splashDuration = 5000;
+	private static final String KEY_QUOTE_NO = "QuoteNo";
+	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
+	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
+	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
+	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
+
 	private final int NUM_EXP_TYPES=5;
-	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
-	private static final String KEY_ENABLE_SPLASH = "enable_splash";
-	private static final String KEY_BANK_SMS = "respond_bank_messages";
-	private static final String SHARED_PREFERENCES_VERSION = "app_version";
-	private static final String KEY_VERSION = "version";
-	private static int VERSION_NO;
-	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
-	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -47,6 +53,7 @@ public class StartupActivity extends FragmentActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_startup);
 		
+		preferences = this.getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		calculateDimensions();
 		buildLayout();
 		
@@ -135,13 +142,13 @@ public class StartupActivity extends FragmentActivity
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		super.onActivityResult(requestCode, resultCode, data);
-		SharedPreferences databasePreferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
-		if(databasePreferences.contains(KEY_DATABASE_INITIALIZED))
+		if(preferences.contains(KEY_DATABASE_INITIALIZED))
 		{
-			if(databasePreferences.getBoolean(KEY_DATABASE_INITIALIZED, false))
+			if(preferences.getBoolean(KEY_DATABASE_INITIALIZED, false))
 			{
 				// Finish This Activity
-				super.onBackPressed();
+				//super.onBackPressed();
+				finish();
 			}
 		}
 	}
@@ -158,6 +165,29 @@ public class StartupActivity extends FragmentActivity
 			DatabaseManager.setAllCounters(restoreManager.getAllCounters());
 			DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
 			DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+			
+			// Store Default Preferences
+			SharedPreferences.Editor editor = preferences.edit();
+			int appVersionNo;
+			try
+			{
+				appVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
+			}
+			catch (NameNotFoundException e)
+			{
+				appVersionNo = CURRENT_APP_VERSION_NO;
+				Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
+						"StartupActivity/restoreData\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			}
+			editor.putInt(KEY_APP_VERSION, appVersionNo);
+			editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+			editor.putInt(KEY_SPLASH_DURATION, splashDuration);
+			editor.putInt(KEY_QUOTE_NO, 0);
+			editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+			editor.putString(KEY_CURRENCY_SYMBOL, " ");
+			editor.putBoolean(KEY_RESPOND_BANK_SMS, true);
+			editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
+			editor.commit();
 			
 			startActivity(summaryIntent);
 			super.onBackPressed();
@@ -194,31 +224,28 @@ public class StartupActivity extends FragmentActivity
 		expTypes.add(getResources().getString(R.string.hint_exp05));
 		DatabaseManager.setAllExpenditureTypes(expTypes);
 		
-		SharedPreferences settingsPreferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
-		SharedPreferences.Editor settingsEditor = settingsPreferences.edit();
-		settingsEditor.putBoolean(KEY_ENABLE_SPLASH, true);
-		settingsEditor.putBoolean(KEY_BANK_SMS, true);
-		settingsEditor.commit();
-		
-
-		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
-		SharedPreferences.Editor versionEditor = versionPreferences.edit();
+		// Store Default Preferences
+		SharedPreferences.Editor editor = preferences.edit();
+		int appVersionNo;
 		try
 		{
-			VERSION_NO = this.getPackageManager().getPackageInfo(this.getLocalClassName(), 0).versionCode;
+			appVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
 		}
 		catch (NameNotFoundException e)
 		{
+			appVersionNo = CURRENT_APP_VERSION_NO;
 			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
-					"ExpenditureSetupActivity\\saveToDatabase\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+					"StartupActivity/skipSetup\n" + e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-		versionEditor.putInt(KEY_VERSION, VERSION_NO);
-		versionEditor.commit();
-		
-		SharedPreferences databasePreferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
-		SharedPreferences.Editor databaseEditor = databasePreferences.edit();
-		databaseEditor.putBoolean(KEY_DATABASE_INITIALIZED, true);
-		databaseEditor.commit();
+		editor.putInt(KEY_APP_VERSION, appVersionNo);
+		editor.putBoolean(KEY_DATABASE_INITIALIZED, true);
+		editor.putInt(KEY_SPLASH_DURATION, splashDuration);
+		editor.putInt(KEY_QUOTE_NO, 0);
+		editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+		editor.putString(KEY_CURRENCY_SYMBOL, " ");
+		editor.putBoolean(KEY_RESPOND_BANK_SMS, true);
+		editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
+		editor.commit();
 		
 		startActivityForResult(summaryIntent, 0);
 		super.onBackPressed();

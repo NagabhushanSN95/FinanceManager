@@ -7,7 +7,6 @@ In Transactions activity, provide options to settings, statistics, extras, etc
 In TransactionsActivity, after returning from TemplatesActivity, Particulars title contains the particular of last transaction
 Do, restoring in seperate thread
 Add aaditya's name in About Developer Page
-While displaying autoComplete options, display only related ones. Don't show income options during wallet debit
 while displaying autoComplete options for banks, remove banks header
 Edit Template
 Display Indian Flag and App icon in Splash Activity
@@ -18,14 +17,13 @@ Release App
 Settings Activity - Make it neat
 Help: Guide/Demo/FAQs/Mail
 In Displaying Banks, display bank name and balance only
-Release App
-
 ViewPager for banks/expenditure setup/edit activities
 Start up Page: Initialize/ Restore/ Skip
 Animations
 Redesign SplashActivity and About Developer Page
 Release App
 
+Make NumExpenditureTypes Variable
 Design Icons
 Graphs for statistics
 pdf and doc file export
