@@ -25,11 +25,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.expenditurelist.database.DatabaseManager;
+import com.chaturvedi.expenditurelist.updates.Update43To49;
 
 public class SummaryActivity extends Activity
 {
 	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
 	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
+	private static final String SHARED_PREFERENCES_VERSION = "app_version";
+	private static final int VERSION_NO = 49;
+	private static final String KEY_VERSION = "version";
 	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
 	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
 	private String currencySymbol = " ";
@@ -85,6 +89,28 @@ public class SummaryActivity extends Activity
 		WIDTH_NAME_VIEWS=screenWidth*55/100;
 		WIDTH_AMOUNT_VIEWS = screenWidth*35/100;
 		MARGIN_LEFT_NAME_VIEWS = 5;
+		
+		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
+		SharedPreferences.Editor versionEditor = versionPreferences.edit();
+		Toast.makeText(getApplicationContext(), "Check-Point 01", Toast.LENGTH_SHORT).show();
+		if(versionPreferences.contains(KEY_VERSION))
+		{
+			Toast.makeText(getApplicationContext(), "Check-Point 02", Toast.LENGTH_SHORT).show();
+			int versionNo = versionPreferences.getInt(KEY_VERSION, 0);
+			if(versionNo != VERSION_NO)
+			{
+				Toast.makeText(getApplicationContext(), "Check-Point 03", Toast.LENGTH_SHORT).show();
+				runUpdateClasses(versionNo);
+				versionEditor.putInt(KEY_VERSION, VERSION_NO);
+			}
+		}//
+		else
+		{
+			Toast.makeText(getApplicationContext(), "Check-Point 04", Toast.LENGTH_SHORT).show();
+			runUpdateClasses(0);
+			versionEditor.putInt(KEY_VERSION, VERSION_NO);
+		}
+		versionEditor.commit();
 		
 		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
 		if(preferences.contains(KEY_DATABASE_INITIALIZED))
@@ -259,6 +285,24 @@ public class SummaryActivity extends Activity
 		catch(Exception e)
 		{
 			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+	}
+	
+	private void runUpdateClasses(int oldVersionNo)
+	{
+		Toast.makeText(getApplicationContext(), "Check-Point 05", Toast.LENGTH_SHORT).show();
+		if(oldVersionNo == 0)
+		{
+			Toast.makeText(getApplicationContext(), "Check-Point 06", Toast.LENGTH_SHORT).show();
+			new Update43To49(SummaryActivity.this);
+		}
+		else if(oldVersionNo == 43)
+		{
+			new Update43To49(SummaryActivity.this);
+		}
+		else
+		{
+			new Update43To49(SummaryActivity.this);
 		}
 	}
 }

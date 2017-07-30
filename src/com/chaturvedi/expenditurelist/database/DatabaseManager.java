@@ -113,6 +113,7 @@ public class DatabaseManager
 				expenditureTypes.add(expType.getExpenditureTypeName());
 			}
 			
+			Toast.makeText(context, "NumCounterRows= "+numCountersRows, Toast.LENGTH_SHORT).show();
 			if(numCountersRows>0)
 			{
 				counters = databaseAdapter.getAllCountersRows();
@@ -167,6 +168,7 @@ public class DatabaseManager
 		if(numTransactions>0)
 		{
 			ArrayList<Transaction> transactions = new ArrayList<Transaction>();
+			Toast.makeText(context, "Check-point 19: " + createdTimes.size() + " : " + modifiedTimes.size(), Toast.LENGTH_SHORT).show();
 			for(int i=0; i<numTransactions; i++)
 			{
 				Transaction transaction=new Transaction(i, createdTimes.get(i), modifiedTimes.get(i), dates.get(i), types.get(i), particulars.get(i),
@@ -174,7 +176,7 @@ public class DatabaseManager
 				transactions.add(transaction);
 			}
 			databaseAdapter.deleteAllTransactions();
-			databaseAdapter.addAllTransactions(transactions);
+			databaseAdapter.addAllTransactions(transactions);//
 		}
 		else
 		{

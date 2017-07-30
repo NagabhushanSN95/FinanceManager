@@ -13,121 +13,141 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 {
 	private static Context context;
 	// Database Version
-		private static final int DATABASE_VERSION = 1;
-		// Database Name
-		private static final String DATABASE_NAME = "expenditureManager";
-		// Table names
-		private static final String TABLE_TRANSACTIONS = "transactions";
-		private static final String TABLE_BANKS = "banks";
-		private static final String TABLE_WALLET = "wallet";
-		private static final String TABLE_EXPENDITURE_TYPES = "expenditure_types";
-		private static final String TABLE_COUNTERS = "counters";
+	private static final int DATABASE_VERSION = 1;
+	// Database Name
+	private static final String DATABASE_NAME = "expenditureManager";
+	// Table names
+	private static final String TABLE_TRANSACTIONS = "transactions";
+	private static final String TABLE_BANKS = "banks";
+	private static final String TABLE_WALLET = "wallet";
+	private static final String TABLE_EXPENDITURE_TYPES = "expenditure_types";
+	private static final String TABLE_COUNTERS = "counters";
+	
+	// Common Column Names
+	private static final String KEY_ID = "id";
+	
+	// Transaction Table Columns names
+	private static final String KEY_CREATED_TIME = "created_time";
+	private static final String KEY_MODIFIED_TIME = "modified_time";
+	private static final String KEY_DATE = "date";
+	private static final String KEY_TYPE = "type";
+	private static final String KEY_PARTICULARS = "particulars";
+	private static final String KEY_RATE = "rate";
+	private static final String KEY_QUANTITY = "quantity";
+	private static final String KEY_AMOUNT = "amount";
+	
+	// Banks Table Column Names
+	private static final String KEY_NAME="name";
+	private static final String KEY_ACC_NO="account_number";
+	private static final String KEY_BALANCE="balance";
+	private static final String KEY_SMS_NAME="sms_name";
+	
+	// Expenditure Types Table Column Names
+	private static final String KEY_EXPENDITURE_TYPE_NAME="expenditure_type_name";
+	
+	// Counters Table Column Names
+	private static final String KEY_EXP01 = "expenditure_01";
+	private static final String KEY_EXP02 = "expenditure_02";
+	private static final String KEY_EXP03 = "expenditure_03";
+	private static final String KEY_EXP04 = "expenditure_04";
+	private static final String KEY_EXP05 = "expenditure_05";
+	
+	// Table Create Statements (Change Type Of Date From String To Date/DateTime whichever is available
+	private static String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE " + TABLE_TRANSACTIONS + "("+ 
+			KEY_ID + " INTEGER PRIMARY KEY," + 
+			KEY_CREATED_TIME + " STRING," +
+			KEY_MODIFIED_TIME + " STRING," +
+			KEY_DATE + " STRING," +
+			KEY_TYPE + " STRING," +
+			KEY_PARTICULARS + " TEXT,"+ 
+			KEY_RATE + " DOUBLE," +
+			KEY_QUANTITY + " DOUBLE," +
+			KEY_AMOUNT + " TEXT" + ")";
+	
+	private static String CREATE_BANKS_TABLE = "CREATE TABLE " + TABLE_BANKS + "("+ 
+			KEY_ID + " INTEGER PRIMARY KEY," + 
+			KEY_NAME + " TEXT," + 
+			KEY_ACC_NO + " TEXT," + 
+			KEY_BALANCE + " DOUBLE," +
+			KEY_SMS_NAME + " TEXT" + ")";
+	
+	private static String CREATE_WALLET_TABLE = "CREATE TABLE " + TABLE_WALLET + "("+ 
+			KEY_ID + " INTEGER PRIMARY KEY," + 
+			KEY_NAME + " TEXT,"+ 
+			KEY_AMOUNT + " DOUBLE" + ")";
+	
+	private static String CREATE_EXPENDITURE_TYPES_TABLE = "CREATE TABLE " + TABLE_EXPENDITURE_TYPES + 
+			"(" + KEY_ID + " INTEGER PRIMARY KEY," + KEY_EXPENDITURE_TYPE_NAME + " TEXT" + ")";
+	
+	private static String CREATE_COUNTERS_TABLE = "CREATE TABLE " + TABLE_COUNTERS + "(" + 
+			KEY_ID + " INTEGER PRIMARY KEY," + 
+			KEY_DATE + " TEXT," + 
+			KEY_EXP01 + " DOUBLE," + 
+			KEY_EXP02 + " DOUBLE," + 
+			KEY_EXP03 + " DOUBLE," + 
+			KEY_EXP04 + " DOUBLE," + 
+			KEY_EXP05 + " DOUBLE" + ")";
+	
+	public DatabaseAdapter(Context context)
+	{
+		super(context, DATABASE_NAME, null, DATABASE_VERSION);
+		DatabaseAdapter.context=context;
+	}
+			// Creating Tables
+	@Override
+	public void onCreate(SQLiteDatabase db)
+	{
+		// Create The Tables
+		db.execSQL(CREATE_TRANSACTIONS_TABLE);
+		db.execSQL(CREATE_BANKS_TABLE);
+		db.execSQL(CREATE_WALLET_TABLE);
+		db.execSQL(CREATE_EXPENDITURE_TYPES_TABLE);
+		db.execSQL(CREATE_COUNTERS_TABLE);
+	}
+	
+	// Upgrading database
+	@Override
+	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+	{
+		// Drop older table if existed
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTIONS);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_BANKS);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENDITURE_TYPES);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_COUNTERS);
+		// Create tables again
+		onCreate(db);
+	}
+	
+	/**
+	* Adds A New Transaction
+	* 
+	*/
+	public void addTransaction(Transaction transaction)
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
 		
-		// Common Column Names
-		private static final String KEY_ID = "id";
+		ContentValues values = new ContentValues();
+		values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
+		values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
+		values.put(KEY_DATE, transaction.getDate().getSavableDate());
+		values.put(KEY_TYPE, transaction.getType());
+		values.put(KEY_PARTICULARS, transaction.getParticular());
+		values.put(KEY_RATE, transaction.getRate());
+		values.put(KEY_QUANTITY, transaction.getQuantity());
+		values.put(KEY_AMOUNT, transaction.getAmount());
 		
-		// Transaction Table Columns names
-		private static final String KEY_CREATED_TIME = "created_time";
-		private static final String KEY_MODIFIED_TIME = "modified_time";
-		private static final String KEY_DATE = "date";
-		private static final String KEY_TYPE = "type";
-		private static final String KEY_PARTICULARS = "particulars";
-		private static final String KEY_RATE = "rate";
-		private static final String KEY_QUANTITY = "quantity";
-		private static final String KEY_AMOUNT = "amount";
+		// Inserting Row
+		db.insert(TABLE_TRANSACTIONS, null, values);
+		db.close(); // Closing database connection
+	}
+	
+	public void addAllTransactions(ArrayList<Transaction> transactions)
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
 		
-		// Banks Table Column Names
-		private static final String KEY_NAME="name";
-		private static final String KEY_ACC_NO="account_number";
-		private static final String KEY_BALANCE="balance";
-		private static final String KEY_SMS_NAME="sms_name";
-		
-		// Expenditure Types Table Column Names
-		private static final String KEY_EXPENDITURE_TYPE_NAME="expenditure_type_name";
-		
-		// Counters Table Column Names
-		private static final String KEY_EXP01 = "expenditure_01";
-		private static final String KEY_EXP02 = "expenditure_02";
-		private static final String KEY_EXP03 = "expenditure_03";
-		private static final String KEY_EXP04 = "expenditure_04";
-		private static final String KEY_EXP05 = "expenditure_05";
-		
-		// Table Create Statements (Change Type Of Date From String To Date/DateTime whichever is available
-		private static String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE " + TABLE_TRANSACTIONS + "("+ 
-				KEY_ID + " INTEGER PRIMARY KEY," + 
-				KEY_CREATED_TIME + " STRING," +
-				KEY_MODIFIED_TIME + " STRING," +
-				KEY_DATE + " STRING," +
-				KEY_TYPE + " STRING," +
-				KEY_PARTICULARS + " TEXT,"+ 
-				KEY_RATE + " DOUBLE," +
-				KEY_QUANTITY + " DOUBLE," +
-				KEY_AMOUNT + " TEXT" + ")";
-		
-		private static String CREATE_BANKS_TABLE = "CREATE TABLE " + TABLE_BANKS + "("+ 
-				KEY_ID + " INTEGER PRIMARY KEY," + 
-				KEY_NAME + " TEXT," + 
-				KEY_ACC_NO + " TEXT," + 
-				KEY_BALANCE + " DOUBLE," +
-				KEY_SMS_NAME + " TEXT" + ")";
-		
-		private static String CREATE_WALLET_TABLE = "CREATE TABLE " + TABLE_WALLET + "("+ 
-				KEY_ID + " INTEGER PRIMARY KEY," + 
-				KEY_NAME + " TEXT,"+ 
-				KEY_AMOUNT + " DOUBLE" + ")";
-		
-		private static String CREATE_EXPENDITURE_TYPES_TABLE = "CREATE TABLE " + TABLE_EXPENDITURE_TYPES + 
-				"(" + KEY_ID + " INTEGER PRIMARY KEY," + KEY_EXPENDITURE_TYPE_NAME + " TEXT" + ")";
-		
-		private static String CREATE_COUNTERS_TABLE = "CREATE TABLE " + TABLE_COUNTERS + "(" + 
-				KEY_ID + " INTEGER PRIMARY KEY," + 
-				KEY_DATE + " TEXT," + 
-				KEY_EXP01 + " DOUBLE," + 
-				KEY_EXP02 + " DOUBLE," + 
-				KEY_EXP03 + " DOUBLE," + 
-				KEY_EXP04 + " DOUBLE," + 
-				KEY_EXP05 + " DOUBLE" + ")";
-		
-		public DatabaseAdapter(Context context)
+		for(Transaction transaction: transactions)
 		{
-			super(context, DATABASE_NAME, null, DATABASE_VERSION);
-			DatabaseAdapter.context=context;
-		}
-		
-		// Creating Tables
-		@Override
-		public void onCreate(SQLiteDatabase db)
-		{
-			// Create The Tables
-			db.execSQL(CREATE_TRANSACTIONS_TABLE);
-			db.execSQL(CREATE_BANKS_TABLE);
-			db.execSQL(CREATE_WALLET_TABLE);
-			db.execSQL(CREATE_EXPENDITURE_TYPES_TABLE);
-			db.execSQL(CREATE_COUNTERS_TABLE);
-		}
-		
-		// Upgrading database
-		@Override
-		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
-		{
-			// Drop older table if existed
-			db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTIONS);
-			db.execSQL("DROP TABLE IF EXISTS " + TABLE_BANKS);
-			db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET);
-			db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENDITURE_TYPES);
-			db.execSQL("DROP TABLE IF EXISTS " + TABLE_COUNTERS);
-			// Create tables again
-			onCreate(db);
-		}
-		
-		/**
-		* Adds A New Transaction
-		* 
-		*/
-		public void addTransaction(Transaction transaction)
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			
 			ContentValues values = new ContentValues();
 			values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
 			values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
@@ -138,122 +158,101 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			values.put(KEY_QUANTITY, transaction.getQuantity());
 			values.put(KEY_AMOUNT, transaction.getAmount());
 			
-			// Inserting Row
 			db.insert(TABLE_TRANSACTIONS, null, values);
-			db.close(); // Closing database connection
 		}
+		db.close();
+	}
+	
+	// Getting single Transaction
+	public Transaction getTransaction(int id)
+	{
+		SQLiteDatabase db = this.getReadableDatabase();
+		Cursor cursor = db.query(TABLE_TRANSACTIONS, new String[] { KEY_ID, KEY_CREATED_TIME, 
+				KEY_MODIFIED_TIME, KEY_DATE, KEY_TYPE, KEY_PARTICULARS, KEY_RATE, KEY_QUANTITY, 
+				KEY_AMOUNT }, KEY_ID + "=?",
+				new String[] { String.valueOf(id) }, null, null, null, null);
+		if (cursor != null)
+			cursor.moveToFirst();
 		
-		public void addAllTransactions(ArrayList<Transaction> transactions)
+		Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
+				new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), 
+				cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
+		db.close();
+		return transaction;
+	}
+	
+	// Getting All Transactions
+	public ArrayList<Transaction> getAllTransactions()
+	{
+		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
+		// Select All Query
+		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS;
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		// looping through all rows and adding to list
+		if (cursor.moveToFirst())
 		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			
-			for(Transaction transaction: transactions)
+			do
 			{
-				ContentValues values = new ContentValues();
-				values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
-				values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
-				values.put(KEY_DATE, transaction.getDate().getSavableDate());
-				values.put(KEY_TYPE, transaction.getType());
-				values.put(KEY_PARTICULARS, transaction.getParticular());
-				values.put(KEY_RATE, transaction.getRate());
-				values.put(KEY_QUANTITY, transaction.getQuantity());
-				values.put(KEY_AMOUNT, transaction.getAmount());
-				
-				db.insert(TABLE_TRANSACTIONS, null, values);
+				Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
+						new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), 
+						cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
+				transactionList.add(transaction);
 			}
-			db.close();
+			while (cursor.moveToNext());
 		}
-		
-		// Getting single Transaction
-		public Transaction getTransaction(int id)
-		{
-			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_TRANSACTIONS, new String[] { KEY_ID, KEY_CREATED_TIME, 
-					KEY_MODIFIED_TIME, KEY_DATE, KEY_TYPE, KEY_PARTICULARS, KEY_RATE, KEY_QUANTITY, 
-					KEY_AMOUNT }, KEY_ID + "=?",
-					new String[] { String.valueOf(id) }, null, null, null, null);
-			if (cursor != null)
-				cursor.moveToFirst();
-			
-			Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
-					new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), 
-					cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
-			db.close();
-			return transaction;
-		}
-		
-		// Getting All Transactions
-		public ArrayList<Transaction> getAllTransactions()
-		{
-			ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
-			// Select All Query
-			String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS;
-			SQLiteDatabase db = this.getWritableDatabase();
-			Cursor cursor = db.rawQuery(selectQuery, null);
-			// looping through all rows and adding to list
-			if (cursor.moveToFirst())
-			{
-				do
-				{
-					Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
-							new Time(cursor.getString(2)), new Date(cursor.getString(3)), cursor.getString(4), 
-							cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
-					transactionList.add(transaction);
-				}
-				while (cursor.moveToNext());
-			}
-			db.close();
-			return transactionList;
-		}
-		
-		// Updating single Transaction
-		public void updateTransaction(Transaction transaction)
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			ContentValues values = new ContentValues();
-			values.put(KEY_DATE, transaction.getDate().getSavableDate());
-			values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
-			values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
-			values.put(KEY_PARTICULARS, transaction.getParticular());
-			values.put(KEY_RATE, transaction.getRate());
-			values.put(KEY_QUANTITY, transaction.getQuantity());
-			values.put(KEY_AMOUNT, transaction.getAmount());
-			// updating row
-			db.update(TABLE_TRANSACTIONS, values, KEY_ID + " = ?", 
-					new String[] { String.valueOf(transaction.getID()) });
-			db.close();
-		}
-		
-		// Deleting single Transaction
-		public void deleteTransaction(Transaction transaction)
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			db.delete(TABLE_TRANSACTIONS, KEY_ID + " = ?", new String[] { String.valueOf(transaction.getID()) });
-			db.close();
-		}
-		
-		/**
-		 * Deletes All The Transactions Along With The Table
-		 */
-		public void deleteAllTransactions()
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTIONS);
-			db.execSQL(CREATE_TRANSACTIONS_TABLE);
-			db.close();
-		}
-		
-		// Getting Number Of Transaction
-		public int getNumTransactions()
-		{
-			String countQuery = "SELECT * FROM " + TABLE_TRANSACTIONS;
-			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.rawQuery(countQuery, null);
-			int numTransactions = cursor.getCount();
-			cursor.close();
-			db.close();
-			return numTransactions;
-		}
+		db.close();
+		return transactionList;
+	}
+	
+	// Updating single Transaction
+	public void updateTransaction(Transaction transaction)
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
+		ContentValues values = new ContentValues();
+		values.put(KEY_DATE, transaction.getDate().getSavableDate());
+		values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
+		values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
+		values.put(KEY_PARTICULARS, transaction.getParticular());
+		values.put(KEY_RATE, transaction.getRate());
+		values.put(KEY_QUANTITY, transaction.getQuantity());
+		values.put(KEY_AMOUNT, transaction.getAmount());
+		// updating row
+		db.update(TABLE_TRANSACTIONS, values, KEY_ID + " = ?", 
+				new String[] { String.valueOf(transaction.getID()) });
+		db.close();
+	}
+	
+	// Deleting single Transaction
+	public void deleteTransaction(Transaction transaction)
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
+		db.delete(TABLE_TRANSACTIONS, KEY_ID + " = ?", new String[] { String.valueOf(transaction.getID()) });
+		db.close();
+	}
+	
+	/**
+	 * Deletes All The Transactions Along With The Table
+	 */
+	public void deleteAllTransactions()
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTIONS);
+		db.execSQL(CREATE_TRANSACTIONS_TABLE);
+		db.close();
+	}
+	
+	// Getting Number Of Transaction
+	public int getNumTransactions()
+	{
+		String countQuery = "SELECT * FROM " + TABLE_TRANSACTIONS;
+		SQLiteDatabase db = this.getReadableDatabase();
+		Cursor cursor = db.rawQuery(countQuery, null);
+		int numTransactions = cursor.getCount();
+		cursor.close();
+		db.close();
+		return numTransactions;
+	}
 		
 		public void addBank(Bank bank)
 		{
