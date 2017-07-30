@@ -45,9 +45,11 @@
       <file leaf-file-name="AndroidManifest.xml" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1037">
-              <caret line="61" column="44" selection-start-line="61" selection-start-column="44" selection-end-line="61" selection-end-column="44" />
-              <folding />
+            <state relative-caret-position="34">
+              <caret line="2" column="68" selection-start-line="2" selection-start-column="68" selection-end-line="2" selection-end-column="68" />
+              <folding>
+                <element signature="e#1987#2021#0" expanded="true" />
+              </folding>
             </state>
           </provider>
           <provider editor-type-id="android-manifest">
@@ -55,60 +57,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FilterActivity.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/FilterActivity.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="209">
-              <caret line="558" column="95" selection-start-line="558" selection-start-column="95" selection-end-line="558" selection-end-column="95" />
-              <folding>
-                <element signature="method#onCreate#0;class#FilterActivity#0" expanded="false" />
-                <element signature="method#onCreateOptionsMenu#0;class#FilterActivity#0" expanded="false" />
-                <element signature="method#onOptionsItemSelected#0;class#FilterActivity#0" expanded="false" />
-                <element signature="class#3677:5117" expanded="false" />
-                <element signature="method#onItemSelected#0;class#3677:5117" expanded="false" />
-                <element signature="method#onNothingSelected#0;class#3677:5117" expanded="false" />
-                <element signature="method#onClick#0;class#6637:7307" expanded="false" />
-                <element signature="e#7313#7400#0" expanded="false" />
-                <element signature="e#11678#11767#0" expanded="false" />
-                <element signature="method#setCheckBoxesBehavior#0;class#FilterActivity#0" expanded="false" />
-                <element signature="e#13273#13338#0" expanded="false" />
-                <marker date="1485701375873" expanded="true" signature="2885:7309" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="6662:7307" ph="{...}" />
-                <marker date="1485701375873" expanded="false" signature="7440:7868" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="7908:9021" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="9064:9510" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="9552:10620" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="10660:11674" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="15906:16876" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="15954:16012" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="16026:16401" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="16446:16502" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="16516:16871" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="16920:17886" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="16968:17025" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="17039:17413" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="17458:17513" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="17527:17881" ph="..." />
-                <marker date="1485701375873" expanded="true" signature="17898:19417" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="19464:20442" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="19512:19572" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="19586:19963" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="20008:20066" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="20080:20437" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="21101:21147" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="21204:21470" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="21528:21941" ph="..." />
-                <marker date="1485701375873" expanded="false" signature="22000:22321" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="Constants.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/functions/Constants.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="246">
-              <caret line="69" column="49" selection-start-line="69" selection-start-column="49" selection-end-line="69" selection-end-column="49" />
+            <state relative-caret-position="243">
+              <caret line="71" column="53" selection-start-line="71" selection-start-column="53" selection-end-line="71" selection-end-column="53" />
               <folding />
             </state>
           </provider>
@@ -117,68 +70,40 @@
       <file leaf-file-name="TransactionsActivity.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TransactionsActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="171">
-              <caret line="406" column="9" selection-start-line="402" selection-start-column="8" selection-end-line="406" selection-end-column="9" />
+            <state relative-caret-position="555">
+              <caret line="273" column="0" selection-start-line="273" selection-start-column="0" selection-end-line="273" selection-end-column="0" />
               <folding>
                 <element signature="method#onResume#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="e#3142#3240#0" expanded="false" />
-                <element signature="method#onCreateContextMenu#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="method#onContextItemSelected#0;class#TransactionsActivity#0" expanded="false" />
+                <element signature="e#3156#3254#0" expanded="false" />
+                <element signature="method#onBackPressed#0;class#TransactionsActivity#0" expanded="false" />
+                <element signature="method#onCreateOptionsMenu#0;class#TransactionsActivity#0" expanded="false" />
+                <element signature="method#onOptionsItemSelected#0;class#TransactionsActivity#0" expanded="false" />
+                <element signature="method#onActivityResult#0;class#TransactionsActivity#0" expanded="false" />
                 <element signature="docComment;method#calculateDimensions#0;class#TransactionsActivity#0" expanded="false" />
                 <element signature="method#calculateDimensions#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="method#displayNewTransaction#0;class#TransactionsActivity#0" expanded="false" />
                 <element signature="method#displayNewTransaction#1;class#TransactionsActivity#0" expanded="false" />
-                <element signature="method#insertTransaction#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="method#deleteTransactionFromLayout#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="method#editDisplayedTransaction#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="docComment;method#deleteTransaction#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="method#deleteTransaction#0;class#TransactionsActivity#0" expanded="false" />
-                <element signature="method#editTransaction#0;class#TransactionsActivity#0" expanded="false" />
-                <marker date="1485700839270" expanded="false" signature="5019:5999" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="11278:12005" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="20711:20794" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="20833:24318" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="24373:27555" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="27609:31696" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="31749:36643" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="36695:42500" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="43770:55083" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="56457:56604" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="56679:56877" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="56953:57152" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="57229:57460" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="57470:57729" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="57932:58289" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="58339:61302" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="61366:64312" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="64386:64891" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="64960:76392" ph="..." />
-                <marker date="1485700839270" expanded="false" signature="76496:78033" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="5033:6013" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="11533:12260" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="21230:21313" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="21352:24837" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="24892:28074" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="28128:32215" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="32268:37162" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="37214:43019" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="45025:56338" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="57716:57863" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="57939:58137" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="58214:58413" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="58491:58722" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="58732:58991" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="59515:59872" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="59922:62885" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="62949:65895" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="65969:66474" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="66543:77975" ph="..." />
+                <marker date="1485796676875" expanded="false" signature="78079:79616" ph="..." />
               </folding>
             </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SplashActivity.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/SplashActivity.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="145">
-              <caret line="333" column="85" selection-start-line="333" selection-start-column="85" selection-end-line="333" selection-end-column="85" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="activity_splash.xml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/activity_splash.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-85">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-          <provider editor-type-id="android-designer2">
-            <state />
           </provider>
         </entry>
       </file>
@@ -191,6 +116,7 @@
         <option value="ASClass" />
         <option value="layoutResourceFile" />
         <option value="resourceFile" />
+        <option value="valueResourceFile" />
       </list>
     </option>
   </component>
@@ -1835,7 +1761,6 @@
         <option value="C:/Program Files/Android/sdk/platforms/android-20/android.jar!/android/widget/ExpandableListView.class" />
         <option value="$PROJECT_DIR$/app/build.gradle" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/idunnololz/widgets/AnimatedExpandableListView.java" />
-        <option value="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/layout_filter_list_item.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/layout_filter_group_item.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/drawable/round_button.xml" />
@@ -1844,17 +1769,19 @@
         <option value="$PROJECT_DIR$/app/src/main/res/layout/layout_filter_group_title.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/layout_expand_collapse_item.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/IncomeLayout.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/datastructures/Transaction.java" />
         <option value="$PROJECT_DIR$/app/src/main/res/menu/activity_filters.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/AddTransactionActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/datastructures/Date.java" />
         <option value="$PROJECT_DIR$/app/src/main/res/values/strings.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/activity_filter.xml" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/functions/Constants.java" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TransactionsActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/FilterActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/SplashActivity.java" />
+        <option value="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/functions/Constants.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/datastructures/Transaction.java" />
+        <option value="$PROJECT_DIR$/app/src/main/res/values/tags.xml" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TransactionsActivity.java" />
       </list>
     </option>
   </component>
@@ -2573,7 +2500,7 @@
       <window_info id="Nl-Palette" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Android Monitor" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30546075" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Android Monitor" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3105802" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Properties" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -2629,16 +2556,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/layout_check_boxes.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="14" column="48" selection-start-line="14" selection-start-column="48" selection-end-line="14" selection-end-column="48" />
-        </state>
-      </provider>
-      <provider editor-type-id="android-designer2">
-        <state />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/customviews/SettingsLayout.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
@@ -2851,14 +2768,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/datastructures/Transaction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="207" column="30" selection-start-line="207" selection-start-column="30" selection-end-line="207" selection-end-column="30" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/res/menu/activity_transactions.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-51">
@@ -2890,14 +2799,6 @@
       </provider>
       <provider editor-type-id="android-designer2">
         <state />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/res/values/strings.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="143">
-          <caret line="49" column="33" selection-start-line="49" selection-start-column="33" selection-end-line="49" selection-end-column="33" />
-          <folding />
-        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/activity_filter.xml">
@@ -2953,66 +2854,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/functions/Constants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="246">
-          <caret line="69" column="49" selection-start-line="69" selection-start-column="49" selection-end-line="69" selection-end-column="49" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/AddTransactionActivity.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="260">
           <caret line="457" column="21" selection-start-line="456" selection-start-column="12" selection-end-line="457" selection-end-column="21" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/FilterActivity.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="209">
-          <caret line="558" column="95" selection-start-line="558" selection-start-column="95" selection-end-line="558" selection-end-column="95" />
-          <folding>
-            <element signature="method#onCreate#0;class#FilterActivity#0" expanded="false" />
-            <element signature="method#onCreateOptionsMenu#0;class#FilterActivity#0" expanded="false" />
-            <element signature="method#onOptionsItemSelected#0;class#FilterActivity#0" expanded="false" />
-            <element signature="class#3677:5117" expanded="false" />
-            <element signature="method#onItemSelected#0;class#3677:5117" expanded="false" />
-            <element signature="method#onNothingSelected#0;class#3677:5117" expanded="false" />
-            <element signature="method#onClick#0;class#6637:7307" expanded="false" />
-            <element signature="e#7313#7400#0" expanded="false" />
-            <element signature="e#11678#11767#0" expanded="false" />
-            <element signature="method#setCheckBoxesBehavior#0;class#FilterActivity#0" expanded="false" />
-            <element signature="e#13273#13338#0" expanded="false" />
-            <marker date="1485701375873" expanded="true" signature="2885:7309" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="6662:7307" ph="{...}" />
-            <marker date="1485701375873" expanded="false" signature="7440:7868" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="7908:9021" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="9064:9510" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="9552:10620" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="10660:11674" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="15906:16876" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="15954:16012" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="16026:16401" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="16446:16502" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="16516:16871" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="16920:17886" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="16968:17025" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="17039:17413" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="17458:17513" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="17527:17881" ph="..." />
-            <marker date="1485701375873" expanded="true" signature="17898:19417" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="19464:20442" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="19512:19572" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="19586:19963" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="20008:20066" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="20080:20437" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="21101:21147" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="21204:21470" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="21528:21941" ph="..." />
-            <marker date="1485701375873" expanded="false" signature="22000:22321" ph="..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -3146,49 +2992,6 @@
         <state />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TransactionsActivity.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="406" column="9" selection-start-line="402" selection-start-column="8" selection-end-line="406" selection-end-column="9" />
-          <folding>
-            <element signature="method#onResume#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="e#3142#3240#0" expanded="false" />
-            <element signature="method#onCreateContextMenu#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#onContextItemSelected#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="docComment;method#calculateDimensions#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#calculateDimensions#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#displayNewTransaction#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#displayNewTransaction#1;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#insertTransaction#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#deleteTransactionFromLayout#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#editDisplayedTransaction#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="docComment;method#deleteTransaction#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#deleteTransaction#0;class#TransactionsActivity#0" expanded="false" />
-            <element signature="method#editTransaction#0;class#TransactionsActivity#0" expanded="false" />
-            <marker date="1485700839270" expanded="false" signature="5019:5999" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="11278:12005" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="20711:20794" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="20833:24318" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="24373:27555" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="27609:31696" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="31749:36643" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="36695:42500" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="43770:55083" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="56457:56604" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="56679:56877" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="56953:57152" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="57229:57460" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="57470:57729" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="57932:58289" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="58339:61302" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="61366:64312" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="64386:64891" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="64960:76392" ph="..." />
-            <marker date="1485700839270" expanded="false" signature="76496:78033" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/SplashActivity.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="145">
@@ -3197,11 +3000,133 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/datastructures/Transaction.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="175">
+          <caret line="326" column="41" selection-start-line="326" selection-start-column="41" selection-end-line="326" selection-end-column="41" />
+          <folding>
+            <element signature="e#6817#6818#0" expanded="true" />
+            <element signature="e#6856#6857#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/functions/Constants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="243">
+          <caret line="71" column="53" selection-start-line="71" selection-start-column="53" selection-end-line="71" selection-end-column="53" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/FilterActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="209">
+          <caret line="558" column="95" selection-start-line="558" selection-start-column="95" selection-end-line="558" selection-end-column="95" />
+          <folding>
+            <element signature="method#onCreate#0;class#FilterActivity#0" expanded="false" />
+            <element signature="method#onCreateOptionsMenu#0;class#FilterActivity#0" expanded="false" />
+            <element signature="method#onOptionsItemSelected#0;class#FilterActivity#0" expanded="false" />
+            <element signature="class#3677:5117" expanded="false" />
+            <element signature="method#onItemSelected#0;class#3677:5117" expanded="false" />
+            <element signature="method#onNothingSelected#0;class#3677:5117" expanded="false" />
+            <element signature="method#onClick#0;class#6637:7307" expanded="false" />
+            <element signature="e#7313#7400#0" expanded="false" />
+            <element signature="e#11678#11767#0" expanded="false" />
+            <element signature="method#setCheckBoxesBehavior#0;class#FilterActivity#0" expanded="false" />
+            <element signature="e#13273#13338#0" expanded="false" />
+            <marker date="1485701375873" expanded="true" signature="2885:7309" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="6662:7307" ph="{...}" />
+            <marker date="1485701375873" expanded="false" signature="7440:7868" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="7908:9021" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="9064:9510" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="9552:10620" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="10660:11674" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="15906:16876" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="15954:16012" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="16026:16401" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="16446:16502" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="16516:16871" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="16920:17886" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="16968:17025" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="17039:17413" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="17458:17513" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="17527:17881" ph="..." />
+            <marker date="1485701375873" expanded="true" signature="17898:19417" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="19464:20442" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="19512:19572" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="19586:19963" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="20008:20066" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="20080:20437" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="21101:21147" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="21204:21470" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="21528:21941" ph="..." />
+            <marker date="1485701375873" expanded="false" signature="22000:22321" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/res/values/tags.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="22" selection-start-line="2" selection-start-column="22" selection-end-line="2" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/res/values/strings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="143">
+          <caret line="49" column="72" selection-start-line="48" selection-start-column="79" selection-end-line="49" selection-end-column="72" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TransactionsActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="555">
+          <caret line="273" column="0" selection-start-line="273" selection-start-column="0" selection-end-line="273" selection-end-column="0" />
+          <folding>
+            <element signature="method#onResume#0;class#TransactionsActivity#0" expanded="false" />
+            <element signature="e#3156#3254#0" expanded="false" />
+            <element signature="method#onBackPressed#0;class#TransactionsActivity#0" expanded="false" />
+            <element signature="method#onCreateOptionsMenu#0;class#TransactionsActivity#0" expanded="false" />
+            <element signature="method#onOptionsItemSelected#0;class#TransactionsActivity#0" expanded="false" />
+            <element signature="method#onActivityResult#0;class#TransactionsActivity#0" expanded="false" />
+            <element signature="docComment;method#calculateDimensions#0;class#TransactionsActivity#0" expanded="false" />
+            <element signature="method#calculateDimensions#0;class#TransactionsActivity#0" expanded="false" />
+            <element signature="method#displayNewTransaction#1;class#TransactionsActivity#0" expanded="false" />
+            <marker date="1485796676875" expanded="false" signature="5033:6013" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="11533:12260" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="21230:21313" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="21352:24837" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="24892:28074" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="28128:32215" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="32268:37162" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="37214:43019" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="45025:56338" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="57716:57863" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="57939:58137" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="58214:58413" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="58491:58722" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="58732:58991" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="59515:59872" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="59922:62885" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="62949:65895" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="65969:66474" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="66543:77975" ph="..." />
+            <marker date="1485796676875" expanded="false" signature="78079:79616" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/AndroidManifest.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1037">
-          <caret line="61" column="44" selection-start-line="61" selection-start-column="44" selection-end-line="61" selection-end-column="44" />
-          <folding />
+        <state relative-caret-position="34">
+          <caret line="2" column="68" selection-start-line="2" selection-start-column="68" selection-end-line="2" selection-end-column="68" />
+          <folding>
+            <element signature="e#1987#2021#0" expanded="true" />
+          </folding>
         </state>
       </provider>
       <provider editor-type-id="android-manifest">

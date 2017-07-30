@@ -2,15 +2,12 @@
 <manifest package="com.chaturvedi.financemanager"
 		  xmlns:android="http://schemas.android.com/apk/res/android"
 		  xmlns:tools="http://schemas.android.com/tools"
-		  android:versionCode="117"
-		  android:versionName="4.1.1">
+		  android:versionCode="118"
+		  android:versionName="4.1.2">
 
 
 	<uses-permission android:name="android.permission.RECEIVE_SMS"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-
-	<!--uses-sdk tools:overrideLibrary="com.github.aakira.expandablelayout, android.support.v4, android.support.fragment,
-	android.support.mediacompat, android.support.coreui, android.support.coreutils, android.support.compat" /-->
 
 	<application
 		android:allowBackup="true"

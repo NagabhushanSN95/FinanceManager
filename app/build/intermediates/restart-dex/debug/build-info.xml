@@ -5,9 +5,9 @@
     density="xxhdpi"
     format="8"
     plugin-version="2.2.3"
-    timestamp="165592291360122"
+    timestamp="259429970280563"
     token="7151892063185074182"
-    verifier="COMPATIBLE" >
+    verifier="COLD_SWAP_REQUESTED" >
 
     <task
         name="javac"
@@ -23,36 +23,22 @@
         duration="0" />
 
     <artifact
-        location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\instant-run-resources\resources-debug.ir.ap_"
-        type="RESOURCES" />
+        location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\5\slice_0\classes.dex"
+        type="DEX" />
 
     <build
-        timestamp="162716758336768"
+        timestamp="258239053571703"
         verifier="FULL_BUILD_REQUESTED" >
         <artifact
             location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\outputs\apk\app-debug.apk"
             type="MAIN" />
     </build>
     <build
-        timestamp="165501572493752"
-        verifier="COLD_SWAP_REQUESTED" >
-        <artifact
-            location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\5\slice_3\classes.dex"
-            type="DEX" />
-    </build>
-    <build
-        timestamp="165559498132512"
+        timestamp="259429970280563"
         verifier="COLD_SWAP_REQUESTED" >
         <artifact
             location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\5\slice_0\classes.dex"
             type="DEX" />
-    </build>
-    <build
-        timestamp="165592291360122"
-        verifier="COMPATIBLE" >
-        <artifact
-            location="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\instant-run-resources\resources-debug.ir.ap_"
-            type="RESOURCES" />
     </build>
 
 </instant-run>

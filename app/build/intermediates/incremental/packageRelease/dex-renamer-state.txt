@@ -1,4 +1,4 @@
-#Sun Jan 29 20:45:11 IST 2017
+#Mon Jan 30 22:48:45 IST 2017
 base.0=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\release\\folders\\1000\\1f\\main
 renamed.0=classes.dex
 file.0=D\:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\transforms\\dex\\release\\folders\\1000\\1f\\main\\classes.dex

@@ -68,4 +68,6 @@ public class Constants
 	public static final String VALUE_TRANSFER = "Transfer";
 	public static final String VALUE_WALLET = "Wallet";
 	public static final String VALUE_BANK = "Bank";
+
+	public static final int TAG_TRANSACTION_ID = 201;
 }

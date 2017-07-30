@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
+import android.nfc.Tag;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -22,6 +23,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -51,14 +54,12 @@ public class TransactionsActivity extends Activity
 	private int WIDTH_AMOUNT;
 	
 	private LinearLayout parentLayout;
+	private Button showMoreButton;
 	
 	private ArrayList<Transaction> transactions;
-	private ArrayList<Template> templates;
-	private int contextMenuTransactionNo;
 	private DecimalFormat formatterTextFields;
 	private DecimalFormat formatterDisplay;
 	private Intent templatesIntent;
-	private Thread searchThread;
 
 	// Filters
 	private String transactionsDisplayIntervalType = Constants.VALUE_ALL;
@@ -67,7 +68,8 @@ public class TransactionsActivity extends Activity
 	private String transactionsDisplayIntervalEndDate = null;
 	private ArrayList<String> allowedTransactionTypes = null;
 	private String searchKeyword = null;
-	private Button showMoreButton;
+
+	private String contextMenuTag;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -201,7 +203,7 @@ public class TransactionsActivity extends Activity
 
 			case R.id.action_transactionsDisplayOptions:
 //				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
-			displayFilterOptions();
+				displayFilterOptions();
 
 				return true;
 
@@ -247,14 +249,14 @@ public class TransactionsActivity extends Activity
 			case Constants.REQUEST_CODE_EDIT_TRANSACTION:
 				if (resultCode == RESULT_OK)
 				{
-					editDisplayedTransaction(contextMenuTransactionNo, (Transaction) intent.getParcelableExtra(
+					editDisplayedTransaction((Transaction) intent.getParcelableExtra(
 							Constants.TRANSACTION));
 					getTransactionsToDisplay();
 				}
 				break;
 
 			case Constants.REQUEST_CODE_FILTERS:
-				if(resultCode == RESULT_OK)
+				if (resultCode == RESULT_OK)
 				{
 					applyFilters(intent);
 				}
@@ -265,21 +267,28 @@ public class TransactionsActivity extends Activity
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
 	{
 		super.onCreateContextMenu(menu, view, menuInfo);
-		contextMenuTransactionNo = parentLayout.indexOfChild(view);
-		menu.setHeaderTitle("Options For Transaction " + (contextMenuTransactionNo + 1));
+		String slNo = ((TextView) view.findViewById(R.id.slno)).getText().toString();
+		menu.setHeaderTitle("Options For Transaction " + slNo);
 		menu.add(Menu.NONE, view.getId(), Menu.NONE, "Edit");
 		menu.add(Menu.NONE, view.getId(), Menu.NONE, "Delete");
+
+		contextMenuTag = (String) view.getTag();
 	}
 	
 	public boolean onContextItemSelected(MenuItem item)
 	{
+//		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+//		int index = info.position;
+//		View view = info.targetView;
+//		String tag = (String) view.getTag(R.string.tagTransactionID);
+		String tag = contextMenuTag;
 		if (item.getTitle().equals("Edit"))
 		{
-			editTransaction(contextMenuTransactionNo);
+			editTransaction(tag);
 		}
 		else if (item.getTitle().equals("Delete"))
 		{
-			deleteTransaction(contextMenuTransactionNo);
+			deleteTransaction(tag);
 		}
 		else
 		{
@@ -331,8 +340,8 @@ public class TransactionsActivity extends Activity
 		// Suppose, there were only 5 transactions displayed in filtered state, then on pressing back last 100 transactions
 		// should be displayed. But, since there were only 5 transactions displayed, parentLayout.getChildCount()
 		// will return 5. To overcome this, numTransactionsToretrieve will be rounded off to next 100
-		int minNumTransactions = (int) (Math.ceil(1.0*numTransactionsToRetrieve/Constants.MIN_TRANSACTIONS_TO_DISPLAY))
-				*Constants.MIN_TRANSACTIONS_TO_DISPLAY;
+		int minNumTransactions = (int) (Math.ceil(1.0 * numTransactionsToRetrieve / Constants.MIN_TRANSACTIONS_TO_DISPLAY))
+				* Constants.MIN_TRANSACTIONS_TO_DISPLAY;
 		numTransactionsToRetrieve = Math.max(numTransactionsToRetrieve, minNumTransactions);
 
 		int offset = 0;
@@ -342,14 +351,14 @@ public class TransactionsActivity extends Activity
 				transactionsDisplayIntervalStartDate, transactionsDisplayIntervalEndDate, allowedTransactionTypes, searchKeyword,
 				false, offset, numTransactionsToRetrieve);
 
-		if(transactions.size() < numTransactionsToRetrieve)
+		if (transactions.size() < numTransactionsToRetrieve)
 		{
 			// This implies, there are no more transactions to show. Hence, remove the button
 			showMoreButton.setVisibility(View.GONE);
 		}
 		else
 		{
-			if(showMoreButton != null)
+			if (showMoreButton != null)
 			{
 				showMoreButton.setVisibility(View.VISIBLE);
 			}
@@ -388,13 +397,13 @@ public class TransactionsActivity extends Activity
 				false, offset, numTransactionsToRetrieve);
 		transactions.addAll(0, newTransactions);
 
-		if(newTransactions.size() < numTransactionsToRetrieve)
+		if (newTransactions.size() < numTransactionsToRetrieve)
 		{
 			// This implies, there are no more transactions to show. Hence, remove the button
 			showMoreButton.setVisibility(View.GONE);
 		}
 		Log.d("SNB", "CP04: " + transactions.size());
-		return  newTransactions;
+		return newTransactions;
 	}
 	
 	private void buildTitleLayout()
@@ -442,11 +451,11 @@ public class TransactionsActivity extends Activity
 			public void onClick(View v)
 			{
 				ArrayList<Transaction> newTransactions = getMoreTransactionsToDisplay();
-				for(int i=0; i<newTransactions.size(); i++)
+				for (int i = 0; i < newTransactions.size(); i++)
 				{
-					insertTransaction(i, i+1, newTransactions.get(i));
+					insertTransaction(i, i + 1, newTransactions.get(i));
 				}
-				for(int i=newTransactions.size(); i<transactions.size(); i++)
+				for (int i = newTransactions.size(); i < transactions.size(); i++)
 				{
 					TextView slnoView = (TextView) parentLayout.getChildAt(i).findViewById(R.id.slno);
 					slnoView.setText(String.valueOf(i + 1));
@@ -481,7 +490,7 @@ public class TransactionsActivity extends Activity
 	
 	private void displayNewTransaction(int slNo, Transaction transaction)
 	{
-		int colour = 0;
+		int colour;
 		if (transaction.getType().contains("Debit"))
 		{
 			colour = Color.RED;
@@ -496,7 +505,10 @@ public class TransactionsActivity extends Activity
 		}
 		
 		LayoutInflater layoutInflater = LayoutInflater.from(this);
-		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
+		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, parentLayout,
+				false);
+//		linearLayout.setTag(R.string.tagTransactionID, transaction.createTag());
+		linearLayout.setTag(transaction.createTag());
 
 		TextView slnoView = (TextView) linearLayout.findViewById(R.id.slno);
 		LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();
@@ -538,7 +550,7 @@ public class TransactionsActivity extends Activity
 
 	private void insertTransaction(int position, int slNo, Transaction transaction)
 	{
-		int colour = 0;
+		int colour;
 		if (transaction.getType().contains("Debit"))
 		{
 			colour = Color.RED;
@@ -553,7 +565,10 @@ public class TransactionsActivity extends Activity
 		}
 
 		LayoutInflater layoutInflater = LayoutInflater.from(this);
-		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, null);
+		LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_transactions, parentLayout,
+				false);
+//		linearLayout.setTag(R.string.tagTransactionID, transaction.createTag());
+		linearLayout.setTag(transaction.createTag());
 
 		TextView slnoView = (TextView) linearLayout.findViewById(R.id.slno);
 		LayoutParams slnoParams = (LayoutParams) slnoView.getLayoutParams();
@@ -586,20 +601,20 @@ public class TransactionsActivity extends Activity
 		registerForContextMenu(linearLayout);
 	}
 	
-	private void deleteTransactionFromLayout(int transactionNo)
+	private void deleteTransactionFromLayout(int viewNo)
 	{
-		parentLayout.removeViewAt(transactionNo);
-		for (int i = transactionNo; i < parentLayout.getChildCount(); i++)
+		parentLayout.removeViewAt(viewNo);
+		for (int i = viewNo; i < parentLayout.getChildCount(); i++)
 		{
 			TextView slnoView = (TextView) parentLayout.getChildAt(i).findViewById(R.id.slno);
 			slnoView.setText(String.valueOf(i + 1));
 		}
 	}
-	
-	private void editDisplayedTransaction(int transactionNo, Transaction transaction)
+
+	private void editDisplayedTransaction(Transaction transaction)
 	{
-		LinearLayout layout = (LinearLayout) parentLayout.getChildAt(transactionNo);
-		
+		LinearLayout layout = (LinearLayout) parentLayout.findViewWithTag(transaction.createTag());
+
 		TextView dateView = (TextView) layout.findViewById(R.id.date);
 		dateView.setText(transaction.getDate().getDisplayDate());
 		
@@ -1191,22 +1206,29 @@ public class TransactionsActivity extends Activity
 	}*/
 	
 	/**
-	 * Delete the transaction referred by transactionNo
+	 * Delete the transaction
 	 *
-	 * @param transactionNo Number of the transaction to be deleted
+	 * @param tag Tag set on the view on which edit is called.
+	 *            Format: yyyy-transactionId; Eg: 2017-123
 	 */
-	private void deleteTransaction(final int transactionNo)
+	private void deleteTransaction(final String tag)
 	{
+		final LinearLayout layout = (LinearLayout) parentLayout.findViewWithTag(tag);
+		String slNo = ((TextView) layout.findViewById(R.id.slno)).getText().toString();
 		AlertDialog.Builder deleteDialog = new AlertDialog.Builder(this);
 		deleteDialog.setTitle("Delete Transaction");
-		deleteDialog.setMessage("Are You Sure You Want To Delete Transaction No " + (transactionNo + 1) + "?");
+		deleteDialog.setMessage("Are You Sure You Want To Delete Transaction No " + slNo + "?");
 		deleteDialog.setPositiveButton("Delete", new DialogInterface.OnClickListener()
 		{
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.deleteTransaction(TransactionsActivity.this, transactions.get(transactionNo), true);
-				deleteTransactionFromLayout(transactionNo);
+				int transactionId = Integer.parseInt(tag.split("-")[1]);
+				Transaction transaction = DatabaseAdapter.getInstance(TransactionsActivity.this)
+						.getTransaction(transactionId);
+				DatabaseManager.deleteTransaction(TransactionsActivity.this, transaction, true);
+				int viewNo = parentLayout.indexOfChild(layout);
+				deleteTransactionFromLayout(viewNo);
 				getTransactionsToDisplay();
 			}
 		});
@@ -1214,9 +1236,17 @@ public class TransactionsActivity extends Activity
 		deleteDialog.show();
 	}
 
-	private void editTransaction(int transactionNo)
+	/**
+	 * Launches AddTransactionsActivity to edit the transaction
+	 *
+	 * @param tag Tag set on the view on which edit is called.
+	 *            Format: yyyy-transactionId; Eg: 2017-123
+	 */
+	private void editTransaction(String tag)
 	{
-		Transaction oldTransaction = transactions.get(transactionNo);
+		int transactionId = Integer.parseInt(tag.split("-")[1]);
+		Transaction oldTransaction = DatabaseAdapter.getInstance(TransactionsActivity.this).getTransaction(transactionId);
+//		Transaction oldTransaction = transactions.get(transactionNo);
 		Intent editIntent = new Intent(TransactionsActivity.this, AddTransactionActivity.class);
 		editIntent.putExtra(Constants.ACTION, Constants.ACTION_EDIT);
 		editIntent.putExtra(Constants.TRANSACTION, oldTransaction);
@@ -1555,15 +1585,15 @@ public class TransactionsActivity extends Activity
 		// Send current filter state
 		filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE, transactionsDisplayIntervalType);
 		Log.d("SNB", "CP05: " + transactionsDisplayIntervalType);
-		if(transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
+		if (transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
 		{
 			filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE_MONTH, transactionsDisplayIntervalMonthYear);
 		}
-		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_YEAR))
+		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_YEAR))
 		{
 			filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE_YEAR, transactionsDisplayIntervalMonthYear);
 		}
-		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
+		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
 		{
 			filterIntent.putExtra(Constants.KEY_START_DATE, transactionsDisplayIntervalStartDate);
 			filterIntent.putExtra(Constants.KEY_END_DATE, transactionsDisplayIntervalEndDate);
@@ -1577,25 +1607,25 @@ public class TransactionsActivity extends Activity
 	private void applyFilters(Intent intent)
 	{
 		transactionsDisplayIntervalType = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE);
-		if(transactionsDisplayIntervalType.equals(Constants.VALUE_ALL))
+		if (transactionsDisplayIntervalType.equals(Constants.VALUE_ALL))
 		{
 			transactionsDisplayIntervalMonthYear = null;
 			transactionsDisplayIntervalStartDate = null;
 			transactionsDisplayIntervalEndDate = null;
 		}
-		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_YEAR))
+		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_YEAR))
 		{
 			transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE_YEAR);
 			transactionsDisplayIntervalStartDate = null;
 			transactionsDisplayIntervalEndDate = null;
 		}
-		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
+		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
 		{
 			transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE_MONTH);
 			transactionsDisplayIntervalStartDate = null;
 			transactionsDisplayIntervalEndDate = null;
 		}
-		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
+		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
 		{
 			transactionsDisplayIntervalMonthYear = null;
 			transactionsDisplayIntervalStartDate = intent.getStringExtra(Constants.KEY_START_DATE);
@@ -1612,6 +1642,20 @@ public class TransactionsActivity extends Activity
 		allowedTransactionTypes = intent.getStringArrayListExtra(Constants.KEY_ALLOWED_TRANSACTION_TYPES);
 		searchKeyword = intent.getStringExtra(Constants.KEY_SEARCH_KEYWORD);
 		refreshBodyLayout();
+	}
+
+	public static View findViewByTag(LinearLayout parentLayout, String tag)
+	{
+		for (int i = 0; i < parentLayout.getChildCount(); i++)
+		{
+			View child = parentLayout.getChildAt(i);
+			String tagObj = (String) child.getTag();
+			if (tagObj != null && tagObj.equals(tag))
+			{
+				return child;
+			}
+		}
+		return null;
 	}
 	
 	/* *

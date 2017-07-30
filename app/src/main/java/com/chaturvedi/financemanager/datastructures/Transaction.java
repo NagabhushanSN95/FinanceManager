@@ -322,6 +322,10 @@ public class Transaction implements Parcelable
 		return true;
 	}
 
+	public String createTag()
+	{
+		return date.getYear() + "-" + id;
+	}
 
 	// Parcelable Part
 	public Transaction(Parcel in)
