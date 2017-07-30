@@ -202,6 +202,7 @@ public class StartupActivity extends Activity
 			String particularsFileName = "particulars.txt";
 			String amountFileName = "amount.txt";
 			String dateFileName = "date.txt";
+			String icFileName = "initial_conditions.txt";
 			
 			File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
 			if(!expenditureFolder.exists())
@@ -213,6 +214,7 @@ public class StartupActivity extends Activity
 			File particularsFile = new File(expenditureFolder, particularsFileName);
 			File amountFile = new File(expenditureFolder, amountFileName);
 			File dateFile = new File(expenditureFolder, dateFileName);
+			File icFile = new File(expenditureFolder, icFileName);
 			
 			BufferedWriter prefWriter = new BufferedWriter(new FileWriter(prefFile));
 			BufferedWriter walletWriter = new BufferedWriter(new FileWriter(walletFile));
@@ -220,25 +222,31 @@ public class StartupActivity extends Activity
 			BufferedWriter particularsWriter = new BufferedWriter(new FileWriter(particularsFile));
 			BufferedWriter amountWriter = new BufferedWriter(new FileWriter(amountFile));
 			BufferedWriter dateWriter = new BufferedWriter(new FileWriter(dateFile));
+			BufferedWriter icWriter = new BufferedWriter(new FileWriter(icFile));
 			
 			prefWriter.write(numBanks+"\n");
 			prefWriter.write("0"+"\n");
+			icWriter.write("Initial Amount In Wallet=Rs"+walletField.getText().toString()+"\n");
 			walletWriter.write("wallet_balance=Rs"+walletField.getText().toString()+"\n");
 			walletWriter.write("amount_spent=Rs0"+"\n");
 			walletWriter.write("income=Rs0"+"\n");
 			for(int i=0; i<numBanks; i++)
 			{
-				bankWriter.write(bankNameFields.get(i).getText().toString()+"=Rs"+bankBalanceFields.get(i).getText().toString()+"\n");
+				String line=bankNameFields.get(i).getText().toString()+"=Rs"+bankBalanceFields.get(i).getText().toString()+"\n";
+				bankWriter.write(line);
+				icWriter.write(line);
 			}
 			particularsWriter.write("");
 			amountWriter.write("");
 			dateWriter.write("");
+			
 			prefWriter.close();
 			walletWriter.close();
 			bankWriter.close();
 			particularsWriter.close();
 			amountWriter.close();
 			dateWriter.close();
+			icWriter.close();
 		}
 		catch(Exception e)
 		{

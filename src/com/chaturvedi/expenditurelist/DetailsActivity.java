@@ -247,7 +247,7 @@ public class DetailsActivity extends Activity
 		}
 		catch(Exception e)
 		{
-			Toast.makeText(this, "Error In Reading File", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Error In Reading File"+e.getMessage(), Toast.LENGTH_SHORT).show();
 		}
 	}
 	

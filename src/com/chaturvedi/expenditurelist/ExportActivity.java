@@ -28,6 +28,7 @@ public class ExportActivity extends Activity
 	private String particularsFileName;
 	private String amountFileName;
 	private String dateFileName;
+	private String icFileName;
 	private String exportFileName;
 	private File expenditureFolder;
 	private File prefFile;
@@ -36,6 +37,7 @@ public class ExportActivity extends Activity
 	private File particularsFile;
 	private File amountFile;
 	private File dateFile;
+	private File icFile;
 	private File exportFile;
 	private BufferedReader prefReader;
 	private BufferedReader walletReader;
@@ -43,6 +45,7 @@ public class ExportActivity extends Activity
 	private BufferedReader particularsReader;
 	private BufferedReader amountReader;
 	private BufferedReader dateReader;
+	private BufferedReader icReader;
 	private BufferedWriter exportWriter;
 	
 	private TextView exportFileNameField;
@@ -61,6 +64,7 @@ public class ExportActivity extends Activity
 	private ArrayList<String> particulars;
 	private ArrayList<Integer> amounts;
 	private ArrayList<String> dates;
+	private ArrayList<ArrayList<String>> initialConditions;
 	
 	private Calendar calendar;
 	private String currentYear;
@@ -167,6 +171,7 @@ public class ExportActivity extends Activity
 			particularsFileName="particulars.txt";
 			amountFileName="amount.txt";
 			dateFileName="date.txt";
+			icFileName="initial_conditions.txt";
 			
 			expenditureFolder=new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
 			if(!expenditureFolder.exists())
@@ -178,6 +183,7 @@ public class ExportActivity extends Activity
 			particularsFile=new File(expenditureFolder, particularsFileName);
 			amountFile=new File(expenditureFolder, amountFileName);
 			dateFile=new File(expenditureFolder, dateFileName);
+			icFile=new File(expenditureFolder, icFileName);
 
 			prefReader=new BufferedReader(new FileReader(prefFile));
 			walletReader=new BufferedReader(new FileReader(walletFile));
@@ -185,6 +191,7 @@ public class ExportActivity extends Activity
 			particularsReader=new BufferedReader(new FileReader(particularsFile));
 			amountReader=new BufferedReader(new FileReader(amountFile));
 			dateReader=new BufferedReader(new FileReader(dateFile));
+			icReader=new BufferedReader(new FileReader(icFile));
 			
 			numBanks=Integer.parseInt(prefReader.readLine());
 			numEntries=Integer.parseInt(prefReader.readLine());
@@ -213,6 +220,17 @@ public class ExportActivity extends Activity
 				amounts.add(Integer.parseInt(amountReader.readLine()));
 				dates.add(dateReader.readLine());
 			}
+			line=icReader.readLine();
+			int lineNum=0;
+			initialConditions=new ArrayList<ArrayList<String>>();
+			while(line!=null)
+			{
+				initialConditions.add(new ArrayList<String>(2));
+				initialConditions.get(lineNum).add(line.substring(0, line.indexOf("=")));
+				initialConditions.get(lineNum).add(line.substring(line.indexOf("Rs")));
+				line=icReader.readLine();
+				lineNum++;
+			}
 		}
 		catch(Exception e)
 		{
@@ -233,11 +251,26 @@ public class ExportActivity extends Activity
 			exportFile=new File(expenditureFolder, exportFileName);
 			exportWriter=new BufferedWriter(new FileWriter(exportFile));
 			
+			exportWriter.write("<html>\n<body>");
+			exportWriter.write("<h1>"+currentMonth+"-"+currentYear+"</h1>\n");
+			
 			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
+			for(int i=0; i<initialConditions.size(); i++)
+			{
+				exportWriter.write("<tr>\n");
+				exportWriter.write("\t<td>"+initialConditions.get(i).get(0)+"</td>");
+				exportWriter.write("\t<td>"+initialConditions.get(i).get(1)+"</td>");
+				exportWriter.write("</tr>\n");
+			}
+			exportWriter.write("</table>");
+
+			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
+			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Sl No"+"</td>");
 			exportWriter.write("\t<td>"+"Date"+"</td>");
 			exportWriter.write("\t<td>"+"Particulars"+"</td>");
 			exportWriter.write("\t<td>"+"Amount"+"</td>");
+			exportWriter.write("</tr>\n");
 			for(int i=0; i<numEntries; i++)
 			{
 				exportWriter.write("<tr>\n");
@@ -271,6 +304,7 @@ public class ExportActivity extends Activity
 			}
 			exportWriter.write("</table>");
 			
+			exportWriter.write("</html>\n</body>");
 			exportWriter.close();
 			
 			Toast.makeText(getApplicationContext(), "Data Has Been Exported Successfully", Toast.LENGTH_LONG).show();
@@ -292,6 +326,7 @@ public class ExportActivity extends Activity
 			particularsFileName="particulars.txt";
 			amountFileName="amount.txt";
 			dateFileName="date.txt";
+			icFileName="initial_conditions.txt";
 			
 			expenditureFolder=new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), expenditureFolderName);
 			if(!expenditureFolder.exists())
@@ -302,12 +337,14 @@ public class ExportActivity extends Activity
 			particularsFile=new File(expenditureFolder, particularsFileName);
 			amountFile=new File(expenditureFolder, amountFileName);
 			dateFile=new File(expenditureFolder, dateFileName);
+			icFile=new File(expenditureFolder, icFileName);
 			
 			BufferedWriter prefWriter = new BufferedWriter(new FileWriter(prefFile));
 			BufferedWriter walletWriter = new BufferedWriter(new FileWriter(walletFile));
 			BufferedWriter particularsWriter = new BufferedWriter(new FileWriter(particularsFile));
 			BufferedWriter amountWriter = new BufferedWriter(new FileWriter(amountFile));
 			BufferedWriter dateWriter=new BufferedWriter(new FileWriter(dateFile));
+			BufferedWriter icWriter=new BufferedWriter(new FileWriter(icFile));
 			
 			prefWriter.write(numBanks+"\n");
 			prefWriter.write("0"+"\n");
@@ -317,12 +354,21 @@ public class ExportActivity extends Activity
 			particularsWriter.write("");
 			amountWriter.write("");
 			dateWriter.write("");
+
+			icWriter.write("Initial Amount In Wallet=Rs"+walletBalance+"\n");
+			BufferedReader bankReader=new BufferedReader(new FileReader(new File(expenditureFolder, "bank_info.txt")));
+			for(int i=0; i<numBanks; i++)
+			{
+				icWriter.write(bankReader.readLine()+"\n");
+			}
+			bankReader.close();
 			
 			prefWriter.close();
 			walletWriter.close();
 			particularsWriter.close();
 			amountWriter.close();
 			dateWriter.close();
+			icWriter.close();
 			
 			Toast.makeText(getApplicationContext(), "Data Has Been Cleared Successfully", Toast.LENGTH_LONG).show();
 		}
