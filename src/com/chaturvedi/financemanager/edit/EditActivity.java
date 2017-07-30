@@ -1,9 +1,5 @@
 package com.chaturvedi.financemanager.edit;
 
-import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.R.id;
-import com.chaturvedi.financemanager.R.layout;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
@@ -16,6 +12,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.chaturvedi.financemanager.R;
 
 public class EditActivity extends Activity
 {

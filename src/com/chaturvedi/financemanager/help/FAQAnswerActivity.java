@@ -5,11 +5,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.R.id;
-import com.chaturvedi.financemanager.R.layout;
-import com.chaturvedi.financemanager.R.raw;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
@@ -21,6 +16,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.chaturvedi.financemanager.R;
 
 public class FAQAnswerActivity extends Activity
 {

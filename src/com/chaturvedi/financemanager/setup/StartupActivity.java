@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
@@ -26,10 +25,7 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.SummaryActivity;
-import com.chaturvedi.financemanager.R.id;
-import com.chaturvedi.financemanager.R.layout;
-import com.chaturvedi.financemanager.R.string;
-import com.chaturvedi.financemanager.R.style;
+import com.chaturvedi.financemanager.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
@@ -337,12 +333,11 @@ public class StartupActivity extends FragmentActivity
 	
 	private void restoreData()
 	{
-		AlertDialog.Builder restoreDialogBuilder = new AlertDialog.Builder(this);
-		LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
-		View restoreView = inflater.inflate(R.layout.dialog_restore, null);
-		restoreDialogBuilder.setView(restoreView);
+		IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(this);
+		restoreDialogBuilder.setWaitText("Restoring Data. This may take few minutes depending on the Size of your Data");
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();
-		// Restore in a seperate (non-ui) thread
+		
+		/** Restore in a seperate (non-ui) thread */
 		Thread restoreThread = new Thread(new Runnable()
 		{
 			@Override

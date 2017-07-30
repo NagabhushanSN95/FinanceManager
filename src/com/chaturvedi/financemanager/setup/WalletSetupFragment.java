@@ -1,9 +1,5 @@
 package com.chaturvedi.financemanager.setup;
 
-import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.R.id;
-import com.chaturvedi.financemanager.R.layout;
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -12,6 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+
+import com.chaturvedi.financemanager.R;
 
 public class WalletSetupFragment extends Fragment
 {

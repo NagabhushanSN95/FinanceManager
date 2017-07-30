@@ -2,11 +2,6 @@ package com.chaturvedi.financemanager.setup;
 
 import java.util.ArrayList;
 
-import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.R.id;
-import com.chaturvedi.financemanager.R.layout;
-import com.chaturvedi.financemanager.R.string;
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -22,6 +17,8 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.chaturvedi.financemanager.R;
 
 public class ExpTypesSetupFragment extends Fragment
 {

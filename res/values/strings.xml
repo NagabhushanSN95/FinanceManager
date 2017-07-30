@@ -68,8 +68,6 @@
     <string name="quantity">Quantity</string>
     <string name="rate">Rate</string>
     <string name="restore">Restore</string>
-    <string name="restoreInProgress">Restoring Data. 
-        This may take few minutes depending on the Size of your Data</string>
     <string name="restoreData">Restore Data</string>
     <string name="save">Save</string>
     <string name="setup">Set Up</string>

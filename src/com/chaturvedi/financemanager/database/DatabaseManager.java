@@ -727,9 +727,10 @@ public class DatabaseManager
 		databaseAdapter.addAllCountersRows(counters);
 	}
 	
-	public static void setExpenditureType(int expTypeNo, String expType)
+	public static void setExpenditureType(int expTypeNo, String expTypeName)
 	{
-		DatabaseManager.expenditureTypes.set(expTypeNo, expType);
+		DatabaseManager.expenditureTypes.set(expTypeNo, expTypeName);
+		databaseAdapter.updateExpType(expTypeNo, expTypeName);
 	}
 	
 	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)

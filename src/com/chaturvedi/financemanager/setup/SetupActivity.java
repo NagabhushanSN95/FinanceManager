@@ -21,9 +21,6 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.SummaryActivity;
-import com.chaturvedi.financemanager.R.id;
-import com.chaturvedi.financemanager.R.layout;
-import com.chaturvedi.financemanager.R.string;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 

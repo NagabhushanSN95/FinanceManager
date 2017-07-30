@@ -17,8 +17,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.R.id;
-import com.chaturvedi.financemanager.R.layout;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 
 public class EditWalletBalanceActivity extends Activity

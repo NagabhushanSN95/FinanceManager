@@ -26,6 +26,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.financemanager.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.database.BackupManager;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
@@ -227,12 +228,10 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				AlertDialog.Builder restoreDialogBuilder = new AlertDialog.Builder(ExtrasActivity.this);
-				LayoutInflater inflater = LayoutInflater.from(getApplicationContext());
-				View restoreView = inflater.inflate(R.layout.dialog_restore, null);
-				restoreDialogBuilder.setView(restoreView);
+				IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(ExtrasActivity.this);
+				restoreDialogBuilder.setWaitText("Restoring Data. This may take few minutes depending on the Size of your Data");
 				final AlertDialog restoreDialog = restoreDialogBuilder.show();
-				// Restore in a seperate (non-ui) thread
+				/** Restore in a seperate (non-ui) thread*/
 				Thread restoreThread = new Thread(new Runnable()
 				{
 					@Override
