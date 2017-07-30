@@ -37,6 +37,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.expenditurelist.database.Bank;
 import com.chaturvedi.expenditurelist.database.DatabaseManager;
 
 public class BanksSetupActivity extends Activity
@@ -58,22 +59,10 @@ public class BanksSetupActivity extends Activity
 	
 	private LinearLayout parentLayout;
 	private LayoutParams parentLayoutParams;
-	/*private ArrayList<LinearLayout> linearLayouts;
-	private ArrayList<LayoutParams> linearLayoutParams;*/
 	private TextView walletView;
 	private LayoutParams walletViewParams;
 	private EditText walletField;
 	private LayoutParams walletFieldParams;
-	/*private ArrayList<TextView> bankNameViews;
-	private ArrayList<LayoutParams> bankNameViewParams;
-	private ArrayList<TextView> bankAccNoViews;
-	private ArrayList<LayoutParams> bankAccNoViewParams;
-	private ArrayList<TextView> bankBalanceViews;
-	private ArrayList<LayoutParams> bankBalanceViewParams;
-	private ArrayList<TextView> bankSmsNameViews;
-	private ArrayList<LayoutParams> bankSmsNameViewParams;
-	private ArrayList<ImageButton> removeButtons;
-	private ArrayList<LayoutParams> removeButtonParams;*/
 	private Button addBankButton;
 	
 	private AlertDialog.Builder addBankDialog;
@@ -84,10 +73,7 @@ public class BanksSetupActivity extends Activity
 
 	private double walletBalance;
 	private int numBanks=0;
-	private ArrayList<String> bankNames;
-	private ArrayList<String> bankAccNos;
-	private ArrayList<Double> bankBalances;
-	private ArrayList<String> bankSmsNames;
+	private ArrayList<Bank> banks;
 	
 	private Intent expendituresSetupIntent;
 	private ArrayList<String> bankNameSuggestions;
@@ -127,7 +113,7 @@ public class BanksSetupActivity extends Activity
 		//WIDTH_REMOVE_BUTTON=screenWidth*10/100;
 		MARGIN_TOP_VIEWS=5;
 		
-		initializeFields();
+		banks = new ArrayList<Bank>();
 		readBankNames();
 		buildLayout();
 		expendituresSetupIntent=new Intent(this, ExpenditureSetupActivity.class);
@@ -182,14 +168,6 @@ public class BanksSetupActivity extends Activity
 		return true;
 	}
 
-	private void initializeFields()
-	{
-		bankNames = new ArrayList<String>();
-		bankAccNos = new ArrayList<String>();
-		bankBalances = new ArrayList<Double>();
-		bankSmsNames = new ArrayList<String>();
-	}
-
 	private void buildLayout()
 	{
 		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
@@ -222,24 +200,10 @@ public class BanksSetupActivity extends Activity
 			{
 				buildAddBankDialog();
 				addBankDialog.show();
-				//addBank();
 			}
 		});
 		
-		DecimalFormat formatter = new DecimalFormat("#,##0.##"); 
-
-		/*linearLayouts=new ArrayList<LinearLayout>(numBanks+1);
-		linearLayoutParams=new ArrayList<LayoutParams>(numBanks+1);
-		bankNameViews=new ArrayList<TextView>(numBanks);
-		bankNameViewParams=new ArrayList<LayoutParams>(numBanks);
-		bankAccNoViews=new ArrayList<TextView>(numBanks);
-		bankAccNoViewParams=new ArrayList<LayoutParams>(numBanks);
-		bankBalanceViews=new ArrayList<TextView>(numBanks);
-		bankBalanceViewParams=new ArrayList<LayoutParams>(numBanks);
-		bankSmsNameViews=new ArrayList<TextView>(numBanks);
-		bankSmsNameViewParams=new ArrayList<LayoutParams>(numBanks);
-		removeButtons=new ArrayList<ImageButton>(numBanks);
-		removeButtonParams=new ArrayList<LayoutParams>(numBanks);*/
+		DecimalFormat formatter = new DecimalFormat("#,##0.##");
 		
 		for(int i=0; i<numBanks; i++)
 		{
@@ -250,24 +214,24 @@ public class BanksSetupActivity extends Activity
 			TextView bankBalanceView = (TextView) layout.findViewById(R.id.bankBalance);
 			TextView bankSmsNameView = (TextView) layout.findViewById(R.id.bankSmsName);
 			
-			bankNameView.setText(bankNames.get(i));
+			bankNameView.setText(banks.get(i).getName());
 			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_NAME_VIEWS, 0, 0, 0);
 			bankNameView.setLayoutParams(nameViewParams);
 			
-			bankAccNoView.setText(bankAccNos.get(i).toString());
+			bankAccNoView.setText(banks.get(i).getAccNo().toString());
 			LayoutParams accNoViewParams = new LayoutParams(WIDTH_ACC_NO_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_ACC_NO_VIEWS, 0, 0, 0);
 			bankAccNoView.setLayoutParams(accNoViewParams);
 			bankAccNoView.setGravity(Gravity.CENTER);
 			
-			bankBalanceView.setText(formatter.format(bankBalances.get(i)));
+			bankBalanceView.setText(formatter.format(banks.get(i).getBalance()));
 			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_BALANCE_VIEWS, 0, 0, 0);
 			bankBalanceView.setLayoutParams(balanceViewParams);
 			bankBalanceView.setGravity(Gravity.RIGHT);
 			
-			bankSmsNameView.setText(bankSmsNames.get(i));
+			bankSmsNameView.setText(banks.get(i).getSmsName());
 			LayoutParams smsViewParams = new LayoutParams(WIDTH_SMS_VIEWS, LayoutParams.WRAP_CONTENT);
 			//nameViewParams.setMargins(MARGIN_LEFT_SMS_VIEWS, 0, 0, 0);
 			bankSmsNameView.setLayoutParams(smsViewParams);
@@ -343,37 +307,14 @@ public class BanksSetupActivity extends Activity
 				String bankSmsName = bankSmsNameField.getText().toString().trim();
 				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName);
 				
-				/*boolean dataCorrect = false;
-				if(bankName.length()==0)
-				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Bank Name", Toast.LENGTH_LONG).show();
-					dataCorrect = false;
-				}
-				else if(bankBalance.length()==0)
-				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Bank Balance", Toast.LENGTH_LONG).show();
-					dataCorrect = false;
-				}
-				else if(bankSmsName.length()==0)
-				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Bank Sms Name", Toast.LENGTH_LONG).show();
-					dataCorrect = false;
-				}
-				else
-				{
-					dataCorrect = true;
-				}*/
-				
 				if(dataCorrect)
 				{
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
 					numBanks++;
-					bankNames.add(bankName);
-					bankAccNos.add(bankAccNo);
-					bankBalances.add(Double.parseDouble(bankBalance));
-					bankSmsNames.add(bankSmsName);
+					Bank bank = new Bank(bankName, bankAccNo, bankBalance, bankSmsName);
+					banks.add(bank);
 					
 					buildLayout();
 				}
@@ -390,84 +331,6 @@ public class BanksSetupActivity extends Activity
 			}
 		});
 	}
-
-	/*protected void addBank()
-	{
-		buildAddBankDialog();
-		addBankDialog.show();
-		/*if(numBanks%2==0)
-			addBankLayout.setBackgroundColor(Color.parseColor("#FF88FF88"));
-		else
-			addBankLayout.setBackgroundColor(Color.parseColor("#FF00FFFF"));
-		linearLayouts.add(addBankLayout);
-		linearLayoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-		
-		/*AutoCompleteTextView bankNameField = (AutoCompleteTextView) layout.findViewById(R.id.bankName);
-		String[] bankNameSuggestions = new String[]{"State Bank Of India", "Union Bank Of India"};
-		ArrayAdapter<String> bankNameSuggestionAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, bankNameSuggestions);
-		bankNameField.setAdapter(bankNameSuggestionAdapter);
-		bankNameField.setThreshold(1);
-		LayoutParams layoutParams=new LayoutParams(WIDTH_NAME_FIELDS, LayoutParams.WRAP_CONTENT);
-		layoutParams.setMargins(0, MARGIN_TOP_FIELDS, 0, 0);
-		bankNameField.setLayoutParams(layoutParams);
-		bankNameFields.add(bankNameField);
-		bankNameFieldParams.add(layoutParams);*/
-		
-		/*bankNameFields.add((EditText)addBankLayout.findViewById(R.id.bankName));
-		LayoutParams layoutParams=new LayoutParams(WIDTH_NAME_FIELDS, LayoutParams.WRAP_CONTENT);
-		layoutParams.setMargins(0, MARGIN_TOP_FIELDS, 0, 0);
-		bankNameFieldParams.add(layoutParams);
-		bankNameFields.get(numBanks).setLayoutParams(layoutParams);
-
-		bankBalanceFields.add((EditText)addBankLayout.findViewById(R.id.bankBalance));
-		layoutParams=new LayoutParams(WIDTH_AMOUNT_FIELDS, LayoutParams.WRAP_CONTENT);
-		layoutParams.setMargins(0, MARGIN_TOP_FIELDS, 0, 0);
-		bankBalanceFieldParams.add(layoutParams);
-		bankBalanceFields.get(numBanks).setLayoutParams(layoutParams);
-		
-		bankSmsNameFields.add((EditText)addBankLayout.findViewById(R.id.bankSmsName));
-		layoutParams=new LayoutParams(WIDTH_SMS_FIELDS, LayoutParams.WRAP_CONTENT);
-		layoutParams.setMargins(0, MARGIN_TOP_FIELDS, 0, 0);
-		bankSmsNameFieldParams.add(layoutParams);
-		bankSmsNameFields.get(numBanks).setLayoutParams(layoutParams);
-		
-		ImageButton removeButton=(ImageButton)addBankLayout.findViewById(R.id.button_remove);
-		LayoutParams removeParams = new LayoutParams(WIDTH_REMOVE_BUTTON, LayoutParams.WRAP_CONTENT);
-		removeParams.setMargins(0, MARGIN_TOP_FIELDS, 0, 0);
-		removeButton.setLayoutParams(removeParams);
-		removeButtonParams.add(removeParams);
-		removeButtons.add(removeButton);
-		removeButton.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				removeBank(addBankLayout);
-			}
-		});
-		
-		parentLayout.addView(addBankLayout, linearLayoutParams.get(numBanks));
-		numBanks++; * /
-	}*/
-	
-	/*protected void removeBank(View view)
-	{
-		int bankNum=parentLayout.indexOfChild(view)-1;
-		parentLayout.removeViewAt(bankNum+1);
-		linearLayouts.remove(bankNum);
-		linearLayoutParams.remove(bankNum);
-		bankNameViews.remove(bankNum);
-		bankNameViewParams.remove(bankNum);
-		bankAccNoViews.remove(bankNum);
-		bankAccNoViewParams.remove(bankNum);
-		bankBalanceViews.remove(bankNum);
-		bankBalanceViewParams.remove(bankNum);
-		bankSmsNameViews.remove(bankNum);
-		bankSmsNameViewParams.remove(bankNum);
-		removeButtons.remove(bankNum);
-		removeButtonParams.remove(bankNum);
-		numBanks--;
-	}*/
 	
 	private void readBankNames()
 	{
@@ -522,10 +385,7 @@ public class BanksSetupActivity extends Activity
 		{
 			DatabaseManager.setWalletBalance(walletBalance);
 			DatabaseManager.setNumBanks(numBanks);
-			DatabaseManager.setAllBankNames(bankNames);
-			DatabaseManager.setAllBankAccNos(bankAccNos);
-			DatabaseManager.setAllBankBalances(bankBalances);
-			DatabaseManager.setAllBankSmsNames(bankSmsNames);
+			DatabaseManager.setAllBanks(banks);
 			
 			// Start The Next Activity And Finish This Activity
 			startActivity(expendituresSetupIntent);
@@ -536,20 +396,17 @@ public class BanksSetupActivity extends Activity
 	private void deleteBank(int bankNo)
 	{
 		// Remove Bank Details
-		bankNames.remove(bankNo);
-		bankAccNos.remove(bankNo);
-		bankBalances.remove(bankNo);
-		bankSmsNames.remove(bankNo);
+		banks.remove(bankNo);
 		numBanks--;
 	}
 	
 	private void editBank(final int bankNo)
 	{
 		buildAddBankDialog();
-		bankNameField.setText(bankNames.get(bankNo));
-		bankAccNoField.setText(""+bankAccNos.get(bankNo));
-		bankBalanceField.setText(""+bankBalances.get(bankNo));
-		bankSmsNameField.setText(bankSmsNames.get(bankNo));
+		bankNameField.setText(banks.get(bankNo).getName());
+		bankAccNoField.setText(""+banks.get(bankNo).getAccNo());
+		bankBalanceField.setText(""+banks.get(bankNo).getBalance());
+		bankSmsNameField.setText(banks.get(bankNo).getSmsName());
 		
 		addBankDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 		{
@@ -562,36 +419,13 @@ public class BanksSetupActivity extends Activity
 				String bankSmsName = bankSmsNameField.getText().toString().trim();
 				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName);
 				
-				/* booloean dataCorrect = false;
-				if(bankName.length()==0)
-				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Bank Name", Toast.LENGTH_LONG).show();
-					dataCorrect = false;
-				}
-				else if(bankBalance.length()==0)
-				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Bank Balance", Toast.LENGTH_LONG).show();
-					dataCorrect = false;
-				}
-				else if(bankSmsName.length()==0)
-				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Bank Sms Name", Toast.LENGTH_LONG).show();
-					dataCorrect = false;
-				}
-				else
-				{
-					dataCorrect = true;
-				}*/
-				
 				if(dataCorrect)
 				{
 					if(bankAccNo.length()==0)
 						bankAccNo+="0000";
 					
-					bankNames.set(bankNo, bankName);
-					bankAccNos.set(bankNo, bankAccNo);
-					bankBalances.set(bankNo, Double.parseDouble(bankBalance));
-					bankSmsNames.set(bankNo, bankSmsName);
+					Bank bank = new Bank(bankName, bankAccNo, bankBalance, bankSmsName);
+					banks.set(bankNo, bank);
 					
 					buildLayout();
 				}

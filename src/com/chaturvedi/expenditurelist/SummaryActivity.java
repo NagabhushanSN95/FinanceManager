@@ -25,6 +25,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.expenditurelist.database.Bank;
 import com.chaturvedi.expenditurelist.database.DatabaseManager;
 import com.chaturvedi.expenditurelist.updates.Update43To50;
 
@@ -261,16 +262,15 @@ public class SummaryActivity extends Activity
 	private void setData()
 	{
 		int numBanks = DatabaseManager.getNumBanks();
-		ArrayList<String> bankNames = DatabaseManager.getAllBankNames();
-		ArrayList<Double> bankBalances = DatabaseManager.getAllBankBalances();
+		ArrayList<Bank> banks = DatabaseManager.getAllBanks();
 		DecimalFormat formatter = new DecimalFormat("###,##0.##");
 		//try
 		{
 			// Set The Data
 			for(int i=0; i<numBanks; i++)
 			{
-				nameViews.get(i).setText(bankNames.get(i));
-				amountViews.get(i).setText(""+formatter.format(bankBalances.get(i)));
+				nameViews.get(i).setText(banks.get(i).getName());
+				amountViews.get(i).setText(""+formatter.format(banks.get(i).getBalance()));
 			}
 			nameViews.get(numBanks).setText("Wallet");
 			nameViews.get(numBanks+1).setText("Amount Spent");

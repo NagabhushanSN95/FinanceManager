@@ -18,6 +18,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.expenditurelist.database.Bank;
 import com.chaturvedi.expenditurelist.database.DatabaseManager;
 
 public class ExportActivity extends Activity
@@ -172,12 +173,12 @@ public class ExportActivity extends Activity
 			{
 				exportWriter.write("<tr>\n");
 				exportWriter.write("\t<td>"+(i+1)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getDate(i)+"</td>");
+				/*exportWriter.write("\t<td>"+DatabaseManager.getDate(i)+"</td>");
 				exportWriter.write("\t<td>"+DatabaseManager.getExactExpType(i)+"</td>");
 				exportWriter.write("\t<td>"+DatabaseManager.getParticular(i)+"</td>");
 				exportWriter.write("\t<td>"+DatabaseManager.getRate(i)+"</td>");
 				exportWriter.write("\t<td>"+DatabaseManager.getQuantity(i)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getAmount(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getAmount(i)+"</td>");*/
 				exportWriter.write("</tr>\n");
 			}
 			exportWriter.write("</table>");
@@ -195,13 +196,12 @@ public class ExportActivity extends Activity
 			exportWriter.write("\t<td>"+"Amount In wallet"+"</td>");
 			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getWalletBalance()+"</td>");
 			exportWriter.write("</tr>\n");
-			ArrayList<String> bankNames = DatabaseManager.getAllBankNames();
-			ArrayList<Double> bankBalances = DatabaseManager.getAllBankBalances();
+			ArrayList<Bank> banks = DatabaseManager.getAllBanks();
 			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 			{
 				exportWriter.write("<tr>\n");
-				exportWriter.write("\t<td>"+"Amount In "+bankNames.get(i)+"</td>");
-				exportWriter.write("\t<td>"+currencySymbol+bankBalances.get(i)+"</td>");
+				exportWriter.write("\t<td>"+"Amount In "+banks.get(i).getName()+"</td>");
+				exportWriter.write("\t<td>"+currencySymbol+banks.get(i).getBalance()+"</td>");
 				exportWriter.write("</tr>\n");
 			}
 			exportWriter.write("</table>");

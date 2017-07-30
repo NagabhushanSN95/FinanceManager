@@ -49,9 +49,9 @@ public class SmsReceiver extends BroadcastReceiver
 				}
 				for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 				{
-					if(sender.toLowerCase().contains(DatabaseManager.getBankSmsName(i).toLowerCase()))
+					if(sender.toLowerCase().contains(DatabaseManager.getBank(i).getSmsName().toLowerCase()))
 					{
-						Toast.makeText(context, "Transaction In "+DatabaseManager.getBankName(i)+" Detected. Please Update The Same", Toast.LENGTH_LONG).show();
+						Toast.makeText(context, "Transaction In "+DatabaseManager.getBank(i).getName()+" Detected. Please Update The Same", Toast.LENGTH_LONG).show();
 						detailsIntent = new Intent(context, DetailsActivity.class);
 						detailsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 						detailsIntent.putExtra("Bank Sms", true);

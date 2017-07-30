@@ -19,7 +19,6 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.chaturvedi.expenditurelist.database.DatabaseManager;
-import com.chaturvedi.expenditurelist.database.Date;
 
 public class ExpenditureSetupActivity extends Activity
 {
@@ -155,20 +154,7 @@ public class ExpenditureSetupActivity extends Activity
 		
 		if(dataEntered)
 		{
-			DatabaseManager.setAllDates(new ArrayList<Date>());
-			DatabaseManager.setAllTypes(new ArrayList<String>());
-			DatabaseManager.setAllParticulars(new ArrayList<String>());
-			DatabaseManager.setAllRates(new ArrayList<Double>());
-			DatabaseManager.setAllQuantities(new ArrayList<Double>());
-			DatabaseManager.setAllAmounts(new ArrayList<Double>());
 			DatabaseManager.setAllExpenditureTypes(expenditureTypes);
-			
-			/*ArrayList<Double> counters = new ArrayList<Double>(10);
-			for(int i=0; i<NUM_EXPENDITURE_TYPES*2; i++)
-			{
-				counters.add(0.0);
-			}
-			DatabaseManager.setAllCounters(counters);*/
 			
 			SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 			SharedPreferences.Editor editor = preferences.edit();

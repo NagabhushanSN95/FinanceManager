@@ -83,6 +83,7 @@ public class DetailsActivity extends Activity
 	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
 	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
 	
+	private ArrayList<Transaction> transactions;
 	private int contextMenuTransactionNo;
 	private Intent smsIntent;
 	private DecimalFormat formatterTextFields;
@@ -202,12 +203,18 @@ public class DetailsActivity extends Activity
 			parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
 			parentLayout.removeAllViews();
 			
-			ArrayList<Date> dates = DatabaseManager.getAllDates();
+			Calendar calendar = Calendar.getInstance();
+			int year = calendar.get(Calendar.YEAR);
+			int month = calendar.get(Calendar.MONTH) + 1;
+			long currentMonth = year*100+month;
+			transactions = DatabaseManager.getMonthlyTransactions(currentMonth);
+			
+			/*ArrayList<Date> dates = DatabaseManager.getAllDates();
 			ArrayList<String> particulars = DatabaseManager.getAllParticulars();
-			ArrayList<Double> amounts = DatabaseManager.getAllAmounts();
+			ArrayList<Double> amounts = DatabaseManager.getAllAmounts();*/
 			DecimalFormat formatterDisplay = new DecimalFormat("#,##0.##");
 			formatterTextFields = new DecimalFormat("##0.##");
-			for(int i=0; i<DatabaseManager.getNumTransactions(); i++)
+			for(int i=0; i<transactions.size(); i++)
 			{
 				LayoutInflater layoutInflater = LayoutInflater.from(this);
 				LinearLayout linearLayout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_details, null);
@@ -223,21 +230,21 @@ public class DetailsActivity extends Activity
 				LayoutParams dateParams = (LayoutParams) dateView.getLayoutParams();
 				dateParams.width = WIDTH_DATE;
 				dateView.setLayoutParams(dateParams);
-				dateView.setText(dates.get(i).getShortDate());
+				dateView.setText(transactions.get(i).getDate().getShortDate());
 				//dateView.setMinLines(MIN_LINES);
 				
 				TextView particularsView = (TextView)linearLayout.findViewById(R.id.particulars);
 				LayoutParams particularsParams = (LayoutParams) particularsView.getLayoutParams();
 				particularsParams.width = WIDTH_PARTICULARS;
 				particularsView.setLayoutParams(particularsParams);
-				particularsView.setText(particulars.get(i));
+				particularsView.setText(transactions.get(i).getParticular());
 				//particularsView.setMinLines(MIN_LINES);
 				
 				TextView amountView = (TextView)linearLayout.findViewById(R.id.amount);
 				LayoutParams amountParams = (LayoutParams) amountView.getLayoutParams();
 				amountParams.width = WIDTH_AMOUNT;
 				amountView.setLayoutParams(amountParams);
-				amountView.setText(formatterDisplay.format(amounts.get(i)));
+				amountView.setText(formatterDisplay.format(transactions.get(i).getAmount()));
 				//amountView.setMinLines(MIN_LINES);
 
 				parentLayout.addView(linearLayout);
@@ -462,7 +469,7 @@ public class DetailsActivity extends Activity
 		for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 		{
 			banks.add(new RadioButton(this));
-			banks.get(i).setText(DatabaseManager.getBankName(i));
+			banks.get(i).setText(DatabaseManager.getBank(i).getName());
 			banks.get(i).setTextSize(20);
 			banks.get(i).setTextColor(Color.BLUE);
 			banksRadioGroup.addView(banks.get(i));
@@ -545,7 +552,7 @@ public class DetailsActivity extends Activity
 		for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 		{
 			banks.add(new RadioButton(this));
-			banks.get(i).setText(DatabaseManager.getBankName(i));
+			banks.get(i).setText(DatabaseManager.getBank(i).getName());
 			banks.get(i).setTextSize(20);
 			banks.get(i).setTextColor(Color.BLUE);
 			banksRadioGroup.addView(banks.get(i));
@@ -661,7 +668,7 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.deleteTransaction(contextMenuTransactionNo);
+				DatabaseManager.deleteTransaction(transactions.get(contextMenuTransactionNo));
 				buildBodyLayout();
 			}
 		});
@@ -671,15 +678,16 @@ public class DetailsActivity extends Activity
 	
 	private void editTransaction(final int transactionNo)
 	{
-		String expType = DatabaseManager.getType(transactionNo);
+		final Transaction oldTransaction = transactions.get(transactionNo);
+		String expType = oldTransaction.getType();
 		
 		if(expType.contains("Wallet Credit"))
 		{
-			final double backupAmount = DatabaseManager.getAmount(transactionNo);
+			final double backupAmount = oldTransaction.getAmount();
 			buildWalletCreditDialog();
-			particularsField.setText(DatabaseManager.getParticular(transactionNo));
+			particularsField.setText(oldTransaction.getParticular());
 			amountField.setText(formatterTextFields.format(backupAmount));
-			dateField.setText(DatabaseManager.getDate(transactionNo).getDisplayDate());
+			dateField.setText(oldTransaction.getDate().getDisplayDate());
 			walletCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
 				@Override
@@ -692,13 +700,13 @@ public class DetailsActivity extends Activity
 					String particulars = particularsField.getText().toString().trim();
 					String amount = amountField.getText().toString();
 					Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
-					Transaction transaction = null;
+					Transaction newTransaction = null;
 					boolean validData = isValidData(data);
 					
 					if(validData)
 					{
-						transaction = completeData(data);
-						DatabaseManager.editTransaction(transactionNo, transaction);
+						newTransaction = completeData(data);
+						DatabaseManager.editTransaction(oldTransaction, newTransaction);
 					}
 					else
 					{
@@ -717,12 +725,12 @@ public class DetailsActivity extends Activity
 		{
 			int oldExpTypeNo = Integer.parseInt(expType.substring(16, 18));   // Wallet Debit Exp01
 			buildWalletDebitDialog();
-			particularsField.setText(DatabaseManager.getParticular(transactionNo));
+			particularsField.setText(oldTransaction.getParticular());
 			typesList.setSelection(oldExpTypeNo);
-			rateField.setText(formatterTextFields.format(DatabaseManager.getRate(transactionNo)));
-			quantityField.setText(formatterTextFields.format(DatabaseManager.getQuantity(transactionNo)));
-			amountField.setText(formatterTextFields.format(DatabaseManager.getAmount(transactionNo)));
-			dateField.setText(DatabaseManager.getDate(transactionNo).getDisplayDate());
+			rateField.setText(formatterTextFields.format(oldTransaction.getRate()));
+			quantityField.setText(formatterTextFields.format(oldTransaction.getQuantity()));
+			amountField.setText(formatterTextFields.format(oldTransaction.getAmount()));
+			dateField.setText(oldTransaction.getDate().getDisplayDate());
 			
 			walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
@@ -740,13 +748,13 @@ public class DetailsActivity extends Activity
 					String quantity = quantityField.getText().toString();
 					String amount = amountField.getText().toString();
 					Object[] data = {id, time, time, date, type, particulars, rate, quantity, amount};
-					Transaction transaction;
+					Transaction newTransaction;
 					boolean validData = isValidData(data);
 					
 					if(validData)
 					{
-						transaction = completeData(data);
-						DatabaseManager.editTransaction(transactionNo, transaction);
+						newTransaction = completeData(data);
+						DatabaseManager.editTransaction(oldTransaction, newTransaction);
 					}
 					else
 					{
@@ -766,8 +774,8 @@ public class DetailsActivity extends Activity
 		}
 		else if(expType.contains("Bank Credit"))
 		{
-			String oldParticulars = DatabaseManager.getParticular(transactionNo);
-			final double oldAmount = DatabaseManager.getAmount(transactionNo);
+			String oldParticulars = oldTransaction.getParticular();
+			final double oldAmount = oldTransaction.getAmount();
 			buildBankCreditDialog();
 			String creditType = creditTypes[0];
 			if(expType.contains("Income"))
@@ -782,13 +790,13 @@ public class DetailsActivity extends Activity
 			}
 			final int oldBankNo = Integer.parseInt(expType.substring(12, 14));    // Bank Credit 01 Income
 			banks.get(oldBankNo).setChecked(true);
-			String oldBankName = DatabaseManager.getBankName(oldBankNo);
+			String oldBankName = DatabaseManager.getBank(oldBankNo).getName();
 			int start=oldBankName.length() + 9 + creditType.length() + 2;
 			int end=oldParticulars.length();
 			String netParticulars = oldParticulars.substring(start, end);
 			particularsField.setText(netParticulars);
 			amountField.setText(formatterTextFields.format(oldAmount));
-			dateField.setText(DatabaseManager.getDate(transactionNo).getDisplayDate());
+			dateField.setText(oldTransaction.getDate().getDisplayDate());
 			
 			bankCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
@@ -821,13 +829,13 @@ public class DetailsActivity extends Activity
 					String particulars = particularsField.getText().toString();
 					String amount = amountField.getText().toString();
 					Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
-					Transaction transaction;
+					Transaction newTransaction;
 					boolean validData = isValidData(data);
 					
 					if(validData)
 					{
-						transaction = completeData(data);
-						DatabaseManager.editTransaction(transactionNo, transaction);
+						newTransaction = completeData(data);
+						DatabaseManager.editTransaction(oldTransaction, newTransaction);
 					}
 					else
 					{
@@ -848,8 +856,8 @@ public class DetailsActivity extends Activity
 		if(expType.contains("Bank Debit"))
 		{
 			int oldBankNo = Integer.parseInt(expType.substring(11, 13));  // Bank Debit 01 Withdraw
-			String oldParticulars = DatabaseManager.getParticular(transactionNo);
-			final double oldAmount = DatabaseManager.getAmount(transactionNo);
+			String oldParticulars = oldTransaction.getParticular();
+			final double oldAmount = oldTransaction.getAmount();
 			buildBankDebitDialog();
 			String debitType = debitTypes[0];
 			int oldExpTypeNo = 0;
@@ -887,7 +895,7 @@ public class DetailsActivity extends Activity
 					
 				}
 			});
-			String oldBankName = DatabaseManager.getBankName(oldBankNo);
+			String oldBankName = DatabaseManager.getBank(oldBankNo).getName();
 			int start=oldBankName.length() + 13 + debitType.length() + 2;
 			int end=oldParticulars.length();
 			String netParticulars = oldParticulars.substring(start, end);
@@ -895,7 +903,7 @@ public class DetailsActivity extends Activity
 			banks.get(oldBankNo).setChecked(true);
 			particularsField.setText(netParticulars);
 			amountField.setText(formatterTextFields.format(oldAmount));
-			dateField.setText(DatabaseManager.getDate(transactionNo).getDisplayDate());
+			dateField.setText(oldTransaction.getDate().getDisplayDate());
 			
 			bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
@@ -929,13 +937,13 @@ public class DetailsActivity extends Activity
 					String particulars = particularsField.getText().toString();
 					String amount = amountField.getText().toString();
 					Object[] data = {id, time, time, date, type, particulars, amount, "1", amount};
-					Transaction transaction;
+					Transaction newTransaction;
 					boolean validData = isValidData(data);
 					
 					if(validData)
 					{
-						transaction = completeData(data);
-						DatabaseManager.editTransaction(transactionNo, transaction);
+						newTransaction = completeData(data);
+						DatabaseManager.editTransaction(oldTransaction, newTransaction);
 					}
 					else
 					{
@@ -1155,7 +1163,7 @@ public class DetailsActivity extends Activity
 			{
 				creditTypesNo = 1;
 			}
-			particulars = DatabaseManager.getBankName(bankNo) + " Credit: " + creditTypes[creditTypesNo] + ": " + particulars;
+			particulars = DatabaseManager.getBank(bankNo).getName() + " Credit: " + creditTypes[creditTypesNo] + ": " + particulars;
 			transaction = new Transaction(id, createdTime, modifiedTime, new Date(date), type, particulars, 
 					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
 		}
@@ -1171,7 +1179,7 @@ public class DetailsActivity extends Activity
 			{
 				debitTypesNo = 1;
 			}
-			particulars = DatabaseManager.getBankName(bankNo) + " Withdrawal: "+ debitTypes[debitTypesNo] + ": " + particulars;
+			particulars = DatabaseManager.getBank(bankNo).getName() + " Withdrawal: "+ debitTypes[debitTypesNo] + ": " + particulars;
 			transaction = new Transaction(id, createdTime, modifiedTime, new Date(date), type, particulars, 
 					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
 		}

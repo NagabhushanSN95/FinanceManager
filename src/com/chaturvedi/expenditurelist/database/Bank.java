@@ -22,18 +22,27 @@ public class Bank
 		this.setSmsName(smsName);
 	}
 	
-	public Bank(String id, String name, String balance, String smsName)
+	/*public Bank(String id, String name, String balance, String smsName)
 	{
 		this.id=Integer.parseInt(id);
 		this.name=name;
 		this.accNo="0000";
 		this.balance=Double.parseDouble(balance);
 		this.smsName=smsName;
-	}
+	}*/
 	
 	public Bank(String id, String name, String accNo, String balance, String smsName)
 	{
 		this.id=Integer.parseInt(id);
+		this.name=name;
+		this.accNo=accNo;
+		this.balance=Double.parseDouble(balance);
+		this.smsName=smsName;
+	}
+	
+	public Bank(String name, String accNo, String balance, String smsName)
+	{
+		this.id=0;
 		this.name=name;
 		this.accNo=accNo;
 		this.balance=Double.parseDouble(balance);
@@ -102,6 +111,16 @@ public class Bank
 	public double getBalance()
 	{
 		return balance;
+	}
+	
+	public void increamentBanlance(double amount)
+	{
+		balance += amount;
+	}
+	
+	public void decreamentBanlance(double amount)
+	{
+		balance -= amount;
 	}
 
 	/**
