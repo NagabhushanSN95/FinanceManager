@@ -23,7 +23,6 @@ import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
@@ -57,6 +56,7 @@ public class DetailsActivity extends Activity
 
 	private int walletBalance;
 	private int amountSpent;
+	private int income;
 	private int numEntries;
 	private ArrayList<String> particulars;
 	private ArrayList<Integer> amounts;
@@ -111,20 +111,27 @@ public class DetailsActivity extends Activity
 	private BufferedWriter amountWriter;
 	private BufferedWriter dateWriter;
 	
+	private Button walletCreditButton;
 	private Button walletDebitButton;
 	private Button bankCreditButton;
-	private AlertDialog.Builder expenditureDialog;
-	private AlertDialog.Builder atmWithdrawalDialog;
-	private LayoutInflater expenditureDialogLayout;
-	private LayoutInflater atmWithdrawalDialogLayout;
-	private View expenditureDialogView;
-	private View atmWithdrawalDialogView;
+	private Button bankDebitButton;
+
+	private AlertDialog.Builder walletCreditDialog;
+	private AlertDialog.Builder walletDebitDialog;
+	private AlertDialog.Builder bankCreditDialog;
+	private AlertDialog.Builder bankDebitDialog;
+	private LayoutInflater walletCreditDialogLayout;
+	private LayoutInflater walletDebitDialogLayout;
+	private LayoutInflater bankCreditDialogLayout;
+	private LayoutInflater bankDebitDialogLayout;
+	private View walletCreditDialogView;
+	private View walletDebitDialogView;
+	private View bankCreditDialogView;
+	private View bankDebitDialogView;
 	private EditText particularsField;
 	private EditText amountField;
-	private EditText walletDebitDateField;
+	private EditText dateField;
 	private ArrayList<RadioButton> banks;
-	private EditText withdrawalAmountField;
-	private EditText bankDebitDateField;
 	private Intent detailsIntent;
 	
 	@Override
@@ -159,7 +166,7 @@ public class DetailsActivity extends Activity
 		{
 			MARGIN_TOP=screenHeight*8/100;
 			MARGIN_TOP_SCROLL_VIEW=screenHeight*12/100;
-			MARGIN_BOTTOM_SCROLL_VIEW=screenHeight*12/100;
+			MARGIN_BOTTOM_SCROLL_VIEW=screenHeight*20/100;
 		}
 		
 		MARGIN_LEFT_SLNO=5*screenWidth/100;
@@ -216,6 +223,8 @@ public class DetailsActivity extends Activity
 			walletBalance=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			line=walletReader.readLine();
 			amountSpent=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
+			line=walletReader.readLine();
+			income=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			
 			bankNames=new ArrayList<String>();
 			bankBalances=new ArrayList<Integer>();
@@ -276,6 +285,7 @@ public class DetailsActivity extends Activity
 			prefWriter.write(""+numEntries+"\n");
 			walletWriter.write("wallet_balance=Rs"+walletBalance+"\n");
 			walletWriter.write("amount_spent=Rs"+amountSpent+"\n");
+			walletWriter.write("income=Rs"+income+"\n");
 			for(int i=0; i<numBanks; i++)
 			{
 				bankWriter.write(bankNames.get(i)+"=Rs"+bankBalances.get(i)+"\n");
@@ -391,39 +401,134 @@ public class DetailsActivity extends Activity
 	
 	private void buildButtonPanel()
 	{
+		walletCreditButton=(Button)findViewById(R.id.button_wallet_credit);
+		walletCreditButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				buildWalletCreditDialog();
+				walletCreditDialog.show();
+			}
+		});
+		
 		walletDebitButton=(Button)findViewById(R.id.button_wallet_debit);
-		walletDebitButton.setOnClickListener(new DebitListener());
+		walletDebitButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				buildWalletDebitDialog();
+				walletDebitDialog.show();
+			}
+		});
 		walletDebitButton.bringToFront();
-		bankCreditButton=(Button)findViewById(R.id.button_bank_withdrawal);
-		bankCreditButton.setOnClickListener(new CreditListener());
+		
+		bankCreditButton=(Button)findViewById(R.id.button_bank_credit);
+		bankCreditButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				buildBankCreditDialog();
+				bankCreditDialog.show();
+			}
+		});
 		bankCreditButton.bringToFront();
+		
+		bankDebitButton=(Button)findViewById(R.id.button_bank_debit);
+		bankDebitButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				buildBankDebitDialog();
+				bankDebitDialog.show();
+			}
+		});
 	}
 	
-	private void buildExpenditureDialog()
+	private void buildWalletCreditDialog()
 	{
-		expenditureDialog=new AlertDialog.Builder(this);
-		expenditureDialog.setTitle("Add Expenditure");
-		expenditureDialog.setMessage("Enter Details");
-		expenditureDialogLayout=LayoutInflater.from(this);
-		expenditureDialogView=expenditureDialogLayout.inflate(R.layout.dialog_wallet_debit, null);
-		expenditureDialog.setView(expenditureDialogView);
-		expenditureDialog.setPositiveButton("OK", new ExpenditureDialogListener(1));
-		expenditureDialog.setNegativeButton("Cancel", new ExpenditureDialogListener(0));
-		particularsField=(EditText)expenditureDialogView.findViewById(R.id.edit_particulars);
-		amountField=(EditText)expenditureDialogView.findViewById(R.id.edit_amount);
-		walletDebitDateField=(EditText)expenditureDialogView.findViewById(R.id.edit_date);
+		walletCreditDialog=new AlertDialog.Builder(this);
+		walletCreditDialog.setTitle("Add An Income");
+		walletCreditDialog.setMessage("Enter Details");
+		walletCreditDialogLayout=LayoutInflater.from(this);
+		walletCreditDialogView=walletCreditDialogLayout.inflate(R.layout.dialog_wallet_credit, null);
+		walletCreditDialog.setView(walletCreditDialogView);
+		walletCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				numEntries++;
+				int amount=Integer.parseInt(amountField.getText().toString());
+				String date=dateField.getText().toString();
+				walletBalance+=amount;
+				income+=amount;
+				particulars.add(particularsField.getText().toString());
+				amounts.add(amount);
+				dates.add(date);
+				saveData();
+				buildTitleLayout();
+				buildBodyLayout();
+				buildButtonPanel();
+				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
+			}
+		});
+		walletCreditDialog.setNegativeButton("Cancel", null);
+		particularsField=(EditText)walletCreditDialogView.findViewById(R.id.edit_particulars);
+		amountField=(EditText)walletCreditDialogView.findViewById(R.id.edit_amount);
+		dateField=(EditText)walletCreditDialogView.findViewById(R.id.edit_date);
 		
 		Calendar calendar=Calendar.getInstance();
 		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
-		walletDebitDateField.setText(date);
+		dateField.setText(date);
 	}
 	
-	private void buildWithdrawalDialog()
+	private void buildWalletDebitDialog()
 	{
-		atmWithdrawalDialogLayout=LayoutInflater.from(this);
-		atmWithdrawalDialogView=atmWithdrawalDialogLayout.inflate(R.layout.dialog_bank_debit, null);
+		walletDebitDialog=new AlertDialog.Builder(this);
+		walletDebitDialog.setTitle("Add Expenditure");
+		walletDebitDialog.setMessage("Enter Details");
+		walletDebitDialogLayout=LayoutInflater.from(this);
+		walletDebitDialogView=walletDebitDialogLayout.inflate(R.layout.dialog_wallet_debit, null);
+		walletDebitDialog.setView(walletDebitDialogView);
+		walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				numEntries++;
+				int amount=Integer.parseInt(amountField.getText().toString());
+				String date=dateField.getText().toString();
+				walletBalance-=amount;
+				amountSpent+=amount;
+				particulars.add(particularsField.getText().toString());
+				amounts.add(amount);
+				dates.add(date);
+				saveData();
+				buildTitleLayout();
+				buildBodyLayout();
+				buildButtonPanel();
+			}
+		});
+		walletDebitDialog.setNegativeButton("Cancel", null);
+		particularsField=(EditText)walletDebitDialogView.findViewById(R.id.edit_particulars);
+		amountField=(EditText)walletDebitDialogView.findViewById(R.id.edit_amount);
+		dateField=(EditText)walletDebitDialogView.findViewById(R.id.edit_date);
 		
-		RadioGroup banksRadioGroup=(RadioGroup)atmWithdrawalDialogView.findViewById(R.id.radioGroup_banks);
+		Calendar calendar=Calendar.getInstance();
+		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
+		dateField.setText(date);
+	}
+	
+	private void buildBankCreditDialog()
+	{
+		bankCreditDialogLayout=LayoutInflater.from(this);
+		bankCreditDialogView=bankCreditDialogLayout.inflate(R.layout.dialog_bank_credit, null);
+		
+		RadioGroup banksRadioGroup=(RadioGroup)bankCreditDialogView.findViewById(R.id.radioGroup_banks);
 		banks=new ArrayList<RadioButton>();
 		for(int i=0; i<numBanks; i++)
 		{
@@ -434,17 +539,18 @@ public class DetailsActivity extends Activity
 			banksRadioGroup.addView(banks.get(i));
 		}
 		banks.get(0).setChecked(true);
-		withdrawalAmountField=(EditText)atmWithdrawalDialogView.findViewById(R.id.edit_amount);
-		bankDebitDateField=(EditText)atmWithdrawalDialogView.findViewById(R.id.edit_date);
+		amountField=(EditText)bankCreditDialogView.findViewById(R.id.edit_amount);
+		dateField=(EditText)bankCreditDialogView.findViewById(R.id.edit_date);
+		
 		Calendar calendar=Calendar.getInstance();
 		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
-		bankDebitDateField.setText(date);
+		dateField.setText(date);
 		
-		atmWithdrawalDialog=new AlertDialog.Builder(this);
-		atmWithdrawalDialog.setTitle("Add ATM Withdrawal");
-		atmWithdrawalDialog.setMessage("Enter Details");
-		atmWithdrawalDialog.setView(atmWithdrawalDialogView);
-		atmWithdrawalDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		bankCreditDialog=new AlertDialog.Builder(this);
+		bankCreditDialog.setTitle("Add ATM Withdrawal");
+		bankCreditDialog.setMessage("Enter Details");
+		bankCreditDialog.setView(bankCreditDialogView);
+		bankCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 		{
 			@Override
 			public void onClick(DialogInterface dialog, int which)
@@ -452,8 +558,69 @@ public class DetailsActivity extends Activity
 				int bankNo=0;
 				try
 				{
-					int withdrawalAmount=Integer.parseInt(withdrawalAmountField.getText().toString());
-					String date=bankDebitDateField.getText().toString();
+					int amount=Integer.parseInt(amountField.getText().toString());
+					String date=dateField.getText().toString();
+					for(int i=0; i<numBanks; i++)
+					{
+						if(banks.get(i).isChecked())
+							bankNo=i;
+					}
+					bankBalances.set(bankNo, bankBalances.get(bankNo)+amount);
+					income+=amount;
+					numEntries++;
+					particulars.add(bankNames.get(bankNo)+" Credit");
+					amounts.add(amount);
+					dates.add(date);
+					saveData();
+				}
+				catch(Exception e)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_SHORT).show();
+				}
+				buildTitleLayout();
+				buildBodyLayout();
+				buildButtonPanel();
+			}
+		});
+		bankCreditDialog.setNegativeButton("Cancel", null);
+	}
+	
+	private void buildBankDebitDialog()
+	{
+		bankDebitDialogLayout=LayoutInflater.from(this);
+		bankDebitDialogView=bankDebitDialogLayout.inflate(R.layout.dialog_bank_debit, null);
+		
+		RadioGroup banksRadioGroup=(RadioGroup)bankDebitDialogView.findViewById(R.id.radioGroup_banks);
+		banks=new ArrayList<RadioButton>();
+		for(int i=0; i<numBanks; i++)
+		{
+			banks.add(new RadioButton(this));
+			banks.get(i).setText(bankNames.get(i));
+			banks.get(i).setTextSize(20);
+			banks.get(i).setTextColor(Color.BLUE);
+			banksRadioGroup.addView(banks.get(i));
+		}
+		banks.get(0).setChecked(true);
+		amountField=(EditText)bankDebitDialogView.findViewById(R.id.edit_amount);
+		dateField=(EditText)bankDebitDialogView.findViewById(R.id.edit_date);
+		Calendar calendar=Calendar.getInstance();
+		String date=calendar.get(Calendar.DATE)+"-"+(calendar.get(Calendar.MONTH)+1)+"-"+calendar.get(Calendar.YEAR);
+		dateField.setText(date);
+		
+		bankDebitDialog=new AlertDialog.Builder(this);
+		bankDebitDialog.setTitle("Add ATM Withdrawal");
+		bankDebitDialog.setMessage("Enter Details");
+		bankDebitDialog.setView(bankDebitDialogView);
+		bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				int bankNo=0;
+				try
+				{
+					int withdrawalAmount=Integer.parseInt(amountField.getText().toString());
+					String date=dateField.getText().toString();
 					for(int i=0; i<numBanks; i++)
 					{
 						if(banks.get(i).isChecked())
@@ -476,7 +643,7 @@ public class DetailsActivity extends Activity
 				buildButtonPanel();
 			}
 		});
-		atmWithdrawalDialog.setNegativeButton("Cancel", null);
+		bankDebitDialog.setNegativeButton("Cancel", null);
 	}
 	
 	/*private String breakParticularsString(String line)
@@ -493,15 +660,15 @@ public class DetailsActivity extends Activity
 			line+=lines.get(i)+"\n";
 		}
 		return line;
-	}*/
+	}
 	
 	private class DebitListener implements OnClickListener
 	{
 		@Override
 		public void onClick(View v)
 		{
-			buildExpenditureDialog();
-			expenditureDialog.show();
+			buildWalletDebitDialog();
+			walletDebitDialog.show();
 		}
 	}
 	
@@ -511,8 +678,8 @@ public class DetailsActivity extends Activity
 		@Override
 		public void onClick(View v)
 		{
-			buildWithdrawalDialog();
-			atmWithdrawalDialog.show();
+			buildBankDebitDialog();
+			bankDebitDialog.show();
 		}
 		
 	}
@@ -533,7 +700,7 @@ public class DetailsActivity extends Activity
 			{
 				numEntries++;
 				int amount=Integer.parseInt(amountField.getText().toString());
-				String date=walletDebitDateField.getText().toString();
+				String date=dateField.getText().toString();
 				walletBalance-=amount;
 				amountSpent+=amount;
 				particulars.add(particularsField.getText().toString());
@@ -547,5 +714,5 @@ public class DetailsActivity extends Activity
 			}
 		}
 		
-	}
+	}*/
 }

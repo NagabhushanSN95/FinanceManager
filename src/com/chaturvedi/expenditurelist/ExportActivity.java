@@ -55,6 +55,7 @@ public class ExportActivity extends Activity
 	private int numEntries;
 	private int walletBalance;
 	private int amountSpent;
+	private int income;
 	private ArrayList<String> bankNames;
 	private ArrayList<Integer> bankBalances;
 	private ArrayList<String> particulars;
@@ -191,6 +192,8 @@ public class ExportActivity extends Activity
 			walletBalance=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			line=walletReader.readLine();
 			amountSpent=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
+			line=walletReader.readLine();
+			income=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			
 			bankNames=new ArrayList<String>();
 			bankBalances=new ArrayList<Integer>();
@@ -219,7 +222,6 @@ public class ExportActivity extends Activity
 	
 	private void saveData()
 	{
-		//String spaces="";
 		try
 		{
 			expenditureFolderName="Expenditure List";
@@ -230,7 +232,12 @@ public class ExportActivity extends Activity
 			
 			exportFile=new File(expenditureFolder, exportFileName);
 			exportWriter=new BufferedWriter(new FileWriter(exportFile));
+			
 			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
+			exportWriter.write("\t<td>"+"Sl No"+"</td>");
+			exportWriter.write("\t<td>"+"Date"+"</td>");
+			exportWriter.write("\t<td>"+"Particulars"+"</td>");
+			exportWriter.write("\t<td>"+"Amount"+"</td>");
 			for(int i=0; i<numEntries; i++)
 			{
 				exportWriter.write("<tr>\n");
@@ -243,6 +250,10 @@ public class ExportActivity extends Activity
 			exportWriter.write("</table>");
 			
 			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
+			exportWriter.write("<tr>\n");
+			exportWriter.write("\t<td>"+"Total Income In This Month"+"</td>");
+			exportWriter.write("\t<td>"+"Rs "+income+"</td>");
+			exportWriter.write("</tr>\n");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Total Amount Spent In This Month"+"</td>");
 			exportWriter.write("\t<td>"+"Rs "+amountSpent+"</td>");
@@ -302,6 +313,7 @@ public class ExportActivity extends Activity
 			prefWriter.write("0"+"\n");
 			walletWriter.write("wallet_balance=Rs"+walletBalance+"\n");
 			walletWriter.write("amount_spent=Rs0"+"\n");
+			walletWriter.write("income=Rs0"+"\n");
 			particularsWriter.write("");
 			amountWriter.write("");
 			dateWriter.write("");

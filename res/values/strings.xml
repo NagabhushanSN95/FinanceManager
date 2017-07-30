@@ -6,8 +6,10 @@
     <string name="krishna">Shree KRISHNAya Namaha</string>
     <string name="title_details">Details</string>
     <string name="action_details">View Details</string>
-    <string name="debit">Expenditure</string>
+    <string name="wallet_debit">Expenditure</string>
+    <string name="wallet_credit">Income</string>
     <string name="bank_debit">Bank Withdrawal</string>
+    <string name="bank_credit">Bank Credit</string>
     <string name="action_export">Export Data To SD Card</string>
     <string name="action_edit">Edit</string>
     <string name="slno">Sl No</string>

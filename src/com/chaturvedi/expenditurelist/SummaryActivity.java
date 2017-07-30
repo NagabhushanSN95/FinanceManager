@@ -35,6 +35,7 @@ public class SummaryActivity extends Activity
 	
 	private static int walletBalance;
 	private static int amountSpent;
+	private static int income;
 	private static int numBanks;
 	private static ArrayList<String> bankNames;
 	private static ArrayList<Integer> bankBalances;
@@ -173,6 +174,8 @@ public class SummaryActivity extends Activity
 			walletBalance=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			line=walletReader.readLine();
 			amountSpent=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
+			line=walletReader.readLine();
+			income=Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			
 			bankReader=new BufferedReader(new FileReader(bankFile));
 			bankNames=new ArrayList<String>();
@@ -198,13 +201,13 @@ public class SummaryActivity extends Activity
 		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, 0, 0);
 		parentLayout.setLayoutParams(parentLayoutParams);
 		
-		layouts=new ArrayList<LinearLayout>(numBanks+2);
-		layoutParams=new ArrayList<LayoutParams>(numBanks+2);
-		nameViews=new ArrayList<TextView>(numBanks+2);
-		nameViewParams=new ArrayList<LayoutParams>(numBanks+2);
-		amountViews=new ArrayList<TextView>(numBanks+2);
-		amountViewParams=new ArrayList<LayoutParams>(numBanks+2);
-		for(int i=0; i<numBanks+2; i++)
+		layouts=new ArrayList<LinearLayout>(numBanks+3);
+		layoutParams=new ArrayList<LayoutParams>(numBanks+3);
+		nameViews=new ArrayList<TextView>(numBanks+3);
+		nameViewParams=new ArrayList<LayoutParams>(numBanks+3);
+		amountViews=new ArrayList<TextView>(numBanks+3);
+		amountViewParams=new ArrayList<LayoutParams>(numBanks+3);
+		for(int i=0; i<numBanks+3; i++)
 		{
 			layouts.add(new LinearLayout(this));
 			layoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
@@ -234,9 +237,11 @@ public class SummaryActivity extends Activity
 				amountViews.get(i).setText("Rs "+bankBalances.get(i));
 			}
 			nameViews.get(numBanks).setText("Wallet");
-			nameViews.get(numBanks+1).setText("AmountSpent");
+			nameViews.get(numBanks+1).setText("Amount Spent");
+			nameViews.get(numBanks+2).setText("Income");
 			amountViews.get(numBanks).setText("Rs "+walletBalance);
 			amountViews.get(numBanks+1).setText("Rs "+amountSpent);
+			amountViews.get(numBanks+2).setText("Rs "+income);
 		}
 		catch(Exception e)
 		{

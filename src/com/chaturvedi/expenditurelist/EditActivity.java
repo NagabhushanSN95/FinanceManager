@@ -57,6 +57,7 @@ public class EditActivity extends Activity
 	private static int numEntries;
 	private static int walletBalance;
 	private static int amountSpent;
+	private static int income;
 	private ArrayList<String> bankNames;
 	private ArrayList<Integer> bankBalances;
 
@@ -244,6 +245,8 @@ public class EditActivity extends Activity
 			walletBalance = Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			line=walletReader.readLine();
 			amountSpent = Integer.parseInt(line.substring(line.indexOf("Rs")+2));
+			line=walletReader.readLine();
+			income = Integer.parseInt(line.substring(line.indexOf("Rs")+2));
 			
 			bankNames=new ArrayList<String>();
 			bankBalances=new ArrayList<Integer>();
@@ -303,6 +306,7 @@ public class EditActivity extends Activity
 			prefWriter.write(numEntries+"\n");
 			walletWriter.write("wallet_balance=Rs"+walletField.getText().toString()+"\n");
 			walletWriter.write("amount_spent=Rs"+amountSpent+"\n");
+			walletWriter.write("income=Rs"+income+"\n");
 			for(int i=0; i<numBanks; i++)
 			{
 				bankWriter.write(bankNameFields.get(i).getText().toString()+"=Rs"+bankBalanceFields.get(i).getText().toString()+"\n");
