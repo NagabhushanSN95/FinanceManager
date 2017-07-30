@@ -2,6 +2,7 @@
 
 package com.chaturvedi.financemanager;
 
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -44,6 +45,8 @@ import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.Template;
 import com.chaturvedi.financemanager.database.Time;
 import com.chaturvedi.financemanager.database.Transaction;
+import com.chaturvedi.financemanager.edit.EditActivity;
+import com.chaturvedi.financemanager.help.HelpActivity;
 
 public class SummaryActivity extends Activity
 {

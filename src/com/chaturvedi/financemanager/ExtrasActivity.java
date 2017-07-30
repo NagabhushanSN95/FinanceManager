@@ -1,5 +1,6 @@
 package com.chaturvedi.financemanager;
 
+
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -30,6 +31,7 @@ import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.Date;
 import com.chaturvedi.financemanager.database.ExportManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
+import com.chaturvedi.financemanager.help.AboutActivity;
 
 public class ExtrasActivity extends Activity
 {

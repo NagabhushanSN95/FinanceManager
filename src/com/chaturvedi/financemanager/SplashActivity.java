@@ -11,6 +11,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
+import com.chaturvedi.financemanager.setup.StartupActivity;
 import com.chaturvedi.financemanager.updates.Update68To88;
 //import android.view.ViewGroup.LayoutParams;
 

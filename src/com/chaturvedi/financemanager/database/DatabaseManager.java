@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.Toast;
 
 public class DatabaseManager
@@ -30,6 +29,15 @@ public class DatabaseManager
 	{
 		context=cxt;
 		databaseAdapter = new DatabaseAdapter(context);
+	}
+	
+	public static void initialize(double walletBalance)
+	{
+		transactions = new ArrayList<Transaction>();
+		DatabaseManager.walletBalance = walletBalance;
+		databaseAdapter.initializeWalletTable(walletBalance);
+		counters = new ArrayList<Counters>();
+		templates = new ArrayList<Template>(); 
 	}
 	
 	public static void readDatabase()
@@ -86,77 +94,20 @@ public class DatabaseManager
 		}
 	}
 	
-	public static void initialize(double walletBalance)
-	{
-		transactions = new ArrayList<Transaction>();
-		DatabaseManager.walletBalance = walletBalance;
-		databaseAdapter.initializeWalletTable(walletBalance);
-		counters = new ArrayList<Counters>();
-		templates = new ArrayList<Template>(); 
-	}
-	
-	/*public static void saveDatabase()
-	{
-		if(numTransactions>0)
-		{
-			databaseAdapter.deleteAllTransactions();
-			databaseAdapter.addAllTransactions(transactions);
-		}
-		else
-		{
-			databaseAdapter.deleteAllTransactions();
-		}
-		
-		if(numBanks>0)
-		{
-			databaseAdapter.deleteAllBanks();
-			databaseAdapter.addAllBanks(banks);
-		}
-		else
-		{
-			databaseAdapter.deleteAllBanks();
-		}
-		
-		databaseAdapter.setWalletBalance(walletBalance);
-		
-		ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
-		for(int i=0; i<expenditureTypes.size(); i++)
-		{
-			expTypes.add(new ExpenditureTypes(i, expenditureTypes.get(i)));
-		}
-		databaseAdapter.deleteAllExpenditureTypes();
-		databaseAdapter.addAllExpenditureTypes(expTypes);
-		
-		if(numCountersRows>0)
-		{
-			databaseAdapter.deleteAllCountersRows();
-			databaseAdapter.addAllCountersRows(counters);
-		}
-		else
-		{
-			databaseAdapter.deleteAllCountersRows();
-		}
-		
-		if(templates.size() > 0)
-		{
-			databaseAdapter.deleteAllTemplates();
-			databaseAdapter.addAllTemplates(templates);
-		}
-		else
-		{
-			databaseAdapter.deleteAllTemplates();
-		}
-		
-		// Check this and remove
-		databaseAdapter.close();
-	}*/
-	
 	public static void clearDatabase()
 	{
 		transactions = new ArrayList<Transaction>();
 		databaseAdapter.deleteAllTransactions();
 		counters = new ArrayList<Counters>();
 		databaseAdapter.deleteAllCountersRows();
+	}
+
+	/**
+	 * @return the numTransactions
+	 */
+	public static int getNumTransactions()
+	{
+		return transactions.size();
 	}
 	
 	public static void addTransaction(Transaction transaction)
@@ -524,11 +475,117 @@ public class DatabaseManager
 		return transactions1;
 	}
 	
+	public static void addTemplate(Template template)
+	{
+		int numTemplates = templates.size();
+		if(numTemplates == 0)
+		{
+			templates = new ArrayList<Template>();
+			template.setID(1);
+			templates.add(template);
+			databaseAdapter.addTemplate(template);
+		}
+		else if(template.getParticular().compareTo(templates.get(0).getParticular()) < 0)
+		{
+			template.setID(1);
+			templates.add(0, template);
+			for(int i=1; i<templates.size();i++)// Update IDs of the templates below
+			{
+				Template tempTemplate = templates.get(i);
+				tempTemplate.setID(tempTemplate.getID()+1);
+			}
+			
+			databaseAdapter.insertTemplate(template);
+		}
+		else if(template.getParticular().compareTo(templates.get(numTemplates-1).getParticular()) > 0)
+		{
+			template.setID(numTemplates+1);
+			templates.add(template);
+			databaseAdapter.addTemplate(template);
+		}
+		else
+		{
+			// Search For The Template Within
+			int first = 0;
+			int last = numTemplates-1;
+			int middle = (first+last)/2;
+			while(first<=last)
+			{
+				if(templates.get(middle).getParticular().compareTo(template.getParticular()) < 0)
+				{
+					first = middle+1;
+				}
+				else if(templates.get(middle).getParticular().compareTo(template.getParticular()) > 0)
+				{
+					last = middle-1;
+				}
+				else
+				{
+					template.setID(middle+1);
+					templates.set(middle, template);
+					databaseAdapter.updateTemplate(template);
+					Toast.makeText(context, "Existing Template Updated", Toast.LENGTH_SHORT).show();
+					break;
+				}
+				middle = (first + last)/2;
+			}
+			if(first>last)
+			{
+				template.setID(middle+2);
+				templates.add(middle+1, template);		   // Insert The New Counters Row.
+				for(int i=middle+2; i<templates.size();i++)// Update IDs of the templates below
+				{
+					Template tempTemplate = templates.get(i);
+					tempTemplate.setID(tempTemplate.getID()+1);
+				}
+				databaseAdapter.insertTemplate(template);
+			}
+		}
+	}
+
+	public static void setAllTemplates(ArrayList<Template> templates)
+	{
+		DatabaseManager.templates = templates;
+		databaseAdapter.deleteAllTemplates();
+		databaseAdapter.addAllTemplates(templates);
+	}
+	
+	public static void deleteTemplate(Template template)
+	{
+		int templateNo = templates.indexOf(template);
+		DatabaseManager.templates.remove(templateNo);
+		// Update the IDs of the remaining (below) Templates
+		for(int i=templateNo; i<templates.size(); i++)
+		{
+			templates.get(i).setID(templates.get(i).getID()-1);
+		}
+		databaseAdapter.deleteTemplate(template);
+	}
+	
+	public static ArrayList<Template> getAllTemplates()
+	{
+		return templates;
+	}
+
+	/**
+	 * @return the numBanks
+	 */
+	public static int getNumBanks()
+	{
+		return banks.size();
+	}
+	
 	public static void addBank(Bank bank)
 	{
-		//DatabaseManager.increamentNumBanks();
 		banks.add(bank);
 		databaseAdapter.addBank(bank);
+	}
+	
+	public static void setAllBanks(ArrayList<Bank> banks)
+	{
+		DatabaseManager.banks = banks;
+		databaseAdapter.deleteAllBanks();
+		databaseAdapter.addAllBanks(banks);
 	}
 	
 	public static void editBank(int bankNum, Bank bank)
@@ -537,16 +594,169 @@ public class DatabaseManager
 		databaseAdapter.updateBank(bank);
 	}
 	
+	public static Bank getBank(int bankNo)
+	{
+		return banks.get(bankNo);
+	}
+	
+	public static ArrayList<Bank> getAllBanks()
+	{
+		return banks;
+	}
+	
 	public static void deleteBank(int bankNum)
 	{
-		//DatabaseManager.decreamentNumBanks();
 		banks.remove(bankNum);
 		databaseAdapter.deleteBank(banks.get(bankNum));
+	}
+	
+	public static void increamentBankBalance(int bankNum, double amount)
+	{
+		banks.get(bankNum).increamentBanlance(amount);
+	}
+	
+	public static void decreamentBankBalance(int bankNum, double amount)
+	{
+		banks.get(bankNum).decreamentBanlance(amount);
+	}
+	
+	public static int getNumExpTypes()
+	{
+		return expenditureTypes.size();
+	}
+	
+	/**
+	 * Adds a new Expenditure Type
+	 * @param expTypeName
+	 * @param position 1 for 1st position and so on
+	 */
+	public static void addExpType(String expTypeName, int position)
+	{
+		position = position-1;	// Make it start from 0
+		expenditureTypes.add(position, expTypeName);
+		
+		DecimalFormat formatter = new DecimalFormat("00");
+		// Update Exp Types of all Transactions
+		for(Transaction transaction: transactions)
+		{
+			if(transaction.getType().contains("Wallet Credit"))
+			{
+				
+			}
+			else if(transaction.getType().contains("Wallet Debit"))
+			{
+				int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
+				if(expTypeNo >= position)
+				{
+					transaction.setType("Wallet Debit Exp" + formatter.format(expTypeNo+1));
+				}
+			}
+			else if(transaction.getType().contains("Bank Credit"))
+			{
+				
+			}
+			else if(transaction.getType().contains("Bank Debit"))
+			{
+				int bankNo = Integer.parseInt(transaction.getType().substring(11, 13));  // Bank Debit 01 Exp01
+				if(transaction.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
+				{
+				
+				}
+				else if(transaction.getType().contains("Exp"))   // Bank Debit 01 Exp01
+				{
+					int expTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
+					if(expTypeNo >= position)
+					{
+						transaction.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + formatter.format(expTypeNo+1));
+					}
+				}
+			}
+		}
+		
+		// Update Exp Types of all Templates
+		for(Template template: templates)
+		{
+			if(template.getType().contains("Wallet Credit"))
+			{
+				
+			}
+			else if(template.getType().contains("Wallet Debit"))
+			{
+				int expTypeNo = Integer.parseInt(template.getType().substring(16, 18));   // Wallet Debit Exp01
+				if(expTypeNo >= position)
+				{
+					template.setType("Wallet Debit Exp" + formatter.format(expTypeNo+1));
+				}
+			}
+			else if(template.getType().contains("Bank Credit"))
+			{
+				
+			}
+			else if(template.getType().contains("Bank Debit"))
+			{
+				int bankNo = Integer.parseInt(template.getType().substring(11, 13));  // Bank Debit 01 Exp01
+				if(template.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
+				{
+				
+				}
+				else if(template.getType().contains("Exp"))   // Bank Debit 01 Exp01
+				{
+					int expTypeNo = Integer.parseInt(template.getType().substring(17, 19));
+					if(expTypeNo >= position)
+					{
+						template.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + formatter.format(expTypeNo+1));
+					}
+				}
+			}
+		}
+		
+		// Update Counters
+		for(Counters counter: counters)
+		{
+			counter.addNewExpToCounters(position);
+		}
+		
+		// Update the same in Database
+		databaseAdapter.deleteAllTransactions();
+		databaseAdapter.addAllTransactions(transactions);
+		databaseAdapter.deleteAllTemplates();
+		databaseAdapter.addAllTemplates(templates);
+		databaseAdapter.deleteAllExpTypes();
+		databaseAdapter.addAllExpTypes(expenditureTypes);
+		databaseAdapter.readjustCountersTable();
+		databaseAdapter.addAllCountersRows(counters);
+	}
+	
+	public static void setExpenditureType(int expTypeNo, String expType)
+	{
+		DatabaseManager.expenditureTypes.set(expTypeNo, expType);
+	}
+	
+	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
+	{
+		DatabaseManager.expenditureTypes=expTypes1;
+		databaseAdapter.deleteAllExpTypes();
+		databaseAdapter.addAllExpTypes(expTypes1);
+	}
+	
+	public static String getExpenditureType(int expTypeNo)
+	{
+		return DatabaseManager.expenditureTypes.get(expTypeNo);
+	}
+	
+	public static ArrayList<String> getAllExpenditureTypes()
+	{
+		return DatabaseManager.expenditureTypes;
 	}
 	
 	public static void readjustCountersTable()
 	{
 		databaseAdapter.readjustCountersTable();
+	}
+	
+	public static int getNumCountersRows()
+	{
+		return counters.size();
 	}
 
 	public static void setAllCounters(ArrayList<Counters> counters)
@@ -805,320 +1015,6 @@ public class DatabaseManager
 		}
 		return totalCounters;
 	}
-	
-	public static int getNumExpTypes()
-	{
-		return expenditureTypes.size();
-	}
-	
-	public static void setAllExpenditureTypes(ArrayList<String> expTypes1)
-	{
-		DatabaseManager.expenditureTypes=expTypes1;
-		
-		/*ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
-		for(int i=0; i<expenditureTypes.size(); i++)
-		{
-			expTypes.add(new ExpenditureTypes(i, expenditureTypes.get(i)));
-		}*/
-		databaseAdapter.deleteAllExpTypes();
-		databaseAdapter.addAllExpTypes(expTypes1);
-	}
-	
-	public static ArrayList<String> getAllExpenditureTypes()
-	{
-		return DatabaseManager.expenditureTypes;
-	}
-	
-	public static void setExpenditureType(int expTypeNo, String expType)
-	{
-		DatabaseManager.expenditureTypes.set(expTypeNo, expType);
-	}
-	
-	public static String getExpenditureType(int expTypeNo)
-	{
-		return DatabaseManager.expenditureTypes.get(expTypeNo);
-	}
-	
-	/**
-	 * Adds a new Expenditure Type
-	 * @param expTypeName
-	 * @param position 1 for 1st position and so on
-	 */
-	public static void addExpType(String expTypeName, int position)
-	{
-		position = position-1;	// Make it start from 0
-		expenditureTypes.add(position, expTypeName);
-		
-		DecimalFormat formatter = new DecimalFormat("00");
-		// Update Exp Types of all Transactions
-		for(Transaction transaction: transactions)
-		{
-			if(transaction.getType().contains("Wallet Credit"))
-			{
-				
-			}
-			else if(transaction.getType().contains("Wallet Debit"))
-			{
-				int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
-				if(expTypeNo >= position)
-				{
-					transaction.setType("Wallet Debit Exp" + formatter.format(expTypeNo+1));
-				}
-			}
-			else if(transaction.getType().contains("Bank Credit"))
-			{
-				
-			}
-			else if(transaction.getType().contains("Bank Debit"))
-			{
-				int bankNo = Integer.parseInt(transaction.getType().substring(11, 13));  // Bank Debit 01 Exp01
-				if(transaction.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
-				{
-				
-				}
-				else if(transaction.getType().contains("Exp"))   // Bank Debit 01 Exp01
-				{
-					int expTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
-					if(expTypeNo >= position)
-					{
-						transaction.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + formatter.format(expTypeNo+1));
-					}
-				}
-			}
-		}
-		
-		// Update Exp Types of all Templates
-		for(Template template: templates)
-		{
-			if(template.getType().contains("Wallet Credit"))
-			{
-				
-			}
-			else if(template.getType().contains("Wallet Debit"))
-			{
-				int expTypeNo = Integer.parseInt(template.getType().substring(16, 18));   // Wallet Debit Exp01
-				if(expTypeNo >= position)
-				{
-					template.setType("Wallet Debit Exp" + formatter.format(expTypeNo+1));
-				}
-			}
-			else if(template.getType().contains("Bank Credit"))
-			{
-				
-			}
-			else if(template.getType().contains("Bank Debit"))
-			{
-				int bankNo = Integer.parseInt(template.getType().substring(11, 13));  // Bank Debit 01 Exp01
-				if(template.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
-				{
-				
-				}
-				else if(template.getType().contains("Exp"))   // Bank Debit 01 Exp01
-				{
-					int expTypeNo = Integer.parseInt(template.getType().substring(17, 19));
-					if(expTypeNo >= position)
-					{
-						template.setType("Bank Debit " + formatter.format(bankNo) + " Exp" + formatter.format(expTypeNo+1));
-					}
-				}
-			}
-		}
-		
-		// Update Counters
-		for(Counters counter: counters)
-		{
-			counter.addNewExpToCounters(position);
-		}
-		
-		// Update the same in Database
-		databaseAdapter.deleteAllTransactions();
-		databaseAdapter.addAllTransactions(transactions);
-		databaseAdapter.deleteAllTemplates();
-		databaseAdapter.addAllTemplates(templates);
-		databaseAdapter.deleteAllExpTypes();
-		databaseAdapter.addAllExpTypes(expenditureTypes);
-		databaseAdapter.readjustCountersTable();
-		databaseAdapter.addAllCountersRows(counters);
-	}
-	
-	/**
-	 * @return The months in which Transactions were made in the format
-	 * 		January - 2015
-	 * 		February - 2015 and so on
-	 */
-	public static ArrayList<String> getExportableMonths()
-	{
-		ArrayList<Long> longMonths = new ArrayList<Long>();		//201501, 201502,...
-		ArrayList<String> months = new ArrayList<String>();		//January - 2015, February - 2015
-		
-		// Gets All the months(In which transactions were made) in the format 201501, 201502, 201503,....
-		for(int i=0; i<transactions.size(); i++)
-		{
-			long longMonth = (long) transactions.get(i).getDate().getLongDate()/100;	//201501
-			if(!longMonths.contains(longMonth))
-			{
-				longMonths.add(longMonth);
-			}
-		}
-		
-		// Convert the months format from long (201501) to words (January - 2015)
-		for(int i=0; i<longMonths.size(); i++)
-		{
-			int month = (int) (longMonths.get(i) % 100);
-			int year = (int) (longMonths.get(i)/100);
-			String monthName = Date.getMonthName(month);
-			months.add(monthName + " - " + year);			//"January" + " - " + 2015 = "January - 2015"
-		}
-		return months;
-	}
-	
-	public static String getExactExpType(int transactionNo)
-	{
-		String type = transactions.get(transactionNo).getType();
-		String expType = "";
-		if(type.contains("Wallet Credit"))
-		{
-			expType = "Income";
-		}
-		else if(type.contains("Wallet Debit"))
-		{
-			int expTypeNo = Integer.parseInt(type.substring(16, 18));   // Wallet Debit Exp01
-			expType = DatabaseManager.getExpenditureType(expTypeNo);
-		}
-		else if(type.contains("Bank Credit"))
-		{
-			if(type.contains("Income"))
-				expType = "Income";
-			else if(type.contains("Savings"))
-				expType = "Bank Savings";
-		}
-		else if(type.contains("Bank Debit"))
-		{
-			if(type.contains("Withdrawal"))
-			{
-				expType = "Bank Withdrawal";
-			}
-			else if(type.contains("Exp"))
-			{
-				int expTypeNo = Integer.parseInt(type.substring(17, 19)); //// Bank Debit 01 Exp01
-				expType = DatabaseManager.getExpenditureType(expTypeNo);
-			}
-		}
-		return expType;
-	}
-	
-	public static void addTemplate(Template template)
-	{
-		int numTemplates = templates.size();
-		if(numTemplates == 0)
-		{
-			templates = new ArrayList<Template>();
-			template.setID(1);
-			templates.add(template);
-			databaseAdapter.addTemplate(template);
-		}
-		else if(template.getParticular().compareTo(templates.get(0).getParticular()) < 0)
-		{
-			template.setID(1);
-			templates.add(0, template);
-			for(int i=1; i<templates.size();i++)// Update IDs of the templates below
-			{
-				Template tempTemplate = templates.get(i);
-				tempTemplate.setID(tempTemplate.getID()+1);
-			}
-			
-			databaseAdapter.insertTemplate(template);
-		}
-		else if(template.getParticular().compareTo(templates.get(numTemplates-1).getParticular()) > 0)
-		{
-			template.setID(numTemplates+1);
-			templates.add(template);
-			databaseAdapter.addTemplate(template);
-		}
-		else
-		{
-			// Search For The Template Within
-			int first = 0;
-			int last = numTemplates-1;
-			int middle = (first+last)/2;
-			while(first<=last)
-			{
-				if(templates.get(middle).getParticular().compareTo(template.getParticular()) < 0)
-				{
-					first = middle+1;
-				}
-				else if(templates.get(middle).getParticular().compareTo(template.getParticular()) > 0)
-				{
-					last = middle-1;
-				}
-				else
-				{
-					template.setID(middle+1);
-					templates.set(middle, template);
-					databaseAdapter.updateTemplate(template);
-					Toast.makeText(context, "Existing Template Updated", Toast.LENGTH_SHORT).show();
-					break;
-				}
-				middle = (first + last)/2;
-			}
-			if(first>last)
-			{
-				template.setID(middle+2);
-				templates.add(middle+1, template);		   // Insert The New Counters Row.
-				for(int i=middle+2; i<templates.size();i++)// Update IDs of the templates below
-				{
-					Template tempTemplate = templates.get(i);
-					tempTemplate.setID(tempTemplate.getID()+1);
-				}
-				databaseAdapter.insertTemplate(template);
-			}
-		}
-	}
-
-	public static void setAllTemplates(ArrayList<Template> templates)
-	{
-		DatabaseManager.templates = templates;
-		databaseAdapter.deleteAllTemplates();
-		databaseAdapter.addAllTemplates(templates);
-	}
-	
-	public static void deleteTemplate(Template template)
-	{
-		int templateNo = templates.indexOf(template);
-		DatabaseManager.templates.remove(templateNo);
-		// Update the IDs of the remaining (below) Templates
-		for(int i=templateNo; i<templates.size(); i++)
-		{
-			templates.get(i).setID(templates.get(i).getID()-1);
-		}
-		databaseAdapter.deleteTemplate(template);
-	}
-	
-	public static ArrayList<Template> getAllTemplates()
-	{
-		return templates;
-	}
-
-	/**
-	 * @return the numBanks
-	 */
-	public static int getNumBanks()
-	{
-		return banks.size();
-	}
-
-	/**
-	 * @return the numTransactions
-	 */
-	public static int getNumTransactions()
-	{
-		return transactions.size();
-	}
-	
-	public static int getNumCountersRows()
-	{
-		return counters.size();
-	}
 
 	/**
 	 * @param walletBalance the walletBalance to set
@@ -1293,31 +1189,70 @@ public class DatabaseManager
 		return counters[expenditureTypes.size()+3];
 	}
 	
-	public static void setAllBanks(ArrayList<Bank> banks)
+	/**
+	 * @return The months in which Transactions were made in the format
+	 * 		January - 2015
+	 * 		February - 2015 and so on
+	 */
+	public static ArrayList<String> getExportableMonths()
 	{
-		DatabaseManager.banks = banks;
-		databaseAdapter.deleteAllBanks();
-		databaseAdapter.addAllBanks(banks);
+		ArrayList<Long> longMonths = new ArrayList<Long>();		//201501, 201502,...
+		ArrayList<String> months = new ArrayList<String>();		//January - 2015, February - 2015
+		
+		// Gets All the months(In which transactions were made) in the format 201501, 201502, 201503,....
+		for(int i=0; i<transactions.size(); i++)
+		{
+			long longMonth = (long) transactions.get(i).getDate().getLongDate()/100;	//201501
+			if(!longMonths.contains(longMonth))
+			{
+				longMonths.add(longMonth);
+			}
+		}
+		
+		// Convert the months format from long (201501) to words (January - 2015)
+		for(int i=0; i<longMonths.size(); i++)
+		{
+			int month = (int) (longMonths.get(i) % 100);
+			int year = (int) (longMonths.get(i)/100);
+			String monthName = Date.getMonthName(month);
+			months.add(monthName + " - " + year);			//"January" + " - " + 2015 = "January - 2015"
+		}
+		return months;
 	}
 	
-	public static ArrayList<Bank> getAllBanks()
+	public static String getExactExpType(int transactionNo)
 	{
-		return banks;
-	}
-	
-	public static Bank getBank(int bankNo)
-	{
-		return banks.get(bankNo);
-	}
-	
-	public static void increamentBankBalance(int bankNum, double amount)
-	{
-		banks.get(bankNum).increamentBanlance(amount);
-	}
-	
-	public static void decreamentBankBalance(int bankNum, double amount)
-	{
-		banks.get(bankNum).decreamentBanlance(amount);
+		String type = transactions.get(transactionNo).getType();
+		String expType = "";
+		if(type.contains("Wallet Credit"))
+		{
+			expType = "Income";
+		}
+		else if(type.contains("Wallet Debit"))
+		{
+			int expTypeNo = Integer.parseInt(type.substring(16, 18));   // Wallet Debit Exp01
+			expType = DatabaseManager.getExpenditureType(expTypeNo);
+		}
+		else if(type.contains("Bank Credit"))
+		{
+			if(type.contains("Income"))
+				expType = "Income";
+			else if(type.contains("Savings"))
+				expType = "Bank Savings";
+		}
+		else if(type.contains("Bank Debit"))
+		{
+			if(type.contains("Withdrawal"))
+			{
+				expType = "Bank Withdrawal";
+			}
+			else if(type.contains("Exp"))
+			{
+				int expTypeNo = Integer.parseInt(type.substring(17, 19)); //// Bank Debit 01 Exp01
+				expType = DatabaseManager.getExpenditureType(expTypeNo);
+			}
+		}
+		return expType;
 	}
 	
 	// Static Methods to compare two objects like transactions, banks...
