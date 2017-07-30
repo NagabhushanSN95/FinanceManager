@@ -5,6 +5,7 @@ package com.chaturvedi.expenditurelist;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -25,15 +26,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.expenditurelist.database.DatabaseManager;
-import com.chaturvedi.expenditurelist.updates.Update43To49;
+import com.chaturvedi.expenditurelist.updates.Update43To50;
 
 public class SummaryActivity extends Activity
 {
 	private static final String SHARED_PREFERENCES_DATABASE = "DatabaseInitialized";
 	private static final String KEY_DATABASE_INITIALIZED = "database_initialized";
 	private static final String SHARED_PREFERENCES_VERSION = "app_version";
-	private static final int VERSION_NO = 49;
 	private static final String KEY_VERSION = "version";
+	private static final int VERSION_NO = 50;
 	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
 	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
 	private String currencySymbol = " ";
@@ -92,21 +93,17 @@ public class SummaryActivity extends Activity
 		
 		SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
 		SharedPreferences.Editor versionEditor = versionPreferences.edit();
-		Toast.makeText(getApplicationContext(), "Check-Point 01", Toast.LENGTH_SHORT).show();
 		if(versionPreferences.contains(KEY_VERSION))
 		{
-			Toast.makeText(getApplicationContext(), "Check-Point 02", Toast.LENGTH_SHORT).show();
 			int versionNo = versionPreferences.getInt(KEY_VERSION, 0);
 			if(versionNo != VERSION_NO)
 			{
-				Toast.makeText(getApplicationContext(), "Check-Point 03", Toast.LENGTH_SHORT).show();
 				runUpdateClasses(versionNo);
 				versionEditor.putInt(KEY_VERSION, VERSION_NO);
 			}
-		}//
+		}
 		else
 		{
-			Toast.makeText(getApplicationContext(), "Check-Point 04", Toast.LENGTH_SHORT).show();
 			runUpdateClasses(0);
 			versionEditor.putInt(KEY_VERSION, VERSION_NO);
 		}
@@ -267,7 +264,7 @@ public class SummaryActivity extends Activity
 		ArrayList<String> bankNames = DatabaseManager.getAllBankNames();
 		ArrayList<Double> bankBalances = DatabaseManager.getAllBankBalances();
 		DecimalFormat formatter = new DecimalFormat("###,##0.##");
-		try
+		//try
 		{
 			// Set The Data
 			for(int i=0; i<numBanks; i++)
@@ -279,12 +276,17 @@ public class SummaryActivity extends Activity
 			nameViews.get(numBanks+1).setText("Amount Spent");
 			nameViews.get(numBanks+2).setText("Income");
 			amountViews.get(numBanks).setText(""+formatter.format(DatabaseManager.getWalletBalance()));
-			amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getAmountSpent()));
-			amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getIncome()));
+			
+			Calendar calendar = Calendar.getInstance();
+			int year = calendar.get(Calendar.YEAR);
+			int month = calendar.get(Calendar.MONTH) + 1;
+			long currentMonth = year*100+month;
+			amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getMonthlyAmountSpent(currentMonth)));
+			amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getMonthlyIncome(currentMonth)));
 		}
-		catch(Exception e)
+		//catch(Exception e)
 		{
-			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
+		//	Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 	}
 	
@@ -294,15 +296,15 @@ public class SummaryActivity extends Activity
 		if(oldVersionNo == 0)
 		{
 			Toast.makeText(getApplicationContext(), "Check-Point 06", Toast.LENGTH_SHORT).show();
-			new Update43To49(SummaryActivity.this);
+			new Update43To50(SummaryActivity.this);
 		}
 		else if(oldVersionNo == 43)
 		{
-			new Update43To49(SummaryActivity.this);
+			new Update43To50(SummaryActivity.this);
 		}
 		else
 		{
-			new Update43To49(SummaryActivity.this);
+			new Update43To50(SummaryActivity.this);
 		}
 	}
 }

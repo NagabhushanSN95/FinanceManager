@@ -9,9 +9,14 @@ public class Counters
 	private double exp03;
 	private double exp04;
 	private double exp05;
+	private double amountSpent;
+	private double income;
+	private double savings;
+	private double withdrawal;
 	
 	// Constructor
-	public Counters(int id, Date date, double exp01, double exp02, double exp03, double exp04, double exp05)
+	public Counters(int id, Date date, double exp01, double exp02, double exp03, double exp04, double exp05,
+			double amountSpent, double income, double savings, double withdrawal)
 	{
 		this.id = id;
 		this.date = date;
@@ -20,6 +25,10 @@ public class Counters
 		this.exp03 = exp03;
 		this.exp04 = exp04;
 		this.exp05 = exp05;
+		this.setAmountSpent(amountSpent);
+		this.setIncome(income);
+		this.setSavings(savings);
+		this.setWithdrawal(withdrawal);
 	}
 	
 	// Constructor
@@ -32,6 +41,11 @@ public class Counters
 		this.exp03 = exp[2];
 		this.exp04 = exp[3];
 		this.exp05 = exp[4];
+		//this.amountSpent = exp[0] + exp[1] + exp[2] + exp[3] + exp[4];
+		this.setAmountSpent(exp[5]);
+		this.setIncome(exp[6]);
+		this.setSavings(exp[7]);
+		this.setWithdrawal(exp[8]);
 	}
 	
 	public void increamentCounters(double[] exp)
@@ -41,6 +55,10 @@ public class Counters
 		this.exp03 += exp[2];
 		this.exp04 += exp[3];
 		this.exp05 += exp[4];
+		this.setAmountSpent(this.getAmountSpent() + exp[5]);
+		this.setIncome(this.getIncome() + exp[6]);
+		this.setSavings(this.getSavings() + exp[7]);
+		this.setWithdrawal(this.getWithdrawal() + exp[8]);
 	}
 	
 	public void decreamentCounters(double[] exp)
@@ -50,6 +68,10 @@ public class Counters
 		this.exp03 -= exp[2];
 		this.exp04 -= exp[3];
 		this.exp05 -= exp[4];
+		this.setAmountSpent(this.getAmountSpent() - exp[5]);
+		this.setIncome(this.getIncome() - exp[6]);
+		this.setSavings(this.getSavings() - exp[7]);
+		this.setWithdrawal(this.getWithdrawal() - exp[8]);
 	}
 
 	/**
@@ -162,5 +184,61 @@ public class Counters
 	public double getExp05()
 	{
 		return exp05;
+	}
+
+	/**
+	 * @return the amountSpent
+	 */
+	public double getAmountSpent() {
+		return amountSpent;
+	}
+
+	/**
+	 * @param amountSpent the amountSpent to set
+	 */
+	public void setAmountSpent(double amountSpent) {
+		this.amountSpent = amountSpent;
+	}
+
+	/**
+	 * @return the income
+	 */
+	public double getIncome() {
+		return income;
+	}
+
+	/**
+	 * @param income the income to set
+	 */
+	public void setIncome(double income) {
+		this.income = income;
+	}
+
+	/**
+	 * @return the savings
+	 */
+	public double getSavings() {
+		return savings;
+	}
+
+	/**
+	 * @param savings the savings to set
+	 */
+	public void setSavings(double savings) {
+		this.savings = savings;
+	}
+
+	/**
+	 * @return the withdrawal
+	 */
+	public double getWithdrawal() {
+		return withdrawal;
+	}
+
+	/**
+	 * @param withdrawal the withdrawal to set
+	 */
+	public void setWithdrawal(double withdrawal) {
+		this.withdrawal = withdrawal;
 	}
 }

@@ -15,8 +15,8 @@ public class DatabaseManager
 	private static int numCountersRows;
 	
 	private static double walletBalance;
-	private static double amountSpent;
-	private static double income;
+	//private static double amountSpent;
+	//private static double income;
 	
 	private static ArrayList<String> bankNames;
 	private static ArrayList<String> bankAccNos;
@@ -63,8 +63,8 @@ public class DatabaseManager
 			DatabaseManager.numCountersRows = databaseAdapter.getNumCountersRows();
 			
 			setWalletBalance(databaseAdapter.getWalletBalance());
-			setAmountSpent(databaseAdapter.getAmountSpent());
-			setIncome(databaseAdapter.getIncome());
+			//setAmountSpent(databaseAdapter.getAmountSpent());
+			//setIncome(databaseAdapter.getIncome());
 			
 			if(numBanks>0)
 			{
@@ -113,7 +113,6 @@ public class DatabaseManager
 				expenditureTypes.add(expType.getExpenditureTypeName());
 			}
 			
-			Toast.makeText(context, "NumCounterRows= "+numCountersRows, Toast.LENGTH_SHORT).show();
 			if(numCountersRows>0)
 			{
 				counters = databaseAdapter.getAllCountersRows();
@@ -149,7 +148,7 @@ public class DatabaseManager
 			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 		
-		databaseAdapter.initializeWalletTable(walletBalance, amountSpent, income);
+		databaseAdapter.initializeWalletTable(walletBalance);
 		
 		ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
 		for(int i=0; i<expenditureTypes.size(); i++)
@@ -168,7 +167,6 @@ public class DatabaseManager
 		if(numTransactions>0)
 		{
 			ArrayList<Transaction> transactions = new ArrayList<Transaction>();
-			Toast.makeText(context, "Check-point 19: " + createdTimes.size() + " : " + modifiedTimes.size(), Toast.LENGTH_SHORT).show();
 			for(int i=0; i<numTransactions; i++)
 			{
 				Transaction transaction=new Transaction(i, createdTimes.get(i), modifiedTimes.get(i), dates.get(i), types.get(i), particulars.get(i),
@@ -176,7 +174,7 @@ public class DatabaseManager
 				transactions.add(transaction);
 			}
 			databaseAdapter.deleteAllTransactions();
-			databaseAdapter.addAllTransactions(transactions);//
+			databaseAdapter.addAllTransactions(transactions);
 		}
 		else
 		{
@@ -200,8 +198,8 @@ public class DatabaseManager
 		}
 		
 		databaseAdapter.setWalletBalance(walletBalance);
-		databaseAdapter.setAmountSpent(amountSpent);
-		databaseAdapter.setIncome(income);
+		//databaseAdapter.setAmountSpent(amountSpent);
+		//databaseAdapter.setIncome(income);
 		
 		ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
 		for(int i=0; i<expenditureTypes.size(); i++)
@@ -232,8 +230,8 @@ public class DatabaseManager
 		quantities = new ArrayList<Double>();
 		amounts = new ArrayList<Double>();
 		
-		amountSpent = 0;
-		income = 0;
+		//amountSpent = 0;
+		//income = 0;
 		
 		//resetMonthlyCounters();
 	}
@@ -244,7 +242,7 @@ public class DatabaseManager
 		{
 			DatabaseManager.increamentNumTransations();
 			DatabaseManager.increamentWalletBalance(transaction.getAmount());
-			DatabaseManager.increamentIncome(transaction.getAmount());
+			DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmount());
 			DatabaseManager.addCreatedTime(transaction.getCreatedTime());
 			DatabaseManager.addModifiedTime(transaction.getModifiedTime());
 			DatabaseManager.addDate(transaction.getDate());
@@ -260,7 +258,7 @@ public class DatabaseManager
 			
 			DatabaseManager.increamentNumTransations();
 			DatabaseManager.decreamentWalletBalance(transaction.getAmount());
-			DatabaseManager.increamentAmountSpent(transaction.getAmount());
+			DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmount());
 			DatabaseManager.addCreatedTime(transaction.getCreatedTime());
 			DatabaseManager.addModifiedTime(transaction.getModifiedTime());
 			DatabaseManager.addDate(transaction.getDate());
@@ -276,11 +274,12 @@ public class DatabaseManager
 			int bankNo = Integer.parseInt(transaction.getType().substring(12, 14));    // Bank Credit 01 Income
 			if(transaction.getType().contains("Income"))   // Bank Credit 01 Income
 			{
-				DatabaseManager.increamentIncome(transaction.getAmount());
+				DatabaseManager.increamentIncome(transaction.getDate(), transaction.getAmount());
 			}
 			else if(transaction.getType().contains("Savings"))  // Bank Credit 01 Savings
 			{
 				DatabaseManager.decreamentWalletBalance(transaction.getAmount());
+				DatabaseManager.increamentSavings(transaction.getDate(), transaction.getAmount());
 			}
 			
 			DatabaseManager.increamentBankBalance(bankNo, transaction.getAmount());
@@ -300,11 +299,12 @@ public class DatabaseManager
 			if(transaction.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
 			{
 				DatabaseManager.increamentWalletBalance(transaction.getAmount());
+				DatabaseManager.increamentWithdrawal(transaction.getDate(), transaction.getAmount());
 			}
 			else if(transaction.getType().contains("Exp"))   // Bank Debit 01 Exp01
 			{
 				int expTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
-				DatabaseManager.increamentAmountSpent(transaction.getAmount());
+				DatabaseManager.increamentAmountSpent(transaction.getDate(), transaction.getAmount());
 				DatabaseManager.increamentCounters(transaction.getDate(), expTypeNo, transaction.getAmount());
 			}
 			
@@ -352,13 +352,11 @@ public class DatabaseManager
 			DatabaseManager.setParticular(transactionNo, newParticulars);
 			DatabaseManager.setDate(transactionNo, newDate);
 			double netAmount = newAmount-oldAmount;
-			if(newAmount!=DatabaseManager.getAmount(transactionNo))
-			{
-				DatabaseManager.increamentIncome(netAmount);
-				DatabaseManager.increamentWalletBalance(netAmount);
-				DatabaseManager.setRate(transactionNo, newAmount);
-				DatabaseManager.setAmount(transactionNo, newAmount);
-			}
+			DatabaseManager.decreamentIncome(oldDate, oldAmount);
+			DatabaseManager.increamentIncome(newDate, newAmount);
+			DatabaseManager.increamentWalletBalance(netAmount);
+			DatabaseManager.setRate(transactionNo, newAmount);
+			DatabaseManager.setAmount(transactionNo, newAmount);
 		}
 		else if(transaction.getType().contains("Wallet Debit"))
 		{
@@ -368,7 +366,8 @@ public class DatabaseManager
 			double netAmount = newAmount - oldAmount;
 			DatabaseManager.decreamentCounters(oldDate, oldExpTypeNo, oldAmount);
 			DatabaseManager.increamentCounters(newDate, newExpTypeNo, newAmount);
-			DatabaseManager.increamentAmountSpent(netAmount);
+			DatabaseManager.decreamentAmountSpent(oldDate, oldAmount);
+			DatabaseManager.increamentAmountSpent(newDate, newAmount);
 			DatabaseManager.decreamentWalletBalance(netAmount);
 			
 			DatabaseManager.setParticular(transactionNo, newParticulars);
@@ -387,12 +386,13 @@ public class DatabaseManager
 			if(oldType.contains("Income"))   // Bank Credit 01 Income
 			{
 				DatabaseManager.decreamentBankBalance(oldBankNo, oldAmount);
-				DatabaseManager.decreamentIncome(oldAmount);
+				DatabaseManager.decreamentIncome(oldDate, oldAmount);
 			}
 			else if(oldType.contains("Savings"))   // Bank Credit 01 Savings
 			{
 				DatabaseManager.decreamentBankBalance(oldBankNo, oldAmount);
 				DatabaseManager.increamentWalletBalance(oldAmount);
+				DatabaseManager.decreamentSavings(oldDate, oldAmount);
 			}
 			
 			int newBankNo=Integer.parseInt(newType.substring(12, 14));    // Bank Credit 01 Income;
@@ -400,11 +400,12 @@ public class DatabaseManager
 			// Make the transaction
 			if(oldType.contains("Income"))
 			{
-				DatabaseManager.increamentIncome(newAmount);
+				DatabaseManager.increamentIncome(newDate, newAmount);
 			}
 			else if(oldType.contains("Savings"))
 			{
 				DatabaseManager.decreamentWalletBalance(newAmount);
+				DatabaseManager.increamentSavings(newDate, newAmount);
 			}
 			DatabaseManager.increamentBankBalance(newBankNo, newAmount);
 			DatabaseManager.setParticular(transactionNo, newParticulars);
@@ -424,13 +425,14 @@ public class DatabaseManager
 			{
 				DatabaseManager.increamentBankBalance(oldBankNo, oldAmount);
 				DatabaseManager.decreamentWalletBalance(oldAmount);
+				DatabaseManager.decreamentWithdrawal(oldDate, oldAmount);
 			}
 			else if(oldType.contains("Exp"))   // Bank Debit 01 Exp01
 			{
 				oldExpTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
 				DatabaseManager.decreamentCounters(oldDate, oldExpTypeNo, oldAmount);
 				DatabaseManager.increamentBankBalance(oldBankNo, oldAmount);
-				DatabaseManager.decreamentAmountSpent(oldAmount);
+				DatabaseManager.decreamentAmountSpent(oldDate, oldAmount);
 			}
 			
 			/** Make New Transaction*/
@@ -440,12 +442,13 @@ public class DatabaseManager
 			{
 				DatabaseManager.increamentWalletBalance(transaction.getAmount());
 				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
+				DatabaseManager.increamentWithdrawal(newDate, newAmount);
 			}
 			else if(newType.contains("Exp"))   // Bank Debit 01 Exp01
 			{
 				newExpTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
-				DatabaseManager.increamentAmountSpent(transaction.getAmount());
-				DatabaseManager.increamentCounters(newDate, newExpTypeNo, transaction.getAmount());
+				DatabaseManager.increamentAmountSpent(newDate, newAmount);
+				DatabaseManager.increamentCounters(newDate, newExpTypeNo, newAmount);
 				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
 			}
 			DatabaseManager.setParticular(transactionNo, newParticulars);
@@ -464,14 +467,14 @@ public class DatabaseManager
 		double amount = DatabaseManager.amounts.get(transactionNo);
 		if(type.contains("Wallet Credit"))
 		{
-			DatabaseManager.decreamentIncome(amount);
+			DatabaseManager.decreamentIncome(date, amount);
 			DatabaseManager.decreamentWalletBalance(amount);
 		}
 		else if(type.contains("Wallet Debit"))
 		{
 			int expTypeNo = Integer.parseInt(type.substring(16, 18));   // Wallet Debit Exp01
 			DatabaseManager.increamentWalletBalance(amount);
-			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentAmountSpent(date, amount);
 			DatabaseManager.decreamentCounters(date, expTypeNo, amount);
 		}
 		else if(type.contains("Bank Credit"))
@@ -479,13 +482,14 @@ public class DatabaseManager
 			int bankNo = Integer.parseInt(type.substring(12, 14));    // Bank Credit 01 Income
 			if(type.contains("Income"))
 			{
-				DatabaseManager.decreamentIncome(amount);
+				DatabaseManager.decreamentIncome(date, amount);
 				DatabaseManager.decreamentBankBalance(bankNo, amount);
 			}
 			else if(type.contains("Savings"))
 			{
 				DatabaseManager.increamentWalletBalance(amount);
 				DatabaseManager.decreamentBankBalance(bankNo, amount);
+				DatabaseManager.decreamentSavings(date, amount);
 			}
 		}
 		else if(type.contains("Bank Debit"))
@@ -495,12 +499,13 @@ public class DatabaseManager
 			{
 				DatabaseManager.decreamentWalletBalance(amount);
 				DatabaseManager.increamentBankBalance(bankNo, amount);
+				DatabaseManager.decreamentWithdrawal(date, amount);
 			}
 			else if(type.contains("Exp"))
 			{
 				int expTypeNo = Integer.parseInt(type.substring(17, 19)); //// Bank Debit 01 Exp01
 				DatabaseManager.increamentBankBalance(bankNo, amount);
-				DatabaseManager.decreamentAmountSpent(amount);
+				DatabaseManager.decreamentAmountSpent(date, amount);
 				DatabaseManager.decreamentCounters(date, expTypeNo, amount);
 			}
 		}
@@ -544,7 +549,7 @@ public class DatabaseManager
 	
 	public static void increamentCounters(Date date, int expTypeNo, double amount)
 	{
-		double[] exp = {0.0, 0.0, 0.0, 0.0, 0.0};
+		double[] exp = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 		exp[expTypeNo] = amount;
 		if(numCountersRows == 0)
 		{
@@ -594,7 +599,7 @@ public class DatabaseManager
 	
 	public static void decreamentCounters(Date date, int expTypeNo, double amount)
 	{
-		double[] exp = new double[5];
+		double[] exp = new double[9];
 		exp[expTypeNo] = amount;
 		
 		// Search For The Date
@@ -622,7 +627,7 @@ public class DatabaseManager
 	
 	public static double[] getMonthlyCounters(long month)
 	{
-		double[] monthlyCounters = new double[5];
+		double[] monthlyCounters = new double[9];
 		boolean found = false;
 		for(int i=0; i<numCountersRows; i++)
 		{
@@ -652,10 +657,13 @@ public class DatabaseManager
 				monthlyCounters[2] += counter1.getExp03();
 				monthlyCounters[3] += counter1.getExp04();
 				monthlyCounters[4] += counter1.getExp05();
+				monthlyCounters[5] += counter1.getAmountSpent();
+				monthlyCounters[6] += counter1.getIncome();
+				monthlyCounters[7] += counter1.getSavings();
+				monthlyCounters[8] += counter1.getWithdrawal();
 			}
 			else if(month1 > month)
 			{
-				Toast.makeText(context, "08) "+i, Toast.LENGTH_SHORT).show();
 				i = numCountersRows;
 				break;
 			}
@@ -665,7 +673,7 @@ public class DatabaseManager
 	
 	public static double[] getTotalCounters()
 	{
-		double[] totalCounters = new double[5];
+		double[] totalCounters = new double[9];
 		for(int i=0; i<numCountersRows; i++)
 		{
 			Counters counter1 = counters.get(i);
@@ -674,6 +682,10 @@ public class DatabaseManager
 			totalCounters[2] += counter1.getExp03();
 			totalCounters[3] += counter1.getExp04();
 			totalCounters[4] += counter1.getExp05();
+			totalCounters[5] += counter1.getAmountSpent();
+			totalCounters[6] += counter1.getIncome();
+			totalCounters[7] += counter1.getSavings();
+			totalCounters[8] += counter1.getWithdrawal();
 		}
 		return totalCounters;
 	}
@@ -826,9 +838,9 @@ public class DatabaseManager
 		walletBalance-=Double.parseDouble(amount);
 	}
 
-	/**
+	/* *
 	 * @param amountSpent the amountSpent to set
-	 */
+	 * /
 	public static void setAmountSpent(double amountSpent)
 	{
 		DatabaseManager.amountSpent = amountSpent;
@@ -841,35 +853,51 @@ public class DatabaseManager
 
 	/**
 	 * @return the amountSpent
-	 */
+	 * /
 	public static double getAmountSpent()
 	{
 		return amountSpent;
-	}
+	}*/
 	
-	public static void increamentAmountSpent(double amount)
+	public static void increamentAmountSpent(Date date, double amount)
 	{
-		amountSpent+=amount;
+		// Amount Spent is the 6th column
+		DatabaseManager.increamentCounters(date, 5, amount);
 	}
 	
-	public static void increamentAmountSpent(String amount)
+	/*public static void increamentAmountSpent(String amount)
 	{
 		amountSpent+=Double.parseDouble(amount);
-	}
+	}*/
 	
-	public static void decreamentAmountSpent(double amount)
+	public static void decreamentAmountSpent(Date date, double amount)
 	{
-		amountSpent-=amount;
+		// Amount Spent is the 6th column
+		DatabaseManager.decreamentCounters(date, 5, amount);
 	}
 	
-	public static void decreamentAmountSpent(String amount)
+	/*public static void decreamentAmountSpent(String amount)
 	{
 		amountSpent-=Double.parseDouble(amount);
+	}*/
+	
+	public static double getMonthlyAmountSpent(long month)
+	{
+		double counters[] = getMonthlyCounters(month);
+		// Amount Spent is the 6th Column
+		return counters[5];
+	}
+	
+	public static double getTotalAmountSpent()
+	{
+		double counters[] = getTotalCounters();
+		// Amount Spent is the 6th Column
+		return counters[5];
 	}
 
-	/**
+	/* *
 	 * @param income the income to set
-	 */
+	 * /
 	public static void setIncome(double income)
 	{
 		DatabaseManager.income = income;
@@ -882,30 +910,98 @@ public class DatabaseManager
 
 	/**
 	 * @return the income
-	 */
+	 * /
 	public static double getIncome()
 	{
 		return income;
-	}
+	}*/
 	
-	public static void increamentIncome(double amount)
+	public static void increamentIncome(Date date, double amount)
 	{
-		income+=amount;
+		// Income is the 7th column
+		DatabaseManager.increamentCounters(date, 6, amount);
 	}
 	
-	public static void increamentIncome(String amount)
+	/*public static void increamentIncome(String amount)
 	{
 		income+=Double.parseDouble(amount);
-	}
+	}*/
 	
-	public static void decreamentIncome(double amount)
+	public static void decreamentIncome(Date date, double amount)
 	{
-		income-=amount;
+		// Income is the 7th column
+		DatabaseManager.decreamentCounters(date, 6, amount);
 	}
 	
-	public static void decreamentIncome(String amount)
+	/*public static void decreamentIncome(String amount)
 	{
 		income-=Double.parseDouble(amount);
+	}*/
+	
+	public static double getMonthlyIncome(long month)
+	{
+		double counters[] = getMonthlyCounters(month);
+		// Income is the 7th Column
+		return counters[6];
+	}
+	
+	public static double getTotalIncome()
+	{
+		double counters[] = getTotalCounters();
+		// Income is the 7th Column
+		return counters[6];
+	}
+	
+	public static void increamentSavings(Date date, double amount)
+	{
+		// Savings is the 8th column
+		DatabaseManager.increamentCounters(date, 7, amount);
+	}
+	
+	public static void decreamentSavings(Date date, double amount)
+	{
+		// Savings is the 8th column
+		DatabaseManager.decreamentCounters(date, 7, amount);
+	}
+	
+	public static double getMonthlySavings(long month)
+	{
+		double counters[] = getMonthlyCounters(month);
+		// Savings is the 8th Column
+		return counters[7];
+	}
+	
+	public static double getTotalSavings()
+	{
+		double counters[] = getTotalCounters();
+		// Savings is the 8th Column
+		return counters[7];
+	}
+	
+	public static void increamentWithdrawal(Date date, double amount)
+	{
+		// Withdrawal is the 9th column
+		DatabaseManager.increamentCounters(date, 8, amount);
+	}
+	
+	public static void decreamentWithdrawal(Date date, double amount)
+	{
+		// Withdrawal is the 9th column
+		DatabaseManager.decreamentCounters(date, 8, amount);
+	}
+	
+	public static double getMonthlyWithdrawal(long month)
+	{
+		double counters[] = getMonthlyCounters(month);
+		// Withdrawal is the 9th column
+		return counters[8];
+	}
+	
+	public static double getTotalWithdrawal()
+	{
+		double counters[] = getTotalCounters();
+		// Withdrawal is the 9th column
+		return counters[8];
 	}
 
 	/**

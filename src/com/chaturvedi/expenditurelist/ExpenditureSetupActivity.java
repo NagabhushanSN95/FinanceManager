@@ -27,6 +27,9 @@ public class ExpenditureSetupActivity extends Activity
 	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
 	private static final String KEY_ENABLE_SPLASH = "enable_splash";
 	private static final String KEY_BANK_SMS = "respond_bank_messages";
+	private static final String SHARED_PREFERENCES_VERSION = "app_version";
+	private static final String KEY_VERSION = "version";
+	private static final int VERSION_NO = 50;
 	
 	private int screenWidth;
 	private int screenHeight;
@@ -172,6 +175,12 @@ public class ExpenditureSetupActivity extends Activity
 			editor.putBoolean(KEY_ENABLE_SPLASH, true);
 			editor.putBoolean(KEY_BANK_SMS, true);
 			editor.commit();
+			
+
+			SharedPreferences versionPreferences = getSharedPreferences(SHARED_PREFERENCES_VERSION, 0);
+			SharedPreferences.Editor versionEditor = versionPreferences.edit();
+			versionEditor.putInt(KEY_VERSION, VERSION_NO);
+			versionEditor.commit();
 		}
 	}
 }

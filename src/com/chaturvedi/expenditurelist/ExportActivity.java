@@ -185,11 +185,11 @@ public class ExportActivity extends Activity
 			exportWriter.write("<table border=\"1\" style=\"width:600px\">");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Total Income In This Month"+"</td>");
-			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getIncome()+"</td>");
+			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getTotalIncome()+"</td>");
 			exportWriter.write("</tr>\n");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Total Amount Spent In This Month"+"</td>");
-			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getAmountSpent()+"</td>");
+			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getTotalAmountSpent()+"</td>");
 			exportWriter.write("</tr>\n");
 			exportWriter.write("<tr>\n");
 			exportWriter.write("\t<td>"+"Amount In wallet"+"</td>");

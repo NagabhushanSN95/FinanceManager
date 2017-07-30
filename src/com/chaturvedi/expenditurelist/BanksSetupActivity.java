@@ -521,8 +521,6 @@ public class BanksSetupActivity extends Activity
 		if(dataEntered)
 		{
 			DatabaseManager.setWalletBalance(walletBalance);
-			DatabaseManager.setAmountSpent(0);
-			DatabaseManager.setIncome(0);
 			DatabaseManager.setNumBanks(numBanks);
 			DatabaseManager.setAllBankNames(bankNames);
 			DatabaseManager.setAllBankAccNos(bankAccNos);

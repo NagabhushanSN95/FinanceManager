@@ -51,6 +51,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	private static final String KEY_EXP03 = "expenditure_03";
 	private static final String KEY_EXP04 = "expenditure_04";
 	private static final String KEY_EXP05 = "expenditure_05";
+	private static final String KEY_AMOUNT_SPENT = "amount_spent";
+	private static final String KEY_INCOME = "income";
+	private static final String KEY_SAVINGS = "savings";
+	private static final String KEY_WITHDRAWAL = "withdrawal";
 	
 	// Table Create Statements (Change Type Of Date From String To Date/DateTime whichever is available
 	private static String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE " + TABLE_TRANSACTIONS + "("+ 
@@ -86,7 +90,11 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			KEY_EXP02 + " DOUBLE," + 
 			KEY_EXP03 + " DOUBLE," + 
 			KEY_EXP04 + " DOUBLE," + 
-			KEY_EXP05 + " DOUBLE" + ")";
+			KEY_EXP05 + " DOUBLE," + 
+			KEY_AMOUNT_SPENT + " DOUBLE," + 
+			KEY_INCOME + " DOUBLE," + 
+			KEY_SAVINGS + " DOUBLE," + 
+			KEY_WITHDRAWAL + " DOUBLE" + ")";
 	
 	public DatabaseAdapter(Context context)
 	{
@@ -291,12 +299,14 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		public Bank getBank(int id)
 		{
 			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_BANKS, new String[] { KEY_ID, KEY_NAME, KEY_ACC_NO, KEY_BALANCE, KEY_SMS_NAME }
-					, KEY_ID + "=?", new String[] { String.valueOf(id) }, null, null, null, null);
+			Cursor cursor = db.query(TABLE_BANKS, new String[] { KEY_ID, KEY_NAME, KEY_ACC_NO, KEY_BALANCE, 
+					KEY_SMS_NAME } , KEY_ID + "=?", new String[] { String.valueOf(id) }, 
+					null, null, null, null);
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
+			Bank bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
+					cursor.getString(3), cursor.getString(4));
 			Toast.makeText(context, bank.toString(), Toast.LENGTH_LONG).show();
 			db.close();
 			return bank;
@@ -315,18 +325,21 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 					Bank bank;
 					if(cursor.getColumnCount()==5)
 					{
-
-						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
+						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
+								cursor.getString(3), cursor.getString(4));
 					}
 					else if(cursor.getColumnCount()==4)
 					{
 
-						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
+								cursor.getString(3));
 					}
 					else
 					{
-						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
-						Toast.makeText(context, "Error In Reading Bank Details\nDatabaseAdapter\\getAllBanks\nContact Developer For Assistance\n", Toast.LENGTH_LONG).show();
+						bank = new Bank(cursor.getString(0), cursor.getString(1), cursor.getString(2), 
+								cursor.getString(3), cursor.getString(4));
+						Toast.makeText(context, "Error In Reading Bank Details\nDatabaseAdapter\\getAllBanks" 
+								+ "\nContact Developer For Assistance\n", Toast.LENGTH_LONG).show();
 					}
 					bankList.add(bank);
 				}
@@ -374,7 +387,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			return numBanks;
 		}
 		
-		public void initializeWalletTable(double walletBalance, double amountSpent, double income)
+		public void initializeWalletTable(double walletBalance)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			
@@ -382,18 +395,6 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			values.put(KEY_ID, 1);
 			values.put(KEY_NAME, "wallet_balance");
 			values.put(KEY_AMOUNT, walletBalance);
-			db.insert(TABLE_WALLET, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 2);
-			values.put(KEY_NAME, "amount_spent");
-			values.put(KEY_AMOUNT, amountSpent);
-			db.insert(TABLE_WALLET, null, values);
-			
-			values = new ContentValues();
-			values.put(KEY_ID, 3);
-			values.put(KEY_NAME, "income");
-			values.put(KEY_AMOUNT, income);
 			db.insert(TABLE_WALLET, null, values);
 			
 			db.close();
@@ -422,7 +423,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			return walletBalance;
 		}
 		
-		public void setAmountSpent(double amount)
+		/*public void setAmountSpent(double amount)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			ContentValues values = new ContentValues();
@@ -466,7 +467,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			double income=Double.parseDouble(cursor.getString(2));
 			db.close();
 			return income;
-		}
+		}*/
 
 		
 		public void addExpenditureType(ExpenditureTypes expenditureType)
@@ -495,7 +496,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		public ExpenditureTypes getExpenditureType(int id)
 		{
 			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_EXPENDITURE_TYPES, new String[] { KEY_ID, KEY_EXPENDITURE_TYPE_NAME, }, 
+			Cursor cursor = db.query(TABLE_EXPENDITURE_TYPES, new String[] {KEY_ID, KEY_EXPENDITURE_TYPE_NAME}, 
 					KEY_ID + "=?", new String[] { String.valueOf(id) }, null, null, null, null);
 			if (cursor != null)
 				cursor.moveToFirst();
@@ -516,7 +517,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				do
 				{
-					ExpenditureTypes expenditureType = new ExpenditureTypes(cursor.getString(0), cursor.getString(1));
+					ExpenditureTypes expenditureType = new ExpenditureTypes(cursor.getString(0), 
+							cursor.getString(1));
 					expenditureTypes.add(expenditureType);
 				}
 				while (cursor.moveToNext());
@@ -538,7 +540,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		public void deleteExpenditureType(ExpenditureTypes expenditureType)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
-			db.delete(TABLE_EXPENDITURE_TYPES, KEY_ID + " = ?", new String[] { String.valueOf(expenditureType.getID()) });
+			db.delete(TABLE_EXPENDITURE_TYPES, KEY_ID + " = ?", new String[] 
+					{ String.valueOf(expenditureType.getID()) });
 			db.close();
 		}
 		
@@ -560,7 +563,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			return cursor.getCount();
 		}
 		
-		public void initializeCountersTable()
+		/*public void initializeCountersTable()
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			
@@ -634,7 +637,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			/*ContentValues values = new ContentValues();
 			values.put(KEY_NAME, "current_type1");
 			values.put(KEY_AMOUNT, amounts.get(0));
-			db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(1) });*/
+			db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", new String[] { String.valueOf(1) });* /
 			
 			ContentValues values;
 			for(int i=0; i<10; i++)
@@ -662,10 +665,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			}
 			db.close();
 			return amounts;
-		}
+		}*/
 		
 		/**
-		* Adds A New Transaction
+		* Adds A New Row Of Counters
 		* 
 		*/
 		public void addCountersRow(Counters counter)
@@ -679,6 +682,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			values.put(KEY_EXP03, counter.getExp03());
 			values.put(KEY_EXP04, counter.getExp04());
 			values.put(KEY_EXP05, counter.getExp05());
+			values.put(KEY_AMOUNT_SPENT, counter.getAmountSpent());
+			values.put(KEY_INCOME, counter.getIncome());
+			values.put(KEY_SAVINGS, counter.getSavings());
+			values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
 			
 			// Inserting Row
 			db.insert(TABLE_COUNTERS, null, values);
@@ -698,6 +705,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				values.put(KEY_EXP03, counter.getExp03());
 				values.put(KEY_EXP04, counter.getExp04());
 				values.put(KEY_EXP05, counter.getExp05());
+				values.put(KEY_AMOUNT_SPENT, counter.getAmountSpent());
+				values.put(KEY_INCOME, counter.getIncome());
+				values.put(KEY_SAVINGS, counter.getSavings());
+				values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
 				
 				db.insert(TABLE_COUNTERS, null, values);
 			}
@@ -709,14 +720,15 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			SQLiteDatabase db = this.getReadableDatabase();
 			Cursor cursor = db.query(TABLE_COUNTERS, new String[] { KEY_ID, KEY_DATE, KEY_EXP01, KEY_EXP02, 
-					KEY_EXP03, KEY_EXP04, KEY_EXP05 }, KEY_ID + "=?",
-					new String[] { String.valueOf(id) }, null, null, null, null);
+					KEY_EXP03, KEY_EXP04, KEY_EXP05, KEY_AMOUNT_SPENT, KEY_INCOME, KEY_SAVINGS, KEY_WITHDRAWAL}
+			, KEY_ID + "=?", new String[] { String.valueOf(id) }, null, null, null, null);
 			if (cursor != null)
 				cursor.moveToFirst();
 			
 			Counters counter = new Counters(cursor.getInt(0), new Date(cursor.getString(1)), 
 					cursor.getDouble(2), cursor.getDouble(3), cursor.getDouble(4), cursor.getDouble(5), 
-					cursor.getDouble(6));
+					cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getDouble(9), 
+					cursor.getDouble(10));
 			db.close();
 			return counter;
 		}
@@ -736,7 +748,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				{
 					Counters counter = new Counters(cursor.getInt(0), new Date(cursor.getString(1)), 
 							cursor.getDouble(2), cursor.getDouble(3), cursor.getDouble(4), cursor.getDouble(5), 
-							cursor.getDouble(6));
+							cursor.getDouble(6), cursor.getDouble(7), cursor.getDouble(8), cursor.getDouble(9), 
+							cursor.getDouble(10));
 					countersRows.add(counter);
 				}
 				while (cursor.moveToNext());
@@ -756,6 +769,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			values.put(KEY_EXP03, counter.getExp03());
 			values.put(KEY_EXP04, counter.getExp04());
 			values.put(KEY_EXP05, counter.getExp05());
+			values.put(KEY_AMOUNT_SPENT, counter.getAmountSpent());
+			values.put(KEY_INCOME, counter.getIncome());
+			values.put(KEY_SAVINGS, counter.getSavings());
+			values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
 			// updating row
 			db.update(TABLE_COUNTERS, values, KEY_ID + " = ?", 
 					new String[] { String.valueOf(counter.getID()) });

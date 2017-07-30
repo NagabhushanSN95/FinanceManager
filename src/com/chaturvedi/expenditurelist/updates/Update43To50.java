@@ -14,7 +14,7 @@ import com.chaturvedi.expenditurelist.database.Counters;
 import com.chaturvedi.expenditurelist.database.Date;
 import com.chaturvedi.expenditurelist.database.Time;
 
-public class Update43To49 extends SQLiteOpenHelper
+public class Update43To50 extends SQLiteOpenHelper
 {
 	private static Context context;
 	// Database Version
@@ -56,6 +56,10 @@ public class Update43To49 extends SQLiteOpenHelper
 	private static final String KEY_EXP03 = "expenditure_03";
 	private static final String KEY_EXP04 = "expenditure_04";
 	private static final String KEY_EXP05 = "expenditure_05";
+	private static final String KEY_AMOUNT_SPENT = "amount_spent";
+	private static final String KEY_INCOME = "income";
+	private static final String KEY_SAVINGS = "savings";
+	private static final String KEY_WITHDRAWAL = "withdrawal";
 	
 	// Table Create Statements 
 	private static String CREATE_TRANSACTIONS_OLD_TABLE = "CREATE TABLE " + TABLE_TRANSACTIONS + "("+ 
@@ -106,7 +110,11 @@ public class Update43To49 extends SQLiteOpenHelper
 			KEY_EXP02 + " DOUBLE," + 
 			KEY_EXP03 + " DOUBLE," + 
 			KEY_EXP04 + " DOUBLE," + 
-			KEY_EXP05 + " DOUBLE" + ")";
+			KEY_EXP05 + " DOUBLE," + 
+			KEY_AMOUNT_SPENT + " DOUBLE," + 
+			KEY_INCOME + " DOUBLE," + 
+			KEY_SAVINGS + " DOUBLE," + 
+			KEY_WITHDRAWAL + " DOUBLE" + ")";
 	
 	private int numTransactions;
 	private ArrayList<Time> createdTimes;
@@ -129,11 +137,10 @@ public class Update43To49 extends SQLiteOpenHelper
 	private int numCountersRows;
 	private ArrayList<Counters> countersRows;
 	
-	public Update43To49(Context context)
+	public Update43To50(Context context)
 	{
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
-		Toast.makeText(context, "Check-Point 07", Toast.LENGTH_SHORT).show();
-		Update43To49.context=context;
+		Update43To50.context=context;
 		readOldDatabase();
 		rectifyTransactionsTable();
 		buildCountersTable();
@@ -168,7 +175,6 @@ public class Update43To49 extends SQLiteOpenHelper
 	
 	private void readOldDatabase()
 	{
-		Toast.makeText(context, "Check-Point 08", Toast.LENGTH_SHORT).show();
 		createdTimes = new ArrayList<Time>();
 		modifiedTimes = new ArrayList<Time>();
 		oldDates = new ArrayList<String>();
@@ -196,7 +202,6 @@ public class Update43To49 extends SQLiteOpenHelper
 			{
 				oldDates.add(cursor.getString(1));
 				oldTypes.add(cursor.getString(2));
-				Toast.makeText(context, "Check-Point 09: "+oldTypes.get(0), Toast.LENGTH_SHORT).show();
 				oldParticulars.add(cursor.getString(3));
 				rates.add(Double.parseDouble(cursor.getString(4)));
 				quantities.add(Double.parseDouble(cursor.getString(5)));
@@ -235,7 +240,6 @@ public class Update43To49 extends SQLiteOpenHelper
 	
 	private void rectifyTransactionsTable()
 	{
-		Toast.makeText(context, "Check-Point 10", Toast.LENGTH_SHORT).show();
 		for(int i=0; i<numTransactions; i++)
 		{
 			newDates.add(new Date(oldDates.get(i)));
@@ -245,7 +249,6 @@ public class Update43To49 extends SQLiteOpenHelper
 			newTypes.add(newType);
 			String newParticular = getNewParticular(newType, oldParticulars.get(i));
 			newParticulars.add(newParticular);
-			Toast.makeText(context, "Check-Point 12: "+newType, Toast.LENGTH_SHORT).show();
 		}
 	}
 	
@@ -262,7 +265,6 @@ public class Update43To49 extends SQLiteOpenHelper
 		
 		if(oldType.equals("Income"))
 		{
-			Toast.makeText(context, "Check-Point 11", Toast.LENGTH_SHORT).show();
 			newType = "Wallet Credit";
 			return newType;
 		}
@@ -365,7 +367,6 @@ public class Update43To49 extends SQLiteOpenHelper
 				}
 				DecimalFormat formatter = new DecimalFormat("00");
 				newType = "Bank Debit " + formatter.format(bankNo) + " Exp05";
-				Toast.makeText(context, "Check-point 18", Toast.LENGTH_SHORT).show();
 				return newType;
 			}
 			else
@@ -418,35 +419,64 @@ public class Update43To49 extends SQLiteOpenHelper
 	
 	private void buildCountersTable()
 	{
-		Toast.makeText(context, "Check-Point 13", Toast.LENGTH_SHORT).show();
 		countersRows = new ArrayList<Counters>();
 		numCountersRows = 0;
 		
 		for(int i=0; i<numTransactions; i++)
 		{
-			Toast.makeText(context, "Check-Point 14", Toast.LENGTH_SHORT).show();
 			String newType = newTypes.get(i);
-			if(newType.contains("Wallet Debit"))
+			if(newType.contains("Wallet Credit"))
+			{
+				Date date = newDates.get(i);
+				int counterNo = 6; // Income is 7th Column
+				double amount = amounts.get(i);
+				increamentCounters(date, counterNo, amount);
+			}
+			else if(newType.contains("Wallet Debit"))
 			{
 				Date date = newDates.get(i);
 				int expTypeNo = Integer.parseInt(newType.substring(16, 18));   // Wallet Debit Exp01
+				int counterNo = 5; //Amount Spent is 6th Column
 				double amount = amounts.get(i);
 				increamentCounters(date, expTypeNo, amount);
+				increamentCounters(date, counterNo, amount);
+			}
+			else if(newType.contains("Bank Credit") && newType.contains("Income"))
+			{
+				Date date = newDates.get(i);
+				int counterNo = 6; // Income is 7th Column
+				double amount = amounts.get(i);
+				increamentCounters(date, counterNo, amount);
+			}
+			else if(newType.contains("Bank Credit") && newType.contains("Savings"))
+			{
+				Date date = newDates.get(i);
+				int counterNo = 7; // Savings is 8th Column
+				double amount = amounts.get(i);
+				increamentCounters(date, counterNo, amount);
+			}
+			else if(newType.contains("Bank Debit") && newType.contains("Withdrawal"))
+			{
+				Date date = newDates.get(i);
+				int counterNo = 8; // Withdrawal is 9th Column
+				double amount = amounts.get(i);
+				increamentCounters(date, counterNo, amount);
 			}
 			else if(newType.contains("Bank Debit") && newType.contains("Exp"))
 			{
 				Date date = newDates.get(i);
 				int expTypeNo = Integer.parseInt(newType.substring(17, 19));//Bank Debit 01 Exp01
+				int counterNo = 5; //Amount Spent is 6th Column
 				double amount = amounts.get(i);
 				increamentCounters(date, expTypeNo, amount);
+				increamentCounters(date, counterNo, amount);
 			}
 		}
 	}
 	
 	private void increamentCounters(Date date, int expTypeNo, double amount)
 	{
-		Toast.makeText(context, "Check-Point 15", Toast.LENGTH_SHORT).show();
-		double[] exp = {0.0, 0.0, 0.0, 0.0, 0.0};
+		double[] exp = new double[9];
 		exp[expTypeNo] = amount;
 		if(numCountersRows == 0)
 		{
@@ -497,7 +527,6 @@ public class Update43To49 extends SQLiteOpenHelper
 	private void saveNewDatabase()
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
-		Toast.makeText(context, "Check-Point 16", Toast.LENGTH_SHORT).show();
 		
 		// Delete Old Table and create new Table
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTIONS);
@@ -531,6 +560,10 @@ public class Update43To49 extends SQLiteOpenHelper
 			values.put(KEY_EXP03, counter.getExp03());
 			values.put(KEY_EXP04, counter.getExp04());
 			values.put(KEY_EXP05, counter.getExp05());
+			values.put(KEY_AMOUNT_SPENT, counter.getAmountSpent());
+			values.put(KEY_INCOME, counter.getIncome());
+			values.put(KEY_SAVINGS, counter.getSavings());
+			values.put(KEY_WITHDRAWAL, counter.getWithdrawal());
 			
 			db.insert(TABLE_COUNTERS, null, values);
 		}
