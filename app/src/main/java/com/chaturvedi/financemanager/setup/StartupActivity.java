@@ -113,7 +113,7 @@ public class StartupActivity extends FragmentActivity
 				{
 					// Get the Uri of the selected file
 					Uri uri = intent.getData();
-					restoreData(uri.getPath());
+					restoreData(uri);
 				}
 				break;
 		}
@@ -354,7 +354,7 @@ public class StartupActivity extends FragmentActivity
 		}*/
 	}
 	
-	private void restoreData(final String path)
+	private void restoreData(final Uri fileUri)
 	{
 		// TODO: CREATE a new Activity for Restoring. Give 2 options there. To select Data Backup file
 		// TODO: and settings backup file. Restore both
@@ -371,7 +371,7 @@ public class StartupActivity extends FragmentActivity
 			public void run()
 			{
 				// Restore Data
-				RestoreManager restoreManager = new RestoreManager(StartupActivity.this, path, true);
+				RestoreManager restoreManager = new RestoreManager(StartupActivity.this, fileUri, true);
 				int result = restoreManager.getResult();
 				if(result == 0)
 				{

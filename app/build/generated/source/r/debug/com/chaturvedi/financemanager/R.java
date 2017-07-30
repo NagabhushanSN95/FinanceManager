@@ -501,23 +501,22 @@ public final class R {
         public static final int skip=0x7f0a0068;
         public static final int slno=0x7f0a0069;
         public static final int splashDuration=0x7f0a006a;
-        public static final int tagTransactionID=0x7f0a006b;
-        public static final int title_amountSpent=0x7f0a006c;
-        public static final int title_details=0x7f0a006d;
-        public static final int title_expenditureType=0x7f0a006e;
-        public static final int to=0x7f0a006f;
-        public static final int transactionType=0x7f0a0070;
-        public static final int transactionsDisplayInterval=0x7f0a0071;
-        public static final int transfer=0x7f0a0072;
-        public static final int transferDestination=0x7f0a0073;
-        public static final int transferSource=0x7f0a0074;
-        public static final int type=0x7f0a0075;
-        public static final int walletBalance=0x7f0a0076;
-        public static final int walletName=0x7f0a0077;
-        public static final int wallet_credit=0x7f0a0078;
-        public static final int wallet_debit=0x7f0a0079;
-        public static final int wallet_view=0x7f0a007a;
-        public static final int welcomeNote=0x7f0a007b;
+        public static final int title_amountSpent=0x7f0a006b;
+        public static final int title_details=0x7f0a006c;
+        public static final int title_expenditureType=0x7f0a006d;
+        public static final int to=0x7f0a006e;
+        public static final int transactionType=0x7f0a006f;
+        public static final int transactionsDisplayInterval=0x7f0a0070;
+        public static final int transfer=0x7f0a0071;
+        public static final int transferDestination=0x7f0a0072;
+        public static final int transferSource=0x7f0a0073;
+        public static final int type=0x7f0a0074;
+        public static final int walletBalance=0x7f0a0075;
+        public static final int walletName=0x7f0a0076;
+        public static final int wallet_credit=0x7f0a0077;
+        public static final int wallet_debit=0x7f0a0078;
+        public static final int wallet_view=0x7f0a0079;
+        public static final int welcomeNote=0x7f0a007a;
     }
     public static final class style {
         /**  API 11 theme customizations can go here. 

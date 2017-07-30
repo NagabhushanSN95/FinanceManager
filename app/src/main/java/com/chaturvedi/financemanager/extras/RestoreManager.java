@@ -1,6 +1,8 @@
 package com.chaturvedi.financemanager.extras;
 
 import android.content.Context;
+import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -21,10 +23,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import static com.chaturvedi.financemanager.R.string.APP_VERSION_107;
-import static com.chaturvedi.financemanager.R.string.walletBalance;
 
 public class RestoreManager
 {
@@ -62,44 +65,58 @@ public class RestoreManager
 	/**
 	 *
 	 * @param cxt	Context Eg: ExtrasActivity.this
-	 * @param filePath
+	 * @param fileUri
 	 * @param data	true if Data needs to be restored
 	 *              false if Settings need to be restored
 	 */
-	public RestoreManager(Context cxt, String filePath, boolean data)
+	public RestoreManager(Context cxt, Uri fileUri, boolean data)
 	{
 		context = cxt;
 		if(data)
 		{
-			result = readDataBackup(filePath);
+			result = readDataBackup(fileUri);
 		}
 		else
 		{
-			result = readSettingsBackup(filePath);
+			result = readSettingsBackup(fileUri);
 		}
 
 	}
 	
 	/**
 	 * Reads the backed up data
-	 * @param path:
+	 * @param fileUri:
 	 * @return
 	 * 		0 If Read Properly
 	 * 		1 If No Backup Exists
 	 * 		2 Old Data
 	 * 		3 Error in Catch Block
 	 */
-	private int readDataBackup(String path)
+	private int readDataBackup(Uri fileUri)
 	{
-		File backupFile = new File(path);
+		
+		/*if(fileUri.contains("/document/primary:"))
+		{
+			// /document/primary:Android/Chaturvedi/Finance Manager/Backups/Data Backup - 20170330112452760.snb
+			// /storage/emulated/0/Android/Chaturvedi/Finance Manager/Backups/Data Backup - 20170330112452760.snb
+			fileUri = "/storage/emulated/0/" + fileUri.substring(18);
+		}
+		File backupFile = new File(fileUri);
 
 		if(!backupFile.exists())
 		{
 			return 1;
-		}
+		}*/
+		
 		try
 		{
-			BufferedReader backupReader = new BufferedReader(new FileReader(backupFile));
+//			BufferedReader backupReader = new BufferedReader(new FileReader(backupFile));
+			InputStream inputStream = context.getContentResolver().openInputStream(fileUri);
+			if(inputStream == null)
+			{
+				return 1;
+			}
+			BufferedReader backupReader = new BufferedReader(new InputStreamReader(inputStream));
 			
 			// Read The KEY DATA
 			backupReader.readLine();
@@ -202,24 +219,32 @@ public class RestoreManager
 
 	/**
 	 * Reads the backed up data
-	 * @param path:
+	 * @param fileUri:
 	 * @return
 	 * 		0 If Read Properly
 	 * 		1 If No Backup Exists
 	 * 		2 Old Data
 	 * 		3 Error in Catch Block
 	 */
-	private int readSettingsBackup(String path)
+	private int readSettingsBackup(Uri fileUri)
 	{
-		File backupFile = new File(path);
+		/*File backupFile = new File(fileUri);
 		if(!backupFile.exists())
 		{
 			return 1;
-		}
+		}*/
 
 		try
 		{
-			BufferedReader reader = new BufferedReader(new FileReader(backupFile));
+//			BufferedReader reader = new BufferedReader(new FileReader(backupFile));
+			
+			InputStream inputStream = context.getContentResolver().openInputStream(fileUri);
+			if(inputStream == null)
+			{
+				return 1;
+			}
+			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+			
 			String rawData = "";
 			String line = reader.readLine();
 			while(line != null)
@@ -324,11 +349,6 @@ public class RestoreManager
 	public ArrayList<ExpenditureType> getAllExpTypes()
 	{
 		return expTypes;
-	}
-
-	public double getWalletBalance()
-	{
-		return walletBalance;
 	}
 
 	public ArrayList<Template> getAllTemplates()

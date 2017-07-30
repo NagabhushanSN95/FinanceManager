@@ -7,7 +7,7 @@
         <item name="android:windowExitAnimation">@anim/dialog_slide_down</item>
     </style><style name="AppBaseTheme" parent="android:Theme.Light">
         
-    </style></file><file path="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\res\values\tags.xml" qualifiers=""><string name="tagTransactionID">Tag Transaction ID</string></file><file path="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\res\values-sw720dp-land\dimens.xml" qualifiers="sw720dp-land-v13"><dimen name="activity_horizontal_margin">128dp</dimen></file><file path="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\res\values-v11\styles.xml" qualifiers="v11"><style name="AppBaseTheme" parent="android:Theme.Holo.Light">
+    </style></file><file path="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\res\values-sw720dp-land\dimens.xml" qualifiers="sw720dp-land-v13"><dimen name="activity_horizontal_margin">128dp</dimen></file><file path="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\res\values-v11\styles.xml" qualifiers="v11"><style name="AppBaseTheme" parent="android:Theme.Holo.Light">
         
     </style></file><file path="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\res\values-v14\styles.xml" qualifiers="v14"><style name="AppBaseTheme" parent="android:Theme.Holo.Light.DarkActionBar">
         

@@ -116,7 +116,6 @@
     <string name="skip">Skip</string>
     <string name="slno">Sl No</string>
     <string name="splashDuration">Duration Of Splash Screen</string>
-    <string name="tagTransactionID">Tag Transaction ID</string>
     <string name="title_amountSpent">Amount Spent</string>
     <string name="title_details">Details</string>
     <string name="title_expenditureType">Expenditure Type</string>

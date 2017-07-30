@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -37,6 +38,7 @@ import com.chaturvedi.financemanager.updates.Update89To96;
 import com.chaturvedi.financemanager.updates.Update96To107;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -465,7 +467,9 @@ public class SplashActivity extends Activity
 					// Read the backups and see if there is any change
 					String autoBackupPath = Environment.getExternalStoragePublicDirectory("Android").getPath() +
 							"/Chaturvedi/Finance Manager/Auto Backups/Auto Data Backup.snb";
-					RestoreManager restoreManager = new RestoreManager(SplashActivity.this, autoBackupPath, true);
+//					RestoreManager restoreManager = new RestoreManager(SplashActivity.this, autoBackupPath, true);
+					Uri fileUri = Uri.fromFile(new File(autoBackupPath));
+					RestoreManager restoreManager = new RestoreManager(SplashActivity.this, fileUri, true);
 					int restoreResult = restoreManager.getResult();
 					// If read backups, proceed
 					if (restoreResult == 0)
