@@ -11,8 +11,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Build.VERSION;
+import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +28,7 @@ public class SettingsActivity extends Activity
 	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
 	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
 	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
+	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	
 	private final int SPLASH_DURATION_0     = 0;
 	private final int SPLASH_DURATION_5000  = 1;
@@ -54,6 +55,8 @@ public class SettingsActivity extends Activity
 	private final int NUM_CURRENCY_SYMBOLS=3;
 	private Spinner transactionsDisplayIntervalSpinner;
 	private int transactionsDisplayInterval = TRANSACTIONS_MONTHLY;
+	private Spinner autoBackupRestoreSpinner;
+	private int autoBackupRestoreValue;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -125,6 +128,12 @@ public class SettingsActivity extends Activity
 		//String[] transactionsDisplayOptions = { "Month", "All" };
 		transactionsDisplayIntervalSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, transactionsDisplayOptions));
 		transactionsDisplayIntervalSpinner.setSelection(transactionsDisplayInterval);
+		
+		autoBackupRestoreSpinner = (Spinner)findViewById(R.id.spinner_autoBackupRestore);
+		String[] autoBackupRestoreOptions = { "No Auto Backup", "Auto Backup Only", "Auto Backup And Restore" };
+		//String[] transactionsDisplayOptions = { "Month", "All" };
+		autoBackupRestoreSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, autoBackupRestoreOptions));
+		autoBackupRestoreSpinner.setSelection(autoBackupRestoreValue);
 	}
 	
 	private void readPreferences()
@@ -185,6 +194,29 @@ public class SettingsActivity extends Activity
 			else
 				transactionsDisplayInterval = TRANSACTIONS_MONTHLY;
 		}
+		
+		// Retrieve Automatic Backup And Restore Status
+		if(preferences.contains(KEY_AUTOMATIC_BACKUP_RESTORE))
+		{
+			autoBackupRestoreValue = preferences.getInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+		}
+		switch(autoBackupRestoreValue)
+		{
+		case 0:
+			autoBackupRestoreValue = 0;
+			break;
+			
+		case 1:
+			autoBackupRestoreValue = 1;
+			break;
+			
+		case 2:
+		case 3:
+		case 4:
+			autoBackupRestoreValue = 2;
+			break;
+		}
+		
 	}
 	
 	private void savePreferences()
@@ -259,6 +291,23 @@ public class SettingsActivity extends Activity
 				editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 				break;
 		}
+		
+		autoBackupRestoreValue = autoBackupRestoreSpinner.getSelectedItemPosition();
+		switch(autoBackupRestoreValue)
+		{
+			case 0:
+				autoBackupRestoreValue = 0;
+				break;
+				
+			case 1:
+				autoBackupRestoreValue = 1;
+				break;
+				
+			case 2:
+				autoBackupRestoreValue = 4;
+				break;
+		}
+		editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, autoBackupRestoreValue);
 		
 		editor.commit();
 	}

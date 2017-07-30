@@ -18,6 +18,7 @@
     <string name="addTemplate">Add To Templates</string>
     <string name="allBankTransactions">All Bank Transactions</string>
     <string name="amount">Amount</string>
+    <string name="autoBackupRestore">Auto Backup And Restore</string>
     <string name="backup">Back-up Data</string>
     <string name="bank_credit">Bank Credit</string>
     <string name="bank_debit">Bank Withdrawal</string>

@@ -11,7 +11,6 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -29,8 +28,11 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
+import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.setup.StartupActivity;
 import com.chaturvedi.financemanager.updates.Update68To88;
+import com.chaturvedi.financemanager.updates.Update88To89;
+import com.chaturvedi.financemanager.updates.Update89To95;
 //import android.view.ViewGroup.LayoutParams;
 
 public class SplashActivity extends Activity 
@@ -38,11 +40,15 @@ public class SplashActivity extends Activity
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
 	private static int APP_VERSION_NO_88;
+	private static int APP_VERSION_NO_89;
+	private static int APP_VERSION_NO_95;
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
 	private boolean databaseInitialized = true;
 	private static final String KEY_QUOTE_NO = "QuoteNo";
+	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
+	private AutomaticBackupAndRestoreManager autoRestoreManager;
 	
 	private TextView quoteView;
 	private String quoteText;
@@ -119,13 +125,23 @@ public class SplashActivity extends Activity
 		
 		// Compare the version of current and previous App. If the previous app was of old version, 
 		// run the Update Classes
-		APP_VERSION_NO_88 = Integer.parseInt(getResources().getString(R.string.currentAppVersion));
+		APP_VERSION_NO_88 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_88));
+		APP_VERSION_NO_89 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_88));
+		APP_VERSION_NO_95 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_88));
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if(canProceed && (previousVersionNo != currentVersionNo))
 		{
 			if(previousVersionNo < APP_VERSION_NO_88)
 			{
 				new Update68To88(SplashActivity.this);
+			}
+			if(previousVersionNo < APP_VERSION_NO_89)
+			{
+				new Update88To89(SplashActivity.this);
+			}
+			if(previousVersionNo < APP_VERSION_NO_95)
+			{
+				new Update89To95(SplashActivity.this);
 			}
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.commit();
@@ -174,6 +190,13 @@ public class SplashActivity extends Activity
 		{
 			quotesNo = 0;
 			editor.putInt(KEY_QUOTE_NO, 1);
+		}
+		
+		// Retrieve Automatic Backup And Restore Status
+		if(preferences.contains(KEY_AUTOMATIC_BACKUP_RESTORE))
+		{
+			int value = preferences.getInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+			autoRestoreManager = new AutomaticBackupAndRestoreManager(value);
 		}
 		editor.commit();
 	}
@@ -347,70 +370,121 @@ public class SplashActivity extends Activity
 			{
 				DatabaseManager.readDatabase();
 				
-				// Read the backups and see if there is any change
-				RestoreManager restoreManager = new RestoreManager(SplashActivity.this);
-				int restoreResult = restoreManager.readBackups("Finance Manager/Auto Backup");
-				// If read backups, proceed
-				if(restoreResult == 0)
+				if(autoRestoreManager.isAutomaticBackup())
 				{
-					//If found any error, restore
-					
-					// Wallet Balance
-					if(DatabaseManager.getWalletBalance() != restoreManager.getWalletBalance())
+					// Read the backups and see if there is any change
+					RestoreManager restoreManager = new RestoreManager(SplashActivity.this);
+					int restoreResult = restoreManager.readBackups("Finance Manager/Auto Backup");
+					// If read backups, proceed
+					if(restoreResult == 0)
 					{
-						DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-						Toast.makeText(getApplicationContext(), "Error Found In Wallet Balance. Data Recovered",
-								Toast.LENGTH_SHORT).show();
+						//If found any error, restore
+						
+						// Wallet Balance
+						if(DatabaseManager.getWalletBalance() != restoreManager.getWalletBalance())
+						{
+							if(autoRestoreManager.isAutomaticRestore())
+							{
+								DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
+								Toast.makeText(getApplicationContext(), "Error Found In Wallet Balance. Data Recovered",
+										Toast.LENGTH_SHORT).show();
+							}
+							else
+							{
+								Toast.makeText(getApplicationContext(), "Error Found In Wallet Balance. " + 
+										"Data Not Recovered", Toast.LENGTH_SHORT).show();
+							}
+						}
+						// Transactions
+						if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
+								restoreManager.getAllTransactions()))
+						{
+							if(autoRestoreManager.isAutomaticRestore())
+							{
+								DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
+								Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
+										Toast.LENGTH_SHORT).show();
+							}
+							else
+							{
+								Toast.makeText(getApplicationContext(), "Error Found In Transactions. " + 
+										"Data Not Recovered", Toast.LENGTH_SHORT).show();
+							}
+						}
+						
+						// Banks
+						if(!DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(), 
+								restoreManager.getAllBanks()))
+						{
+							if(autoRestoreManager.isAutomaticRestore())
+							{
+								DatabaseManager.setAllBanks(restoreManager.getAllBanks());
+								Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Recovered", 
+										Toast.LENGTH_SHORT).show();
+							}
+							else
+							{
+								Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Not Recovered", 
+										Toast.LENGTH_SHORT).show();
+							}
+						}
+						
+						// Expenditure Types
+						if(!DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
+								restoreManager.getAllExpTypes()))
+						{
+							if(autoRestoreManager.isAutomaticRestore())
+							{
+								DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
+								Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Recovered",
+										Toast.LENGTH_SHORT).show();
+							}
+							else
+							{
+								Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Not Recovered",
+										Toast.LENGTH_SHORT).show();
+							}
+						}
+						
+						// Counters
+						if(!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
+								restoreManager.getAllCounters()))
+						{
+							if(autoRestoreManager.isAutomaticRestore())
+							{
+								DatabaseManager.setAllCounters(restoreManager.getAllCounters());
+								Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
+										Toast.LENGTH_SHORT).show();
+							}
+							else
+							{
+								Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Not Recovered",
+										Toast.LENGTH_SHORT).show();
+							}
+						}
+						
+						// Templates
+						if(!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(), 
+								restoreManager.getAllTemplates()))
+						{
+							if(autoRestoreManager.isAutomaticRestore())
+							{
+								DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+								Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
+										Toast.LENGTH_SHORT).show();
+							}
+							else
+							{
+								Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Not Recovered", 
+										Toast.LENGTH_SHORT).show();
+							}
+						}
 					}
-					// Transactions
-					if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
-							restoreManager.getAllTransactions()))
+					else
 					{
-						DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-						Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
-								Toast.LENGTH_SHORT).show();
+						Toast.makeText(getApplicationContext(), "Error In Automatic Restore\n" + 
+								"Error Code: " + restoreResult, Toast.LENGTH_LONG).show();
 					}
-					
-					// Banks
-					if(!DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(), 
-							restoreManager.getAllBanks()))
-					{
-						DatabaseManager.setAllBanks(restoreManager.getAllBanks());
-						Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Recovered", 
-								Toast.LENGTH_SHORT).show();
-					}
-					
-					// Expenditure Types
-					if(!DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
-							restoreManager.getAllExpTypes()))
-					{
-						DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
-						Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Recovered",
-								Toast.LENGTH_SHORT).show();
-					}
-					
-					// Counters
-					if(!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
-							restoreManager.getAllCounters()))
-					{
-						DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-						Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
-								Toast.LENGTH_SHORT).show();
-					}
-					
-					// Templates
-					if(!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(), 
-							restoreManager.getAllTemplates()))
-					{
-						DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
-						Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
-								Toast.LENGTH_SHORT).show();
-					}
-				}
-				else
-				{
-					Toast.makeText(getApplicationContext(), "Error In Automatic Restore\n" + 
-							"Error Code: " + restoreResult, Toast.LENGTH_LONG).show();
 				}
 			}
 			if(splashDuration == 0)

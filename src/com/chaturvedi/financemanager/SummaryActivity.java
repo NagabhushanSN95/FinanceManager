@@ -46,6 +46,7 @@ import com.chaturvedi.financemanager.database.Template;
 import com.chaturvedi.financemanager.database.Time;
 import com.chaturvedi.financemanager.database.Transaction;
 import com.chaturvedi.financemanager.edit.EditActivity;
+import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.help.HelpActivity;
 
 public class SummaryActivity extends Activity
@@ -57,6 +58,7 @@ public class SummaryActivity extends Activity
 	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
 	private String transactionsDisplayInterval = "Month";
 	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
+	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -171,7 +173,19 @@ public class SummaryActivity extends Activity
 	@Override
 	public void onBackPressed()
 	{
-		new BackupManager(this).autoBackup();	// Backs-Up Data to Auto Backup Folder
+		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		boolean backup = false;
+		if(preferences.contains(KEY_AUTOMATIC_BACKUP_RESTORE))
+		{
+			int value = preferences.getInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+			AutomaticBackupAndRestoreManager manager = new AutomaticBackupAndRestoreManager(value);
+			backup = manager.isAutomaticBackup();
+		}
+		if(backup)
+		{
+			new BackupManager(this).autoBackup();	// Backs-Up Data to Auto Backup Folder
+		}
+		
 		super.onBackPressed();
 	}
 
