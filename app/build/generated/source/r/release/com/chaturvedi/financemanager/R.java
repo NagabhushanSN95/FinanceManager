@@ -95,11 +95,11 @@ public final class R {
         public static final int bankTransactionsLayout=0x7f0c00b3;
         public static final int buttonLayout=0x7f0c000c;
         public static final int button_FAQ=0x7f0c0046;
-        public static final int button_add=0x7f0c0010;
+        public static final int button_add=0x7f0c0011;
         public static final int button_addBank=0x7f0c001b;
         public static final int button_addWallet=0x7f0c002c;
         public static final int button_add_expType=0x7f0c001d;
-        public static final int button_cancel=0x7f0c0011;
+        public static final int button_cancel=0x7f0c0010;
         public static final int button_contactDeveloper=0x7f0c0047;
         public static final int button_editWalletBalance=0x7f0c002b;
         public static final int button_finish=0x7f0c0022;

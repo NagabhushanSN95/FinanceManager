@@ -254,6 +254,7 @@ public class TemplatesActivity extends Activity
 			{
 				DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TemplatesActivity.this);
 				databaseAdapter.deleteTemplate(templates.get(contextMenuTemplateNo));
+				templates.remove(contextMenuTemplateNo);
 				parentLayout.removeViewAt(contextMenuTemplateNo);
 				buildBodyLayout();
 			}

@@ -37,7 +37,7 @@ public class RestoreManager
 	private int numExpTypes;
 	private int numTemplates;
 
-	private ArrayList<NewWallet> wallets;
+	private ArrayList<Wallet> wallets;
 	private ArrayList<Bank> banks;
 	private ArrayList<Transaction> transactions;
 	private ArrayList<Counters> counters;
@@ -113,10 +113,10 @@ public class RestoreManager
 
 			// Read Wallets Data
 			backupReader.readLine();
-			wallets = new ArrayList<NewWallet>(numWallets);
+			wallets = new ArrayList<Wallet>(numWallets);
 			for(int i=0; i<numWallets; i++)
 			{
-				NewWallet wallet = new NewWallet(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
+				Wallet wallet = new Wallet(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
 						backupReader.readLine());
 				wallets.add(wallet);
 				backupReader.readLine();
@@ -294,7 +294,7 @@ public class RestoreManager
 		return numTemplates;
 	}
 
-	public ArrayList<NewWallet> getAllWallets()
+	public ArrayList<Wallet> getAllWallets()
 	{
 		return wallets;
 	}

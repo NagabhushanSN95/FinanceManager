@@ -22,8 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.NewWallet;
+import com.chaturvedi.financemanager.database.Wallet;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ public class WalletsSetupFragment extends Fragment
 	private EditText walletNameField;
 	private EditText walletBalanceField;
 
-	private static ArrayList<NewWallet> wallets;
+	private static ArrayList<Wallet> wallets;
 	private int contextMenuWalletNo;
 
 	@Override
@@ -73,7 +72,7 @@ public class WalletsSetupFragment extends Fragment
 		WIDTH_BALANCE_VIEWS=screenWidth*30/100;
 		MARGIN_TOP_VIEWS=5;
 
-		wallets = new ArrayList<NewWallet>();
+		wallets = new ArrayList<Wallet>();
 		buildLayout();
 		return walletsSetupView;
 	}
@@ -88,7 +87,7 @@ public class WalletsSetupFragment extends Fragment
 		return f;
 	}
 
-	public static ArrayList<NewWallet> getAllWallets()
+	public static ArrayList<Wallet> getAllWallets()
 	{
 		// Set Right all IDs if they are not in order due to addition and deletion of wallets
 		for(int i=0; i<wallets.size(); i++)
@@ -225,7 +224,7 @@ public class WalletsSetupFragment extends Fragment
 				
 				if(dataCorrect)
 				{
-					NewWallet wallet = new NewWallet(""+id, walletName, walletBalance, ""+false);
+					Wallet wallet = new Wallet(""+id, walletName, walletBalance, ""+false);
 					wallets.add(wallet);
 					
 					buildLayout();
@@ -266,7 +265,7 @@ public class WalletsSetupFragment extends Fragment
 				
 				if(dataCorrect)
 				{
-					NewWallet wallet = new NewWallet(String.valueOf(id), walletName, walletBalance, String.valueOf(false));
+					Wallet wallet = new Wallet(String.valueOf(id), walletName, walletBalance, String.valueOf(false));
 					wallets.set(walletNo, wallet);
 					
 					buildLayout();

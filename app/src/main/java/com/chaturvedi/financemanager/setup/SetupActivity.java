@@ -22,12 +22,9 @@ import android.widget.Toast;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.ExpenditureType;
-import com.chaturvedi.financemanager.database.NewWallet;
+import com.chaturvedi.financemanager.database.Wallet;
 import com.chaturvedi.financemanager.main.SummaryActivity;
 import com.chaturvedi.financemanager.database.Bank;
-import com.chaturvedi.financemanager.database.DatabaseManager;
-
-import static com.chaturvedi.financemanager.R.string.walletBalance;
 
 public class SetupActivity extends FragmentActivity
 {
@@ -152,7 +149,7 @@ public class SetupActivity extends FragmentActivity
 	
 	private void finishSetup()
 	{
-		ArrayList<NewWallet> wallets = WalletsSetupFragment.getAllWallets();
+		ArrayList<Wallet> wallets = WalletsSetupFragment.getAllWallets();
 		ArrayList<Bank> banks = BanksSetupFragment.getAllBanks();
 		ArrayList<ExpenditureType> expTypes = ExpTypesSetupFragment.getAllExpTypes();
 

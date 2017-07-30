@@ -3,13 +3,12 @@
 package com.chaturvedi.financemanager.functions;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.ExpenditureType;
-import com.chaturvedi.financemanager.database.NewWallet;
+import com.chaturvedi.financemanager.database.Wallet;
 
 public class TransactionTypeParser
 {
@@ -17,14 +16,14 @@ public class TransactionTypeParser
 	
 	private boolean isIncome = false;
 	private boolean isIncomeDestinationWallet = false;
-	private NewWallet incomeDestinationWallet = null;
+	private Wallet incomeDestinationWallet = null;
 	private boolean isIncomeDestinationBank = false;
 	private Bank incomeDestinationBank = null;
 	private String incomeDestinationName = null;
 	
 	private boolean isExpense = false;
 	private boolean isExpenseSourceWallet = false;
-	private NewWallet expenseSourceWallet = null;
+	private Wallet expenseSourceWallet = null;
 	private boolean isExpenseSourceBank = false;
 	private Bank expenseSourceBank = null;
 	private ExpenditureType expenditureType = null;
@@ -32,11 +31,11 @@ public class TransactionTypeParser
 	
 	private boolean isTransfer = false;
 	private boolean isTransferSourceWallet = false;
-	private NewWallet transferSourceWallet = null;
+	private Wallet transferSourceWallet = null;
 	private boolean isTransferSourceBank = false;
 	private Bank transferSourceBank = null;
 	private boolean isTransferDestinationWallet = false;
-	private NewWallet transferDestinationWallet = null;
+	private Wallet transferDestinationWallet = null;
 	private boolean isTransferDestinationBank = false;
 	private Bank transferDestinationBank = null;
 	private String transferSourceName = null;
@@ -170,7 +169,7 @@ public class TransactionTypeParser
 		return isIncomeDestinationWallet;
 	}
 	
-	public NewWallet getIncomeDestinationWallet()
+	public Wallet getIncomeDestinationWallet()
 	{
 		return incomeDestinationWallet;
 	}
@@ -200,7 +199,7 @@ public class TransactionTypeParser
 		return isExpenseSourceWallet;
 	}
 	
-	public NewWallet getExpenseSourceWallet()
+	public Wallet getExpenseSourceWallet()
 	{
 		return expenseSourceWallet;
 	}
@@ -235,7 +234,7 @@ public class TransactionTypeParser
 		return isTransferSourceWallet;
 	}
 	
-	public NewWallet getTransferSourceWallet()
+	public Wallet getTransferSourceWallet()
 	{
 		return transferSourceWallet;
 	}
@@ -255,7 +254,7 @@ public class TransactionTypeParser
 		return isTransferDestinationWallet;
 	}
 	
-	public NewWallet getTransferDestinationWallet()
+	public Wallet getTransferDestinationWallet()
 	{
 		return transferDestinationWallet;
 	}

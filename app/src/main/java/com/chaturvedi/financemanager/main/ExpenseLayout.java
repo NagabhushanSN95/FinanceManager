@@ -5,7 +5,6 @@ package com.chaturvedi.financemanager.main;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -32,8 +31,6 @@ import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-
-import static com.chaturvedi.financemanager.R.string.expenseSource;
 
 public class ExpenseLayout extends RelativeLayout
 {
@@ -87,14 +84,13 @@ public class ExpenseLayout extends RelativeLayout
 		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
 		amountEditText = (EditText) findViewById(R.id.editText_amount);
 
-		final Calendar myCalendar = Calendar.getInstance();
 		final DatePickerDialog.OnDateSetListener onDateSetListener = new DatePickerDialog.OnDateSetListener()
 		{
 
 			@Override
-			public void onDateSet(DatePicker view, int year, int monthOfYear,
-								  int dayOfMonth)
+			public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth)
 			{
+				Calendar myCalendar = Calendar.getInstance();
 				myCalendar.set(Calendar.YEAR, year);
 				myCalendar.set(Calendar.MONTH, monthOfYear);
 				myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
@@ -109,8 +105,10 @@ public class ExpenseLayout extends RelativeLayout
 			@Override
 			public void onClick(View v)
 			{
-				new DatePickerDialog(getContext(), onDateSetListener, myCalendar.get(Calendar.YEAR),
-						myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+				Date date = new Date(dateEditText.getText().toString());
+				// For DatePickerDialog, Month starts with 0. But in custom Date class, Month starts with 1.
+				// Hence, 1 is subtracted
+				new DatePickerDialog(getContext(), onDateSetListener, date.getYear(), date.getMonth()-1, date.getDate()).show();
 			}
 		});
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);

@@ -12,8 +12,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -21,19 +19,12 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.NewWallet;
+import com.chaturvedi.financemanager.database.Wallet;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-
-import static com.chaturvedi.financemanager.R.id.bankSmsName;
 
 public class EditWalletsActivity extends Activity
 {
@@ -56,7 +47,7 @@ public class EditWalletsActivity extends Activity
 	private EditText walletNameField;
 	private EditText walletBalanceField;
 
-	private static ArrayList<NewWallet> wallets;
+	private static ArrayList<Wallet> wallets;
 	private int contextMenuWalletNo;
 
 	@Override
@@ -98,9 +89,8 @@ public class EditWalletsActivity extends Activity
 		}
 		else if(item.getTitle().equals("Delete"))
 		{
-			int walletID = wallets.get(contextMenuWalletNo).getID();
-			DatabaseAdapter.getInstance(EditWalletsActivity.this).deleteWallet(walletID);
-			buildLayout();
+			deleteWallet(contextMenuWalletNo);
+			//buildLayout();
 		}
 		else
 		{
@@ -189,7 +179,7 @@ public class EditWalletsActivity extends Activity
 				
 				if(dataCorrect)
 				{
-					NewWallet wallet = new NewWallet(id, walletName, Double.parseDouble(walletBalance), false);
+					Wallet wallet = new Wallet(id, walletName, Double.parseDouble(walletBalance), false);
 					databaseAdapter.addWallet(wallet);
 				}
 				else
@@ -207,7 +197,7 @@ public class EditWalletsActivity extends Activity
 	private void editWallet(final int walletNo)
 	{
 		//ArrayList<Bank> wallets = DatabaseManager.getAllBanks();
-		final NewWallet wallet = wallets.get(walletNo);
+		final Wallet wallet = wallets.get(walletNo);
 		buildAddWalletDialog();
 		walletNameField.setText(wallet.getName());
 		walletBalanceField.setText(String.valueOf(wallet.getBalance()));
@@ -225,7 +215,7 @@ public class EditWalletsActivity extends Activity
 				
 				if(dataCorrect)
 				{
-					NewWallet newWallet = new NewWallet(id, walletName, Double.parseDouble(walletBalance), isDeleted);
+					Wallet newWallet = new Wallet(id, walletName, Double.parseDouble(walletBalance), isDeleted);
 					DatabaseAdapter.getInstance(EditWalletsActivity.this).updateWallet(newWallet);
 					buildLayout();
 				}
@@ -239,6 +229,26 @@ public class EditWalletsActivity extends Activity
 			}
 		});
 		addWalletDialog.show();
+	}
+
+	private void deleteWallet(final int contextMenuWalletNo)
+	{
+		final Wallet wallet = wallets.get(contextMenuWalletNo);
+		AlertDialog.Builder deleteDialog = new AlertDialog.Builder(EditWalletsActivity.this);
+		deleteDialog.setTitle("Delete Wallet");
+		deleteDialog.setMessage("Are you sure you want to delete wallet '" + wallet.getName() + "'?");
+		deleteDialog.setPositiveButton("Delete", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				DatabaseAdapter.getInstance(EditWalletsActivity.this).deleteWallet(wallet.getID());
+				wallets.remove(contextMenuWalletNo);
+				parentLayout.removeViewAt(contextMenuWalletNo);
+			}
+		});
+		deleteDialog.setNegativeButton("Cancel", null);
+		deleteDialog.show();
 	}
 	
 	private boolean verifyData(String walletName, String walletBalance, String origWalletName)

@@ -26,7 +26,7 @@ import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.ExpenditureType;
-import com.chaturvedi.financemanager.database.NewWallet;
+import com.chaturvedi.financemanager.database.Wallet;
 import com.chaturvedi.financemanager.database.RestoreManager;
 import com.chaturvedi.financemanager.main.SummaryActivity;
 
@@ -455,7 +455,7 @@ public class StartupActivity extends FragmentActivity
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(StartupActivity.this);
 
-		NewWallet wallet = new NewWallet(1, "Wallet01", 0, false);
+		Wallet wallet = new Wallet(1, "Wallet01", 0, false);
 		databaseAdapter.addWallet(wallet);
 
 		ArrayList<ExpenditureType> expTypes = new ArrayList<ExpenditureType>(NUM_EXP_TYPES);

@@ -33,7 +33,7 @@ import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.BackupManager;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.database.NewWallet;
+import com.chaturvedi.financemanager.database.Wallet;
 import com.chaturvedi.financemanager.edit.EditActivity;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.functions.Constants;
@@ -301,7 +301,7 @@ public class SummaryActivity extends Activity
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SummaryActivity.this);
 		int numWallets = databaseAdapter.getNumVisibleWallets();
 		int numBanks = databaseAdapter.getNumVisibleBanks();
-		ArrayList<NewWallet> wallets = databaseAdapter.getAllVisibleWallets();
+		ArrayList<Wallet> wallets = databaseAdapter.getAllVisibleWallets();
 		ArrayList<Bank> banks = databaseAdapter.getAllVisibleBanks();
 		DecimalFormat formatter = new DecimalFormat("###,##0.##");
 		try

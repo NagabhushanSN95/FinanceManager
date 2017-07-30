@@ -25,6 +25,7 @@ import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.database.Wallet;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -102,9 +103,8 @@ public class EditBanksActivity extends Activity
 		}
 		else if(item.getTitle().equals("Delete"))
 		{
-			int bankID = banks.get(contextMenuBankNo).getID();
-			DatabaseAdapter.getInstance(EditBanksActivity.this).deleteBank(bankID);
-			buildLayout();
+			deleteBank(contextMenuBankNo);
+			//buildLayout();
 		}
 		else
 		{
@@ -320,6 +320,26 @@ public class EditBanksActivity extends Activity
 			}
 		});
 		addBankDialog.show();
+	}
+
+	private void deleteBank(final int contextMenuBankNo)
+	{
+		final Bank bank = banks.get(contextMenuBankNo);
+		AlertDialog.Builder deleteDialog = new AlertDialog.Builder(EditBanksActivity.this);
+		deleteDialog.setTitle("Delete Bank");
+		deleteDialog.setMessage("Are you sure you want to delete bank '" + bank.getName() + "'?");
+		deleteDialog.setPositiveButton("Delete", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				DatabaseAdapter.getInstance(EditBanksActivity.this).deleteBank(bank.getID());
+				banks.remove(contextMenuBankNo);
+				parentLayout.removeViewAt(contextMenuBankNo);
+			}
+		});
+		deleteDialog.setNegativeButton("Cancel", null);
+		deleteDialog.show();
 	}
 	
 	private boolean verifyData(String bankName, String bankBalance, String bankSmsName, String origBankName)

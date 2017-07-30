@@ -1,17 +1,47 @@
+// Shree KRISHNAya Namaha
+
 package com.chaturvedi.financemanager.database;
 
-public class Wallet
+import android.util.Log;
+
+public class Wallet implements MoneyStorage
 {
 	private int id;
 	private String name;
-	private double amount;
-	
-	public Wallet(int id, String name, double amount)
+	private double balance;
+	private boolean deleted;
+
+	public Wallet(int id, String name, double balance, boolean deleted)
 	{
-		this.id=id;
-		this.setName(name);
-		this.setAmount(amount);
+		this.id = id;
+		this.name = name;
+		this.balance = balance;
+		this.deleted = deleted;
 	}
+
+//	public Wallet(String id, String name, String balance)
+//	{
+//		this.id=Integer.parseInt(id);
+//		this.name=name;
+//		this.balance=Double.parseDouble(balance);
+//	}
+//
+//	public Wallet(int id, String name, String balance)
+//	{
+//		this.id=id;
+//		this.name=name;
+//		this.balance=Double.parseDouble(balance);
+//	}
+
+	public Wallet(String id, String name, String balance, String deleted)
+	{
+		this.id=Integer.parseInt(id);
+		this.name=name;
+		this.balance=Double.parseDouble(balance);
+		//this.deleted = deleted.equals("1");
+		this.deleted = Boolean.parseBoolean(deleted);
+	}
+
 	/**
 	 * @param id the id to set
 	 */
@@ -19,7 +49,7 @@ public class Wallet
 	{
 		this.id = id;
 	}
-	
+
 	/**
 	 * @return the id
 	 */
@@ -45,19 +75,38 @@ public class Wallet
 	}
 
 	/**
-	 * @param amount the amount to set
+	 * @param balance the balance to set
 	 */
-	public void setAmount(double amount)
+	public void setBalance(double balance)
 	{
-		this.amount = amount;
+		this.balance = balance;
 	}
 
 	/**
-	 * @return the amount
+	 * @return the balance
 	 */
-	public double getAmount()
+	public double getBalance()
 	{
-		return amount;
+		return balance;
 	}
 	
+	public void incrementBalance(double amount)
+	{
+		balance += amount;
+	}
+	
+	public void decrementBalance(double amount)
+	{
+		balance -= amount;
+	}
+
+	public void setDeleted(boolean deleted)
+	{
+		this.deleted = deleted;
+	}
+
+	public boolean isDeleted()
+	{
+		return deleted;
+	}
 }

@@ -86,8 +86,8 @@ public class BackupManager
 
 			// Write Wallets Data
 			backupWriter.write("---------------Wallets---------------\n");
-			ArrayList<NewWallet> wallets = databaseAdapter.getAllWallets();
-			for(NewWallet wallet : wallets)
+			ArrayList<Wallet> wallets = databaseAdapter.getAllWallets();
+			for(Wallet wallet : wallets)
 			{
 				backupWriter.write(wallet.getID() + "\n");
 				backupWriter.write(wallet.getName() + "\n");

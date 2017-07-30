@@ -1,14 +1,9 @@
 package com.chaturvedi.financemanager.database;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 
@@ -1611,7 +1606,7 @@ public class DatabaseManager
 
 			if (parser.isIncomeDestinationWallet())
 			{
-				NewWallet wallet = parser.getIncomeDestinationWallet();
+				Wallet wallet = parser.getIncomeDestinationWallet();
 				wallet.incrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1629,7 +1624,7 @@ public class DatabaseManager
 
 			if (parser.isExpenseSourceWallet())
 			{
-				NewWallet wallet = parser.getExpenseSourceWallet();
+				Wallet wallet = parser.getExpenseSourceWallet();
 				wallet.decrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1655,7 +1650,7 @@ public class DatabaseManager
 
 			if (parser.isTransferSourceWallet())
 			{
-				NewWallet wallet = parser.getTransferSourceWallet();
+				Wallet wallet = parser.getTransferSourceWallet();
 				wallet.decrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1668,7 +1663,7 @@ public class DatabaseManager
 
 			if (parser.isTransferDestinationWallet())
 			{
-				NewWallet wallet = parser.getTransferDestinationWallet();
+				Wallet wallet = parser.getTransferDestinationWallet();
 				wallet.incrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1699,7 +1694,7 @@ public class DatabaseManager
 
 			if (parser.isIncomeDestinationWallet())
 			{
-				NewWallet wallet = parser.getIncomeDestinationWallet();
+				Wallet wallet = parser.getIncomeDestinationWallet();
 				wallet.decrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1717,7 +1712,7 @@ public class DatabaseManager
 
 			if (parser.isExpenseSourceWallet())
 			{
-				NewWallet wallet = parser.getExpenseSourceWallet();
+				Wallet wallet = parser.getExpenseSourceWallet();
 				wallet.incrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1743,7 +1738,7 @@ public class DatabaseManager
 
 			if (parser.isTransferSourceWallet())
 			{
-				NewWallet wallet = parser.getTransferSourceWallet();
+				Wallet wallet = parser.getTransferSourceWallet();
 				wallet.incrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1756,7 +1751,7 @@ public class DatabaseManager
 
 			if (parser.isTransferDestinationWallet())
 			{
-				NewWallet wallet = parser.getTransferDestinationWallet();
+				Wallet wallet = parser.getTransferDestinationWallet();
 				wallet.decrementBalance(amount);
 				databaseAdapter.updateWallet(wallet);
 			}
@@ -1850,11 +1845,16 @@ public class DatabaseManager
 				//Toast.makeText(context, "09 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
 				isValid = false;
 			}
+			if (transaction1.isHidden() != transaction2.isHidden())
+			{
+				//Toast.makeText(context, "09 Error: i=" + i + ", id1=" + transaction1.getID() + ", id2=" + transaction2.getID(), Toast.LENGTH_SHORT).show();
+				isValid = false;
+			}
 		}
 		return isValid;
 	}
 	
-	public static boolean areEqualWallets(ArrayList<NewWallet> wallets1, ArrayList<NewWallet> wallets2)
+	public static boolean areEqualWallets(ArrayList<Wallet> wallets1, ArrayList<Wallet> wallets2)
 	{
 		if (wallets1.size() != wallets2.size())
 		{
@@ -1876,6 +1876,10 @@ public class DatabaseManager
 				isValid = false;
 			}
 			if (wallets1.get(i).getBalance() != wallets2.get(i).getBalance())
+			{
+				isValid = false;
+			}
+			if (wallets1.get(i).isDeleted() != wallets2.get(i).isDeleted())
 			{
 				isValid = false;
 			}
@@ -1921,6 +1925,11 @@ public class DatabaseManager
 				isValid = false;
 			}
 			if (!banks1.get(i).getSmsName().equals(banks2.get(i).getSmsName()))
+			{
+				//Toast.makeText(context, "05 Error: i=" + i + ", id1=" + banks1.get(i).getSmsName() + ", id2=" + banks2.get(i).getSmsName(), Toast.LENGTH_SHORT).show();
+				isValid = false;
+			}
+			if (banks1.get(i).isDeleted() != (banks2.get(i).isDeleted()))
 			{
 				//Toast.makeText(context, "05 Error: i=" + i + ", id1=" + banks1.get(i).getSmsName() + ", id2=" + banks2.get(i).getSmsName(), Toast.LENGTH_SHORT).show();
 				isValid = false;
@@ -2045,6 +2054,10 @@ public class DatabaseManager
 				return false;
 			}
 			if (templates1.get(i).getAmount() != templates2.get(i).getAmount())
+			{
+				return false;
+			}
+			if (templates1.get(i).isHidden() != templates2.get(i).isHidden())
 			{
 				return false;
 			}

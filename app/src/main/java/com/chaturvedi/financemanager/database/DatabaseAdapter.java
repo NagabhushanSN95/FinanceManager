@@ -155,7 +155,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	}
 
 
-	public void addWallet(NewWallet wallet)
+	public void addWallet(Wallet wallet)
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
 
@@ -169,11 +169,11 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		db.close();
 	}
 
-	public void addAllWallets(ArrayList<NewWallet> wallets)
+	public void addAllWallets(ArrayList<Wallet> wallets)
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
 
-		for (NewWallet wallet : wallets)
+		for (Wallet wallet : wallets)
 		{
 			ContentValues values = new ContentValues();
 			values.put(KEY_ID, wallet.getID());
@@ -185,16 +185,16 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		db.close();
 	}
 
-	public NewWallet getWallet(int id)
+	public Wallet getWallet(int id)
 	{
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.query(TABLE_WALLETS, new String[]{KEY_ID, KEY_NAME, KEY_AMOUNT, KEY_DELETED}, KEY_ID + "=?",
 				new String[]{String.valueOf(id)}, null, null, null, null);
 
-		NewWallet wallet = null;
+		Wallet wallet = null;
 		if (cursor != null && cursor.moveToFirst())
 		{
-			wallet = new NewWallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2), cursor.getString(3).equals("1"));
+			wallet = new Wallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2), cursor.getString(3).equals("1"));
 			cursor.close();
 		}
 
@@ -202,24 +202,24 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		return wallet;
 	}
 
-	public NewWallet getWalletFromName(String walletName)
+	public Wallet getWalletFromName(String walletName)
 	{
-		NewWallet wallet = null;
+		Wallet wallet = null;
 		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_NAME + " = '" + walletName + "'";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
 		{
-			wallet = new NewWallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2), cursor.getString(3).equals("1"));
+			wallet = new Wallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2), cursor.getString(3).equals("1"));
 		}
 		cursor.close();
 		db.close();
 		return wallet;
 	}
 
-	public ArrayList<NewWallet> getAllWallets()
+	public ArrayList<Wallet> getAllWallets()
 	{
-		ArrayList<NewWallet> wallets = new ArrayList<NewWallet>();
+		ArrayList<Wallet> wallets = new ArrayList<Wallet>();
 		String selectQuery = "SELECT * FROM " + TABLE_WALLETS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -227,7 +227,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			do
 			{
-				NewWallet wallet = new NewWallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2),
+				Wallet wallet = new Wallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2),
 						cursor.getString(3).equals("1"));
 				wallets.add(wallet);
 			}
@@ -238,9 +238,9 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		return wallets;
 	}
 
-	public ArrayList<NewWallet> getAllVisibleWallets()
+	public ArrayList<Wallet> getAllVisibleWallets()
 	{
-		ArrayList<NewWallet> wallets = new ArrayList<NewWallet>();
+		ArrayList<Wallet> wallets = new ArrayList<Wallet>();
 		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -248,7 +248,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			do
 			{
-				NewWallet wallet = new NewWallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2),
+				Wallet wallet = new Wallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble(2),
 						cursor.getString(3).equals("1"));
 				wallets.add(wallet);
 			}
@@ -278,22 +278,22 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		return walletsNamesList;
 	}
 
-//	public NewWallet getWalletFromName(String walletName)
+//	public Wallet getWalletFromName(String walletName)
 //	{
-//		NewWallet wallet = null;
+//		Wallet wallet = null;
 //		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_NAME + " = " + walletName;
 //		SQLiteDatabase db = this.getWritableDatabase();
 //		Cursor cursor = db.rawQuery(selectQuery, null);
 //		if (cursor.moveToFirst())
 //		{
-//			wallet = new NewWallet(cursor.getString(0), cursor.getString(1), cursor.getString(2));
+//			wallet = new Wallet(cursor.getString(0), cursor.getString(1), cursor.getString(2));
 //		}
 //		cursor.close();
 //		db.close();
 //		return wallet;
 //	}
 
-	public void updateWallet(NewWallet wallet)
+	public void updateWallet(Wallet wallet)
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
