@@ -167,8 +167,8 @@ public class SmsReceiver extends BroadcastReceiver
 		if(message.toLowerCase().contains("debit"))
 		{
 			detailsIntent.putExtra("Type", "debit");
-			int startIndex = message.indexOf("Rs")+2;
-			int endIndex = message.indexOf("on", startIndex)-1;
+			int startIndex = message.indexOf("Rs")+3;
+			int endIndex = message.indexOf("ATM", startIndex)-1;
 			double amount = Double.parseDouble(message.substring(startIndex, endIndex));
 			detailsIntent.putExtra("Amount", amount);
 			context.startActivity(detailsIntent);

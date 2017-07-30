@@ -23,6 +23,7 @@ public class SettingsActivity extends Activity
 	private static final String KEY_ENABLE_SPLASH = "enable_splash";
 	private static final String KEY_BANK_SMS = "respond_bank_messages";
 	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
+	private static final String KEY_TRANSACTIONS_DISPLAY_OPTIONS = "transactions_display_options";
 	
 	private CheckBox splashCheckBox;
 	private static boolean enableSplash=true;
@@ -32,6 +33,8 @@ public class SettingsActivity extends Activity
 	private ArrayList<String> currencySymbols;
 	private String currencySymbolSelected = "Rs ";
 	private static final int NUM_CURRENCY_SYMBOLS=3;
+	Spinner transactionsDisplayOptionsList;
+	private static String transactionsDisplayOption = "Month";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -50,13 +53,8 @@ public class SettingsActivity extends Activity
 		}
 		readPreferences();
 		readCurrencySymbolsFile();
-		splashCheckBox=(CheckBox)findViewById(R.id.checkBox_splash);
-		splashCheckBox.setChecked(enableSplash);
-		bankSmsCheckBox = (CheckBox)findViewById(R.id.checkBox_bank_sms);
-		bankSmsCheckBox.setChecked(respondBankMessages);
-		currencySymbolsList = (Spinner)findViewById(R.id.list_currencySymbols);
-		currencySymbolsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, currencySymbols));
-		currencySymbolsList.setSelection(getCurrencySymbolPosition(currencySymbolSelected));
+		buildLayout();
+		
 	}
 
 	@Override
@@ -64,6 +62,35 @@ public class SettingsActivity extends Activity
 	{
 		super.onPause();
 		savePreferences();
+	}
+	
+	private void buildLayout()
+	{
+		splashCheckBox=(CheckBox)findViewById(R.id.checkBox_splash);
+		splashCheckBox.setChecked(enableSplash);
+		bankSmsCheckBox = (CheckBox)findViewById(R.id.checkBox_bank_sms);
+		bankSmsCheckBox.setChecked(respondBankMessages);
+		currencySymbolsList = (Spinner)findViewById(R.id.list_currencySymbols);
+		currencySymbolsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, currencySymbols));
+		currencySymbolsList.setSelection(getCurrencySymbolPosition(currencySymbolSelected));
+		
+		transactionsDisplayOptionsList = (Spinner)findViewById(R.id.list_transactionsDisplayOptions);
+		//String[] transactionsDisplayOptions = { "Month", "Year", "All" };
+		String[] transactionsDisplayOptions = { "Month", "All" };
+		transactionsDisplayOptionsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, transactionsDisplayOptions));
+		if(transactionsDisplayOption.equals("Month"))
+		{
+			transactionsDisplayOptionsList.setSelection(0);
+		}
+		else if(transactionsDisplayOption.equals("Year"))
+		{
+			transactionsDisplayOptionsList.setSelection(1);
+		}
+		else
+		{
+			//transactionsDisplayOptionsList.setSelection(2);
+			transactionsDisplayOptionsList.setSelection(1);
+		}
 	}
 	
 	private void readPreferences()
@@ -81,6 +108,10 @@ public class SettingsActivity extends Activity
 		{
 			currencySymbolSelected=preferences.getString(KEY_CURRENCY_SYMBOL, "Rs ");
 		}
+		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_OPTIONS))
+		{
+			transactionsDisplayOption=preferences.getString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, "Month");
+		}
 	}
 	
 	private void savePreferences()
@@ -90,12 +121,14 @@ public class SettingsActivity extends Activity
 		currencySymbolSelected = (String) currencySymbolsList.getSelectedItem();
 		if(currencySymbolSelected.equalsIgnoreCase("None"))
 			currencySymbolSelected = " ";
+		transactionsDisplayOption = (String) transactionsDisplayOptionsList.getSelectedItem();
 		
 		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 		SharedPreferences.Editor editor = preferences.edit();
 		editor.putBoolean(KEY_ENABLE_SPLASH, enableSplash);
 		editor.putBoolean(KEY_BANK_SMS, respondBankMessages);
 		editor.putString(KEY_CURRENCY_SYMBOL, currencySymbolSelected);
+		editor.putString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, transactionsDisplayOption);
 		editor.commit();
 	}
 	

@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -39,6 +42,8 @@ public class SummaryActivity extends Activity
 	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
 	private static final String KEY_CURRENCY_SYMBOL = "currency_symbols";
 	private String currencySymbol = " ";
+	private static final String KEY_TRANSACTIONS_DISPLAY_OPTIONS = "transactions_display_options";
+	private String transactionsDisplayOption = "Month";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -181,6 +186,10 @@ public class SummaryActivity extends Activity
 			case R.id.action_export:
 				startActivityForResult(exportIntent, 0);
 				return true;
+				
+			case R.id.action_clearData:
+				clearData();
+				return true;
 		}
 		return true;
 	}
@@ -264,7 +273,7 @@ public class SummaryActivity extends Activity
 		int numBanks = DatabaseManager.getNumBanks();
 		ArrayList<Bank> banks = DatabaseManager.getAllBanks();
 		DecimalFormat formatter = new DecimalFormat("###,##0.##");
-		//try
+		try
 		{
 			// Set The Data
 			for(int i=0; i<numBanks; i++)
@@ -277,17 +286,58 @@ public class SummaryActivity extends Activity
 			nameViews.get(numBanks+2).setText("Income");
 			amountViews.get(numBanks).setText(""+formatter.format(DatabaseManager.getWalletBalance()));
 			
-			Calendar calendar = Calendar.getInstance();
-			int year = calendar.get(Calendar.YEAR);
-			int month = calendar.get(Calendar.MONTH) + 1;
-			long currentMonth = year*100+month;
-			amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getMonthlyAmountSpent(currentMonth)));
-			amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getMonthlyIncome(currentMonth)));
+			SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+			
+			if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_OPTIONS))
+			{
+				transactionsDisplayOption=preferences.getString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, "Month");
+			}
+			
+			if(transactionsDisplayOption.equals("Month"))
+			{
+				Calendar calendar = Calendar.getInstance();
+				int year = calendar.get(Calendar.YEAR);
+				int month = calendar.get(Calendar.MONTH) + 1;
+				long currentMonth = year*100+month;
+				amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getMonthlyAmountSpent(currentMonth)));
+				amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getMonthlyIncome(currentMonth)));
+			}
+			else if(transactionsDisplayOption.equals("Year"))
+			{
+				Calendar calendar = Calendar.getInstance();
+				int year = calendar.get(Calendar.YEAR);
+				//amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getYearlyAmountSpent(year)));
+				//amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getYearlyIncome(year)));
+			}
+			else
+			{
+				amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getTotalAmountSpent()));
+				amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getTotalIncome()));
+			}
 		}
-		//catch(Exception e)
+		catch(Exception e)
 		{
-		//	Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Error In SummaryActivity.setData()\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	private void clearData()
+	{
+		AlertDialog.Builder clearDialog = new AlertDialog.Builder(this);
+		clearDialog.setTitle("Clear All Data");
+		clearDialog.setMessage("Are You Sure To Delete All Your Transactions?");
+		clearDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				DatabaseManager.clearDatabase();
+				buildLayout();
+				setData();
+			}
+		});
+		clearDialog.setNegativeButton("Cancel", null);
+		clearDialog.show();
 	}
 	
 	private void runUpdateClasses(int oldVersionNo)

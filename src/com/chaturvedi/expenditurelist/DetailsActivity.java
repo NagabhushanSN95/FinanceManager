@@ -11,6 +11,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -83,6 +85,10 @@ public class DetailsActivity extends Activity
 	private String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
 	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
 	
+	private static final String SHARED_PREFERENCES_SETTINGS = "Settings";
+	private static final String KEY_TRANSACTIONS_DISPLAY_OPTIONS = "transactions_display_options";
+	private String transactionsDisplayOption = "Month";
+	
 	private ArrayList<Transaction> transactions;
 	private int contextMenuTransactionNo;
 	private Intent smsIntent;
@@ -104,6 +110,7 @@ public class DetailsActivity extends Activity
 			actionBar.setVisibility(View.GONE);
 		}
 		
+		readPreferences();
 		calculateDimensions();
 		buildTitleLayout();
 		buildBodyLayout();
@@ -122,6 +129,25 @@ public class DetailsActivity extends Activity
 		super.onPause();
 		DatabaseManager.saveDatabase();
 	}
+
+	/*@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.activity_details, menu);
+		return true;
+	}
+	
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch(item.getItemId())
+		{
+			case R.id.action_display_options:
+				displayOptions();
+				return true;
+		}
+		return true;
+	}*/
 	
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
 	{
@@ -173,6 +199,35 @@ public class DetailsActivity extends Activity
 		WIDTH_TRANSACTION_BUTTON = screenWidth*25/100;
 	}
 	
+	private void readPreferences()
+	{
+		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
+		
+		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_OPTIONS))
+		{
+			transactionsDisplayOption=preferences.getString(KEY_TRANSACTIONS_DISPLAY_OPTIONS, "Month");
+		}
+		
+		if(transactionsDisplayOption.equals("Month"))
+		{
+			Calendar calendar = Calendar.getInstance();
+			int year = calendar.get(Calendar.YEAR);
+			int month = calendar.get(Calendar.MONTH) + 1;
+			long currentMonth = year*100+month;
+			transactions = DatabaseManager.getMonthlyTransactions(currentMonth);
+		}
+		else if(transactionsDisplayOption.equals("Year"))
+		{
+			Calendar calendar = Calendar.getInstance();
+			int year = calendar.get(Calendar.YEAR);
+			//transactions = DatabaseManager.getYearlyTransactions(year);
+		}
+		else
+		{
+			transactions = DatabaseManager.getAllTransactions();
+		}
+	}
+	
 	private void buildTitleLayout()
 	{
 		TextView slnoTitleView = (TextView)findViewById(R.id.slno);
@@ -203,15 +258,6 @@ public class DetailsActivity extends Activity
 			parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
 			parentLayout.removeAllViews();
 			
-			Calendar calendar = Calendar.getInstance();
-			int year = calendar.get(Calendar.YEAR);
-			int month = calendar.get(Calendar.MONTH) + 1;
-			long currentMonth = year*100+month;
-			transactions = DatabaseManager.getMonthlyTransactions(currentMonth);
-			
-			/*ArrayList<Date> dates = DatabaseManager.getAllDates();
-			ArrayList<String> particulars = DatabaseManager.getAllParticulars();
-			ArrayList<Double> amounts = DatabaseManager.getAllAmounts();*/
 			DecimalFormat formatterDisplay = new DecimalFormat("#,##0.##");
 			formatterTextFields = new DecimalFormat("##0.##");
 			for(int i=0; i<transactions.size(); i++)
@@ -1187,6 +1233,13 @@ public class DetailsActivity extends Activity
 		return transaction;	
 	}
 	
+	private void displayOptions()
+	{
+		LayoutInflater layoutInflater = LayoutInflater.from(DetailsActivity.this);
+		LinearLayout displayOptionsLayout01 = (LinearLayout) layoutInflater.inflate(R.layout.dialog_display_options01, null);
+		
+	}
+	
 	/**
 	 * Takes the details of the sms from the intent and performs the necessary transaction
 	 */
@@ -1201,6 +1254,7 @@ public class DetailsActivity extends Activity
 			buildBankCreditDialog();
 			banks.get(bankNo).setChecked(true);
 			amountField.setText(formatterTextFields.format(amount));
+			bankCreditDialog.setCancelable(false);
 			bankCreditDialog.show();
 		}
 		else
@@ -1208,6 +1262,7 @@ public class DetailsActivity extends Activity
 			buildBankDebitDialog();
 			banks.get(bankNo).setChecked(true);
 			amountField.setText(formatterTextFields.format(amount));
+			bankDebitDialog.setCancelable(false);
 			bankDebitDialog.show();
 		}
 	}

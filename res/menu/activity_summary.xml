@@ -47,5 +47,11 @@
         android:orderInCategory="800"
         android:showAsAction="never"
         android:title="@string/action_export"/>
+    
+    <item
+        android:id="@+id/action_clearData"
+        android:orderInCategory="900"
+        android:showAsAction="never"
+        android:title="@string/action_clearData"/>
 
 </menu>

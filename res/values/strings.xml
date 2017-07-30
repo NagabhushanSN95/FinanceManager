@@ -5,6 +5,7 @@
     <string name="krishna">Shree KRISHNAya Namaha</string>
     <string name="krishnarpanamastu">Sarvam Shree Krishnarpanamastu</string>
     <string name="action_about">About Developer</string>
+    <string name="action_clearData">Clear Data</string>
     <string name="action_details">View Details</string>
     <string name="action_display_options">Display Options</string>
     <string name="action_edit_banks">Edit Banks</string>
@@ -21,12 +22,15 @@
     <string name="checkBox_bank_sms">Respond To Messages From Banks</string>
     <string name="currencySymbols">Currency Symbol</string>
     <string name="date">Date</string>
+    <string name="transactionsDisplayOptions">Display Transactions By</string>
     <string name="finish">Finish</string>
     <string name="hint_bankAccNo">Account Number</string>
     <string name="hint_bankBalance">Balance</string>
     <string name="hint_bankName">Bank Name</string>
     <string name="hint_bankSmsName">Sms</string>
+    <string name="hint_export_fileName">Enter The File Name</string>
     <string name="instruction_expenditure_types">Enter Five Different Types Of Expenditures</string>
+    <string name="instruction_export">The Data Will Be Exported To A Text File Named</string>
     <string name="next">Next</string>
     <string name="particulars">Particulars</string>
     <string name="quantity">Quantity</string>
