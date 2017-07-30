@@ -28,14 +28,14 @@ import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
+import com.chaturvedi.financemanager.updates.Update68To76;
 //import android.view.ViewGroup.LayoutParams;
-import com.chaturvedi.financemanager.updates.Update68To75;
 
 public class SplashActivity extends Activity 
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
-	private static final int APP_VERSION_NO_75 = 75;
+	private static final int APP_VERSION_NO_76 = 76;
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
@@ -118,9 +118,9 @@ public class SplashActivity extends Activity
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if(canProceed && (previousVersionNo != currentVersionNo))
 		{
-			if(previousVersionNo < APP_VERSION_NO_75)
+			if(previousVersionNo < APP_VERSION_NO_76)
 			{
-				new Update68To75(SplashActivity.this);
+				new Update68To76(SplashActivity.this);
 			}
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.commit();

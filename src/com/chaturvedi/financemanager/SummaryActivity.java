@@ -418,15 +418,6 @@ public class SummaryActivity extends Activity
 		}
 	}
 	
-	/**
-	 * If there is an update, this method runs the update classes required 
-	 * @param oldVersionNo
-	 */
-	private void runUpdateClasses(int oldVersionNo)
-	{
-		
-	}
-	
 	// Copied from Transactions Activity
 	
 	private void doTransactionsActivityOperations()

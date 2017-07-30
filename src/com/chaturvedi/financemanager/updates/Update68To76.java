@@ -12,21 +12,48 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.widget.Toast;
 
-public class Update68To75
+public class Update68To76 extends SQLiteOpenHelper		// To create Templates Table
 {
 	private Context context;
-	private final int CURRENT_APP_VERSION_NO = 75;
-	
-	public Update68To75(Context cxt)
+	private final int CURRENT_APP_VERSION_NO = 76;
+
+	private static final int DATABASE_VERSION = 1;
+	private static final String DATABASE_NAME = "expenditureManager";
+	public Update68To76(Context cxt)
 	{
+		super(cxt, DATABASE_NAME, null, DATABASE_VERSION);
 		context = cxt;
 		
 		Toast.makeText(context, "Updating The App", Toast.LENGTH_LONG).show();
+		updateDatabase();
 		updateSharedPreferences();
 		updateBackups();
+	}
+	
+	private void updateDatabase()
+	{
+		final String TABLE_TEMPLATES = "templates";
+		final String KEY_ID = "id";
+		final String KEY_TYPE = "type";
+		final String KEY_PARTICULARS = "particulars";
+		final String KEY_AMOUNT = "amount";
+		
+		String CREATE_TEMPLATES_TABLE = "CREATE TABLE " + TABLE_TEMPLATES + "(" + 
+				KEY_ID + " INTEGER PRIMARY KEY," + 
+				KEY_PARTICULARS + " TEXT,"+ 
+				KEY_TYPE + " STRING," +
+				KEY_AMOUNT + " TEXT" + ")";
+		
+		// Create The Table
+		SQLiteDatabase db = this.getWritableDatabase();
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TEMPLATES);		// Table will not exist. To be on safer side
+		db.execSQL(CREATE_TEMPLATES_TABLE);
+		db.close();
 	}
 	
 	private void updateSharedPreferences()
@@ -208,7 +235,7 @@ public class Update68To75
 		int numBanks 		= 0;
 		int numCountersRows = 0;
 		
-		String backupFolderName = "Finance Manager/BackupTrial";
+		String backupFolderName = "Finance Manager/Backups";
 		String extension = ".snb";
 		File backupFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), backupFolderName);
 		if(!backupFolder.exists())
@@ -236,7 +263,6 @@ public class Update68To75
 			
 			lines.add(5 + "");	// NumExpTypes
 			lines.add(0 + "");	// NumTemplates
-			keyDataFile = new File(backupFolder, keyDataFileName+extension);
 			BufferedWriter keyDataWriter = new BufferedWriter(new FileWriter(keyDataFile));
 			for(int i=0; i<lines.size(); i++)
 			{
@@ -258,7 +284,7 @@ public class Update68To75
 		}
 		
 		// In Transactions File, add ID before each transaction
-		String transactionsFileName = "Key Data";
+		String transactionsFileName = "Transactions";
 		File transactionsFile = new File(backupFolder, transactionsFileName+extension);
 		try
 		{
@@ -274,7 +300,7 @@ public class Update68To75
 			for(int i=0; i<numTransactions*9; i++)
 			{
 				if(i%9==0)
-					transactionsWriter.write((i/9)+1);
+					transactionsWriter.write(((i/9)+1) + "\n");
 				transactionsWriter.write(lines.get(i) + "\n");
 			}
 			transactionsWriter.close();
@@ -290,5 +316,125 @@ public class Update68To75
 			e.printStackTrace();
 		}
 		
+		// In Banks File, add ID before each transaction
+		String banksFileName = "Banks";
+		File banksFile = new File(backupFolder, banksFileName+extension);
+		try
+		{
+			BufferedReader banksReader = new BufferedReader(new FileReader(banksFile));
+			ArrayList<String> lines = new ArrayList<String>();
+			for(int i=0; i<numBanks*5; i++)
+			{
+				lines.add(banksReader.readLine());
+			}
+			banksReader.close();
+			
+			BufferedWriter banksWriter = new BufferedWriter(new FileWriter(banksFile));
+			for(int i=0; i<numBanks*5; i++)
+			{
+				if(i%5==0)
+					banksWriter.write(((i/5)+1) + "\n");
+				banksWriter.write(lines.get(i) + "\n");
+			}
+			banksWriter.close();
+		}
+		catch(FileNotFoundException e)
+		{
+			Toast.makeText(context, "Error Found in Update68\nPlease Report To The Developer", 
+					Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		// In Counters File, add ID before each transaction
+		String countersFileName = "Counters";
+		File countersFile = new File(backupFolder, countersFileName+extension);
+		try
+		{
+			BufferedReader countersReader = new BufferedReader(new FileReader(countersFile));
+			ArrayList<String> lines = new ArrayList<String>();
+			for(int i=0; i<numCountersRows*11; i++)
+			{
+				lines.add(countersReader.readLine());
+			}
+			countersReader.close();
+			
+			BufferedWriter countersWriter = new BufferedWriter(new FileWriter(countersFile));
+			for(int i=0; i<numCountersRows*11; i++)
+			{
+				if(i%11==0)
+					countersWriter.write(((i/11)+1) + "\n");
+				countersWriter.write(lines.get(i) + "\n");
+			}
+			countersWriter.close();
+		}
+		catch(FileNotFoundException e)
+		{
+			Toast.makeText(context, "Error Found in Update68\nPlease Report To The Developer", 
+					Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		// For older version, if wallet balance is not backed up
+		if(backupVersionNo == 56)
+		{
+			String walletFileName = "Wallet";
+			File walletFile = new File(backupFolder, walletFileName + extension);
+			try
+			{
+				BufferedWriter walletWriter = new BufferedWriter(new FileWriter(walletFile));
+				walletWriter.write("0\n");
+				walletWriter.close();
+			}
+			catch(IOException e)
+			{
+				Toast.makeText(context, "Error Found in Update68/Wallet\nPlease Report To The Developer", 
+						Toast.LENGTH_LONG).show();
+				e.printStackTrace();
+			}
+		}
+		
+		// Create Templates File
+		String templatesFileName = "Templates";
+		File templatesFile = new File(backupFolder, templatesFileName+extension);
+		try
+		{
+			BufferedWriter templatesWriter = new BufferedWriter(new FileWriter(templatesFile));
+			templatesWriter.write("\n");
+			templatesWriter.close();
+		}
+		catch(IOException e)
+		{
+			Toast.makeText(context, "Error Found in Update68/Templates\nPlease Report To The Developer", 
+					Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}
+	}
+
+	// These methods are related to Database. Since this class extends, SQLiteOpenHelper class, these methods 
+	// have to be impemented, but will never be called. So. don't worry
+	@Override
+	public void onCreate(SQLiteDatabase db)
+	{
+		// This method will be called only when the database is created for the first time.
+		// Since the database is already created, this method will not be called. So, nothing is required here
+		Toast.makeText(context, "Database onCreate called in Updata68 Class\nPlease Contact Developer ASAP", 
+				Toast.LENGTH_LONG).show();
+	}
+	
+	// Upgrading database
+	@Override
+	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+	{
+		// Called when database is upgraded. Not called here
+		Toast.makeText(context, "Database onUpgrade called in Updata68 Class\nPlease Contact Developer ASAP", 
+				Toast.LENGTH_LONG).show();
 	}
 }
