@@ -1,15 +1,15 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity" >
 
     <RelativeLayout
         android:id="@+id/action_bar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
         android:background="#0000FF" >
 
         <ImageView
@@ -36,95 +36,9 @@
         android:id="@+id/krishna"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/action_bar"
-        android:layout_centerHorizontal="true"
+	android:gravity="center"
+	android:layout_marginLeft="75dp"
+	android:layout_marginBottom="75dp"
         android:text="@string/krishna" />
 
-    <TextView
-        android:id="@+id/bank_01"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/krishna"
-        android:layout_marginLeft="40dp"
-        android:layout_marginTop="60dp"
-        android:text="State Bank of India" />
-
-    <TextView
-        android:id="@+id/balance_bank_01"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/bank_01"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="180dp"
-        android:text="Rs100" />
-
-    <TextView
-        android:id="@+id/bank_02"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/bank_01"
-        android:layout_below="@+id/bank_01"
-        android:layout_marginTop="20dp"
-        android:text="Union Bank of India" />
-
-    <TextView
-        android:id="@+id/balance_bank_02"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/bank_02"
-        android:layout_alignLeft="@+id/balance_bank_01"
-        android:text="Rs200" />
-
-    <TextView
-        android:id="@+id/bank_03"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/bank_01"
-        android:layout_below="@+id/bank_02"
-        android:layout_marginTop="20dp"
-        android:text="Canara Bank" />
-
-    <TextView
-        android:id="@+id/balance_bank_03"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/bank_03"
-        android:layout_alignLeft="@+id/balance_bank_01"
-        android:text="Rs300" />
-
-    <TextView
-        android:id="@+id/wallet"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/bank_01"
-        android:layout_below="@+id/bank_03"
-        android:layout_marginTop="20dp"
-        android:text="Wallet" />
-
-    <TextView
-        android:id="@+id/balance_wallet"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/wallet"
-        android:layout_alignLeft="@+id/balance_bank_01"
-        android:text="Rs400" />
-
-    <TextView
-        android:id="@+id/expenditure"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/bank_01"
-        android:layout_below="@+id/wallet"
-        android:layout_marginTop="20dp"
-        android:text="Amount Spent" />
-
-    <TextView
-        android:id="@+id/amount_spent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/expenditure"
-        android:layout_alignLeft="@+id/balance_bank_01"
-        android:text="Rs500" />
-
-</RelativeLayout>
+</LinearLayout>

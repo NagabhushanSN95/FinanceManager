@@ -15,6 +15,8 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,10 +28,13 @@ public class AdvancedSettingsActivity extends Activity
 	private ArrayList<String> bankNames;
 	private ArrayList<Integer> bankBalances;
 
-	private ArrayList<TextView> banksView;
-	private TextView walletView;
-	private ArrayList<EditText> bankBalanceFields;
-	private EditText walletField;
+	private LinearLayout parentLayout;
+	private ArrayList<LinearLayout> linearLayouts;
+	private ArrayList<LayoutParams> linearLayoutParams;
+	private ArrayList<TextView> textViews;
+	private ArrayList<LayoutParams> textViewParams;
+	private ArrayList<EditText> amountFields;
+	private ArrayList<LayoutParams> amountFieldParams;
 	private ImageButton saveButton;
 	
 	private String expenditureFolderName;
@@ -54,22 +59,35 @@ public class AdvancedSettingsActivity extends Activity
 		setContentView(R.layout.activity_advanced_settings);
 		readFile();
 		
-		banksView=new ArrayList<TextView>();
-		bankBalanceFields=new ArrayList<EditText>();
-		banksView.add((TextView)findViewById(R.id.bank01_view));
-		banksView.add((TextView)findViewById(R.id.bank02_view));
-		bankBalanceFields.add((EditText)findViewById(R.id.edit_balance_bank01));
-		bankBalanceFields.add((EditText)findViewById(R.id.edit_balance_bank02));
-		walletView=(TextView)findViewById(R.id.wallet);
-		walletField=(EditText)findViewById(R.id.balance_wallet);
+		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
+		linearLayouts=new ArrayList<LinearLayout>(numBanks+1);
+		linearLayoutParams=new ArrayList<LayoutParams>(numBanks+1);
+		textViews=new ArrayList<TextView>(numBanks+1);
+		textViewParams=new ArrayList<LayoutParams>(numBanks+1);
+		amountFields=new ArrayList<EditText>(numBanks+1);
+		amountFieldParams=new ArrayList<LayoutParams>(numBanks+1);
+		for(int i=0; i<numBanks+1; i++)
+		{
+			linearLayouts.add(new LinearLayout(this));
+			linearLayoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			textViews.add(new TextView(this));
+			textViewParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			amountFields.add(new EditText(this));
+			amountFieldParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			
+			linearLayouts.get(i).setOrientation(LinearLayout.HORIZONTAL);
+			linearLayouts.get(i).addView(textViews.get(i), textViewParams.get(i));
+			linearLayouts.get(i).addView(amountFields.get(i), amountFieldParams.get(i));
+			parentLayout.addView(linearLayouts.get(i), linearLayoutParams.get(i));
+		}
 		
-		walletView.setText("Wallet Balance\tRs");
-		walletField.setText(""+walletBalance);
 		for(int i=0; i<numBanks; i++)
 		{
-			banksView.get(i).setText(bankNames.get(i)+"\tRs");
-			bankBalanceFields.get(i).setText(""+bankBalances.get(i));
+			textViews.get(i).setText(bankNames.get(i)+"\tRs");
+			amountFields.get(i).setText(""+bankBalances.get(i));
 		}
+		textViews.get(numBanks).setText("Wallet Balance\tRs");
+		amountFields.get(numBanks).setText(""+walletBalance);
 		
 		saveButton=(ImageButton)findViewById(R.id.button_save);
 		saveButton.setOnClickListener(new SaveListener());
@@ -125,9 +143,9 @@ public class AdvancedSettingsActivity extends Activity
 		{
 			for(int i=0; i<numBanks; i++)
 			{
-				bankBalances.set(i, Integer.parseInt(bankBalanceFields.get(i).getText().toString()));
+				bankBalances.set(i, Integer.parseInt(amountFields.get(i).getText().toString()));
 			}
-			walletBalance=Integer.parseInt(walletField.getText().toString());
+			walletBalance=Integer.parseInt(amountFields.get(numBanks).getText().toString());
 			
 			
 			expenditureFolderName="Expenditure List/.temp";

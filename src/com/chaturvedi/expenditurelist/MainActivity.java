@@ -17,6 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,14 +44,13 @@ public class MainActivity extends Activity
 	private static BufferedReader walletReader;
 	private static BufferedReader bankReader;
 	
-	private static TextView walletBalanceView;
-	private static TextView amountSpentView;
-	private static TextView bank01View;
-	private static TextView bank02View;
-	private static TextView bank03View;
-	private static TextView balanceBank01View;
-	private static TextView balanceBank02View;
-	private static TextView balanceBank03View;
+	private static LinearLayout mainLayout;
+	private static ArrayList<LinearLayout> layouts;
+	private static ArrayList<LinearLayout.LayoutParams> layoutParams;
+	private static ArrayList<TextView> nameViews;
+	private static ArrayList<LinearLayout.LayoutParams> nameViewParams;
+	private static ArrayList<TextView> amountViews;
+	private static ArrayList<LinearLayout.LayoutParams> amountViewParams;
 	
 	private Intent detailsIntent;
 	private Intent advancedSettingsIntent;
@@ -72,6 +73,7 @@ public class MainActivity extends Activity
 		}
 		
 		readData();
+		buildLayout();
 		setData();
 		
 		detailsIntent=new Intent(this, DetailsActivity.class);
@@ -165,28 +167,49 @@ public class MainActivity extends Activity
 		}
 	}
 	
+	private void buildLayout()
+	{
+		mainLayout=(LinearLayout)findViewById(R.id.activity_main);
+		
+		layouts=new ArrayList<LinearLayout>(numBanks+2);
+		layoutParams=new ArrayList<LayoutParams>(numBanks+2);
+		nameViews=new ArrayList<TextView>(numBanks+2);
+		nameViewParams=new ArrayList<LayoutParams>(numBanks+2);
+		amountViews=new ArrayList<TextView>(numBanks+2);
+		amountViewParams=new ArrayList<LayoutParams>(numBanks+2);
+		for(int i=0; i<numBanks+2; i++)
+		{
+			layouts.add(new LinearLayout(this));
+			layoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			nameViews.add(new TextView(this));
+			nameViewParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			amountViews.add(new TextView(this));
+			amountViewParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+			
+			layoutParams.get(i).setMargins(50, 10, 10, 10);
+			nameViewParams.get(i).setMargins(10,0,0,0);
+			amountViewParams.get(i).setMargins(30,0,0,0);
+
+			layouts.get(i).addView(nameViews.get(i), nameViewParams.get(i));
+			layouts.get(i).addView(amountViews.get(i), amountViewParams.get(i));
+			mainLayout.addView(layouts.get(i), layoutParams.get(i));
+		}
+	}
+	
 	private void setData()
 	{
 		try
 		{
-			walletBalanceView=(TextView)findViewById(R.id.balance_wallet);
-			amountSpentView=(TextView)findViewById(R.id.amount_spent);
-			walletBalanceView.setText("Rs "+walletBalance);
-			amountSpentView.setText("Rs "+amountSpent);
-
-			bank01View=(TextView)findViewById(R.id.bank_01);
-			bank02View=(TextView)findViewById(R.id.bank_02);
-			bank03View=(TextView)findViewById(R.id.bank_03);
-			bank03View.setVisibility(View.GONE);
-			balanceBank01View=(TextView)findViewById(R.id.balance_bank_01);
-			balanceBank02View=(TextView)findViewById(R.id.balance_bank_02);
-			balanceBank03View=(TextView)findViewById(R.id.balance_bank_03);
-			balanceBank03View.setVisibility(View.GONE);
-			
-			bank01View.setText(bankNames.get(0));
-			bank02View.setText(bankNames.get(1));
-			balanceBank01View.setText("Rs "+bankBalances.get(0));
-			balanceBank02View.setText("Rs "+bankBalances.get(1));
+			// Set The Data
+			for(int i=0; i<numBanks; i++)
+			{
+				nameViews.get(i).setText(bankNames.get(i));
+				amountViews.get(i).setText("Rs "+bankBalances.get(i));
+			}
+			nameViews.get(numBanks).setText("Wallet");
+			nameViews.get(numBanks+1).setText("AmountSpent");
+			amountViews.get(numBanks).setText("Rs "+walletBalance);
+			amountViews.get(numBanks+1).setText("Rs "+amountSpent);
 		}
 		catch(Exception e)
 		{

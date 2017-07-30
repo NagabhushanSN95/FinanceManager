@@ -11,6 +11,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,6 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -106,7 +108,7 @@ public class DetailsActivity extends Activity
 	private View atmWithdrawalDialogView;
 	private EditText particularsField;
 	private EditText amountField;
-	ArrayList<RadioButton> banks;
+	private ArrayList<RadioButton> banks;
 	private EditText withdrawalAmountField;
 	private Intent detailsIntent;
 	
@@ -278,16 +280,19 @@ public class DetailsActivity extends Activity
 		
 		slnoTitleView=new TextView(this);
 		slnoTitleView.setText("Sl No");
+		//slnoTitleView.setBackgroundColor(Color.parseColor("#CCCCCC"));
 		slnoTitleParams=new RelativeLayout.LayoutParams(WIDTH_SLNO, RelativeLayout.LayoutParams.WRAP_CONTENT);
 		slnoTitleParams.setMargins(MARGIN_LEFT_SLNO, MARGIN_TOP, 0, 0);
 		
 		particularsTitleView=new TextView(this);
 		particularsTitleView.setText("Particulars");
+		//particularsTitleView.setBackgroundColor(Color.parseColor("#CCCCCC"));
 		particularsTitleParams=new RelativeLayout.LayoutParams(WIDTH_PARTICULARS, RelativeLayout.LayoutParams.WRAP_CONTENT);
 		particularsTitleParams.setMargins(screenWidth*40/100, MARGIN_TOP, 0, 0);
 		
 		amountTitleView=new TextView(this);
 		amountTitleView.setText("Amount");
+		//amountTitleView.setBackgroundColor(Color.parseColor("#CCCCCC"));
 		amountTitleParams=new RelativeLayout.LayoutParams(WIDTH_AMOUNT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 		amountTitleParams.setMargins(screenWidth*80/100, MARGIN_TOP, 0, 0);
 		
@@ -372,27 +377,57 @@ public class DetailsActivity extends Activity
 	
 	private void buildWithdrawalDialog()
 	{
-		atmWithdrawalDialog=new AlertDialog.Builder(this);
-		atmWithdrawalDialog.setTitle("Add ATM Withdrawal");
-		atmWithdrawalDialog.setMessage("Enter Details");
 		atmWithdrawalDialogLayout=LayoutInflater.from(this);
-		atmWithdrawalDialogView=atmWithdrawalDialogLayout.inflate(R.layout.layout_atm_withdrawal_dialog, null);
-		atmWithdrawalDialog.setView(atmWithdrawalDialogView);
-		atmWithdrawalDialog.setPositiveButton("OK", new AtmWithdrawalDialogListener(1));
-		atmWithdrawalDialog.setNegativeButton("Cancel", new AtmWithdrawalDialogListener(0));
+		atmWithdrawalDialogView=atmWithdrawalDialogLayout.inflate(R.layout.dialog_bank_debit, null);
+		
+		RadioGroup banksRadioGroup=(RadioGroup)atmWithdrawalDialogView.findViewById(R.id.radioGroup_banks);
 		banks=new ArrayList<RadioButton>();
-		banks.add((RadioButton)atmWithdrawalDialogView.findViewById(R.id.bank_01));
-		banks.add((RadioButton)atmWithdrawalDialogView.findViewById(R.id.bank_02));
-		banks.add((RadioButton)atmWithdrawalDialogView.findViewById(R.id.bank_03));
-		banks.get(2).setVisibility(View.GONE);
 		for(int i=0; i<numBanks; i++)
 		{
+			banks.add(new RadioButton(this));
 			banks.get(i).setText(bankNames.get(i));
 			banks.get(i).setTextSize(20);
-			banks.get(i).setTextColor(999999999);
+			banks.get(i).setTextColor(Color.BLUE);
+			banksRadioGroup.addView(banks.get(i));
 		}
 		banks.get(0).setChecked(true);
 		withdrawalAmountField=(EditText)atmWithdrawalDialogView.findViewById(R.id.edit_amount);
+		
+		atmWithdrawalDialog=new AlertDialog.Builder(this);
+		atmWithdrawalDialog.setTitle("Add ATM Withdrawal");
+		atmWithdrawalDialog.setMessage("Enter Details");
+		atmWithdrawalDialog.setView(atmWithdrawalDialogView);
+		atmWithdrawalDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				int bankNo=0;
+				try
+				{
+					int withdrawalAmount=Integer.parseInt(withdrawalAmountField.getText().toString());
+					for(int i=0; i<numBanks; i++)
+					{
+						if(banks.get(i).isChecked())
+							bankNo=i;
+					}
+					bankBalances.set(bankNo, bankBalances.get(bankNo)-withdrawalAmount);
+					walletBalance+=withdrawalAmount;
+					numEntries++;
+					particulars.add(bankNames.get(bankNo)+" withdrawal");
+					amounts.add(withdrawalAmount);
+					saveData();
+				}
+				catch(Exception e)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_SHORT).show();
+				}
+				buildTitleLayout();
+				buildBodyLayout();
+				buildButtonPanel();
+			}
+		});
+		atmWithdrawalDialog.setNegativeButton("Cancel", null);
 	}
 	
 	/*private String breakParticularsString(String line)
@@ -456,52 +491,11 @@ public class DetailsActivity extends Activity
 				particulars.add(particularsField.getText().toString());
 				amounts.add(amount);
 				saveData();
-				//readFile();
 				buildTitleLayout();
 				buildBodyLayout();
 				buildButtonPanel();
 				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
 			}
-		}
-		
-	}
-	
-	private class AtmWithdrawalDialogListener implements DialogInterface.OnClickListener
-	{
-		private int action;
-		
-		public AtmWithdrawalDialogListener(int act)
-		{
-			action=act;
-		}
-
-		@Override
-		public void onClick(DialogInterface dialog, int which)
-		{
-			if(action==1)
-			{
-				int bankNo=0;
-				int withdrawalAmount=Integer.parseInt(withdrawalAmountField.getText().toString());
-				if(banks.get(0).isChecked())
-					bankNo=0;
-				else if(banks.get(1).isChecked())
-					bankNo=1;
-				else if(banks.get(2).isChecked())
-					bankNo=2;
-				
-				bankBalances.set(bankNo, bankBalances.get(bankNo)-withdrawalAmount);
-				walletBalance+=withdrawalAmount;
-				numEntries++;
-				particulars.add(bankNames.get(bankNo)+" withdrawal");
-				amounts.add(withdrawalAmount);
-				saveData();
-				//readFile();
-				buildTitleLayout();
-				buildBodyLayout();
-				buildButtonPanel();
-				Toast.makeText(getApplicationContext(), "Data Saved", Toast.LENGTH_SHORT).show();
-			}
-			//Toast.makeText(getApplicationContext(), banks.get(0).getText()+banks.get(0).toString(), Toast.LENGTH_SHORT).show();
 		}
 		
 	}
