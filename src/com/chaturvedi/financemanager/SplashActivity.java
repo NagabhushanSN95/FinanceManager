@@ -320,34 +320,43 @@ public class SplashActivity extends Activity
 				if(restoreResult == 1)
 				{
 					//If found any error, restore
-					if(DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
+					if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
 							restoreManager.getAllTransactions()))
 					{
 						DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 						Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
-					if(DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(), 
+					if(!DatabaseManager.areEqualBanks(DatabaseManager.getAllBanks(), 
 							restoreManager.getAllBanks()))
 					{
 						DatabaseManager.setAllBanks(restoreManager.getAllBanks());
 						Toast.makeText(getApplicationContext(), "Error Found In Banks. Data Recovered", 
 								Toast.LENGTH_SHORT).show();
 					}
-					if(DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
+					if(!DatabaseManager.areEqualCounters(DatabaseManager.getAllCounters(), 
 							restoreManager.getAllCounters()))
 					{
 						DatabaseManager.setAllCounters(restoreManager.getAllCounters());
 						Toast.makeText(getApplicationContext(), "Error Found In Counters. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
-					if(DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
+					if(!DatabaseManager.areEqualExpTypes(DatabaseManager.getAllExpenditureTypes(), 
 							restoreManager.getAllExpTypes()))
 					{
 						DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
 						Toast.makeText(getApplicationContext(), "Error Found In Exp Types. Data Recovered",
 								Toast.LENGTH_SHORT).show();
 					}
+					if(!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(), 
+							restoreManager.getAllTemplates()))
+					{
+						DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+						Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
+								Toast.LENGTH_SHORT).show();
+					}
+					//Toast.makeText(getApplicationContext(), restoreManager.getAllTemplates().get(0).getParticular()
+					//		, Toast.LENGTH_SHORT).show();
 				}
 			}
 			if(!showSplash)

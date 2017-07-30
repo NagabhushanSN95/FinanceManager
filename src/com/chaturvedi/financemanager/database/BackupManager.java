@@ -37,9 +37,9 @@ public class BackupManager
 	
 	public void backup(String backupFolderName)
 	{
-		File expenditureFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), backupFolderName);
-		if(!expenditureFolder.exists())
-			expenditureFolder.mkdirs();
+		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Chaturvedi"), backupFolderName);
+		if(!financeFolder.exists())
+			financeFolder.mkdirs();
 		
 		String extension = ".snb";
 		String keyDataFileName = "Key Data";
@@ -48,13 +48,15 @@ public class BackupManager
 		String countersFileName = "Counters";
 		String expTypesFileName = "Expenditure Types";
 		String walletFileName = "Wallet";
+		String templatesFileName = "Templates";
 
-		File keyDataFile = new File(expenditureFolder, keyDataFileName+extension);
-		File transactionsFile = new File(expenditureFolder, transactionsFileName+extension);
-		File banksFile = new File(expenditureFolder, banksFileName+extension);
-		File countersFile = new File(expenditureFolder, countersFileName+extension);
-		File expTypesFile = new File(expenditureFolder, expTypesFileName+extension);
-		File walletFile = new File(expenditureFolder, walletFileName+extension);
+		File keyDataFile = new File(financeFolder, keyDataFileName+extension);
+		File transactionsFile = new File(financeFolder, transactionsFileName+extension);
+		File banksFile = new File(financeFolder, banksFileName+extension);
+		File countersFile = new File(financeFolder, countersFileName+extension);
+		File expTypesFile = new File(financeFolder, expTypesFileName+extension);
+		File walletFile = new File(financeFolder, walletFileName+extension);
+		File templatesFile = new File(financeFolder, templatesFileName+extension);
 		
 		try
 		{
@@ -64,6 +66,7 @@ public class BackupManager
 			BufferedWriter countersWriter = new BufferedWriter(new FileWriter(countersFile));
 			BufferedWriter expTypesWriter = new BufferedWriter(new FileWriter(expTypesFile));
 			BufferedWriter walletWriter = new BufferedWriter(new FileWriter(walletFile));
+			BufferedWriter templatesWriter = new BufferedWriter(new FileWriter(templatesFile));
 			
 			// Store The KEY DATA
 			int versionNo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
@@ -71,12 +74,15 @@ public class BackupManager
 			keyDataWriter.write(DatabaseManager.getNumTransactions() + "\n");
 			keyDataWriter.write(DatabaseManager.getNumBanks() + "\n");
 			keyDataWriter.write(DatabaseManager.getNumCountersRows() + "\n");
+			keyDataWriter.write(DatabaseManager.getAllExpenditureTypes().size() + "\n");
+			keyDataWriter.write(DatabaseManager.getAllTemplates().size() + "\n");
 			keyDataWriter.close();
 			
 			// Backup The Transactions
 			ArrayList<Transaction> transactions = DatabaseManager.getAllTransactions();
 			for(Transaction transaction : transactions)
 			{
+				transactionsWriter.write(transaction.getID() + "\n");
 				transactionsWriter.write(transaction.getCreatedTime().toString() + "\n");
 				transactionsWriter.write(transaction.getModifiedTime().toString() + "\n");
 				transactionsWriter.write(transaction.getDate().getSavableDate() + "\n");
@@ -93,6 +99,7 @@ public class BackupManager
 			ArrayList<Bank> banks = DatabaseManager.getAllBanks();
 			for(Bank bank : banks)
 			{
+				banksWriter.write(bank.getID() + "\n");
 				banksWriter.write(bank.getName() + "\n");
 				banksWriter.write(bank.getAccNo() + "\n");
 				banksWriter.write(bank.getBalance() + "\n");
@@ -105,6 +112,7 @@ public class BackupManager
 			ArrayList<Counters> counters = DatabaseManager.getAllCounters();
 			for(Counters counter : counters)
 			{
+				countersWriter.write(counter.getID() + "\n");
 				countersWriter.write(counter.getDate().getSavableDate() + "\n");
 				countersWriter.write(counter.getExp01() + "\n");
 				countersWriter.write(counter.getExp02() + "\n");
@@ -127,8 +135,21 @@ public class BackupManager
 			}
 			expTypesWriter.close();
 			
+			// Backup Wallet Balance
 			walletWriter.write(DatabaseManager.getWalletBalance() + "\n");
 			walletWriter.close();
+			
+			// Backup The Templates
+			ArrayList<Template> templates = DatabaseManager.getAllTemplates();
+			for(Template template : templates)
+			{
+				templatesWriter.write(template.getID() + "\n");
+				templatesWriter.write(template.getParticular() + "\n");
+				templatesWriter.write(template.getType() + "\n");
+				templatesWriter.write(template.getAmount() + "\n");
+				templatesWriter.write("\n");
+			}
+			templatesWriter.close();
 			
 			Toast.makeText(context, "Data Has Been Backed-Up Succesfully", Toast.LENGTH_LONG).show();
 		}

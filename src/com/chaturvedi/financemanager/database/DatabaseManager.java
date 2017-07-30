@@ -248,6 +248,8 @@ public class DatabaseManager
 	public static void setAllTransactions(ArrayList<Transaction> transactions)
 	{
 		DatabaseManager.transactions = transactions;
+		databaseAdapter.deleteAllTransactions();
+		databaseAdapter.addAllTransactions(transactions);
 	}
 	
 	/**
@@ -483,6 +485,8 @@ public class DatabaseManager
 	public static void setAllCounters(ArrayList<Counters> counters)
 	{
 		DatabaseManager.counters = counters;
+		databaseAdapter.deleteAllCountersRows();
+		databaseAdapter.addAllCountersRows(counters);
 	}
 	
 	public static ArrayList<Counters> getAllCounters()
@@ -777,6 +781,13 @@ public class DatabaseManager
 				databaseAdapter.insertTemplate(template);
 			}
 		}
+	}
+
+	public static void setAllTemplates(ArrayList<Template> templates)
+	{
+		DatabaseManager.templates = templates;
+		databaseAdapter.deleteAllTemplates();
+		databaseAdapter.addAllTemplates(templates);
 	}
 	
 	public static void deleteTemplate(Template template)
@@ -1223,6 +1234,36 @@ public class DatabaseManager
 				//return false;
 			}*/
 			if(expTypes1.get(i) != expTypes2.get(i))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public static boolean areEqualTemplates(ArrayList<Template> templates1, ArrayList<Template> templates2)
+	{
+		// Go on comparing every fields. Whenever you find a difference, return false;
+		if(templates1.size() != templates2.size())
+		{
+			return false;
+		}
+		int numTemplates = templates1.size();
+		for(int i=0; i<numTemplates; i++)
+		{
+			if(templates1.get(i).getID() != templates2.get(i).getID())
+			{
+				return false;
+			}
+			if(!(templates1.get(i).getParticular().equals(templates2.get(i).getParticular())))
+			{
+				return false;
+			}
+			if(!(templates1.get(i).getType().equals(templates2.get(i).getType())))
+			{
+				return false;
+			}
+			if(templates1.get(i).getAmount() != templates2.get(i).getAmount())
 			{
 				return false;
 			}

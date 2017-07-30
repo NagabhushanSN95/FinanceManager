@@ -28,11 +28,15 @@ public class RestoreManager
 	private int numTransactions;
 	private int numBanks;
 	private int numCountersRows;
+	private int numExpTypes;
+	private int numTemplates;
+	
 	private ArrayList<Transaction> transactions;
 	private ArrayList<Bank> banks;
 	private ArrayList<Counters> counters;
 	private ArrayList<String> expTypes;
 	private double walletBalance;
+	private ArrayList<Template> templates;
 	
 	public RestoreManager(Context cxt)
 	{
@@ -123,6 +127,8 @@ public class RestoreManager
 			numTransactions = Integer.parseInt(keyDataReader.readLine());
 			numBanks = Integer.parseInt(keyDataReader.readLine());
 			numCountersRows = Integer.parseInt(keyDataReader.readLine());
+			numExpTypes = Integer.parseInt(keyDataReader.readLine());
+			numTemplates = Integer.parseInt(keyDataReader.readLine());
 			keyDataReader.close();
 			
 			// Save The Data Into Database And Overwrite Existing Data In Database
@@ -163,6 +169,7 @@ public class RestoreManager
 			ArrayList<Transaction> transactions = new ArrayList<Transaction>();
 			for(int i=0; i<numTransactions; i++)
 			{
+				int ID = Integer.parseInt(transactionsReader.readLine());
 				Time createdTime = new Time(transactionsReader.readLine());
 				Time modifiedTime = new Time(transactionsReader.readLine());
 				Date date = new Date(transactionsReader.readLine());
@@ -172,7 +179,7 @@ public class RestoreManager
 				double quantity = Double.parseDouble(transactionsReader.readLine());
 				double amount = Double.parseDouble(transactionsReader.readLine());
 				transactionsReader.readLine();
-				Transaction transaction = new Transaction(i, createdTime, modifiedTime, date, type, particular, rate, quantity, amount);
+				Transaction transaction = new Transaction(ID, createdTime, modifiedTime, date, type, particular, rate, quantity, amount);
 				transactions.add(transaction);
 			}
 			// Save The Transactions Into Database And Overwrite Existing Transactions In Database
@@ -205,12 +212,13 @@ public class RestoreManager
 			ArrayList<Bank> banks = new ArrayList<Bank>();
 			for(int i=0; i<numBanks; i++)
 			{
+				int ID = Integer.parseInt(banksReader.readLine());
 				String bankName = banksReader.readLine();
 				String accNo = banksReader.readLine();
 				double balance = Double.parseDouble(banksReader.readLine());
 				String smsName = banksReader.readLine();
 				banksReader.readLine();
-				Bank bank = new Bank(i, bankName, accNo, balance, smsName);
+				Bank bank = new Bank(ID, bankName, accNo, balance, smsName);
 				banks.add(bank);
 			}
 			
@@ -245,6 +253,7 @@ public class RestoreManager
 			ArrayList<Counters> counters = new ArrayList<Counters>();
 			for(int i=0; i<numCountersRows; i++)
 			{
+				int ID = Integer.parseInt(countersReader.readLine());
 				Date date = new Date(countersReader.readLine());
 				double exp01 = Double.parseDouble(countersReader.readLine());
 				double exp02 = Double.parseDouble(countersReader.readLine());
@@ -256,7 +265,7 @@ public class RestoreManager
 				double savings = Double.parseDouble(countersReader.readLine());
 				double withdrawal = Double.parseDouble(countersReader.readLine());
 				countersReader.readLine();
-				Counters counter = new Counters(i, date, exp01, exp02, exp03, exp04, exp05, amountSpent, income, savings, withdrawal);
+				Counters counter = new Counters(ID, date, exp01, exp02, exp03, exp04, exp05, amountSpent, income, savings, withdrawal);
 				counters.add(counter);
 			}
 			DatabaseManager.setAllCounters(counters);
@@ -396,6 +405,7 @@ public class RestoreManager
 				readCounters();
 				readExpTypes();
 				readWalletBalance();
+				readTemplates();
 			}
 			
 			keyDataReader.close();
@@ -421,6 +431,8 @@ public class RestoreManager
 			numTransactions = Integer.parseInt(keyDataReader.readLine());
 			numBanks = Integer.parseInt(keyDataReader.readLine());
 			numCountersRows = Integer.parseInt(keyDataReader.readLine());
+			numExpTypes = Integer.parseInt(keyDataReader.readLine());
+			numTemplates = Integer.parseInt(keyDataReader.readLine());
 			keyDataReader.close();
 		}
 		catch(FileNotFoundException e)
@@ -456,6 +468,7 @@ public class RestoreManager
 			transactions = new ArrayList<Transaction>();
 			for(int i=0; i<numTransactions; i++)
 			{
+				int ID = Integer.parseInt(transactionsReader.readLine());
 				Time createdTime = new Time(transactionsReader.readLine());
 				Time modifiedTime = new Time(transactionsReader.readLine());
 				Date date = new Date(transactionsReader.readLine());
@@ -465,7 +478,7 @@ public class RestoreManager
 				double quantity = Double.parseDouble(transactionsReader.readLine());
 				double amount = Double.parseDouble(transactionsReader.readLine());
 				transactionsReader.readLine();
-				Transaction transaction = new Transaction(i, createdTime, modifiedTime, date, type, particular, rate, quantity, amount);
+				Transaction transaction = new Transaction(ID, createdTime, modifiedTime, date, type, particular, rate, quantity, amount);
 				transactions.add(transaction);
 			}
 			transactionsReader.close();
@@ -496,12 +509,13 @@ public class RestoreManager
 			banks = new ArrayList<Bank>();
 			for(int i=0; i<numBanks; i++)
 			{
+				int ID = Integer.parseInt(banksReader.readLine());
 				String bankName = banksReader.readLine();
 				String accNo = banksReader.readLine();
 				double balance = Double.parseDouble(banksReader.readLine());
 				String smsName = banksReader.readLine();
 				banksReader.readLine();
-				Bank bank = new Bank(i, bankName, accNo, balance, smsName);
+				Bank bank = new Bank(ID, bankName, accNo, balance, smsName);
 				banks.add(bank);
 			}
 			banksReader.close();
@@ -518,7 +532,6 @@ public class RestoreManager
 					"Error In RestoreManager/readBanks()\n" + 
 					e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-		
 	}
 	
 	private void readCounters()
@@ -533,6 +546,7 @@ public class RestoreManager
 			counters = new ArrayList<Counters>();
 			for(int i=0; i<numCountersRows; i++)
 			{
+				int ID = Integer.parseInt(countersReader.readLine());
 				Date date = new Date(countersReader.readLine());
 				double exp01 = Double.parseDouble(countersReader.readLine());
 				double exp02 = Double.parseDouble(countersReader.readLine());
@@ -544,7 +558,7 @@ public class RestoreManager
 				double savings = Double.parseDouble(countersReader.readLine());
 				double withdrawal = Double.parseDouble(countersReader.readLine());
 				countersReader.readLine();
-				Counters counter = new Counters(i, date, exp01, exp02, exp03, exp04, exp05, amountSpent, income, savings, withdrawal);
+				Counters counter = new Counters(ID, date, exp01, exp02, exp03, exp04, exp05, amountSpent, income, savings, withdrawal);
 				counters.add(counter);
 			}
 			countersReader.close();
@@ -579,8 +593,7 @@ public class RestoreManager
 			
 			// Read Expenditure Types
 			expTypes = new ArrayList<String>();
-			int NUM_EXP_TYPES = 5;
-			for(int i=0; i<NUM_EXP_TYPES ; i++)
+			for(int i=0; i<numExpTypes ; i++)
 			{
 				expTypes.add(expTypesReader.readLine());
 			}
@@ -624,6 +637,48 @@ public class RestoreManager
 		}
 	}
 	
+	private void readTemplates()
+	{
+		try
+		{
+			String templatesFileName = "Templates";
+			File templatesFile = new File(backupFolder, templatesFileName+extension);
+			BufferedReader templatesReader = new BufferedReader(new FileReader(templatesFile));
+			
+			// Read templates
+			templates = new ArrayList<Template>();
+			for(int i=0; i<numTemplates; i++)
+			{
+				int ID = Integer.parseInt(templatesReader.readLine());
+				String particulars = templatesReader.readLine();
+				String type = templatesReader.readLine();
+				double amount = Double.parseDouble(templatesReader.readLine());
+				templatesReader.readLine();
+				Template template = new Template(ID, particulars, type, amount);
+				templates.add(template);
+			}
+			templatesReader.close();
+		}
+		catch(FileNotFoundException e)
+		{
+			Toast.makeText(context, "Backup Files Have Tampered. Read Aborted\n" + 
+					"Error In RestoreManager/readtemplates()\n" + 
+					e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		catch (NumberFormatException e)
+		{
+			Toast.makeText(context, "Backup Files Have Tampered. Read Aborted\n" + 
+					"Error In RestoreManager/readtemplates()\n" + 
+					e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		catch (IOException e)
+		{
+			Toast.makeText(context, "Backup Files Have Tampered. Read Aborted\n" + 
+					"Error In RestoreManager/readtemplates()\n" + 
+					e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+	}
+	
 	public int getAppVersionNo()
 	{
 		return appVersionNo;
@@ -642,6 +697,16 @@ public class RestoreManager
 	public int getNumCountersRows()
 	{
 		return numCountersRows;
+	}
+	
+	public int getNumExpTypes()
+	{
+		return numExpTypes;
+	}
+	
+	public int getNumTemplates()
+	{
+		return numTemplates;
 	}
 	
 	public ArrayList<Transaction> getAllTransactions()
@@ -667,6 +732,12 @@ public class RestoreManager
 	public double getWalletBalance()
 	{
 		return walletBalance;
+	}
+	
+	public ArrayList<Template> getAllTemplates()
+	{
+		return templates;
+		
 	}
 	
 	/**
