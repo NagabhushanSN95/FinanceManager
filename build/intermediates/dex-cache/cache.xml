@@ -7,17 +7,8 @@
         jumboMode="true"
         optimize="true"
         revision="23.0.2"
-        sha1="55ecccaa729d693dd60ce6f15a2b39c4d58d6662">
+        sha1="9f5658a12119d37dfe8ce1ae835929db5d828a54">
         <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe\classes.dex" />
-    </item>
-    <item
-        is-multidex="true"
-        jar="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
-        jumboMode="true"
-        optimize="true"
-        revision="23.0.2"
-        sha1="d5567fd36761af57bbcc49930c150c5a6ba51008">
-        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd\classes.dex" />
     </item>
     <item
         is-multidex="false"
@@ -27,6 +18,15 @@
         revision="23.0.2"
         sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67">
         <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\pre-dexed\debug\support-v4-19.1.0_25c31f909aefd2b01057c3020630746b92282e1d.jar" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="23.0.2"
+        sha1="d5567fd36761af57bbcc49930c150c5a6ba51008">
+        <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd\classes.dex" />
     </item>
     <item
         is-multidex="true"

@@ -25,8 +25,10 @@ import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.database.RestoreManager;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
+import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.setup.StartupActivity;
 import com.chaturvedi.financemanager.updates.Update107To110;
+import com.chaturvedi.financemanager.updates.Update110To111;
 import com.chaturvedi.financemanager.updates.Update68To88;
 import com.chaturvedi.financemanager.updates.Update88To89;
 import com.chaturvedi.financemanager.updates.Update89To96;
@@ -157,9 +159,13 @@ public class SplashActivity extends Activity
 			{
 				new Update96To107(SplashActivity.this);
 			}
-			if(previousVersionNo < APP_VERSION_NO_110)
+			if (previousVersionNo < APP_VERSION_NO_110)
 			{
 				new Update107To110(SplashActivity.this);
+			}
+			if (previousVersionNo < Constants.APP_VERSION_111)
+			{
+				new Update110To111(SplashActivity.this);
 			}
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.commit();

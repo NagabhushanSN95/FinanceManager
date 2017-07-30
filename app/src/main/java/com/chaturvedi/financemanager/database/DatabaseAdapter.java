@@ -21,7 +21,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Table names
 	private static final String TABLE_TRANSACTIONS = "transactions";
 	private static final String TABLE_BANKS = "banks";
-	private static final String TABLE_WALLET = "wallet";
+	private static final String TABLE_WALLETS = "wallets";
 	private static final String TABLE_EXPENDITURE_TYPES = "expenditure_types";
 	private static final String TABLE_COUNTERS = "counters";
 	private static final String TABLE_TEMPLATES = "templates";
@@ -46,9 +46,6 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	private static final String KEY_ACC_NO = "account_number";
 	private static final String KEY_BALANCE = "balance";
 	private static final String KEY_SMS_NAME = "sms_name";
-
-	// Expenditure Types Table Column Names
-	private static final String KEY_EXPENDITURE_TYPE_NAME = "expenditure_type_name";
 	
 	// Counters Table Column Names
 	private static final String KEY_EXP01 = "expenditure_01";
@@ -63,7 +60,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	// Table Create Statements (Change Type Of Date From String To Date/DateTime whichever is available
 
-	private static String CREATE_WALLETS_TABLE = "CREATE TABLE " + TABLE_WALLET + "(" +
+	private static String CREATE_WALLETS_TABLE = "CREATE TABLE " + TABLE_WALLETS + "(" +
 			KEY_ID + " INTEGER PRIMARY KEY," +
 			KEY_NAME + " TEXT," +
 			KEY_AMOUNT + " DOUBLE," +
@@ -91,7 +88,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	private static String CREATE_EXPENDITURE_TYPES_TABLE = "CREATE TABLE " + TABLE_EXPENDITURE_TYPES + "(" +
 			KEY_ID + " INTEGER PRIMARY KEY," +
-			KEY_EXPENDITURE_TYPE_NAME + " TEXT," +
+			KEY_NAME + " TEXT," +
 			KEY_DELETED + " BOOLEAN" + ")";
 	
 	private static String CREATE_COUNTERS_TABLE = "CREATE TABLE " + TABLE_COUNTERS + "(" +
@@ -147,7 +144,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
 	{
 		// Drop older table if existed
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLETS);
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_BANKS);
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTIONS);
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENDITURE_TYPES);
@@ -168,7 +165,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		values.put(KEY_AMOUNT, wallet.getBalance());
 		values.put(KEY_DELETED, wallet.isDeleted());
 
-		db.insert(TABLE_WALLET, null, values);
+		db.insert(TABLE_WALLETS, null, values);
 		db.close();
 	}
 
@@ -183,7 +180,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			values.put(KEY_NAME, wallet.getName());
 			values.put(KEY_AMOUNT, wallet.getBalance());
 			values.put(KEY_DELETED, wallet.isDeleted());
-			db.insert(TABLE_WALLET, null, values);
+			db.insert(TABLE_WALLETS, null, values);
 		}
 		db.close();
 	}
@@ -191,7 +188,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public NewWallet getWallet(int id)
 	{
 		SQLiteDatabase db = this.getReadableDatabase();
-		Cursor cursor = db.query(TABLE_WALLET, new String[]{KEY_ID, KEY_NAME, KEY_AMOUNT, KEY_DELETED}, KEY_ID + "=?",
+		Cursor cursor = db.query(TABLE_WALLETS, new String[]{KEY_ID, KEY_NAME, KEY_AMOUNT, KEY_DELETED}, KEY_ID + "=?",
 				new String[]{String.valueOf(id)}, null, null, null, null);
 
 		NewWallet wallet = null;
@@ -208,7 +205,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public NewWallet getWalletFromName(String walletName)
 	{
 		NewWallet wallet = null;
-		String selectQuery = "SELECT * FROM " + TABLE_WALLET + " WHERE " + KEY_NAME + " = '" + walletName + "'";
+		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_NAME + " = '" + walletName + "'";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
@@ -223,7 +220,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public ArrayList<NewWallet> getAllWallets()
 	{
 		ArrayList<NewWallet> wallets = new ArrayList<NewWallet>();
-		String selectQuery = "SELECT * FROM " + TABLE_WALLET;
+		String selectQuery = "SELECT * FROM " + TABLE_WALLETS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
@@ -244,7 +241,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public ArrayList<NewWallet> getAllVisibleWallets()
 	{
 		ArrayList<NewWallet> wallets = new ArrayList<NewWallet>();
-		String selectQuery = "SELECT * FROM " + TABLE_WALLET + " WHERE " + KEY_DELETED + " = 0";
+		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
@@ -265,7 +262,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public ArrayList<String> getAllVisibleWalletsNames()
 	{
 		ArrayList<String> walletsNamesList = new ArrayList<String>();
-		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_WALLET + " WHERE " + KEY_DELETED + " = 0";
+		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
@@ -284,7 +281,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 //	public NewWallet getWalletFromName(String walletName)
 //	{
 //		NewWallet wallet = null;
-//		String selectQuery = "SELECT * FROM " + TABLE_WALLET + " WHERE " + KEY_NAME + " = " + walletName;
+//		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_NAME + " = " + walletName;
 //		SQLiteDatabase db = this.getWritableDatabase();
 //		Cursor cursor = db.rawQuery(selectQuery, null);
 //		if (cursor.moveToFirst())
@@ -303,7 +300,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		values.put(KEY_NAME, wallet.getName());
 		values.put(KEY_AMOUNT, wallet.getBalance());
 		values.put(KEY_DELETED, wallet.isDeleted());
-		db.update(TABLE_WALLET, values, KEY_ID + " = ?", new String[]{String.valueOf(wallet.getID())});
+		db.update(TABLE_WALLETS, values, KEY_ID + " = ?", new String[]{String.valueOf(wallet.getID())});
 		db.close();
 	}
 
@@ -312,21 +309,21 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(KEY_DELETED, true);
-		db.update(TABLE_WALLET, values, KEY_ID + " = ?", new String[]{String.valueOf(walletID)});
+		db.update(TABLE_WALLETS, values, KEY_ID + " = ?", new String[]{String.valueOf(walletID)});
 		db.close();
 	}
 
 	public void deleteAllWallets()
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
-		db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET);
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLETS);
 		db.execSQL(CREATE_WALLETS_TABLE);
 		db.close();
 	}
 
 	public int getNumWallets()
 	{
-		String countQuery = "SELECT * FROM " + TABLE_WALLET;
+		String countQuery = "SELECT * FROM " + TABLE_WALLETS;
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
 		int numWallets = cursor.getCount();
@@ -337,7 +334,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 
 	public int getNumVisibleWallets()
 	{
-		String countQuery = "SELECT * FROM " + TABLE_WALLET + " WHERE " + KEY_DELETED + " = 0";
+		String countQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
 		int numWallets = cursor.getCount();
@@ -354,7 +351,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			return 1;
 		}
 
-		String selectQuery = "SELECT max(" + KEY_ID + ") FROM " + TABLE_WALLET;
+		String selectQuery = "SELECT max(" + KEY_ID + ") FROM " + TABLE_WALLETS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
@@ -860,7 +857,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 
 		ContentValues values = new ContentValues();
 		values.put(KEY_ID, expType.getId());
-		values.put(KEY_EXPENDITURE_TYPE_NAME, expType.getName());
+		values.put(KEY_NAME, expType.getName());
 		values.put(KEY_DELETED, expType.isDeleted());
 
 		db.insert(TABLE_EXPENDITURE_TYPES, null, values);
@@ -875,7 +872,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		{
 			ContentValues values = new ContentValues();
 			values.put(KEY_ID, expType.getId());
-			values.put(KEY_EXPENDITURE_TYPE_NAME, expType.getName());
+			values.put(KEY_NAME, expType.getName());
 			values.put(KEY_DELETED, expType.isDeleted());
 			db.insert(TABLE_EXPENDITURE_TYPES, null, values);
 		}
@@ -886,7 +883,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	{
 		ExpenditureType expType = null;
 		SQLiteDatabase db = this.getReadableDatabase();
-		Cursor cursor = db.query(TABLE_EXPENDITURE_TYPES, new String[]{KEY_ID, KEY_EXPENDITURE_TYPE_NAME, KEY_DELETED},
+		Cursor cursor = db.query(TABLE_EXPENDITURE_TYPES, new String[]{KEY_ID, KEY_NAME, KEY_DELETED},
 				KEY_ID + "=?", new String[]{String.valueOf(id)}, null, null, null, null);
 		if (cursor != null && cursor.moveToFirst())
 		{
@@ -900,7 +897,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public ExpenditureType getExpenditureTypeFromName(String expTypeName)
 	{
 		ExpenditureType expenditureType = null;
-		String selectQuery = "SELECT * FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_EXPENDITURE_TYPE_NAME + " = '" +
+		String selectQuery = "SELECT * FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_NAME + " = '" +
 				expTypeName + "'";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -958,7 +955,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public ArrayList<String> getAllVisibleExpenditureTypeNames()
 	{
 		ArrayList<String> expTypes = new ArrayList<String>();
-		String selectQuery = "SELECT " + KEY_EXPENDITURE_TYPE_NAME + " FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_DELETED + " = 0";
+		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
@@ -978,7 +975,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
-		values.put(KEY_EXPENDITURE_TYPE_NAME, expenditureType.getName());
+		values.put(KEY_NAME, expenditureType.getName());
 		values.put(KEY_DELETED, expenditureType.isDeleted());
 		db.update(TABLE_EXPENDITURE_TYPES, values, KEY_ID + " = ?",
 				new String[]{String.valueOf(expenditureType.getId())});
@@ -1694,11 +1691,29 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	}
 
 	// Getting single Template
+	public Template getTemplate(String particulars)
+	{
+		Template template = null;
+		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES + " WHERE " + KEY_PARTICULARS + " = '" + particulars + "'";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		if (cursor != null && cursor.moveToFirst())
+		{
+			template = new Template(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getDouble(3),
+					cursor.getString(4).equals("1"));
+			cursor.close();
+		}
+
+		db.close();
+		return template;
+	}
+
+	// Getting single Template
 	public Template getTemplate(String particulars, String type)
 	{
 		Template template = null;
-		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES + " WHERE " + KEY_PARTICULARS + " = " + particulars +
-				" && " + KEY_TYPE + " = " + type;
+		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES + " WHERE " + KEY_PARTICULARS + " = '" + particulars +
+				"' && " + KEY_TYPE + " = '" + type + "'";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
 		if (cursor != null && cursor.moveToFirst())
@@ -1752,6 +1767,75 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				Template template = new Template(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getDouble(3),
 						cursor.getString(4).equals("1"));
 				templatesList.add(template);
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return templatesList;
+	}
+
+	// Getting Names of Visible Templates for Transaction Type Credit
+	public ArrayList<String> getVisibleCreditTemplatesNames()
+	{
+		ArrayList<String> templatesList = new ArrayList<String>();
+		// Select Query
+		String selectQuery = "SELECT " + KEY_PARTICULARS + " FROM " + TABLE_TEMPLATES + " WHERE " + KEY_TYPE
+				+ " LIKE 'Credit%' AND " + KEY_HIDDEN + " = 0";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		// looping through all rows and adding to list
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				templatesList.add(cursor.getString(0));
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return templatesList;
+	}
+
+	// Getting Names of Visible Templates for Transaction Type Debit
+	public ArrayList<String> getVisibleDebitTemplatesNames()
+	{
+		ArrayList<String> templatesList = new ArrayList<String>();
+		// Select Query
+		String selectQuery = "SELECT " + KEY_PARTICULARS + " FROM " + TABLE_TEMPLATES + " WHERE " + KEY_TYPE
+				+ " LIKE 'Debit%' AND " + KEY_HIDDEN + " = 0";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		// looping through all rows and adding to list
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				templatesList.add(cursor.getString(0));
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return templatesList;
+	}
+
+	// Getting Names of Visible Templates for Transaction Type Transfer
+	public ArrayList<String> getVisibleTransferTemplatesNames()
+	{
+		ArrayList<String> templatesList = new ArrayList<String>();
+		// Select Query
+		String selectQuery = "SELECT " + KEY_PARTICULARS + " FROM " + TABLE_TEMPLATES + " WHERE " + KEY_TYPE
+				+ " LIKE 'Transfer%' AND " + KEY_HIDDEN + " = 0";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		// looping through all rows and adding to list
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				templatesList.add(cursor.getString(0));
 			}
 			while (cursor.moveToNext());
 		}

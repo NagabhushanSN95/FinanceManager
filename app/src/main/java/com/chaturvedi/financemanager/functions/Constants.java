@@ -3,9 +3,11 @@ package com.chaturvedi.financemanager.functions;
 
 public class Constants
 {
+	public static final int APP_VERSION_111 = 111;
+	public static final int CURRENT_APP_VERSION_NO = 111;
+
 	public static final String ALL_PREFERENCES = "AllPreferences";
 	public static final String KEY_APP_VERSION = "AppVersionNo";
-	public static final int CURRENT_APP_VERSION_NO = 110;
 	public static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
 	public static final String KEY_SPLASH_DURATION = "SplashDuration";
 	public static final String KEY_QUOTE_NO = "QuoteNo";

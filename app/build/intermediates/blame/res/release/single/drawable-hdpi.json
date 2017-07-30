@@ -1,0 +1,54 @@
+[
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\transfer.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\transfer.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\remove_symbol_pressed.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\remove_symbol_pressed.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\krishna.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\krishna.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\bank_debit.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\bank_debit.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\debit.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\debit.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\bank_credit.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\bank_credit.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\wallet_debit.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\wallet_debit.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\app_icon.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\app_icon.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\remove_symbol.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\remove_symbol.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\wallet_credit.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\wallet_credit.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\credit.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\credit.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\button_info_pressed.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\button_info_pressed.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\release\\drawable-hdpi\\button_info_normal.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\button_info_normal.png"
+    }
+]

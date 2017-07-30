@@ -1,0 +1,48 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_activity_summary"
+    tools:context=".main.SummaryActivity" >
+
+    <TextView
+        android:id="@+id/krishna"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/krishna" />
+    
+    <ScrollView
+        android:id="@+id/scrollView_parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/krishna"
+        android:layout_marginTop="30dp" >
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+            
+            <LinearLayout 
+        	android:id="@+id/parentLayout"
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+        	android:orientation="vertical"
+        	android:background="#FFFFFF" >
+        
+	    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+	<com.chaturvedi.financemanager.main.TransactionButtonsLayout
+		android:id="@+id/button_layout"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true">
+
+	</com.chaturvedi.financemanager.main.TransactionButtonsLayout>
+    
+</RelativeLayout>

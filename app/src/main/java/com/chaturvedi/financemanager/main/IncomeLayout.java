@@ -5,9 +5,9 @@ package com.chaturvedi.financemanager.main;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
@@ -16,6 +16,7 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -33,7 +34,7 @@ import java.util.Calendar;
 public class IncomeLayout extends RelativeLayout
 {
 	private Spinner incomeDestinationSpinner;
-	private EditText particularsEditText;
+	private MyAutoCompleteTextView particularsEditText;
 	private EditText rateEditText;
 	private EditText quantityEditText;
 	private EditText amountEditText;
@@ -62,15 +63,16 @@ public class IncomeLayout extends RelativeLayout
 	{
 		LayoutInflater.from(getContext()).inflate(R.layout.layout_transaction_income, this);
 
-		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
+		final DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
 
 		ArrayList<String> incomeDestinationsList = databaseAdapter.getAllVisibleWalletsNames();
 		incomeDestinationsList.addAll(databaseAdapter.getAllVisibleBanksNames());
 
 		incomeDestinationSpinner = (Spinner) this.findViewById(R.id.spinner_incomeDestination);
-		incomeDestinationSpinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
-				incomeDestinationsList));
-		particularsEditText = (EditText) findViewById(R.id.editText_particulars);
+		final ArrayAdapter<String> incomeDestinationAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+				incomeDestinationsList);
+		incomeDestinationSpinner.setAdapter(incomeDestinationAdapter);
+		particularsEditText = (MyAutoCompleteTextView) findViewById(R.id.editText_particulars);
 		rateEditText = (EditText) findViewById(R.id.editText_rate);
 		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
 		amountEditText = (EditText) findViewById(R.id.editText_amount);
@@ -99,8 +101,26 @@ public class IncomeLayout extends RelativeLayout
 						myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
 			}
 		});
-
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
+
+		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(getContext(),
+				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleCreditTemplatesNames());
+		particularsEditText.setAdapter(templatesAdapter);
+		particularsEditText.setThreshold(1);
+		particularsEditText.setDropDownWidth(-1);	// To set drop down width to Match Parent
+		particularsEditText.setOnItemClickListener(new AdapterView.OnItemClickListener()
+		{
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
+			{
+				Template selectedTemplate = databaseAdapter.getTemplate(particularsEditText.getText().toString());
+				String incomeDestinationName = (new TransactionTypeParser(getContext(), selectedTemplate.getType())).
+						getIncomeDestinationName();
+				int incomeDestinationPosition = incomeDestinationAdapter.getPosition(incomeDestinationName);
+				incomeDestinationSpinner.setSelection(incomeDestinationPosition);
+				rateEditText.setText(String.valueOf(selectedTemplate.getAmount()));
+			}
+		});
 	}
 
 	public void setData(Transaction transaction)

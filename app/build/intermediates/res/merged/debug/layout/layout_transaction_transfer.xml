@@ -38,7 +38,7 @@
 			android:layout_marginStart="50dp"/>
 	</TableRow>
 
-	<EditText
+	<com.chaturvedi.customviews.MyAutoCompleteTextView
 		android:id="@+id/editText_particulars"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"

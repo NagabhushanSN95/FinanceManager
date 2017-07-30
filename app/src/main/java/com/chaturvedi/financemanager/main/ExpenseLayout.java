@@ -8,6 +8,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.DatePicker;
@@ -16,6 +17,7 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -31,10 +33,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import static com.chaturvedi.financemanager.R.string.expenseSource;
+
 public class ExpenseLayout extends RelativeLayout
 {
 	private Spinner expenseSourcesSpinner;
-	private EditText particularsEditText;
+	private MyAutoCompleteTextView particularsEditText;
 	private Spinner expenseTypeSpinner;
 	private EditText rateEditText;
 	private EditText quantityEditText;
@@ -64,16 +68,17 @@ public class ExpenseLayout extends RelativeLayout
 	{
 		LayoutInflater.from(getContext()).inflate(R.layout.layout_transaction_expense, this);
 
-		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
+		final DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
 
 		ArrayList<String> expenseSourcesList = databaseAdapter.getAllVisibleWalletsNames();
 		expenseSourcesList.addAll(databaseAdapter.getAllVisibleBanksNames());
 		ArrayList<String> expenditureTypesList = databaseAdapter.getAllVisibleExpenditureTypeNames();
 
 		expenseSourcesSpinner = (Spinner) findViewById(R.id.spinner_expenseSource);
-		expenseSourcesSpinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
-				expenseSourcesList));
-		particularsEditText = (EditText) findViewById(R.id.editText_particulars);
+		final ArrayAdapter<String> expenseSourcesAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+				expenseSourcesList);
+		expenseSourcesSpinner.setAdapter(expenseSourcesAdapter);
+		particularsEditText = (MyAutoCompleteTextView) findViewById(R.id.editText_particulars);
 		expenseTypeSpinner = (Spinner) findViewById(R.id.spinner_expenseType);
 		expenseTypeSpinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
 				expenditureTypesList));
@@ -107,8 +112,27 @@ public class ExpenseLayout extends RelativeLayout
 						myCalendar.get(Calendar.MONTH), myCalendar.get(Calendar.DAY_OF_MONTH)).show();
 			}
 		});
-
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
+
+		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(getContext(),
+				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleDebitTemplatesNames());
+		particularsEditText.setAdapter(templatesAdapter);
+		particularsEditText.setThreshold(1);
+		particularsEditText.setDropDownWidth(-1);	// To set drop down width to Match Parent
+		particularsEditText.setOnItemClickListener(new AdapterView.OnItemClickListener()
+		{
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
+			{
+				Template selectedTemplate = databaseAdapter.getTemplate(particularsEditText.getText().toString());
+				String expenseSourceName = (new TransactionTypeParser(getContext(), selectedTemplate.getType())).
+						getExpenseSourceName();
+				int expenseSourcePosition = expenseSourcesAdapter.getPosition(expenseSourceName);
+				expenseSourcesSpinner.setSelection(expenseSourcePosition);
+				rateEditText.setText(String.valueOf(selectedTemplate.getAmount()));
+			}
+		});
+
 	}
 
 	public void setData(Transaction transaction)
