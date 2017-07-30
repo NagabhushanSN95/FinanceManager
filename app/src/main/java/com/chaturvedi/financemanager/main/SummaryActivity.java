@@ -75,7 +75,9 @@ public class SummaryActivity extends Activity
 	private Intent extrasIntent;
 	
 	private Intent smsIntent;
-	private DecimalFormat formatterTextFields;
+
+	private long lastBackPressedTime;
+	private static final int DOUBLE_BACK_PRESS_INTERVAL = 2000;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -129,20 +131,29 @@ public class SummaryActivity extends Activity
 	@Override
 	public void onBackPressed()
 	{
-		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
-		boolean backup = false;
-		if(preferences.contains(KEY_AUTOMATIC_BACKUP_RESTORE))
+		if(lastBackPressedTime + DOUBLE_BACK_PRESS_INTERVAL > System.currentTimeMillis())
 		{
-			int value = preferences.getInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
-			AutomaticBackupAndRestoreManager manager = new AutomaticBackupAndRestoreManager(value);
-			backup = manager.isAutomaticBackup();
+			// If set, auto-backup data and close the activity
+			SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+			boolean backup = false;
+			if(preferences.contains(KEY_AUTOMATIC_BACKUP_RESTORE))
+			{
+				int value = preferences.getInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+				AutomaticBackupAndRestoreManager manager = new AutomaticBackupAndRestoreManager(value);
+				backup = manager.isAutomaticBackup();
+			}
+			if(backup)
+			{
+				new BackupManager(this).autoBackup();	// Backs-Up Data to Auto Backup Folder
+			}
+
+			super.onBackPressed();
 		}
-		if(backup)
+		else
 		{
-			new BackupManager(this).autoBackup();	// Backs-Up Data to Auto Backup Folder
+			Toast.makeText(SummaryActivity.this, "Press again to exit", Toast.LENGTH_SHORT).show();
+			lastBackPressedTime = System.currentTimeMillis();
 		}
-		
-		super.onBackPressed();
 	}
 
 	@Override

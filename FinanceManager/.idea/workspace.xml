@@ -48,11 +48,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="EditWalletsActivity.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/edit/EditWalletsActivity.java">
+      <file leaf-file-name="StatisticsActivity.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/StatisticsActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="70">
-              <caret line="92" column="14" selection-start-line="92" selection-start-column="14" selection-end-line="92" selection-end-column="14" />
+            <state relative-caret-position="-213">
+              <caret line="159" column="81" selection-start-line="159" selection-start-column="81" selection-end-line="159" selection-end-column="81" />
               <folding />
             </state>
           </provider>
@@ -68,21 +68,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="EditBanksActivity.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/edit/EditBanksActivity.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="337" column="61" selection-start-line="337" selection-start-column="61" selection-end-line="337" selection-end-column="61" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="DatabaseAdapter.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="124">
-              <caret line="707" column="62" selection-start-line="707" selection-start-column="62" selection-end-line="707" selection-end-column="62" />
+            <state relative-caret-position="104">
+              <caret line="1406" column="20" selection-start-line="1406" selection-start-column="20" selection-end-line="1406" selection-end-column="20" />
               <folding />
             </state>
           </provider>
@@ -1631,7 +1621,6 @@
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/AddTransactionActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TransactionsActivity.java" />
-        <option value="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/activity_add_transaction.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/TemplatesActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/ExpenseLayout.java" />
@@ -1640,6 +1629,9 @@
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/edit/EditWalletsActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/edit/EditBanksActivity.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseManager.java" />
+        <option value="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/SummaryActivity.java" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/StatisticsActivity.java" />
       </list>
     </option>
   </component>
@@ -2093,7 +2085,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Nl-Palette" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
@@ -2233,6 +2225,11 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="340">
           <caret line="24" column="11" selection-start-line="24" selection-start-column="11" selection-end-line="24" selection-end-column="11" />
+          <folding>
+            <element signature="method#onCreate#0;class#Update110To111#0" expanded="false" />
+            <element signature="e#2479#2562#0" expanded="false" />
+            <element signature="method#onUpgrade#0;class#Update110To111#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2290,14 +2287,11 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="186">
           <caret line="24" column="11" selection-start-line="24" selection-start-column="11" selection-end-line="24" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/SplashActivity.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="138">
-          <caret line="85" column="26" selection-start-line="85" selection-start-column="26" selection-end-line="85" selection-end-column="26" />
-          <folding />
+          <folding>
+            <element signature="method#onCreate#0;class#Update110To111#0" expanded="false" />
+            <element signature="e#2479#2562#0" expanded="false" />
+            <element signature="method#onUpgrade#0;class#Update110To111#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2379,14 +2373,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="354">
           <caret line="258" column="34" selection-start-line="258" selection-start-column="34" selection-end-line="258" selection-end-column="34" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="124">
-          <caret line="707" column="62" selection-start-line="707" selection-start-column="62" selection-end-line="707" selection-end-column="62" />
           <folding />
         </state>
       </provider>
@@ -2482,6 +2468,38 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="8">
           <caret line="2059" column="77" selection-start-line="2059" selection-start-column="77" selection-end-line="2059" selection-end-column="77" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/SplashActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="580">
+          <caret line="85" column="26" selection-start-line="85" selection-start-column="26" selection-end-line="85" selection-end-column="26" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/SummaryActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="263">
+          <caret line="153" column="55" selection-start-line="153" selection-start-column="55" selection-end-line="153" selection-end-column="55" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/database/DatabaseAdapter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="104">
+          <caret line="1406" column="20" selection-start-line="1406" selection-start-column="20" selection-end-line="1406" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/chaturvedi/financemanager/main/StatisticsActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-213">
+          <caret line="159" column="81" selection-start-line="159" selection-start-column="81" selection-end-line="159" selection-end-column="81" />
           <folding />
         </state>
       </provider>

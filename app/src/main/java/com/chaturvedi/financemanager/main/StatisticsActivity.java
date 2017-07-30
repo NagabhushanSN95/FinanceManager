@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TableLayout;
@@ -96,7 +97,8 @@ public class StatisticsActivity extends Activity
 			numExpTypes = preferences.getInt(KEY_NUM_EXP_TYPES, 5);
 		}*/
 		
-		DecimalFormat formatter = new DecimalFormat("#,##0.##");
+		DecimalFormat formatter1 = new DecimalFormat("#,##0.##");
+		DecimalFormat formatter2 = new DecimalFormat("00");
 		
 		TableLayout statLayout = (TableLayout) findViewById(R.id.layout_statistics);
 		
@@ -154,14 +156,14 @@ public class StatisticsActivity extends Activity
 			monthView.setBackgroundResource(R.drawable.border_black_1dp);
 			monthRow.addView(monthView);
 			long longMonth = Date.getLongMonth(months.get(i));
-			String month = (longMonth/100) + "/" + (longMonth%100);
+			String month = (longMonth/100) + "/" + formatter2.format(longMonth%100);
 			double[] monthlyCounters = databaseAdapter.getMonthlyCounters(month);
 			
 			for(int j=0; j<databaseAdapter.getNumVisibleExpenditureTypes()+4; j++)//+4 for Total Expenses,Incomes,Savings and Withdrawals
 			{
 				TextView expValueView = new TextView(this);
 				expValueView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
-				expValueView.setText(currencySymbol + formatter.format(monthlyCounters[j]));
+				expValueView.setText(currencySymbol + formatter1.format(monthlyCounters[j]));
 				expValueView.setBackgroundResource(R.drawable.border_black_1dp);
 				monthRow.addView(expValueView);
 			}
@@ -183,7 +185,7 @@ public class StatisticsActivity extends Activity
 		{
 			TextView expValueView = new TextView(this);
 			expValueView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
-			expValueView.setText(currencySymbol + formatter.format(totalCounters[j]));
+			expValueView.setText(currencySymbol + formatter1.format(totalCounters[j]));
 			expValueView.setBackgroundResource(R.drawable.border_black_1dp);
 			totalsRow.addView(expValueView);
 		}
