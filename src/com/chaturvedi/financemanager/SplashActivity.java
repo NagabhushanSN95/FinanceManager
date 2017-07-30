@@ -355,6 +355,8 @@ public class SplashActivity extends Activity
 					if(DatabaseManager.getWalletBalance() != restoreManager.getWalletBalance())
 					{
 						DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
+						Toast.makeText(getApplicationContext(), "Error Found In Wallet Balance. Data Recovered",
+								Toast.LENGTH_SHORT).show();
 					}
 					// Transactions
 					if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 

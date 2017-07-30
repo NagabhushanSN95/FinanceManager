@@ -177,6 +177,7 @@ public class RestoreManager
 			for(int i=0; i<numTransactions; i++)
 			{
 				int ID = Integer.parseInt(transactionsReader.readLine().trim());
+				//Toast.makeText(context, "i="+i+", id="+ID, Toast.LENGTH_SHORT).show();
 				Time createdTime = new Time(transactionsReader.readLine().trim());
 				Time modifiedTime = new Time(transactionsReader.readLine().trim());
 				Date date = new Date(transactionsReader.readLine().trim());

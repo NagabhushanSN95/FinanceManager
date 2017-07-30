@@ -164,7 +164,6 @@ public class DatabaseManager
 	
 	public static void addTransaction(Transaction transaction)
 	{
-		DatabaseManager.transactions.add(transaction);
 		
 		if(transaction.getType().contains("Wallet Credit"))
 		{
@@ -221,6 +220,7 @@ public class DatabaseManager
 		}
 		
 		transaction.setID(transactions.size()+1);
+		DatabaseManager.transactions.add(transaction);
 		databaseAdapter.addTransaction(transaction);
 	}
 

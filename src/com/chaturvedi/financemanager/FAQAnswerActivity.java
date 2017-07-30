@@ -1,8 +1,12 @@
 package com.chaturvedi.financemanager;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Build.VERSION;
@@ -10,20 +14,21 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class HelpActivity extends Activity
+public class FAQAnswerActivity extends Activity
 {
-	private Intent guideIntent;
-	private Intent FAQIntent;
+	private int FAQNo;
+	private ArrayList<String> FAQQuestions;
+	private ArrayList<String> FAQAnswers;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_help);
+		setContentView(R.layout.activity_faq_answer);
 		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
 		{
 			// Provide Up Button in Action Bar
@@ -33,15 +38,17 @@ public class HelpActivity extends Activity
 		{
 			// No Up Button in Action Bar
 		}
+		FAQNo = getIntent().getIntExtra("FAQ No", 1);
+		readFAQs();
 		buildLayout();
 	}
-	
+
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		switch(item.getItemId())
 		{
 			case android.R.id.home:
-				NavUtils.navigateUpFromSameTask(HelpActivity.this);
+				NavUtils.navigateUpFromSameTask(FAQAnswerActivity.this);
 				return true;
 		}
 		return true;
@@ -56,35 +63,29 @@ public class HelpActivity extends Activity
 			krishna.setVisibility(View.INVISIBLE);
 		}
 
-		Button guideButton = (Button) findViewById(R.id.button_guide);
-		guideButton.setOnClickListener(new View.OnClickListener()
-		{
-			
-			@Override
-			public void onClick(View v)
-			{
-				guideIntent = new Intent(HelpActivity.this, GuideActivity.class);
-				startActivity(guideIntent);
-			}
-		});
-
-		Button FAQButton = (Button) findViewById(R.id.button_FAQ);
-		FAQButton.setOnClickListener(new View.OnClickListener()
-		{
-			
-			@Override
-			public void onClick(View v)
-			{
-				FAQIntent = new Intent(HelpActivity.this, FAQSummaryActivity.class);
-				startActivity(FAQIntent);
-			}
-		});
+		((TextView)findViewById(R.id.textView_FAQQuestion)).setText(FAQQuestions.get(FAQNo));
+		((TextView)findViewById(R.id.textView_FAQAnswer)).setText(FAQAnswers.get(FAQNo));
 	}
-	
-	@Override
-	public void onBackPressed()
+
+	private void readFAQs()
 	{
-		super.onBackPressed();
-		overridePendingTransition(R.anim.old_activity_enter, R.anim.new_activity_leave);
+		FAQQuestions=new ArrayList<String>();
+		FAQAnswers=new ArrayList<String>();
+		InputStream textStream = getResources().openRawResource(R.raw.faq);
+		BufferedReader FAQReader = new BufferedReader(new InputStreamReader(textStream));
+		try
+		{
+			String line=FAQReader.readLine();
+			while(line!=null)
+			{
+				FAQQuestions.add(line);
+				FAQAnswers.add(FAQReader.readLine());
+				line=FAQReader.readLine();
+			}
+		}
+		catch(Exception e)
+		{
+			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+		}
 	}
 }

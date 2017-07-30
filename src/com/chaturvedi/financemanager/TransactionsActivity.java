@@ -502,7 +502,7 @@ public class TransactionsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				String id = ""+DatabaseManager.getNumTransactions();
+				String id = ""+(DatabaseManager.getNumTransactions()+1);
 				Time time = new Time(Calendar.getInstance());
 				String date = dateField.getText().toString();
 				String type = "Wallet Credit";

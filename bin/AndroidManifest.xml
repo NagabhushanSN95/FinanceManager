@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.chaturvedi.financemanager"
     android:versionCode="81"
-    android:versionName="3.3.2" >
+    android:versionName="3.3.4" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -112,6 +112,22 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.chaturvedi.financemanager.HelpActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.FAQSummaryActivity"
+            android:label="@string/label_help"
+            android:parentActivityName="com.chaturvedi.financemanager.HelpActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.HelpActivity" />
+        </activity>
+        <activity 
+            android:name="com.chaturvedi.financemanager.FAQAnswerActivity"
+            android:label="@string/label_help"
+            android:parentActivityName="com.chaturvedi.financemanager.FAQSummaryActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.chaturvedi.financemanager.FAQSummaryActivity" />
         </activity>
         <activity 
             android:name="com.chaturvedi.financemanager.AboutActivity"
