@@ -128,12 +128,12 @@ public class DetailsActivity extends Activity
 		}
 	}
 	
-	@Override
+	/*@Override
 	public void onPause()
 	{
 		super.onPause();
 		DatabaseManager.saveDatabaseImproved();
-	}
+	}*/
 
 	/*@Override
 	public boolean onCreateOptionsMenu(Menu menu)

@@ -543,6 +543,32 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			db.close(); // Closing database connection
 		}
 		
+		/**
+		 * Inserts the Counters Row at the position specified by the ID
+		 * @param counter
+		 */
+		public void insertCountersRow(Counters counter)
+		{
+			int position = counter.getID();
+			int numRows = getNumCountersRows();
+			if(position>numRows)
+			{
+				addCountersRow(counter);
+			}
+			
+			// Add an extra Row and shift rows down
+			addCountersRow(getCountersRow(numRows));
+			for(int i=numRows; i>(position-1); i--)
+			{
+				Counters tempCounter = getCountersRow(i);
+				tempCounter.setID(tempCounter.getID() + 1);
+				updateCountersRow(tempCounter);
+			}
+			
+			// Insert i.e. update the Row
+			updateCountersRow(counter);
+		}
+		
 		public void addAllCountersRows(ArrayList<Counters> counters)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
@@ -610,7 +636,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		}
 		
 		// Updating single Row Of Counters
-		public void updateCountersRows(Counters counter)
+		public void updateCountersRow(Counters counter)
 		{
 			SQLiteDatabase db = this.getWritableDatabase();
 			ContentValues values = new ContentValues();

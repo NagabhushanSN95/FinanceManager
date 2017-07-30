@@ -128,12 +128,12 @@ public class EditBanksActivity extends Activity
 		return true;
 	}
 	
-	@Override
+	/*@Override
 	public void onPause()
 	{
 		super.onPause();
-		DatabaseManager.saveDatabaseImproved();			// To save Wallet Balance
-	}
+		DatabaseManager.saveDatabaseImproved();			// To save Wallet Balance, Fixed
+	}*/
 	
 	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
 	{

@@ -100,33 +100,6 @@ public class DatabaseManager
 		counters = new ArrayList<Counters>();
 	}
 	
-	/*public static void initializeDatabase()
-	{
-		try
-		{
-			if(numBanks>0)
-			{
-				databaseAdapter.addAllBanks(banks);
-			}
-		}
-		catch(Exception e)
-		{
-			Toast.makeText(context, "Error in Initializing Banks Database\n"+ e.getMessage(), 
-					Toast.LENGTH_LONG).show();
-		}
-		
-		databaseAdapter.initializeWalletTable(walletBalance);
-		
-		ArrayList<ExpenditureTypes> expTypes = new ArrayList<ExpenditureTypes>();
-		for(int i=0; i<expenditureTypes.size(); i++)
-		{
-			expTypes.add(new ExpenditureTypes(i, expenditureTypes.get(i)));
-		}
-		databaseAdapter.addAllExpenditureTypes(expTypes);
-		
-		databaseAdapter.close();
-	}*/
-	
 	public static void saveDatabase()
 	{
 		if(numTransactions>0)
@@ -170,21 +143,6 @@ public class DatabaseManager
 		}
 		
 		databaseAdapter.close();
-	}
-	
-	public static void saveDatabaseImproved()
-	{
-		databaseAdapter.setWalletBalance(walletBalance);
-		
-		if(numCountersRows>0)
-		{
-			databaseAdapter.deleteAllCountersRows();
-			databaseAdapter.addAllCountersRows(counters);
-		}
-		else
-		{
-			databaseAdapter.deleteAllCountersRows();
-		}
 	}
 	
 	public static void clearDatabase()
@@ -486,16 +444,28 @@ public class DatabaseManager
 			counters = new ArrayList<Counters>();
 			counters.add(new Counters(date, exp));
 			numCountersRows++;
+			
+			Counters counter = new Counters(date, exp);
+			counter.setID(1);
+			databaseAdapter.addCountersRow(counter);
 		}
 		else if(date.getLongDate()<counters.get(0).getDate().getLongDate())
 		{
 			counters.add(0, new Counters(date, exp));
 			numCountersRows++;
+			
+			Counters counter = new Counters(date, exp);
+			counter.setID(1);
+			databaseAdapter.insertCountersRow(counter);
 		}
 		else if(date.getLongDate()>counters.get(numCountersRows-1).getDate().getLongDate())
 		{
 			counters.add(new Counters(date, exp));
 			numCountersRows++;
+			
+			Counters counter = new Counters(date, exp);
+			counter.setID(numCountersRows);			// Which has been increamented already
+			databaseAdapter.addCountersRow(counter);
 		}
 		else
 		{
@@ -516,6 +486,10 @@ public class DatabaseManager
 				else
 				{
 					counters.get(middle).increamentCounters(exp);
+					
+					Counters counter = counters.get(middle);
+					counter.setID(middle + 1);
+					databaseAdapter.updateCountersRow(counter);
 					break;
 				}
 				middle = (first + last)/2;
@@ -523,6 +497,10 @@ public class DatabaseManager
 			if(first>last)
 			{
 				counters.add(middle+1, new Counters(date, exp));   // Insert The New Counters Row.
+				
+				Counters counter = new Counters(date, exp);
+				counter.setID(middle + 2);
+				databaseAdapter.insertCountersRow(counter);
 			}
 		}
 	}
@@ -549,6 +527,10 @@ public class DatabaseManager
 			else
 			{
 				counters.get(middle).decreamentCounters(exp);
+				
+				Counters counter = counters.get(middle);
+				counter.setID(middle + 1);
+				databaseAdapter.updateCountersRow(counter);
 				break;
 			}
 			middle = (first + last)/2;
@@ -815,21 +797,25 @@ public class DatabaseManager
 	public static void increamentWalletBalance(double amount)
 	{
 		walletBalance+=amount;
+		databaseAdapter.setWalletBalance(walletBalance);
 	}
 	
 	public static void increamentWalletBalance(String amount)
 	{
 		walletBalance+=Double.parseDouble(amount);
+		databaseAdapter.setWalletBalance(walletBalance);
 	}
 	
 	public static void decreamentWalletBalance(double amount)
 	{
 		walletBalance-=amount;
+		databaseAdapter.setWalletBalance(walletBalance);
 	}
 	
 	public static void decreamentWalletBalance(String amount)
 	{
 		walletBalance-=Double.parseDouble(amount);
+		databaseAdapter.setWalletBalance(walletBalance);
 	}
 	
 	public static void increamentAmountSpent(Date date, double amount)
