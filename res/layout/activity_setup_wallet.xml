@@ -12,7 +12,7 @@
         android:text="@string/krishna" />
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/textView_walletBalance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/krishna"
@@ -21,16 +21,24 @@
         android:layout_marginLeft="25dp"
         android:layout_marginRight="25dp"
         android:gravity="center"
-        android:text="Before you can make transactions, you should have money in your wallet, right? Now, check 
-        the amount in your wallet and enter it here" />
+        android:text="@string/walletBalance" />
 
-    <EditText
-        android:id="@+id/editText1"
+    <ImageButton
+        android:id="@+id/infoButton_walletBalance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView1"
+        android:layout_alignRight="@+id/textView_walletBalance"
+        android:layout_alignTop="@+id/textView_walletBalance"
+        android:layout_marginRight="10dp"
+        android:src="@drawable/button_info" />
+
+    <EditText
+        android:id="@+id/editText_walletBalance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView_walletBalance"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="34dp"
+        android:layout_marginTop="20dp"
         android:ems="10"
         android:inputType="numberDecimal" >
     </EditText>

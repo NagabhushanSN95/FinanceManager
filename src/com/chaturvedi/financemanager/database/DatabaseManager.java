@@ -439,6 +439,21 @@ public class DatabaseManager
 		return transactions;
 	}
 	
+	public static ArrayList<Transaction> getYearlyTransactions(long year)
+	{
+		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
+		
+		for(Transaction transaction : DatabaseManager.transactions)
+		{
+			long year1 = (long) Math.floor(transaction.getDate().getLongDate()/10000);
+			if(year1 == year)
+			{
+				transactions1.add(transaction);
+			}
+		}
+		return transactions1;
+	}
+	
 	public static ArrayList<Transaction> getMonthlyTransactions(long month)
 	{
 		ArrayList<Transaction> transactions1 = new ArrayList<Transaction>();
@@ -637,6 +652,53 @@ public class DatabaseManager
 		return monthlyCounters;
 	}
 	
+	public static double[] getYearlyCounters(long year)
+	{
+		int numCountersRows = counters.size();
+		double[] yearlyCounters = new double[9];
+		boolean found = false;
+		for(int i=0; i<numCountersRows; i++)
+		{
+			Counters counter1 = counters.get(i);
+			long year1 = (long) Math.floor(counter1.getDate().getLongDate()/10000);
+			if(!found && year1 < year)				// Required Year not yet found
+			{
+				i += 10;
+				if(i>=numCountersRows)
+					i-=10;
+			}
+			else if(!found && year1 == year)		// Required Year encountered for the first time. 
+			{										//previous ones may contain required Year. So, go back
+				i -= 10;
+				if(i<0)
+					i=-1;
+				found = true;
+			}
+			else if(found && year1<year)
+			{
+				
+			}
+			else if(found && year1 == year)
+			{
+				yearlyCounters[0] += counter1.getExp01();
+				yearlyCounters[1] += counter1.getExp02();
+				yearlyCounters[2] += counter1.getExp03();
+				yearlyCounters[3] += counter1.getExp04();
+				yearlyCounters[4] += counter1.getExp05();
+				yearlyCounters[5] += counter1.getAmountSpent();
+				yearlyCounters[6] += counter1.getIncome();
+				yearlyCounters[7] += counter1.getSavings();
+				yearlyCounters[8] += counter1.getWithdrawal();
+			}
+			else if(year1 > year)
+			{
+				i = numCountersRows;
+				break;
+			}
+		}
+		return yearlyCounters;
+	}
+	
 	public static double[] getTotalCounters()
 	{
 		int numCountersRows = counters.size();
@@ -737,9 +799,15 @@ public class DatabaseManager
 		{
 			template.setID(1);
 			templates.add(0, template);
+			for(int i=1; i<templates.size();i++)// Update IDs of the templates below
+			{
+				Template tempTemplate = templates.get(i);
+				tempTemplate.setID(tempTemplate.getID()+1);
+			}
+			
 			databaseAdapter.insertTemplate(template);
 		}
-		else if(template.getParticular().compareTo(templates.get(0).getParticular()) > 0)
+		else if(template.getParticular().compareTo(templates.get(numTemplates-1).getParticular()) > 0)
 		{
 			template.setID(numTemplates+1);
 			templates.add(template);
@@ -766,14 +834,20 @@ public class DatabaseManager
 					template.setID(middle+1);
 					templates.set(middle, template);
 					databaseAdapter.updateTemplate(template);
+					Toast.makeText(context, "Existing Template Updated", Toast.LENGTH_SHORT).show();
 					break;
 				}
 				middle = (first + last)/2;
 			}
 			if(first>last)
 			{
-				templates.add(middle+1, template);		   // Insert The New Counters Row.
 				template.setID(middle+2);
+				templates.add(middle+1, template);		   // Insert The New Counters Row.
+				for(int i=middle+2; i<templates.size();i++)// Update IDs of the templates below
+				{
+					Template tempTemplate = templates.get(i);
+					tempTemplate.setID(tempTemplate.getID()+1);
+				}
 				databaseAdapter.insertTemplate(template);
 			}
 		}
@@ -790,6 +864,11 @@ public class DatabaseManager
 	{
 		int templateNo = templates.indexOf(template);
 		DatabaseManager.templates.remove(templateNo);
+		// Update the IDs of the remaining (below) Templates
+		for(int i=templateNo; i<templates.size(); i++)
+		{
+			templates.get(i).setID(templates.get(i).getID()-1);
+		}
 		databaseAdapter.deleteTemplate(template);
 	}
 	
@@ -798,14 +877,6 @@ public class DatabaseManager
 		return templates;
 	}
 
-	/* *
-	 * @param numBanks the numBanks to set
-	 * /
-	public static void setNumBanks(int numBanks)
-	{
-		DatabaseManager.numBanks = numBanks;
-	}*/
-
 	/**
 	 * @return the numBanks
 	 */
@@ -813,24 +884,6 @@ public class DatabaseManager
 	{
 		return banks.size();
 	}
-	
-	/*public static void increamentNumBanks()
-	{
-		numBanks++;
-	}
-	
-	public static void decreamentNumBanks()
-	{
-		numBanks--;
-	}
-
-	/**
-	 * @param numTransactions the numTransactions to set
-	 * /
-	public static void setNumTransactions(int numTransactions)
-	{
-		DatabaseManager.numTransactions = numTransactions;
-	}*/
 
 	/**
 	 * @return the numTransactions
@@ -840,35 +893,10 @@ public class DatabaseManager
 		return transactions.size();
 	}
 	
-	/*public static void increamentNumTransations()
-	{
-		numTransactions++;
-	}
-	
-	public static void decreamentNumTransactions()
-	{
-		numTransactions--;
-	}
-	
-	public static void setNumCountersRows(int numRows)
-	{
-		DatabaseManager.numCountersRows = numRows;
-	}*/
-	
 	public static int getNumCountersRows()
 	{
 		return counters.size();
 	}
-	
-	/*public static void increamentNumCountersRows()
-	{
-		DatabaseManager.numCountersRows++;
-	}
-	
-	public static void decreamentNumCountersRows()
-	{
-		DatabaseManager.numCountersRows--;
-	}*/
 
 	/**
 	 * @param walletBalance the walletBalance to set
@@ -930,6 +958,13 @@ public class DatabaseManager
 		return counters[5];
 	}
 	
+	public static double getYearlyAmountSpent(long year)
+	{
+		double counters[] = getYearlyCounters(year);
+		// Amount Spent is the 6th Column
+		return counters[5];
+	}
+	
 	public static double getTotalAmountSpent()
 	{
 		double counters[] = getTotalCounters();
@@ -952,6 +987,13 @@ public class DatabaseManager
 	public static double getMonthlyIncome(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
+		// Income is the 7th Column
+		return counters[6];
+	}
+	
+	public static double getYearlyIncome(long year)
+	{
+		double counters[] = getYearlyCounters(year);
 		// Income is the 7th Column
 		return counters[6];
 	}
@@ -982,6 +1024,13 @@ public class DatabaseManager
 		return counters[7];
 	}
 	
+	public static double getYearlySavings(long year)
+	{
+		double counters[] = getYearlyCounters(year);
+		// Savings is the 8th Column
+		return counters[7];
+	}
+	
 	public static double getTotalSavings()
 	{
 		double counters[] = getTotalCounters();
@@ -1004,6 +1053,13 @@ public class DatabaseManager
 	public static double getMonthlyWithdrawal(long month)
 	{
 		double counters[] = getMonthlyCounters(month);
+		// Withdrawal is the 9th column
+		return counters[8];
+	}
+	
+	public static double getYearlyWithdrawal(long year)
+	{
+		double counters[] = getYearlyCounters(year);
 		// Withdrawal is the 9th column
 		return counters[8];
 	}

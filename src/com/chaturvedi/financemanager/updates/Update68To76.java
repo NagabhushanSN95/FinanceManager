@@ -82,7 +82,7 @@ public class Update68To76 extends SQLiteOpenHelper		// To create Templates Table
 		final String KEY_BANK_SMS_ARRIVED_OLD = "sms_arrived";
 		boolean newBankSmsArrived = false;
 		final String KEY_BANK_SMS_OLD = "respond_bank_messages";
-		boolean respondToBankSms = true;
+		String bankSmsResponse = "Popup";
 		
 		
 		// New Preferences
@@ -139,13 +139,13 @@ public class Update68To76 extends SQLiteOpenHelper		// To create Templates Table
 		
 		if(oldPreferences.contains(KEY_BANK_SMS_OLD))
 		{
-			respondToBankSms=oldPreferences.getBoolean(KEY_BANK_SMS_OLD, true);
+			bankSmsResponse=oldPreferences.getBoolean(KEY_BANK_SMS_OLD, true)? "Popup" : "NoResponse";
 		}
 		else
 		{
-			respondToBankSms = true;
+			bankSmsResponse = "Popup";
 		}
-		editor.putBoolean(KEY_RESPOND_BANK_SMS, respondToBankSms);
+		editor.putString(KEY_RESPOND_BANK_SMS, bankSmsResponse);
 		
 		oldPreferences.edit().clear();							// Delete All Old Preferences
 		//-----------------------------------------------------------------------------------------------

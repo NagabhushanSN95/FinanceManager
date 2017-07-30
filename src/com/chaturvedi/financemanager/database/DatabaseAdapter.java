@@ -748,6 +748,49 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			db.close();
 		}
 		
+		/**
+		 * Inserts the Template at the position specified by the ID
+		 * @param template
+		 */
+		public void insertTemplate(Template template)
+		{
+			int position = template.getID();
+			Toast.makeText(context, "Position: "+position, Toast.LENGTH_SHORT).show();
+			int numTemplates = getNumTemplates();
+			if(position>numTemplates)
+			{
+				addTemplate(template);
+			}
+			
+			// Add an extra Row and shift rows down
+			Template tempTemplate = getTemplate(numTemplates);		// Template will be retrieved based on Id 
+			tempTemplate.setID(tempTemplate.getID() + 1);			// Which starts from 1 and not 0
+			addTemplate(tempTemplate);
+			for(int i=numTemplates; i>(position-1); i--)
+			{
+				tempTemplate = getTemplate(i);
+				tempTemplate.setID(tempTemplate.getID() + 1);
+				updateTemplate(tempTemplate);
+			}
+			
+			// Insert i.e. update the Template
+			updateTemplate(template);
+		}
+		
+		// Updating single Template
+		public void updateTemplate(Template template)
+		{
+			SQLiteDatabase db = this.getWritableDatabase();
+			ContentValues values = new ContentValues();
+			values.put(KEY_PARTICULARS, template.getParticular());
+			values.put(KEY_TYPE, template.getType());
+			values.put(KEY_AMOUNT, template.getAmount());
+			// updating row
+			db.update(TABLE_TEMPLATES, values, KEY_ID + " = ?", 
+					new String[] { String.valueOf(template.getID()) });
+			db.close();
+		}
+		
 		// Getting single Template
 		public Template getTemplate(int id)
 		{
@@ -786,25 +829,20 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			return templatesList;
 		}
 		
-		// Updating single Template
-		public void updateTemplate(Template template)
-		{
-			SQLiteDatabase db = this.getWritableDatabase();
-			ContentValues values = new ContentValues();
-			values.put(KEY_PARTICULARS, template.getParticular());
-			values.put(KEY_TYPE, template.getType());
-			values.put(KEY_AMOUNT, template.getAmount());
-			// updating row
-			db.update(TABLE_TEMPLATES, values, KEY_ID + " = ?", 
-					new String[] { String.valueOf(template.getID()) });
-			db.close();
-		}
-		
 		// Deleting single Template
 		public void deleteTemplate(Template template)
 		{
+			int position = template.getID();
+			int numTemplates = getNumTemplates();
+			// Shift all the templates upwards from this template
+			for(int i=position+1; i<=numTemplates; i++)
+			{
+				Template tempTemplate = getTemplate(i);
+				tempTemplate.setID(tempTemplate.getID() - 1);
+				updateTemplate(tempTemplate);
+			}
 			SQLiteDatabase db = this.getWritableDatabase();
-			db.delete(TABLE_TEMPLATES, KEY_ID + " = ?", new String[] { String.valueOf(template.getID()) });
+			db.delete(TABLE_TEMPLATES, KEY_ID + " = ?", new String[] { String.valueOf(numTemplates) }); // Delete Last Template
 			db.close();
 		}
 		
@@ -817,33 +855,5 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			db.execSQL("DROP TABLE IF EXISTS " + TABLE_TEMPLATES);
 			db.execSQL(CREATE_TEMPLATES_TABLE);
 			db.close();
-		}
-		
-		/**
-		 * Inserts the Template at the position specified by the ID
-		 * @param template
-		 */
-		public void insertTemplate(Template template)
-		{
-			int position = template.getID();
-			int numTemplates = getNumTemplates();
-			if(position>numTemplates)
-			{
-				addTemplate(template);
-			}
-			
-			// Add an extra Row and shift rows down
-			Template tempTemplate = getTemplate(numTemplates);		// Template will be retrieved based on Id 
-			tempTemplate.setID(tempTemplate.getID() + 1);			// Which starts from 1 and not 0
-			addTemplate(tempTemplate);
-			for(int i=numTemplates-1; i>(position-1); i--)
-			{
-				tempTemplate = getTemplate(i);
-				tempTemplate.setID(tempTemplate.getID() + 1);
-				updateTemplate(tempTemplate);
-			}
-			
-			// Insert i.e. update the Template
-			updateTemplate(template);
 		}
 }

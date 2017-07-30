@@ -360,8 +360,6 @@ public class SplashActivity extends Activity
 					if(!DatabaseManager.areEqualTransactions(DatabaseManager.getAllTransactions(), 
 							restoreManager.getAllTransactions()))
 					{
-						Toast.makeText(getApplicationContext(), "Database: " + DatabaseManager.getAllTransactions().size() + "SD Card: " + restoreManager.getAllTransactions().size(),
-								Toast.LENGTH_LONG).show();
 						DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
 						Toast.makeText(getApplicationContext(), "Error Found In Transactions. Data Recovered",
 								Toast.LENGTH_SHORT).show();
@@ -398,7 +396,7 @@ public class SplashActivity extends Activity
 					if(!DatabaseManager.areEqualTemplates(DatabaseManager.getAllTemplates(), 
 							restoreManager.getAllTemplates()))
 					{
-						DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
+						//DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
 						Toast.makeText(getApplicationContext(), "Error Found In Templates. Data Recovered", 
 								Toast.LENGTH_SHORT).show();
 					}

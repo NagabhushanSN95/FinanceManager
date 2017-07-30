@@ -23,7 +23,9 @@ import com.chaturvedi.financemanager.database.DatabaseManager;
 public class StatisticsActivity extends Activity
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
-	private final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
+	private static final String KEY_NUM_EXP_TYPES = "NumExpTypes";
+	private int numExpTypes = 5;
+	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	private String currencySymbol = " ";
 	
 	private int screenWidth;
@@ -73,6 +75,10 @@ public class StatisticsActivity extends Activity
 		{
 			currencySymbol = preferences.getString(KEY_CURRENCY_SYMBOL, " ");
 		}
+		if(preferences.contains(KEY_NUM_EXP_TYPES))
+		{
+			numExpTypes = preferences.getInt(KEY_NUM_EXP_TYPES, 5);
+		}
 		
 		DecimalFormat formatter = new DecimalFormat("#,##0.##");
 		
@@ -93,7 +99,7 @@ public class StatisticsActivity extends Activity
 		parentLayout.addView(monthHeadingLayout);
 		
 		double[] monthlyCounters = DatabaseManager.getMonthlyCounters(getCurrentYearAndMonth());
-		for(int i=0; i<5; i++)
+		for(int i=0; i<numExpTypes; i++)
 		{
 			LayoutInflater statDisplayInflater = LayoutInflater.from(this);
 			LinearLayout statDisplayLayout = (LinearLayout) statDisplayInflater.inflate(R.layout.layout_display_statistics, null);
@@ -127,7 +133,7 @@ public class StatisticsActivity extends Activity
 		parentLayout.addView(overallHeadingLayout);
 		
 		double[] totalCounters = DatabaseManager.getTotalCounters();
-		for(int i=0; i<5; i++)
+		for(int i=0; i<numExpTypes; i++)
 		{
 			LayoutInflater statDisplayInflater = LayoutInflater.from(this);
 			LinearLayout statDisplayLayout = (LinearLayout) statDisplayInflater.inflate(R.layout.layout_display_statistics, null);

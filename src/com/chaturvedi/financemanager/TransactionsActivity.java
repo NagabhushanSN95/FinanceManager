@@ -249,7 +249,7 @@ public class TransactionsActivity extends Activity
 		{
 			Calendar calendar = Calendar.getInstance();
 			int year = calendar.get(Calendar.YEAR);
-			//transactions = DatabaseManager.getYearlyTransactions(year);
+			transactions = DatabaseManager.getYearlyTransactions(year);
 		}
 		else
 		{
@@ -1410,6 +1410,9 @@ public class TransactionsActivity extends Activity
 		String quantity = (String) data[7];
 		String amount = (String) data[8];
 		Transaction transaction = null;
+		
+		// Trim the Strings
+		particulars = particulars.trim();
 		
 		if(type.contains("Wallet Credit"))
 		{

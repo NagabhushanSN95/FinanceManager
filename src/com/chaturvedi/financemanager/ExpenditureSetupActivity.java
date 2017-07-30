@@ -192,7 +192,7 @@ public class ExpenditureSetupActivity extends Activity
 		editor.putInt(KEY_QUOTE_NO, 0);
 		editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		editor.putString(KEY_CURRENCY_SYMBOL, " ");
-		editor.putBoolean(KEY_RESPOND_BANK_SMS, true);
+		editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
 		editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
 		editor.commit();
 	}

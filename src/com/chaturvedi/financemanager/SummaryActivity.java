@@ -357,8 +357,8 @@ public class SummaryActivity extends Activity
 			{
 				Calendar calendar = Calendar.getInstance();
 				int year = calendar.get(Calendar.YEAR);
-				//amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getYearlyAmountSpent(year)));
-				//amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getYearlyIncome(year)));
+				amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getYearlyAmountSpent(year)));
+				amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getYearlyIncome(year)));
 			}
 			else
 			{
@@ -1144,6 +1144,9 @@ public class SummaryActivity extends Activity
 		String quantity = (String) data[7];
 		String amount = (String) data[8];
 		Transaction transaction = null;
+		
+		// Trim the Strings
+		particulars = particulars.trim();
 		
 		if(type.contains("Wallet Credit"))
 		{

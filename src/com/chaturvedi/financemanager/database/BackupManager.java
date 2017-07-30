@@ -184,7 +184,7 @@ public class BackupManager
 			preferencesWriter.write(preferences.getInt(KEY_QUOTE_NO, 0) + "\n");
 			preferencesWriter.write(preferences.getString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month") + "\n");
 			preferencesWriter.write(preferences.getString(KEY_CURRENCY_SYMBOL, " ") + "\n");
-			preferencesWriter.write(preferences.getBoolean(KEY_RESPOND_BANK_SMS, true) + "\n");
+			preferencesWriter.write(preferences.getString(KEY_RESPOND_BANK_SMS, "Popup") + "\n");
 			preferencesWriter.write(preferences.getBoolean(KEY_BANK_SMS_ARRIVED, false) + "\n");
 			preferencesWriter.close();
 			

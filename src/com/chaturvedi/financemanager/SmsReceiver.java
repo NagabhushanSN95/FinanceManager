@@ -16,7 +16,7 @@ public class SmsReceiver extends BroadcastReceiver
 	private SharedPreferences preferences;
 	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
 	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
-	private boolean respondBankMessages = true;
+	private String bankSmsResponse = "Popup";
 	
 	private Context context;
 	private String sender;
@@ -32,7 +32,7 @@ public class SmsReceiver extends BroadcastReceiver
 		DatabaseManager.readDatabase();
 		readPreferences();
 		
-		if(respondBankMessages)
+		if(bankSmsResponse.equals("Popup") || bankSmsResponse.equals("Automatic"))
 		{
 			Bundle bundle = intent.getExtras();
 			SmsMessage[] msgs = null;
@@ -264,7 +264,7 @@ public class SmsReceiver extends BroadcastReceiver
 		preferences = context.getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		if(preferences.contains(KEY_RESPOND_BANK_SMS))
 		{
-			respondBankMessages=preferences.getBoolean(KEY_RESPOND_BANK_SMS, true);
+			bankSmsResponse=preferences.getString(KEY_RESPOND_BANK_SMS, "Popup");
 		}
 	}
 }

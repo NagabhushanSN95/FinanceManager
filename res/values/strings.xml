@@ -19,9 +19,8 @@
     <string name="backup">Back-up Data</string>
     <string name="bank_credit">Bank Credit</string>
     <string name="bank_debit">Bank Withdrawal</string>
+    <string name="bankSms"> Messages From Banks</string>
     <string name="clearData">Clear Data</string>
-    <string name="checkBox_splash">Always Show Splash Screen At The Beginning</string>
-    <string name="checkBox_bank_sms">Respond To Messages From Banks</string>
     <string name="currencySymbols">Currency Symbol</string>
     <string name="date">Date</string>
     <string name="export">Export Data To SD Card</string>
@@ -51,10 +50,12 @@
     <string name="setup">Set Up</string>
     <string name="skip">Skip</string>
     <string name="slno">Sl No</string>
+    <string name="splashDuration">Duration Of Splash Screen</string>
     <string name="title_amountSpent">Amount Spent</string>
     <string name="title_details">Details</string>
     <string name="title_expenditureType">Expenditure Type</string>
     <string name="type">Type</string>
+    <string name="walletBalance">Amount in your Wallet</string>
     <string name="wallet_credit">Income</string>
     <string name="wallet_debit">Expenditure</string>
     <string name="wallet_view">Amount In Wallet</string>
