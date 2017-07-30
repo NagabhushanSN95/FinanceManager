@@ -524,10 +524,10 @@ public class BanksSetupActivity extends Activity
 			DatabaseManager.setAmountSpent(0);
 			DatabaseManager.setIncome(0);
 			DatabaseManager.setNumBanks(numBanks);
-			DatabaseManager.setBankNames(bankNames);
+			DatabaseManager.setAllBankNames(bankNames);
 			DatabaseManager.setAllBankAccNos(bankAccNos);
-			DatabaseManager.setBankBalances(bankBalances);
-			DatabaseManager.setBankSmsNames(bankSmsNames);
+			DatabaseManager.setAllBankBalances(bankBalances);
+			DatabaseManager.setAllBankSmsNames(bankSmsNames);
 			
 			// Start The Next Activity And Finish This Activity
 			startActivity(expendituresSetupIntent);

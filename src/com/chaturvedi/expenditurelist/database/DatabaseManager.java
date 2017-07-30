@@ -1,11 +1,9 @@
 package com.chaturvedi.expenditurelist.database;
 
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 import android.content.Context;
 import android.widget.Toast;
-
 
 public class DatabaseManager
 {
@@ -23,12 +21,14 @@ public class DatabaseManager
 	private static ArrayList<String> bankAccNos;
 	private static ArrayList<Double> bankBalances;
 	private static ArrayList<String> bankSmsNames;
-	
+
+	private static ArrayList<Time> createdTimes;
+	private static ArrayList<Time> modifiedTimes;
 	private static ArrayList<String> dates;
 	private static ArrayList<String> types;
 	private static ArrayList<String> particulars;
 	private static ArrayList<Double> rates;
-	private static ArrayList<Integer> quantities;
+	private static ArrayList<Double> quantities;
 	private static ArrayList<Double> amounts;
 	
 	private static ArrayList<String> expenditureTypes;
@@ -45,18 +45,6 @@ public class DatabaseManager
 	{
 		context=cxt;
 		databaseAdapter = new DatabaseAdapter(context);
-		
-		/*// Initialize ArrayLists
-		bankNames = new ArrayList<String>();
-		bankBalances = new ArrayList<Double>();
-		bankSmsNames = new ArrayList<String>();
-		
-		dates = new ArrayList<String>();
-		types = new ArrayList<String>();
-		particulars = new ArrayList<String>();
-		rates = new ArrayList<Double>();
-		quantities = new ArrayList<Integer>();
-		amounts = new ArrayList<Double>();*/
 	}
 	
 	public static void setContext(Context cxt)
@@ -94,15 +82,19 @@ public class DatabaseManager
 			
 			if(numTransactions>0)
 			{
+				createdTimes = new ArrayList<Time>();
+				modifiedTimes = new ArrayList<Time>();
 				dates = new ArrayList<String>();
 				types = new ArrayList<String>();
 				particulars = new ArrayList<String>();
 				rates = new ArrayList<Double>();
-				quantities = new ArrayList<Integer>();
+				quantities = new ArrayList<Double>();
 				amounts = new ArrayList<Double>();
 				ArrayList<Transaction> transactions = databaseAdapter.getAllTransactions();
 				for(Transaction transaction : transactions)
 				{
+					createdTimes.add(transaction.getCreatedTime());
+					modifiedTimes.add(transaction.getModifiedTime());
 					dates.add(transaction.getDate());
 					types.add(transaction.getType());
 					particulars.add(transaction.getParticular());
@@ -125,48 +117,10 @@ public class DatabaseManager
 		{
 			Toast.makeText(context, "Error In Reading Database\n"+e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-		
-		/*DatabaseManager.numBanks = databaseAdapter.getNumBanks();
-		bankNames = new ArrayList<String>();
-		bankBalances = new ArrayList<Double>();
-		bankSmsNames = new ArrayList<String>();
-		Bank firstBank = databaseAdapter.getBank(0);
-		if(firstBank!=null)
-		{
-			bankNames.add(firstBank.getName());
-			bankBalances.add(firstBank.getBalance());
-			bankSmsNames.add(firstBank.getSmsName());
-		}
-		else
-		{
-			bankNames.add("Null Bank");
-			bankBalances.add(0.0);
-			bankSmsNames.add("null");
-		}
-
-		Bank secondBank = databaseAdapter.getBank(1);
-		if(secondBank!=null)
-		{
-			bankNames.add(secondBank.getName());
-			bankBalances.add(secondBank.getBalance());
-			bankSmsNames.add(secondBank.getSmsName());
-		}
-		else
-		{
-			bankNames.add("Null Bank");
-			bankBalances.add(0.0);
-			bankSmsNames.add("null");
-		}
-		
-		walletBalance = 333;
-		amountSpent=40;
-		income=30;*/
-		
 	}
 	
 	public static void initializeDatabase()
 	{
-		
 		try
 		{
 			if(numBanks>0)
@@ -182,12 +136,8 @@ public class DatabaseManager
 		}
 		catch(Exception e)
 		{
-			//Toast.makeText(context, ""+bankNames.size(), Toast.LENGTH_SHORT).show();
-			//Toast.makeText(context, ""+bankBalances.size(), Toast.LENGTH_SHORT).show();
-			//Toast.makeText(context, ""+bankSmsNames.size(), Toast.LENGTH_SHORT).show();
 			Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-		
 		
 		databaseAdapter.initializeWalletTable(walletBalance, amountSpent, income);
 		
@@ -198,7 +148,6 @@ public class DatabaseManager
 		}
 		databaseAdapter.addAllExpenditureTypes(expTypes);
 		
-		//counters = new ArrayList<Double>(10);
 		databaseAdapter.initializeCountersTable();
 		
 		databaseAdapter.close();
@@ -206,25 +155,12 @@ public class DatabaseManager
 	
 	public static void saveDatabase()
 	{
-		/*dates = new ArrayList<String>();
-		dates.add("12-12-2014");
-		types = new ArrayList<String>();
-		types.add("Book");
-		particulars = new ArrayList<String>();
-		particulars.add("Tony Gaddis Text Book");
-		rates = new ArrayList<Double>();
-		rates.add(650.0);
-		quantities = new ArrayList<Integer>();
-		quantities.add(1);
-		amounts = new ArrayList<Double>();
-		amounts.add(650.0);*/
-		
 		if(numTransactions>0)
 		{
 			ArrayList<Transaction> transactions = new ArrayList<Transaction>();
 			for(int i=0; i<numTransactions; i++)
 			{
-				Transaction transaction=new Transaction(i, dates.get(i), types.get(i), particulars.get(i),
+				Transaction transaction=new Transaction(i, createdTimes.get(i), modifiedTimes.get(i), dates.get(i), types.get(i), particulars.get(i),
 						rates.get(i), quantities.get(i), amounts.get(i));
 				transactions.add(transaction);
 			}
@@ -272,11 +208,13 @@ public class DatabaseManager
 	public static void clearDatabase()
 	{
 		numTransactions=0;
+		createdTimes = new ArrayList<Time>();
+		modifiedTimes = new ArrayList<Time>();
 		dates = new ArrayList<String>();
 		types = new ArrayList<String>();
 		particulars = new ArrayList<String>();
 		rates = new ArrayList<Double>();
-		quantities = new ArrayList<Integer>();
+		quantities = new ArrayList<Double>();
 		amounts = new ArrayList<Double>();
 		
 		amountSpent = 0;
@@ -463,7 +401,7 @@ public class DatabaseManager
 	/**
 	 * @param bankNames the bankNames to set
 	 */
-	public static void setBankNames(ArrayList<String> bankNames)
+	public static void setAllBankNames(ArrayList<String> bankNames)
 	{
 		DatabaseManager.bankNames = bankNames;
 	}
@@ -471,7 +409,7 @@ public class DatabaseManager
 	/**
 	 * @return the bankNames
 	 */
-	public static ArrayList<String> getBankNames()
+	public static ArrayList<String> getAllBankNames()
 	{
 		return bankNames;
 	}
@@ -535,7 +473,7 @@ public class DatabaseManager
 	/**
 	 * @param bankBalances the bankBalances to set
 	 */
-	public static void setBankBalances(ArrayList<Double> bankBalances)
+	public static void setAllBankBalances(ArrayList<Double> bankBalances)
 	{
 		DatabaseManager.bankBalances = bankBalances;
 	}
@@ -543,7 +481,7 @@ public class DatabaseManager
 	/**
 	 * @return the bankBalances
 	 */
-	public static ArrayList<Double> getBankBalances()
+	public static ArrayList<Double> getAllBankBalances()
 	{
 		return bankBalances;
 	}
@@ -601,7 +539,7 @@ public class DatabaseManager
 	/**
 	 * @param bankSmsNames the bankSmsNames to set
 	 */
-	public static void setBankSmsNames(ArrayList<String> bankSmsNames)
+	public static void setAllBankSmsNames(ArrayList<String> bankSmsNames)
 	{
 		DatabaseManager.bankSmsNames = bankSmsNames;
 	}
@@ -609,7 +547,7 @@ public class DatabaseManager
 	/**
 	 * @return the bankSmsNames
 	 */
-	public static ArrayList<String> getBankSmsNames()
+	public static ArrayList<String> getAllBankSmsNames()
 	{
 		return bankSmsNames;
 	}
@@ -633,11 +571,80 @@ public class DatabaseManager
 	{
 		DatabaseManager.bankSmsNames.remove(bankNum);
 	}
-
+	
+	// Methods Related To Transaction
+	public static void setAllCreatedTimes(ArrayList<Time> createdTimes)
+	{
+		DatabaseManager.createdTimes = createdTimes;
+	}
+	
+	public static ArrayList<Time> getAllCreatedTimes()
+	{
+		return DatabaseManager.createdTimes;
+	}
+	
+	public static void setCreatedTime(int transactionNo, Time createdTime)
+	{
+		DatabaseManager.createdTimes.set(transactionNo, createdTime);
+	}
+	
+	public static Time getCreatedTime(int transactionNo)
+	{
+		return DatabaseManager.createdTimes.get(transactionNo);
+	}
+	
+	public static void addCreatedTime(Time createdTime)
+	{
+		if(DatabaseManager.createdTimes == null)
+		{
+			DatabaseManager.createdTimes = new ArrayList<Time>();
+		}
+		DatabaseManager.createdTimes.add(createdTime);
+	}
+	
+	public static void deleteCreatedTime(int transactionNo)
+	{
+		DatabaseManager.createdTimes.remove(transactionNo);
+	}
+	
+	public static void setAllModifiedTimes(ArrayList<Time> modifiedTimes)
+	{
+		DatabaseManager.modifiedTimes = modifiedTimes;
+	}
+	
+	public static ArrayList<Time> getAllModifiedTimes()
+	{
+		return DatabaseManager.modifiedTimes;
+	}
+	
+	public static void setModifiedTime(int transactionNo, Time modifiedTime)
+	{
+		DatabaseManager.modifiedTimes.set(transactionNo, modifiedTime);
+	}
+	
+	public static Time getModifiedTime(int transactionNo)
+	{
+		return DatabaseManager.modifiedTimes.get(transactionNo);
+	}
+	
+	public static void addModifiedTime(Time modifiedTime)
+	{
+		if(DatabaseManager.modifiedTimes == null)
+		{
+			DatabaseManager.modifiedTimes = new ArrayList<Time>();
+		}
+		DatabaseManager.modifiedTimes.add(modifiedTime);
+	}
+	
+	public static void deleteModifiedTime(int transactionNo)
+	{
+		DatabaseManager.modifiedTimes.remove(transactionNo);
+	}
+	
 	/**
 	 * @param dates the dates to set
 	 */
-	public static void setDates(ArrayList<String> dates)
+	public static void setAllDates(ArrayList<String> dates)
 	{
 		DatabaseManager.dates = dates;
 	}
@@ -645,7 +652,7 @@ public class DatabaseManager
 	/**
 	 * @return the dates
 	 */
-	public static ArrayList<String> getDates()
+	public static ArrayList<String> getAllDates()
 	{
 		return dates;
 	}
@@ -672,7 +679,7 @@ public class DatabaseManager
 	/**
 	 * @param types the types to set
 	 */
-	public static void setTypes(ArrayList<String> types)
+	public static void setAllTypes(ArrayList<String> types)
 	{
 		DatabaseManager.types = types;
 	}
@@ -680,7 +687,7 @@ public class DatabaseManager
 	/**
 	 * @return the types
 	 */
-	public static ArrayList<String> getTypes()
+	public static ArrayList<String> getAllTypes()
 	{
 		return types;
 	}
@@ -721,7 +728,7 @@ public class DatabaseManager
 	/**
 	 * @param particulars the particulars to set
 	 */
-	public static void setParticulars(ArrayList<String> particulars)
+	public static void setAllParticulars(ArrayList<String> particulars)
 	{
 		DatabaseManager.particulars = particulars;
 	}
@@ -729,7 +736,7 @@ public class DatabaseManager
 	/**
 	 * @return the particulars
 	 */
-	public static ArrayList<String> getParticulars()
+	public static ArrayList<String> getAllParticulars()
 	{
 		return particulars;
 	}
@@ -756,7 +763,7 @@ public class DatabaseManager
 	/**
 	 * @param rates the rates to set
 	 */
-	public static void setRates(ArrayList<Double> rates)
+	public static void setAllRates(ArrayList<Double> rates)
 	{
 		DatabaseManager.rates = rates;
 	}
@@ -764,7 +771,7 @@ public class DatabaseManager
 	/**
 	 * @return the rates
 	 */
-	public static ArrayList<Double> getRates()
+	public static ArrayList<Double> getAllRates()
 	{
 		return rates;
 	}
@@ -805,7 +812,7 @@ public class DatabaseManager
 	/**
 	 * @param quantities the quantities to set
 	 */
-	public static void setQuantities(ArrayList<Integer> quantities)
+	public static void setAllQuantities(ArrayList<Double> quantities)
 	{
 		DatabaseManager.quantities = quantities;
 	}
@@ -813,31 +820,31 @@ public class DatabaseManager
 	/**
 	 * @return the quantities
 	 */
-	public static ArrayList<Integer> getQuantities()
+	public static ArrayList<Double> getAllQuantities()
 	{
 		return quantities;
 	}
 	
-	public static void addQuantity(int quantity)
+	public static void addQuantity(double quantity)
 	{
 		if(DatabaseManager.quantities == null)
 		{
-			DatabaseManager.quantities = new ArrayList<Integer>();
+			DatabaseManager.quantities = new ArrayList<Double>();
 		}
 		DatabaseManager.quantities.add(quantity);
 	}
 	
-	public static void setQuantity(int transactionNo, int quantity)
+	public static void setQuantity(int transactionNo, double quantity)
 	{
 		DatabaseManager.quantities.set(transactionNo, quantity);
 	}
 	
 	public static void setQuantity(int transactionNo, String quantity)
 	{
-		DatabaseManager.quantities.set(transactionNo, Integer.parseInt(quantity));
+		DatabaseManager.quantities.set(transactionNo, Double.parseDouble(quantity));
 	}
 	
-	public static int getQuantity(int transactionNo)
+	public static double getQuantity(int transactionNo)
 	{
 		return DatabaseManager.quantities.get(transactionNo);
 	}
@@ -846,15 +853,15 @@ public class DatabaseManager
 	{
 		if(DatabaseManager.quantities == null)
 		{
-			DatabaseManager.quantities = new ArrayList<Integer>();
+			DatabaseManager.quantities = new ArrayList<Double>();
 		}
-		DatabaseManager.quantities.add(Integer.parseInt(quantity));
+		DatabaseManager.quantities.add(Double.parseDouble(quantity));
 	}
 
 	/**
 	 * @param amounts the amounts to set
 	 */
-	public static void setAmounts(ArrayList<Double> amounts)
+	public static void setAllAmounts(ArrayList<Double> amounts)
 	{
 		DatabaseManager.amounts = amounts;
 	}
@@ -862,7 +869,7 @@ public class DatabaseManager
 	/**
 	 * @return the amounts
 	 */
-	public static ArrayList<Double> getAmounts()
+	public static ArrayList<Double> getAllAmounts()
 	{
 		return amounts;
 	}
@@ -900,22 +907,32 @@ public class DatabaseManager
 		return DatabaseManager.amounts.get(transactionNo);
 	}
 	
-	public static void setExpenditureTypes(ArrayList<String> expTypes)
+	public static void setAllExpenditureTypes(ArrayList<String> expTypes)
 	{
 		expenditureTypes=expTypes;
 	}
 	
-	public static ArrayList<String> getExpenditureTypes()
+	public static ArrayList<String> getAllExpenditureTypes()
 	{
 		return DatabaseManager.expenditureTypes;
 	}
+	
+	public static void setExpenditureType(int expTypeNo, String expType)
+	{
+		DatabaseManager.expenditureTypes.set(expTypeNo, expType);
+	}
+	
+	public static String getExpenditureType(int expTypeNo)
+	{
+		return DatabaseManager.expenditureTypes.get(expTypeNo);
+	}
 
-	public static void setCounters(ArrayList<Double> counters)
+	public static void setAllCounters(ArrayList<Double> counters)
 	{
 		DatabaseManager.counters = counters;
 	}
 	
-	public static ArrayList<Double> getCounters()
+	public static ArrayList<Double> getAllCounters()
 	{
 		return DatabaseManager.counters;
 		
@@ -987,227 +1004,86 @@ public class DatabaseManager
 		}
 	}
 	
-	public static void deleteTransaction(int transactionNo)
+	public static void addTransaction(Transaction transaction)
 	{
-		String type = DatabaseManager.types.get(transactionNo);
-		String particulars = DatabaseManager.particulars.get(transactionNo);
-		double amount = DatabaseManager.amounts.get(transactionNo);
-		if(type.equals("Income"))
-		{
-			DatabaseManager.decreamentIncome(amount);
-			DatabaseManager.decreamentWalletBalance(amount);
-		}
-		else if(type.equals("Income Bank"))
-		{
-			DatabaseManager.decreamentIncome(amount);
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.decreamentBankBalance(bankNo, amount);
-		}
-		else if(type.equals("Bank Savings"))
-		{
-			DatabaseManager.increamentWalletBalance(amount);
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.decreamentBankBalance(bankNo, amount);
-		}
-		else if(type.equals("Bank Withdraw"))
-		{
-			DatabaseManager.decreamentWalletBalance(amount);
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.increamentBankBalance(bankNo, amount);
-		}
-		else if(type.equals(expenditureTypes.get(0)))
-		{
-			DatabaseManager.increamentWalletBalance(amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(0, amount);
-		}
-		else if(type.equals(expenditureTypes.get(1)))
-		{
-			DatabaseManager.increamentWalletBalance(amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(1, amount);
-		}
-		else if(type.equals(expenditureTypes.get(2)))
-		{
-			DatabaseManager.increamentWalletBalance(amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(2, amount);
-		}
-		else if(type.equals(expenditureTypes.get(3)))
-		{
-			DatabaseManager.increamentWalletBalance(amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(3, amount);
-		}
-		else if(type.equals(expenditureTypes.get(4)))
-		{
-			DatabaseManager.increamentWalletBalance(amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(4, amount);
-		}
-		else if(type.equals(expenditureTypes.get(0) + " Bank"))
-		{
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.increamentBankBalance(bankNo, amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(0, amount);
-		}
-		else if(type.equals(expenditureTypes.get(1) + " Bank"))
-		{
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.increamentBankBalance(bankNo, amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(1, amount);
-		}
-		else if(type.equals(expenditureTypes.get(2) + " Bank"))
-		{
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.increamentBankBalance(bankNo, amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(2, amount);
-		}
-		else if(type.equals(expenditureTypes.get(3) + " Bank"))
-		{
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.increamentBankBalance(bankNo, amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(3, amount);
-		}
-		else if(type.equals(expenditureTypes.get(4) + " Bank"))
-		{
-			int bankNo = getBankNumber(particulars);
-			DatabaseManager.increamentBankBalance(bankNo, amount);
-			DatabaseManager.decreamentAmountSpent(amount);
-			DatabaseManager.decreamentCounter(4, amount);
-		}
-		
-		DatabaseManager.decreamentNumTransactions();
-		DatabaseManager.dates.remove(transactionNo);
-		DatabaseManager.types.remove(transactionNo);
-		DatabaseManager.particulars.remove(transactionNo);
-		DatabaseManager.rates.remove(transactionNo);
-		DatabaseManager.quantities.remove(transactionNo);
-		DatabaseManager.amounts.remove(transactionNo);
-	}
-
-	private static int getBankNumber(String particulars)
-	{
-		for(int i=0; i<numBanks; i++)
-		{
-			if(particulars.contains(bankNames.get(i)))
-				return i;
-		}
-		return 0;
-	}
-	
-	/**
-	 * Adds a Transaction to the Database
-	 * @param data An array of String holding all data
-	 * @param data[0] credit/debit
-	 * @param data[1] particulars
-	 * @param data[2] type
-	 * @param data[3] rate
-	 * @param data[4] quantity
-	 * @param data[5] amount
-	 * @param data[6] date
-	 */
-	public static void addTransaction(String[] data)
-	{
-		String particulars = data[1];
-		String type = data[2];
-		String rate = data[3];
-		//Toast.makeText(context, "Rate: "+rate, Toast.LENGTH_SHORT).show();
-		String quantity = data[4];
-		String amount = data[5];
-		String date = data[6];
-		
-		if(data[0].equalsIgnoreCase("Wallet Credit"))
+		if(transaction.getType().contains("Wallet Credit"))
 		{
 			DatabaseManager.increamentNumTransations();
-			DatabaseManager.increamentWalletBalance(amount);
-			DatabaseManager.increamentIncome(amount);
-			DatabaseManager.addDate(date);
-			DatabaseManager.addType("Income");
-			DatabaseManager.addParticular(particulars);
-			DatabaseManager.addRate(amount);
+			DatabaseManager.increamentWalletBalance(transaction.getAmount());
+			DatabaseManager.increamentIncome(transaction.getAmount());
+			DatabaseManager.addCreatedTime(transaction.getCreatedTime());
+			DatabaseManager.addModifiedTime(transaction.getModifiedTime());
+			DatabaseManager.addDate(transaction.getDate());
+			DatabaseManager.addType(transaction.getType());
+			DatabaseManager.addParticular(transaction.getParticular());
+			DatabaseManager.addRate(transaction.getAmount());
 			DatabaseManager.addQuantity(1);
-			DatabaseManager.addAmount(amount);
+			DatabaseManager.addAmount(transaction.getAmount());
 		}
-		else if(data[0].equals("Wallet Debit"))
+		else if(transaction.getType().contains("Wallet Debit"))
 		{
-			int expTypeNo = Integer.parseInt(type);
+			int expTypeNo = Integer.parseInt(transaction.getType().substring(16, 18));   // Wallet Debit Exp01
 			
-			// Add the Transaction
 			DatabaseManager.increamentNumTransations();
-			DatabaseManager.decreamentWalletBalance(amount);
-			DatabaseManager.increamentAmountSpent(amount);
-			DatabaseManager.addDate(date);
-			DatabaseManager.addType(expTypeNo);
-			DatabaseManager.addParticular(particulars);
-			DatabaseManager.addRate(rate);
-			DatabaseManager.addQuantity(quantity);
-			DatabaseManager.addAmount(amount);
-			DatabaseManager.increamentCounter(expTypeNo, amount);
+			DatabaseManager.decreamentWalletBalance(transaction.getAmount());
+			DatabaseManager.increamentAmountSpent(transaction.getAmount());
+			DatabaseManager.addCreatedTime(transaction.getCreatedTime());
+			DatabaseManager.addModifiedTime(transaction.getModifiedTime());
+			DatabaseManager.addDate(transaction.getDate());
+			DatabaseManager.addType(transaction.getType());
+			DatabaseManager.addParticular(transaction.getParticular());
+			DatabaseManager.addRate(transaction.getRate());
+			DatabaseManager.addQuantity(transaction.getQuantity());
+			DatabaseManager.addAmount(transaction.getAmount());
+			DatabaseManager.increamentCounter(expTypeNo, transaction.getAmount());
 		}
-		else if(data[0].equalsIgnoreCase("Bank Credit"))
+		else if(transaction.getType().contains("Bank Credit"))
 		{
-			// Calculate Blank Fields
-			// BankNo and creditTypesNo both will be sent in types in the form bankNo/creditTypesNo like 2/1
-			String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
-			StringTokenizer tokens = new StringTokenizer(type,"/");
-			int bankNo = Integer.parseInt(tokens.nextToken());
-			int creditTypesNo = Integer.parseInt(tokens.nextToken());
+			int bankNo = Integer.parseInt(transaction.getType().substring(12, 14));    // Bank Credit 01 Income
+			if(transaction.getType().contains("Income"))   // Bank Credit 01 Income
+			{
+				DatabaseManager.increamentIncome(transaction.getAmount());
+			}
+			else if(transaction.getType().contains("Savings"))  // Bank Credit 01 Savings
+			{
+				DatabaseManager.decreamentWalletBalance(transaction.getAmount());
+			}
 			
-			if(creditTypesNo==0)
-			{
-				type = "Income Bank";
-				DatabaseManager.increamentIncome(amount);
-			}
-			else if(creditTypesNo==1)
-			{
-				type = "Bank Savings";
-				DatabaseManager.decreamentWalletBalance(amount);
-			}
-			DatabaseManager.increamentBankBalance(bankNo, amount);
+			DatabaseManager.increamentBankBalance(bankNo, transaction.getAmount());
 			DatabaseManager.increamentNumTransations();
-			DatabaseManager.addDate(date);
-			DatabaseManager.addType(type);
-			DatabaseManager.addParticular(particulars);
-			DatabaseManager.addRate(amount);
+			DatabaseManager.addCreatedTime(transaction.getCreatedTime());
+			DatabaseManager.addModifiedTime(transaction.getModifiedTime());
+			DatabaseManager.addDate(transaction.getDate());
+			DatabaseManager.addType(transaction.getType());
+			DatabaseManager.addParticular(transaction.getParticular());
+			DatabaseManager.addRate(transaction.getRate());
 			DatabaseManager.addQuantity(1);
-			DatabaseManager.addAmount(amount);
+			DatabaseManager.addAmount(transaction.getAmount());
 		}
-		else if(data[0].equalsIgnoreCase("Bank Debit"))
+		else if(transaction.getType().contains("Bank Debit"))
 		{
-			// Calculate Blank Fields
-			// BankNo and debitTypesNo both will be sent in types in the form bankNo/debitTypesNo like 2/1
-			String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
-			StringTokenizer tokens = new StringTokenizer(type,"/");
-			int bankNo = Integer.parseInt(tokens.nextToken());
-			int debitTypesNo = Integer.parseInt(tokens.nextToken());
-			
-			if(debitTypesNo==0)
+			int bankNo = Integer.parseInt(transaction.getType().substring(11, 13));  // Bank Debit 01 Exp01
+			if(transaction.getType().contains("Withdraw"))   // Bank Debit 01 Withdraw
 			{
-				type = "Bank Withdraw";
-				DatabaseManager.increamentWalletBalance(amount);
+				DatabaseManager.increamentWalletBalance(transaction.getAmount());
 			}
-			else if(debitTypesNo==1)
+			else if(transaction.getType().contains("Exp"))   // Bank Debit 01 Exp01
 			{
-				// In this case expTypeNo is concatenated with data[2]
-				int expTypeNo = Integer.parseInt(tokens.nextToken());
-				type = DatabaseManager.getExpenditureTypes().get(expTypeNo) + " Bank";
-				DatabaseManager.increamentAmountSpent(amount);
-				DatabaseManager.increamentCounter(expTypeNo, amount);
+				int expTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
+				DatabaseManager.increamentAmountSpent(transaction.getAmount());
+				DatabaseManager.increamentCounter(expTypeNo, transaction.getAmount());
 			}
 			
-			DatabaseManager.decreamentBankBalance(bankNo, amount);
+			DatabaseManager.decreamentBankBalance(bankNo, transaction.getAmount());
 			DatabaseManager.increamentNumTransations();
-			DatabaseManager.addDate(date);
-			DatabaseManager.addType(type);
-			DatabaseManager.addParticular(particulars);
-			DatabaseManager.addRate(amount);
+			DatabaseManager.addCreatedTime(transaction.getCreatedTime());
+			DatabaseManager.addModifiedTime(transaction.getModifiedTime());
+			DatabaseManager.addDate(transaction.getDate());
+			DatabaseManager.addType(transaction.getType());
+			DatabaseManager.addParticular(transaction.getParticular());
+			DatabaseManager.addRate(transaction.getAmount());
 			DatabaseManager.addQuantity(1);
-			DatabaseManager.addAmount(amount);
+			DatabaseManager.addAmount(transaction.getAmount());
 		}
 	}
 	
@@ -1216,23 +1092,28 @@ public class DatabaseManager
 	 * @param transactionNo Number of the transaction
 	 * @param data New data for the transaction
 	 */
-	public static void editTransaction(int transactionNo, String[] data)
+	public static void editTransaction(int transactionNo, Transaction transaction)
 	{
-		String oldParticulars = DatabaseManager.getParticular(transactionNo);
+		//Time oldCreatedTime = DatabaseManager.getCreatedTime(transactionNo);
+		//Time oldModifiedTime = DatabaseManager.getModifiedTime(transactionNo);
+		//String oldDate = DatabaseManager.getDate(transactionNo);
 		String oldType = DatabaseManager.getType(transactionNo);
-		double oldRate = DatabaseManager.getRate(transactionNo);
-		int oldQuantity = DatabaseManager.getQuantity(transactionNo);
+		//String oldParticulars = DatabaseManager.getParticular(transactionNo);
+		//double oldRate = DatabaseManager.getRate(transactionNo);
+		//double oldQuantity = DatabaseManager.getQuantity(transactionNo);
 		double oldAmount = DatabaseManager.getAmount(transactionNo);
-		String oldDate = DatabaseManager.getDate(transactionNo);
+
+		//Time newCreatedTime = transaction.getCreatedTime();
+		Time newModifiedTime = transaction.getModifiedTime();
+		DatabaseManager.setModifiedTime(transactionNo, newModifiedTime);  // Update The Last Modified Time
+		String newDate = transaction.getDate();
+		String newType = transaction.getType();
+		String newParticulars = transaction.getParticular();
+		double newRate = transaction.getRate();
+		double newQuantity = transaction.getQuantity();
+		double newAmount = transaction.getAmount();
 		
-		String newParticulars = data[1];
-		String newType = data[2];
-		double newRate = Double.parseDouble(data[3]);
-		int newQuantity = Integer.parseInt(data[4]);
-		double newAmount = Double.parseDouble(data[5]);
-		String newDate = data[6];
-		
-		if(data[0].equalsIgnoreCase("Wallet Credit"))
+		if(transaction.getType().contains("Wallet Credit"))
 		{
 			DatabaseManager.setParticular(transactionNo, newParticulars);
 			DatabaseManager.setDate(transactionNo, newDate);
@@ -1245,10 +1126,10 @@ public class DatabaseManager
 				DatabaseManager.setAmount(transactionNo, newAmount);
 			}
 		}
-		else if(data[0].equalsIgnoreCase("Wallet Debit"))
+		else if(transaction.getType().contains("Wallet Debit"))
 		{
-			int oldExpTypeNo = DatabaseManager.getExpenditureTypes().indexOf(oldType);
-			int newExpTypeNo = Integer.parseInt(newType);
+			int oldExpTypeNo = Integer.parseInt(oldType.substring(16,18));
+			int newExpTypeNo = Integer.parseInt(newType.substring(16,18));
 			if(newExpTypeNo!=oldExpTypeNo || newAmount!=oldAmount)
 			{
 				double netAmount = newAmount - oldAmount;
@@ -1258,54 +1139,38 @@ public class DatabaseManager
 				DatabaseManager.decreamentWalletBalance(netAmount);
 			}
 			DatabaseManager.setParticular(transactionNo, newParticulars);
-			DatabaseManager.setType(transactionNo, newExpTypeNo);
+			DatabaseManager.setType(transactionNo, newType);
 			DatabaseManager.setRate(transactionNo, newRate);
 			DatabaseManager.setQuantity(transactionNo, newQuantity);
 			DatabaseManager.setAmount(transactionNo, newAmount);
 			DatabaseManager.setDate(transactionNo, newDate);
 		}
-		else if(data[0].equalsIgnoreCase("Bank Credit"))
+		else if(transaction.getType().contains("Bank Credit"))
 		{
 			// Determine Which Bank was previous Transaction
-			int oldBankNo=0;
-			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+			int oldBankNo=Integer.parseInt(oldType.substring(12, 14));    // Bank Credit 01 Income;
+			
+			/** Determine what type was previous Transaction and undo it. */
+			if(oldType.contains("Income"))   // Bank Credit 01 Income
 			{
-				if(oldParticulars.contains(DatabaseManager.getBankName(i)))
-				{
-					oldBankNo = i;
-					break;
-				}
-			}
-			// Determine what type was previous Transaction and undo it.
-			int oldCreditsTypeNo;
-			if(oldType.equalsIgnoreCase("Income Bank"))
-			{
-				oldCreditsTypeNo = 0;
 				DatabaseManager.decreamentBankBalance(oldBankNo, oldAmount);
 				DatabaseManager.decreamentIncome(oldAmount);
 			}
-			else if(oldType.equalsIgnoreCase("Bank Savings"))
+			else if(oldType.contains("Savings"))   // Bank Credit 01 Savings
 			{
-				oldCreditsTypeNo = 1;
 				DatabaseManager.decreamentBankBalance(oldBankNo, oldAmount);
 				DatabaseManager.increamentWalletBalance(oldAmount);
 			}
 			
-			// BankNo and creditTypesNo both will be sent in types in the form bankNo/creditTypesNo like 2/1
-			String[] creditTypes = new String[]{"Account Transfer", "From Wallet"};
-			StringTokenizer tokens = new StringTokenizer(newType,"/");
-			int newBankNo = Integer.parseInt(tokens.nextToken());
-			int newCreditTypesNo = Integer.parseInt(tokens.nextToken());
+			int newBankNo=Integer.parseInt(newType.substring(12, 14));    // Bank Credit 01 Income;
 			
 			// Make the transaction
-			if(newCreditTypesNo==0)
+			if(oldType.contains("Income"))
 			{
-				newType = "Income Bank";
 				DatabaseManager.increamentIncome(newAmount);
 			}
-			else if(newCreditTypesNo==1)
+			else if(oldType.contains("Savings"))
 			{
-				newType = "Bank Savings";
 				DatabaseManager.decreamentWalletBalance(newAmount);
 			}
 			DatabaseManager.increamentBankBalance(newBankNo, newAmount);
@@ -1316,63 +1181,39 @@ public class DatabaseManager
 			DatabaseManager.setAmount(transactionNo, newAmount);
 			DatabaseManager.setDate(transactionNo, newDate);
 		}
-		else if(data[0].equalsIgnoreCase("Bank Debit"))
+		else if(transaction.getType().contains("Bank Debit"))
 		{
+			/** Determine what type was previous Transaction and undo it. */
 			// Determine Which Bank
-			int oldBankNo=0;
-			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
+			int oldBankNo=Integer.parseInt(oldType.substring(11, 13));  // Bank Debit 01 Exp01;
+			int oldExpTypeNo;
+			if(oldType.contains("Withdraw"))   // Bank Debit 01 Withdraw
 			{
-				if(oldParticulars.contains(DatabaseManager.getBankName(i)))
-				{
-					oldBankNo = i;
-					break;
-				}
-			}
-			// Determine what type was previous Transaction and undo it.
-			int oldDebitsTypeNo, oldExpTypeNo;
-			if(oldType.equals("Bank Withdraw"))
-			{
-				oldDebitsTypeNo = 0;
 				DatabaseManager.increamentBankBalance(oldBankNo, oldAmount);
 				DatabaseManager.decreamentWalletBalance(oldAmount);
 			}
-			else if(oldType.contains("Bank")) // Bank Expenditure
+			else if(oldType.contains("Exp"))   // Bank Debit 01 Exp01
 			{
-				oldDebitsTypeNo = 1;
-				for(int i=0; i<5; i++)
-				{
-					if(oldType.equals(DatabaseManager.getExpenditureTypes().get(i) + " Bank"))
-					{
-						 oldExpTypeNo = i;
-						 DatabaseManager.decreamentCounter(oldExpTypeNo, oldAmount);
-					}
-				}
+				oldExpTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
+				DatabaseManager.decreamentCounter(oldExpTypeNo, oldAmount);
 				DatabaseManager.increamentBankBalance(oldBankNo, oldAmount);
 				DatabaseManager.decreamentAmountSpent(oldAmount);
 			}
 			
-			// Make the Transaction
-			// Calculate Blank Fields
-			// BankNo and debitTypesNo both will be sent in types in the form bankNo/debitTypesNo like 2/1
-			String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
-			StringTokenizer tokens = new StringTokenizer(newType,"/");
-			int bankNo = Integer.parseInt(tokens.nextToken());
-			int debitTypesNo = Integer.parseInt(tokens.nextToken());
-			
-			if(debitTypesNo==0)
+			/** Make New Transaction*/
+			int newBankNo=Integer.parseInt(newType.substring(11, 13));  // Bank Debit 01 Exp01;
+			int newExpTypeNo;
+			if(newType.contains("Withdraw"))   // Bank Debit 01 Withdraw
 			{
-				newType = "Bank Withdraw";
-				DatabaseManager.increamentWalletBalance(newAmount);
-				DatabaseManager.decreamentBankBalance(bankNo, newAmount);
+				DatabaseManager.increamentWalletBalance(transaction.getAmount());
+				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
 			}
-			else if(debitTypesNo==1)
+			else if(newType.contains("Exp"))   // Bank Debit 01 Exp01
 			{
-				// In this case expTypeNo is concatenated with data[2]
-				int expTypeNo = Integer.parseInt(tokens.nextToken());
-				newType = DatabaseManager.getExpenditureTypes().get(expTypeNo) + " Bank";
-				DatabaseManager.increamentAmountSpent(newAmount);
-				DatabaseManager.increamentCounter(expTypeNo, newAmount);
-				DatabaseManager.decreamentBankBalance(bankNo, newAmount);
+				newExpTypeNo = Integer.parseInt(transaction.getType().substring(17, 19));
+				DatabaseManager.increamentAmountSpent(transaction.getAmount());
+				DatabaseManager.increamentCounter(newExpTypeNo, transaction.getAmount());
+				DatabaseManager.decreamentBankBalance(newBankNo, newAmount);
 			}
 			DatabaseManager.setParticular(transactionNo, newParticulars);
 			DatabaseManager.setType(transactionNo, newType);
@@ -1381,6 +1222,64 @@ public class DatabaseManager
 			DatabaseManager.setAmount(transactionNo, newAmount);
 			DatabaseManager.setDate(transactionNo, newDate);
 		}
+	}
+	
+	public static void deleteTransaction(int transactionNo)
+	{
+		String type = DatabaseManager.types.get(transactionNo);
+		double amount = DatabaseManager.amounts.get(transactionNo);
+		if(type.contains("Wallet Credit"))
+		{
+			DatabaseManager.decreamentIncome(amount);
+			DatabaseManager.decreamentWalletBalance(amount);
+		}
+		else if(type.contains("Wallet Debit"))
+		{
+			int expTypeNo = Integer.parseInt(type.substring(16, 18));   // Wallet Debit Exp01
+			DatabaseManager.increamentWalletBalance(amount);
+			DatabaseManager.decreamentAmountSpent(amount);
+			DatabaseManager.decreamentCounter(expTypeNo, amount);
+		}
+		else if(type.contains("Bank Credit"))
+		{
+			int bankNo = Integer.parseInt(type.substring(12, 14));    // Bank Credit 01 Income
+			if(type.contains("Income"))
+			{
+				DatabaseManager.decreamentIncome(amount);
+				DatabaseManager.decreamentBankBalance(bankNo, amount);
+			}
+			else if(type.contains("Savings"))
+			{
+				DatabaseManager.increamentWalletBalance(amount);
+				DatabaseManager.decreamentBankBalance(bankNo, amount);
+			}
+		}
+		else if(type.contains("Bank Debit"))
+		{
+			int bankNo = Integer.parseInt(type.substring(11, 13));  // Bank Debit 01 Withdraw
+			if(type.contains("Withdraw"))
+			{
+				DatabaseManager.decreamentWalletBalance(amount);
+				DatabaseManager.increamentBankBalance(bankNo, amount);
+			}
+			else if(type.contains("Exp"))
+			{
+				int expTypeNo = Integer.parseInt(type.substring(17, 19)); //// Bank Debit 01 Exp01
+				DatabaseManager.increamentBankBalance(bankNo, amount);
+				DatabaseManager.decreamentAmountSpent(amount);
+				DatabaseManager.decreamentCounter(expTypeNo, amount);
+			}
+		}
+		
+		DatabaseManager.decreamentNumTransactions();
+		DatabaseManager.createdTimes.remove(transactionNo);
+		DatabaseManager.modifiedTimes.remove(transactionNo);
+		DatabaseManager.dates.remove(transactionNo);
+		DatabaseManager.types.remove(transactionNo);
+		DatabaseManager.particulars.remove(transactionNo);
+		DatabaseManager.rates.remove(transactionNo);
+		DatabaseManager.quantities.remove(transactionNo);
+		DatabaseManager.amounts.remove(transactionNo);
 	}
 	
 	public static void addBank(String bankName, String bankAccNo, String bankBalance, String bankSmsName)
@@ -1407,5 +1306,40 @@ public class DatabaseManager
 		DatabaseManager.deleteBankAccNo(bankNum);
 		DatabaseManager.deleteBankBalance(bankNum);
 		DatabaseManager.deleteBankSmsName(bankNum);
+	}
+	
+	public static String getExactExpType(int transactionNo)
+	{
+		String type = DatabaseManager.getType(transactionNo);
+		String expType = "";
+		if(type.contains("Wallet Credit"))
+		{
+			expType = "Income";
+		}
+		else if(type.contains("Wallet Debit"))
+		{
+			int expTypeNo = Integer.parseInt(type.substring(16, 18));   // Wallet Debit Exp01
+			expType = DatabaseManager.getExpenditureType(expTypeNo);
+		}
+		else if(type.contains("Bank Credit"))
+		{
+			if(type.contains("Income"))
+				expType = "Income";
+			else if(type.contains("Savings"))
+				expType = "Bank Savings";
+		}
+		else if(type.contains("Bank Debit"))
+		{
+			if(type.contains("Withdrawal"))
+			{
+				expType = "Bank Withdrawal";
+			}
+			else if(type.contains("Exp"))
+			{
+				int expTypeNo = Integer.parseInt(type.substring(17, 19)); //// Bank Debit 01 Exp01
+				expType = DatabaseManager.getExpenditureType(expTypeNo);
+			}
+		}
+		return expType;
 	}
 }

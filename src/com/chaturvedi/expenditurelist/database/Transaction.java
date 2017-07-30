@@ -3,11 +3,13 @@ package com.chaturvedi.expenditurelist.database;
 public class Transaction
 {
 	private int id;
-	private String date;
+	private Time createdTime; // The Time At Which The Transaction Is Created
+	private Time modifiedTime; // The Time At Which The Transaction Was Last Modified
+	private String date; // The Date As Entered By The User
 	private String type;
 	private String particular;
 	private double rate;
-	private int quantity;
+	private double quantity;
 	private double amount;
 	
 	// Empty constructor
@@ -17,9 +19,11 @@ public class Transaction
 	}
 	
 	// Constructor
-	public Transaction(int id, String date, String type, String particular, double rate, int quantity, double amount)
+	public Transaction(int id, Time createdTime, Time modifiedTime, String date, String type, String particular, double rate, double quantity, double amount)
 	{
 		this.setID(id);
+		this.setCreatedTime(createdTime);
+		this.setModifiedTime(modifiedTime);
 		this.setDate(date);
 		this.setType(type);
 		this.setParticular(particular);
@@ -29,14 +33,16 @@ public class Transaction
 	}
 	
 	// Constructor
-	public Transaction(String id, String date, String type, String particular, String rate, String quantity, String amount)
+	public Transaction(String id, Time createdTime, Time modifiedTime, String date, String type, String particular, String rate, String quantity, String amount)
 	{
 		this.setID(Integer.parseInt(id));
+		this.setCreatedTime(createdTime);
+		this.setModifiedTime(modifiedTime);
 		this.setDate(date);
 		this.setType(type);
 		this.setParticular(particular);
 		this.setRate(Double.parseDouble(rate));
-		this.setQuantity(Integer.parseInt(quantity));
+		this.setQuantity(Double.parseDouble(quantity));
 		this.setAmount(Double.parseDouble(amount));
 	}
 
@@ -54,6 +60,38 @@ public class Transaction
 	public int getID()
 	{
 		return id;
+	}
+
+	/**
+	 * @param time The Time at which the transaction is created
+	 */
+	public void setCreatedTime(Time createdTime)
+	{
+		this.createdTime = createdTime;
+	}
+
+	/**
+	 * @return the time at which the transaction is created
+	 */
+	public Time getCreatedTime()
+	{
+		return createdTime;
+	}
+
+	/**
+	 * @param time The Time at which the transaction is created
+	 */
+	public void setModifiedTime(Time modifiedTime)
+	{
+		this.modifiedTime = modifiedTime;
+	}
+
+	/**
+	 * @return the time at which the transaction is created
+	 */
+	public Time getModifiedTime()
+	{
+		return modifiedTime;
 	}
 
 	/**
@@ -123,7 +161,7 @@ public class Transaction
 	/**
 	 * @param quantity the quantity to set
 	 */
-	public void setQuantity(int quantity)
+	public void setQuantity(double quantity)
 	{
 		this.quantity = quantity;
 	}
@@ -131,7 +169,7 @@ public class Transaction
 	/**
 	 * @return the quantity
 	 */
-	public int getQuantity()
+	public double getQuantity()
 	{
 		return quantity;
 	}

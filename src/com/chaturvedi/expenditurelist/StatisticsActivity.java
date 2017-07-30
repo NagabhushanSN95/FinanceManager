@@ -91,7 +91,7 @@ public class StatisticsActivity extends Activity
 			statDisplayLayout.setLayoutParams(layoutParams);*/
 			
 			TextView expenditureTypeName = (TextView)statDisplayLayout.findViewById(R.id.expendtureTypeName);
-			expenditureTypeName.setText(DatabaseManager.getExpenditureTypes().get(i));
+			expenditureTypeName.setText(DatabaseManager.getAllExpenditureTypes().get(i));
 			expenditureTypeName.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
 			
 			TextView currencySymbolView = (TextView)statDisplayLayout.findViewById(R.id.currencySymbol);
@@ -124,7 +124,7 @@ public class StatisticsActivity extends Activity
 			statDisplayLayout.setLayoutParams(layoutParams);*/
 			
 			TextView expenditureTypeName = (TextView)statDisplayLayout.findViewById(R.id.expendtureTypeName);
-			expenditureTypeName.setText(DatabaseManager.getExpenditureTypes().get(i));
+			expenditureTypeName.setText(DatabaseManager.getAllExpenditureTypes().get(i));
 			expenditureTypeName.setLayoutParams(new LayoutParams(WIDTH_NAMES, LayoutParams.WRAP_CONTENT));
 			
 			TextView currencySymbolView = (TextView)statDisplayLayout.findViewById(R.id.currencySymbol);

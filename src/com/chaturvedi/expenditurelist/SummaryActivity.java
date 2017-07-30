@@ -169,26 +169,12 @@ public class SummaryActivity extends Activity
 		setData();
 	}
 	
-	/*@Override
-	public void onBackPressed()
-	{
-		DatabaseManager.saveDatabase();
-		super.onBackPressed();
-	}*/
-	
 	@Override
 	public void onPause()
 	{
 		super.onPause();
 		DatabaseManager.saveDatabase();
 	}
-	
-	/*@Override
-	public void onStart()
-	{
-		super.onPause();
-		DatabaseManager.readDatabase();
-	}*/
 	
 	private void buildLayout()
 	{
@@ -210,7 +196,6 @@ public class SummaryActivity extends Activity
 		LayoutParams lineParams = new LayoutParams(LayoutParams.MATCH_PARENT, 1);
 		line.setLayoutParams(lineParams);
 		line.setBackgroundColor(Color.parseColor("#FFFFFF"));
-		//parentLayout.addView(line);
 		
 		layouts=new ArrayList<LinearLayout>(numBanks+3);
 		nameViews=new ArrayList<TextView>(numBanks+3);
@@ -253,11 +238,8 @@ public class SummaryActivity extends Activity
 	private void setData()
 	{
 		int numBanks = DatabaseManager.getNumBanks();
-		//Toast.makeText(getApplicationContext(), "Check-Point 01 "+numBanks, Toast.LENGTH_SHORT).show();
-		ArrayList<String> bankNames = DatabaseManager.getBankNames();
-		//Toast.makeText(getApplicationContext(), "Check-Point 02 "+bankNames, Toast.LENGTH_SHORT).show();
-		ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
-		//Toast.makeText(getApplicationContext(), "Check-Point 03 "+bankBalances, Toast.LENGTH_SHORT).show();
+		ArrayList<String> bankNames = DatabaseManager.getAllBankNames();
+		ArrayList<Double> bankBalances = DatabaseManager.getAllBankBalances();
 		DecimalFormat formatter = new DecimalFormat("###,##0.##");
 		try
 		{
@@ -267,14 +249,12 @@ public class SummaryActivity extends Activity
 				nameViews.get(i).setText(bankNames.get(i));
 				amountViews.get(i).setText(""+formatter.format(bankBalances.get(i)));
 			}
-			//Toast.makeText(getApplicationContext(), "Check-Point 04", Toast.LENGTH_SHORT).show();
 			nameViews.get(numBanks).setText("Wallet");
 			nameViews.get(numBanks+1).setText("Amount Spent");
 			nameViews.get(numBanks+2).setText("Income");
 			amountViews.get(numBanks).setText(""+formatter.format(DatabaseManager.getWalletBalance()));
 			amountViews.get(numBanks+1).setText(""+formatter.format(DatabaseManager.getAmountSpent()));
 			amountViews.get(numBanks+2).setText(""+formatter.format(DatabaseManager.getIncome()));
-			//Toast.makeText(getApplicationContext(), "Check-Point 05", Toast.LENGTH_SHORT).show();
 		}
 		catch(Exception e)
 		{

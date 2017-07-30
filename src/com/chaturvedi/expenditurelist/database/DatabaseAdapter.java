@@ -27,6 +27,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		private static final String KEY_ID = "id";
 		
 		// Transaction Table Columns names
+		private static final String KEY_CREATED_TIME = "created_time";
+		private static final String KEY_MODIFIED_TIME = "modified_time";
 		private static final String KEY_DATE = "date";
 		private static final String KEY_TYPE = "type";
 		private static final String KEY_PARTICULARS = "particulars";
@@ -46,11 +48,13 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		// Table Create Statements (Change Type Of Date From String To Date/DateTime whichever is available
 		private static String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE " + TABLE_TRANSACTIONS + "("+ 
 				KEY_ID + " INTEGER PRIMARY KEY," + 
+				KEY_CREATED_TIME + " STRING," +
+				KEY_MODIFIED_TIME + " STRING," +
 				KEY_DATE + " STRING," +
 				KEY_TYPE + " STRING," +
 				KEY_PARTICULARS + " TEXT,"+ 
 				KEY_RATE + " DOUBLE," +
-				KEY_QUANTITY + " INTEGER," +
+				KEY_QUANTITY + " DOUBLE," +
 				KEY_AMOUNT + " TEXT" + ")";
 		
 		private static String CREATE_BANKS_TABLE = "CREATE TABLE " + TABLE_BANKS + "("+ 
@@ -65,9 +69,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				KEY_NAME + " TEXT,"+ 
 				KEY_AMOUNT + " DOUBLE" + ")";
 		
-		private static String CREATE_EXPENDITURE_TYPES_TABLE = "CREATE TABLE " + TABLE_EXPENDITURE_TYPES + "(" + 
-				KEY_ID + " INTEGER PRIMARY KEY," +
-				KEY_EXPENDITURE_TYPE_NAME + " TEXT" + ")";
+		private static String CREATE_EXPENDITURE_TYPES_TABLE = "CREATE TABLE " + TABLE_EXPENDITURE_TYPES + 
+				"(" + KEY_ID + " INTEGER PRIMARY KEY," + KEY_EXPENDITURE_TYPE_NAME + " TEXT" + ")";
 		
 		private static String CREATE_COUNTERS_TABLE = "CREATE TABLE " + TABLE_COUNTERS + "(" + 
 				KEY_ID + " INTEGER PRIMARY KEY," + 
@@ -115,6 +118,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			SQLiteDatabase db = this.getWritableDatabase();
 			
 			ContentValues values = new ContentValues();
+			values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
+			values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
 			values.put(KEY_DATE, transaction.getDate());
 			values.put(KEY_TYPE, transaction.getType());
 			values.put(KEY_PARTICULARS, transaction.getParticular());
@@ -134,6 +139,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			for(Transaction transaction: transactions)
 			{
 				ContentValues values = new ContentValues();
+				values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
+				values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
 				values.put(KEY_DATE, transaction.getDate());
 				values.put(KEY_TYPE, transaction.getType());
 				values.put(KEY_PARTICULARS, transaction.getParticular());
@@ -150,14 +157,16 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		public Transaction getTransaction(int id)
 		{
 			SQLiteDatabase db = this.getReadableDatabase();
-			Cursor cursor = db.query(TABLE_TRANSACTIONS, new String[] { KEY_ID, KEY_DATE, KEY_TYPE, 
-					KEY_PARTICULARS, KEY_RATE, KEY_QUANTITY, KEY_AMOUNT }, KEY_ID + "=?",
+			Cursor cursor = db.query(TABLE_TRANSACTIONS, new String[] { KEY_ID, KEY_CREATED_TIME, 
+					KEY_MODIFIED_TIME, KEY_DATE, KEY_TYPE, KEY_PARTICULARS, KEY_RATE, KEY_QUANTITY, 
+					KEY_AMOUNT }, KEY_ID + "=?",
 					new String[] { String.valueOf(id) }, null, null, null, null);
 			if (cursor != null)
 				cursor.moveToFirst();
 			
-			Transaction transaction = new Transaction(cursor.getString(0), cursor.getString(1), cursor.getString(2),
-					cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getString(6));
+			Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
+					new Time(cursor.getString(2)), cursor.getString(3), cursor.getString(4), 
+					cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
 			db.close();
 			return transaction;
 		}
@@ -175,9 +184,9 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			{
 				do
 				{
-					Transaction transaction = new Transaction(cursor.getString(0), cursor.getString(1), cursor.getString(2),
-							cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getString(6));
-					
+					Transaction transaction = new Transaction(cursor.getString(0), new Time(cursor.getString(1)), 
+							new Time(cursor.getString(2)), cursor.getString(3), cursor.getString(4), 
+							cursor.getString(5), cursor.getString(6), cursor.getString(7), cursor.getString(8));
 					transactionList.add(transaction);
 				}
 				while (cursor.moveToNext());
@@ -192,6 +201,8 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			SQLiteDatabase db = this.getWritableDatabase();
 			ContentValues values = new ContentValues();
 			values.put(KEY_DATE, transaction.getDate());
+			values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
+			values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
 			values.put(KEY_PARTICULARS, transaction.getParticular());
 			values.put(KEY_RATE, transaction.getRate());
 			values.put(KEY_QUANTITY, transaction.getQuantity());

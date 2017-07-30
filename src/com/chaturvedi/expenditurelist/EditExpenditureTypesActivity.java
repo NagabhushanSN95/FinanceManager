@@ -109,7 +109,7 @@ public class EditExpenditureTypesActivity extends Activity
 		typeTextFields.add((EditText) findViewById(R.id.expenditure_type4));
 		typeTextFields.add((EditText) findViewById(R.id.expenditure_type5));
 		
-		expenditureTypes = DatabaseManager.getExpenditureTypes();
+		expenditureTypes = DatabaseManager.getAllExpenditureTypes();
 		/*if(expenditureTypes.size()<5)
 		{
 			expenditureTypes = new ArrayList<String>();
@@ -168,7 +168,7 @@ public class EditExpenditureTypesActivity extends Activity
 		
 		if(dataEntered)
 		{
-			DatabaseManager.setExpenditureTypes(expenditureTypes);
+			DatabaseManager.setAllExpenditureTypes(expenditureTypes);
 		}
 	}
 }

@@ -227,10 +227,10 @@ public class EditBanksActivity extends Activity
 		
 		DecimalFormat formatter = new DecimalFormat("#,##0.##");
 		int numBanks = DatabaseManager.getNumBanks();
-		ArrayList<String> bankNames = DatabaseManager.getBankNames();
+		ArrayList<String> bankNames = DatabaseManager.getAllBankNames();
 		ArrayList<String> bankAccNos = DatabaseManager.getAllBankAccNos();
-		ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
-		ArrayList<String> bankSmsNames = DatabaseManager.getBankSmsNames();
+		ArrayList<Double> bankBalances = DatabaseManager.getAllBankBalances();
+		ArrayList<String> bankSmsNames = DatabaseManager.getAllBankSmsNames();
 		
 		/*linearLayouts=new ArrayList<LinearLayout>(numBanks+1);
 		linearLayoutParams=new ArrayList<LayoutParams>(numBanks+1);
@@ -560,10 +560,10 @@ public class EditBanksActivity extends Activity
 	
 	private void editBank(final int bankNo)
 	{
-		ArrayList<String> bankNames = DatabaseManager.getBankNames();
+		ArrayList<String> bankNames = DatabaseManager.getAllBankNames();
 		ArrayList<String> bankAccNos = DatabaseManager.getAllBankAccNos();
-		ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
-		ArrayList<String> bankSmsNames = DatabaseManager.getBankSmsNames();
+		ArrayList<Double> bankBalances = DatabaseManager.getAllBankBalances();
+		ArrayList<String> bankSmsNames = DatabaseManager.getAllBankSmsNames();
 		
 		buildAddBankDialog();
 		bankNameField.setText(bankNames.get(bankNo));

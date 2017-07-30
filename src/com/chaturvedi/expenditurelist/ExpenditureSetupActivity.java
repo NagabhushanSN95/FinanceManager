@@ -151,20 +151,20 @@ public class ExpenditureSetupActivity extends Activity
 		
 		if(dataEntered)
 		{
-			DatabaseManager.setDates(new ArrayList<String>());
-			DatabaseManager.setTypes(new ArrayList<String>());
-			DatabaseManager.setParticulars(new ArrayList<String>());
-			DatabaseManager.setRates(new ArrayList<Double>());
-			DatabaseManager.setQuantities(new ArrayList<Integer>());
-			DatabaseManager.setAmounts(new ArrayList<Double>());
-			DatabaseManager.setExpenditureTypes(expenditureTypes);
+			DatabaseManager.setAllDates(new ArrayList<String>());
+			DatabaseManager.setAllTypes(new ArrayList<String>());
+			DatabaseManager.setAllParticulars(new ArrayList<String>());
+			DatabaseManager.setAllRates(new ArrayList<Double>());
+			DatabaseManager.setAllQuantities(new ArrayList<Double>());
+			DatabaseManager.setAllAmounts(new ArrayList<Double>());
+			DatabaseManager.setAllExpenditureTypes(expenditureTypes);
 			
 			ArrayList<Double> counters = new ArrayList<Double>(10);
 			for(int i=0; i<NUM_EXPENDITURE_TYPES*2; i++)
 			{
 				counters.add(0.0);
 			}
-			DatabaseManager.setCounters(counters);
+			DatabaseManager.setAllCounters(counters);
 			
 			SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 			SharedPreferences.Editor editor = preferences.edit();

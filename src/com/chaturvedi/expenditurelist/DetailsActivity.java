@@ -36,6 +36,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.expenditurelist.database.DatabaseManager;
+import com.chaturvedi.expenditurelist.database.Time;
+import com.chaturvedi.expenditurelist.database.Transaction;
 
 public class DetailsActivity extends Activity
 {
@@ -49,8 +51,6 @@ public class DetailsActivity extends Activity
 	private int WIDTH_AMOUNT;
 	private int WIDTH_TRANSACTION_BUTTON;
 	
-	//private LinearLayout titleLayout;
-	//private ArrayList<LinearLayout> itemsLayout;
 	private LinearLayout parentLayout;
 	
 	private ImageButton walletCreditButton;
@@ -84,7 +84,6 @@ public class DetailsActivity extends Activity
 	private String[] debitTypes = new String[]{"To Wallet", "Account Transfer"};
 	
 	private int contextMenuTransactionNo;
-	
 	private Intent smsIntent;
 	private DecimalFormat formatterTextFields;
 	
@@ -175,8 +174,6 @@ public class DetailsActivity extends Activity
 	
 	private void buildTitleLayout()
 	{
-		//titleLayout=(LinearLayout)findViewById(R.id.layout_title);
-		
 		TextView slnoTitleView = (TextView)findViewById(R.id.slno);
 		LayoutParams slnoTitleParams = (LayoutParams) slnoTitleView.getLayoutParams();
 		slnoTitleParams.width = WIDTH_SLNO;
@@ -205,10 +202,9 @@ public class DetailsActivity extends Activity
 			parentLayout = (LinearLayout)findViewById(R.id.layout_parent);
 			parentLayout.removeAllViews();
 			
-			//itemsLayout = new ArrayList<LinearLayout>();
-			ArrayList<String> dates = DatabaseManager.getDates();
-			ArrayList<String> particulars = DatabaseManager.getParticulars();
-			ArrayList<Double> amounts = DatabaseManager.getAmounts();
+			ArrayList<String> dates = DatabaseManager.getAllDates();
+			ArrayList<String> particulars = DatabaseManager.getAllParticulars();
+			ArrayList<Double> amounts = DatabaseManager.getAllAmounts();
 			DecimalFormat formatterDisplay = new DecimalFormat("#,##0.##");
 			formatterTextFields = new DecimalFormat("##0.##");
 			for(int i=0; i<DatabaseManager.getNumTransactions(); i++)
@@ -244,8 +240,6 @@ public class DetailsActivity extends Activity
 				amountView.setText(formatterDisplay.format(amounts.get(i)));
 				//amountView.setMinLines(MIN_LINES);
 
-				//itemsLayout.add(linearLayout);
-				//linearLayout.setMinimumHeight(MIN_HEIGHT);
 				parentLayout.addView(linearLayout);
 				registerForContextMenu(linearLayout);
 			}
@@ -367,15 +361,20 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
+				String id = ""+DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
+				String date = dateField.getText().toString();
+				String type = "Wallet Credit";
 				String particulars = particularsField.getText().toString().trim();
 				String amount = amountField.getText().toString();
-				String date = dateField.getText().toString();
-				String[] data = {"Wallet Credit", particulars, "Income", amount, "1", amount, date};
+				String[] data = {id, date, type, particulars, amount, "1", amount};
+				Transaction transaction = null;
 				
 				boolean validData = isValidData(data);
 				if(validData)
 				{
-					DatabaseManager.addTransaction(data);
+					transaction = completeData(data, time, time);
+					DatabaseManager.addTransaction(transaction);
 				}
 				else
 				{
@@ -411,19 +410,24 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
+				String id = ""+DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
 				String particulars = particularsField.getText().toString();
 				int expTypeNo = typesList.getSelectedItemPosition();
+				DecimalFormat formatter = new DecimalFormat("00");
+				String type = "Wallet Debit Exp"+formatter.format(expTypeNo);
 				String rate = rateField.getText().toString();
 				String quantity = quantityField.getText().toString();
 				String amount = amountField.getText().toString();
 				String date = dateField.getText().toString();
-				String data[] = {"Wallet Debit", particulars, ""+expTypeNo, rate, quantity, amount, date};
+				String[] data = {id, date, type, particulars, rate, quantity, amount};
+				Transaction transaction;
 				boolean validData = isValidData(data);
 				
 				if(validData)
 				{
-					data = completeData(data);
-					DatabaseManager.addTransaction(data);
+					transaction = completeData(data, time, time);
+					DatabaseManager.addTransaction(transaction);
 				}
 				else
 				{
@@ -443,7 +447,7 @@ public class DetailsActivity extends Activity
 		
 		dateField=(EditText)walletDebitDialogView.findViewById(R.id.field_date);
 		typesList = (Spinner)walletDebitDialogView.findViewById(R.id.list_types);
-		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getExpenditureTypes()));
+		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getAllExpenditureTypes()));
 		particularsField=(EditText)walletDebitDialogView.findViewById(R.id.field_particulars);
 		rateField = (EditText)walletDebitDialogView.findViewById(R.id.field_rate);
 		quantityField = (EditText)walletDebitDialogView.findViewById(R.id.field_quantity);
@@ -499,18 +503,30 @@ public class DetailsActivity extends Activity
 				}
 				
 				// Read Data
-				String particulars = particularsField.getText().toString();
-				//String type = "Income Bank";
-				int creditTypesNo = creditTypesList.getSelectedItemPosition();
-				String amount = amountField.getText().toString();
+				String id = "" + DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
 				String date = dateField.getText().toString();
-				String[] data = {"Bank Credit", particulars, bankNo+"/"+creditTypesNo, amount, "1", amount, date};
+				DecimalFormat bankNoFormatter = new DecimalFormat("00");
+				String type = "Bank Credit " + bankNoFormatter.format(bankNo);
+				int creditTypesNo = creditTypesList.getSelectedItemPosition();
+				if(creditTypesNo==0)
+				{
+					type += " Income";
+				}
+				else if(creditTypesNo==1)
+				{
+					type += " Savings";
+				}
+				String particulars = particularsField.getText().toString();
+				String amount = amountField.getText().toString();
+				String[] data = {id, date, type, particulars, amount, "1", amount};
+				Transaction transaction = null;
 				boolean validData = isValidData(data);
 				
 				if(validData)
 				{
-					data = completeData(data);
-					DatabaseManager.addTransaction(data);
+					transaction = completeData(data, time, time);
+					DatabaseManager.addTransaction(transaction);
 				}
 				else
 				{
@@ -549,7 +565,7 @@ public class DetailsActivity extends Activity
 		debitTypesList = (Spinner)bankDebitDialogView.findViewById(R.id.list_debitTypes);
 		debitTypesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, debitTypes));
 		typesList = (Spinner)bankDebitDialogView.findViewById(R.id.list_types);
-		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getExpenditureTypes()));
+		typesList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, DatabaseManager.getAllExpenditureTypes()));
 		typesList.setVisibility(View.GONE);
 		amountField=(EditText)bankDebitDialogView.findViewById(R.id.field_amount);
 		dateField=(EditText)bankDebitDialogView.findViewById(R.id.field_date);
@@ -597,24 +613,32 @@ public class DetailsActivity extends Activity
 				}
 				
 				// Validate Data
-				String particulars = particularsField.getText().toString();
-				//String type = "Bank Withdraw";
+				String id = ""+DatabaseManager.getNumTransactions();
+				Time time = new Time(Calendar.getInstance());
+				String date = dateField.getText().toString();
+				DecimalFormat formatter = new DecimalFormat("00");
+				String type = "Bank Debit " + formatter.format(bankNo);
 				int debitTypesNo = debitTypesList.getSelectedItemPosition();
+				if(debitTypesNo == 0)
+				{
+					type += " Withdraw";
+				}
+				else if(debitTypesNo == 1)
+				{
+					int expTypeNo = typesList.getSelectedItemPosition();
+					type += " Exp" + formatter.format(expTypeNo);
+				}
+				String particulars = particularsField.getText().toString();
 				int expTypeNo = 0;
 				String amount = amountField.getText().toString();
-				String date = dateField.getText().toString();
-				String[] data = {"Bank Debit", particulars, bankNo+"/"+debitTypesNo, amount, "1", amount, date};
+				String[] data = {id, date, type, particulars, amount, "1", amount};
+				Transaction transaction;
 				boolean validData = isValidData(data);
 				
 				if(validData)
 				{
-					if(debitTypesNo==1)
-					{
-						expTypeNo = typesList.getSelectedItemPosition();
-						data[2] = data[2] + "/"+expTypeNo;
-					}
-					data = completeData(data);
-					DatabaseManager.addTransaction(data);
+					transaction = completeData(data, time, time);
+					DatabaseManager.addTransaction(transaction);
 				}
 				else
 				{
@@ -660,7 +684,7 @@ public class DetailsActivity extends Activity
 	{
 		String expType = DatabaseManager.getType(transactionNo);
 		
-		if(expType.equals("Income"))
+		if(expType.contains("Wallet Credit"))
 		{
 			final double backupAmount = DatabaseManager.getAmount(transactionNo);
 			buildWalletCreditDialog();
@@ -672,15 +696,20 @@ public class DetailsActivity extends Activity
 				@Override
 				public void onClick(DialogInterface dialog, int which)
 				{
+					String id = "" + transactionNo;
+					Time time = new Time(Calendar.getInstance());
+					String date = dateField.getText().toString();
+					String type = "Wallet Credit";
 					String particulars = particularsField.getText().toString().trim();
 					String amount = amountField.getText().toString();
-					String date = dateField.getText().toString();
-					String[] data = {"Wallet Credit", particulars, "Income", amount, "1", amount, date};
+					String[] data = {id, date, type, particulars, amount, "1", amount};
+					Transaction transaction = null;
 					boolean validData = isValidData(data);
 					
 					if(validData)
 					{
-						DatabaseManager.editTransaction(transactionNo, data);
+						transaction = completeData(data, time, time);
+						DatabaseManager.editTransaction(transactionNo, transaction);
 					}
 					else
 					{
@@ -695,97 +724,82 @@ public class DetailsActivity extends Activity
 			});
 			walletCreditDialog.show();
 		}
-		
-		for(int i=0; i<5; i++)
+		else if(expType.contains("Wallet Debit"))
 		{
-			if(expType.equals(DatabaseManager.getExpenditureTypes().get(i)))
+			int oldExpTypeNo = Integer.parseInt(expType.substring(16, 18));   // Wallet Debit Exp01
+			buildWalletDebitDialog();
+			particularsField.setText(DatabaseManager.getParticular(transactionNo));
+			typesList.setSelection(oldExpTypeNo);
+			rateField.setText(formatterTextFields.format(DatabaseManager.getRate(transactionNo)));
+			quantityField.setText(formatterTextFields.format(DatabaseManager.getQuantity(transactionNo)));
+			amountField.setText(formatterTextFields.format(DatabaseManager.getAmount(transactionNo)));
+			dateField.setText(DatabaseManager.getDate(transactionNo));
+			
+			walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
-				final int expTypeNumBackup = i;
-				final double rateBackup = DatabaseManager.getRate(transactionNo);
-				final int quantityBackup = DatabaseManager.getQuantity(transactionNo);
-				final double amountBackup = DatabaseManager.getAmount(transactionNo);
-				
-				buildWalletDebitDialog();
-				particularsField.setText(DatabaseManager.getParticular(transactionNo));
-				typesList.setSelection(expTypeNumBackup);
-				rateField.setText(formatterTextFields.format(rateBackup));
-				quantityField.setText(formatterTextFields.format(quantityBackup));
-				amountField.setText(formatterTextFields.format(amountBackup));
-				dateField.setText(DatabaseManager.getDate(transactionNo));
-				
-				walletDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+				@Override
+				public void onClick(DialogInterface dialog, int which)
 				{
-					@Override
-					public void onClick(DialogInterface dialog, int which)
+					String id = "" + transactionNo;
+					Time time = new Time(Calendar.getInstance());
+					String date = dateField.getText().toString();
+					DecimalFormat formatter = new DecimalFormat("00");
+					int newExpTypeNo = typesList.getSelectedItemPosition();
+					String type = "Wallet Debit Exp" + formatter.format(newExpTypeNo);
+					String particulars = particularsField.getText().toString();
+					String rate = rateField.getText().toString();
+					String quantity = quantityField.getText().toString();
+					String amount = amountField.getText().toString();
+					String[] data = {id, date, type, particulars, rate, quantity, amount};
+					Transaction transaction;
+					boolean validData = isValidData(data);
+					
+					if(validData)
 					{
-						String particulars = particularsField.getText().toString();
-						int expTypeNo = typesList.getSelectedItemPosition();
-						String rate = rateField.getText().toString();
-						String quantity = quantityField.getText().toString();
-						String amount = amountField.getText().toString();
-						String date = dateField.getText().toString();
-						String[] data = {"Wallet Debit", particulars, ""+expTypeNo, rate, quantity, amount, date};
-						boolean validData = isValidData(data);
-						
-						if(validData)
-						{
-							data = completeData(data);
-							DatabaseManager.editTransaction(transactionNo, data);
-						}
-						else
-						{
-							buildWalletDebitDialog();
-							particularsField.setText(particulars);
-							typesList.setSelection(expTypeNo);
-							rateField.setText(rate);
-							quantityField.setText(quantity);
-							amountField.setText(amount);
-							dateField.setText(date);
-							walletDebitDialog.show();
-						}
-						buildBodyLayout();
+						transaction = completeData(data, time, time);
+						DatabaseManager.editTransaction(transactionNo, transaction);
 					}
-				});
-				walletDebitDialog.show();
-			}
+					else
+					{
+						buildWalletDebitDialog();
+						particularsField.setText(particulars);
+						typesList.setSelection(newExpTypeNo);
+						rateField.setText(rate);
+						quantityField.setText(quantity);
+						amountField.setText(amount);
+						dateField.setText(date);
+						walletDebitDialog.show();
+					}
+					buildBodyLayout();
+				}
+			});
+			walletDebitDialog.show();
 		}
-		
-		if(expType.equals("Income Bank") || expType.equals("Bank Savings"))
+		else if(expType.contains("Bank Credit"))
 		{
 			String oldParticulars = DatabaseManager.getParticular(transactionNo);
 			final double oldAmount = DatabaseManager.getAmount(transactionNo);
 			buildBankCreditDialog();
 			String creditType = creditTypes[0];
-			if(expType.equals("Income Bank"))
+			if(expType.contains("Income"))
 			{
 				creditType = creditTypes[0];
 				creditTypesList.setSelection(0);
 			}
-			else if(expType.equals("Bank Savings"))
+			else if(expType.contains("Savings"))
 			{
 				creditType = creditTypes[1];
 				creditTypesList.setSelection(1);
 			}
-			amountField.setText(formatterTextFields.format(oldAmount));
-			dateField.setText(DatabaseManager.getDate(transactionNo));
-			
-			// Determine Which Bank
-			int bankNo=0;
-			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
-			{
-				if(oldParticulars.contains(DatabaseManager.getBankName(i)))
-				{
-					banks.get(i).setChecked(true);
-					bankNo = i;
-					break;
-				}
-			}
-			final int oldBankNo = bankNo;
+			final int oldBankNo = Integer.parseInt(expType.substring(12, 14));    // Bank Credit 01 Income
+			banks.get(oldBankNo).setChecked(true);
 			String oldBankName = DatabaseManager.getBankName(oldBankNo);
 			int start=oldBankName.length() + 9 + creditType.length() + 2;
 			int end=oldParticulars.length();
 			String netParticulars = oldParticulars.substring(start, end);
 			particularsField.setText(netParticulars);
+			amountField.setText(formatterTextFields.format(oldAmount));
+			dateField.setText(DatabaseManager.getDate(transactionNo));
 			
 			bankCreditDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
@@ -801,19 +815,30 @@ public class DetailsActivity extends Activity
 					}
 					
 					// Validate Data
-					String particulars = particularsField.getText().toString();
-					Toast.makeText(getApplicationContext(), "01"+particulars, Toast.LENGTH_SHORT).show();
-					//String type = "Income Bank";
-					int creditTypesNo = creditTypesList.getSelectedItemPosition();
-					String amount = amountField.getText().toString();
+					String id = "" + transactionNo;
+					Time time = new Time(Calendar.getInstance());
 					String date = dateField.getText().toString();
-					String[] data = {"Bank Credit", particulars, newBankNo+"/"+creditTypesNo, amount, "1", amount, date};
+					DecimalFormat formatter = new DecimalFormat("00");
+					String type = "Bank Credit " + formatter.format(newBankNo);
+					int creditTypesNo = creditTypesList.getSelectedItemPosition();
+					if(creditTypesNo == 0)
+					{
+						type += " Income";
+					}
+					else if(creditTypesNo == 1)
+					{
+						type += " Savings";
+					}
+					String particulars = particularsField.getText().toString();
+					String amount = amountField.getText().toString();
+					String[] data = {id, date, type, particulars, amount, "1", amount};
+					Transaction transaction;
 					boolean validData = isValidData(data);
 					
 					if(validData)
 					{
-						data = completeData(data);
-						DatabaseManager.editTransaction(transactionNo, data);
+						transaction = completeData(data, time, time);
+						DatabaseManager.editTransaction(transactionNo, transaction);
 					}
 					else
 					{
@@ -831,15 +856,26 @@ public class DetailsActivity extends Activity
 			bankCreditDialog.show();
 		}
 		
-		if(expType.equals("Bank Withdraw"))
+		if(expType.contains("Bank Debit"))
 		{
+			int oldBankNo = Integer.parseInt(expType.substring(11, 13));  // Bank Debit 01 Withdraw
 			String oldParticulars = DatabaseManager.getParticular(transactionNo);
 			final double oldAmount = DatabaseManager.getAmount(transactionNo);
 			buildBankDebitDialog();
-			particularsField.setText(oldParticulars);
-			debitTypesList.setSelection(0);
-			amountField.setText(formatterTextFields.format(oldAmount));
-			dateField.setText(DatabaseManager.getDate(transactionNo));
+			String debitType = debitTypes[0];
+			int oldExpTypeNo = 0;
+			if(expType.contains("Withdraw"))
+			{
+				debitTypesList.setSelection(0);
+				debitType = debitTypes[0];
+			}
+			else if(expType.contains("Exp"))
+			{
+				debitTypesList.setSelection(1);
+				debitType = debitTypes[1];
+				oldExpTypeNo = Integer.parseInt(expType.substring(17, 19)); //// Bank Debit 01 Exp01
+				typesList.setSelection(oldExpTypeNo);
+			}
 			
 			debitTypesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
 			{
@@ -862,25 +898,15 @@ public class DetailsActivity extends Activity
 					
 				}
 			});
-			
-			// Determine Which Bank
-			int bankNo=0;
-			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
-			{
-				if(oldParticulars.contains(DatabaseManager.getBankName(i)))
-				{
-					banks.get(i).setChecked(true);
-					bankNo = i;
-					break;
-				}
-			}
-			final int oldBankNo = bankNo;
-			String debitType = debitTypes[0];
 			String oldBankName = DatabaseManager.getBankName(oldBankNo);
 			int start=oldBankName.length() + 13 + debitType.length() + 2;
 			int end=oldParticulars.length();
 			String netParticulars = oldParticulars.substring(start, end);
+			
+			banks.get(oldBankNo).setChecked(true);
 			particularsField.setText(netParticulars);
+			amountField.setText(formatterTextFields.format(oldAmount));
+			dateField.setText(DatabaseManager.getDate(transactionNo));
 			
 			bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
 			{
@@ -895,31 +921,32 @@ public class DetailsActivity extends Activity
 							newBankNo=i;
 					}
 					
-					String particulars = particularsField.getText().toString();
-					//String type = "Bank Withdraw";
+					String id = "" + transactionNo;
+					Time time = new Time(Calendar.getInstance());
+					String date = dateField.getText().toString();
+					DecimalFormat formatter = new DecimalFormat("00");
+					String type = "Bank Debit " + formatter.format(newBankNo);
 					int debitTypesNo = debitTypesList.getSelectedItemPosition();
 					int expTypeNo = 0;
-					String amount = amountField.getText().toString();
-					String date = dateField.getText().toString();
-					
-					String[] data = {};
-					if(debitTypesNo==0)
+					if(debitTypesNo == 0)
 					{
-						//type = "Bank Withdraw";
-						data = new String[]{"Bank Debit", particulars, newBankNo+"/"+debitTypesNo, amount, "1", amount, date};
+						type += " Withdraw";
 					}
-					else if(debitTypesNo==1)
+					else if(debitTypesNo == 1)
 					{
-						//type = (String) typesList.getSelectedItem() + " Bank";
 						expTypeNo = typesList.getSelectedItemPosition();
-						data = new String[]{"Bank Debit", particulars, newBankNo+"/"+debitTypesNo+"/"+expTypeNo, amount, "1", amount, date};
+						type += " Exp" + formatter.format(expTypeNo);
 					}
+					String particulars = particularsField.getText().toString();
+					String amount = amountField.getText().toString();
+					String[] data = {id, date, type, particulars, amount, "1", amount};
+					Transaction transaction;
 					boolean validData = isValidData(data);
 					
 					if(validData)
 					{
-						data = completeData(data);
-						DatabaseManager.editTransaction(transactionNo, data);
+						transaction = completeData(data, time, time);
+						DatabaseManager.editTransaction(transactionNo, transaction);
 					}
 					else
 					{
@@ -937,99 +964,6 @@ public class DetailsActivity extends Activity
 			});
 			bankDebitDialog.show();
 		}
-		
-		for(int i=0; i<5; i++)
-		{
-			if(expType.equals(DatabaseManager.getExpenditureTypes().get(i) + " Bank"))
-			{
-				final int expTypeNumBackup = i;
-				String oldParticulars = DatabaseManager.getParticular(transactionNo);
-				final double amountBackup = DatabaseManager.getAmount(transactionNo);
-				buildBankDebitDialog();
-				// Determine Which Bank
-				int bankNo=0;
-				for(int j=0; j<DatabaseManager.getNumBanks(); j++)
-				{
-					if(oldParticulars.contains(DatabaseManager.getBankName(j)))
-					{
-						banks.get(j).setChecked(true);
-						bankNo = j;
-						break;
-					}
-				}
-				final int oldBankNo = bankNo;
-				
-				banks.get(oldBankNo).setChecked(true);
-				particularsField.setText(DatabaseManager.getParticular(transactionNo));
-				debitTypesList.setSelection(1);
-				typesList.setSelection(expTypeNumBackup);
-				amountField.setText(formatterTextFields.format(amountBackup));
-				dateField.setText(DatabaseManager.getDate(transactionNo));
-				
-				String debitType = debitTypes[1];
-				String oldBankName = DatabaseManager.getBankName(oldBankNo);
-				int start=oldBankName.length() + 13 + debitType.length() + 2;
-				int end=oldParticulars.length();
-				String netParticulars = oldParticulars.substring(start, end);
-				particularsField.setText(netParticulars);
-				
-				bankDebitDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
-				{
-					@Override
-					public void onClick(DialogInterface dialog, int which)
-					{
-						// Determine Which Bank Is Selected
-						int bankNo=0;
-						for(int i=0; i<DatabaseManager.getNumBanks(); i++)
-						{
-							if(banks.get(i).isChecked())
-								bankNo=i;
-						}
-						
-						String particulars = particularsField.getText().toString();
-						//String type = DatabaseManager.getExpenditureTypes().get(0) + " Bank";
-						int debitTypesNo = debitTypesList.getSelectedItemPosition();
-						int expTypeNo = 0;
-						String amount = amountField.getText().toString();
-						String date = dateField.getText().toString();
-						
-						String[] data = {};
-						if(debitTypesNo==0)
-						{
-							//type = "Bank Withdraw";
-							data = new String[]{"Bank Debit", particulars, bankNo+"/"+debitTypesNo, amount, "1", amount, date};
-						}
-						else if(debitTypesNo==1)
-						{
-							//type = (String) typesList.getSelectedItem() + " Bank";
-							expTypeNo = typesList.getSelectedItemPosition();
-							data = new String[]{"Bank Debit", particulars, bankNo+"/"+debitTypesNo+"/"+expTypeNo, amount, "1", amount, date};
-						}
-						boolean validData = isValidData(data);
-						
-						if(validData)
-						{
-							data = completeData(data);
-							DatabaseManager.editTransaction(transactionNo, data);
-						}
-						else
-						{
-							buildBankDebitDialog();
-							banks.get(bankNo).setChecked(true);
-							particularsField.setText(particulars);
-							debitTypesList.setSelection(debitTypesNo);
-							typesList.setSelection(expTypeNo);
-							amountField.setText(amount);
-							dateField.setText(date);
-							bankDebitDialog.show();
-						}
-						
-						buildBodyLayout();
-					}
-				});
-				bankDebitDialog.show();
-			}
-		}
 	}
 	
 	/**
@@ -1046,15 +980,17 @@ public class DetailsActivity extends Activity
 	 */
 	private boolean isValidData(String[] data)
 	{
-		String particulars = data[1];
-		String rate = data[3];
-		String quantity = data[4];
-		String amount = data[5];
-		String date = data[6];
+		//int id = Integer.parseInt(data[0]);
+		String date = data[1];
+		String type = data[2];
+		String particulars = data[3];
+		String rate = data[4];
+		String quantity = data[5];
+		String amount = data[6];
 		boolean validData = true;
 		
 		// Check the data for Wallet Credit
-		if(data[0].equalsIgnoreCase("Wallet Credit"))
+		if(type.contains("Wallet Credit"))
 		{
 			if(particulars.length()==0)
 			{
@@ -1078,7 +1014,7 @@ public class DetailsActivity extends Activity
 		}
 		
 		// Checks the data for Wallet Debit
-		else if(data[0].equalsIgnoreCase("Wallet Debit"))
+		else if(type.contains("Wallet Debit"))
 		{
 			if(particulars.length()==0)
 			{
@@ -1099,32 +1035,19 @@ public class DetailsActivity extends Activity
 				}
 				else if(quantity.length()==0)
 				{
-					//amount = rate;
-					//quantity = String.valueOf(1);
 					validData = true;
 				}
 				else
 				{
-					//amount = ""+Double.parseDouble(rate)*Double.parseDouble(quantity);
 					validData = true;
 				}
 			}
 			else if(rate.length()==0)
 			{
-				/*if(quantity.length()==0)
-				{
-					rate = amount;
-					quantity = String.valueOf(1);
-				}
-				else
-				{
-					rate = ""+Double.parseDouble(amount)/Double.parseDouble(quantity);
-				}*/
 				validData = true;
 			}
 			else if(quantity.length()==0)
 			{
-				//quantity = ""+Math.round(Double.parseDouble(amount)/Double.parseDouble(rate));
 				validData = true;
 			}
 			else
@@ -1132,7 +1055,7 @@ public class DetailsActivity extends Activity
 				validData = true;
 			}
 		}
-		else if(data[0].equalsIgnoreCase("Bank Credit"))
+		else if(type.contains("Bank Credit"))
 		{
 			if(amount.length()==0)
 			{
@@ -1149,7 +1072,7 @@ public class DetailsActivity extends Activity
 				validData = true;
 			}
 		}
-		else if(data[0].equalsIgnoreCase("Bank Debit"))
+		else if(type.contains("Bank Debit"))
 		{
 			if(amount.length()==0)
 			{
@@ -1228,25 +1151,28 @@ public class DetailsActivity extends Activity
 		return validDate;
 	}
 	
-	private String[] completeData(String[] data)
+	private Transaction completeData(String[] data, Time createdTime, Time modifiedTime)
 	{
-		String particulars = data[1];
+		int id = Integer.parseInt(data[0]);
+		String date = data[1];
 		String type = data[2];
-		String rate = data[3];
-		String quantity = data[4];
-		String amount = data[5];
-		String date = data[6];
+		String particulars = data[3];
+		String rate = data[4];
+		String quantity = data[5];
+		String amount = data[6];
+		Transaction transaction = null;
 		
-		if(data[0].equals("Wallet Credit"))
+		if(type.contains("Wallet Credit"))
 		{
-			data = new String[]{"Wallet Credit", particulars, type, rate, quantity, amount, date};
+			transaction = new Transaction(id, createdTime, modifiedTime, date, type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
 		}
-		else if(data[0].equals("Wallet Debit"))
+		else if(type.contains("Wallet Debit"))
 		{
-			int expTypeNo = Integer.parseInt(type);
+			int expTypeNo = Integer.parseInt(type.substring(16, 18));   // Wallet Debit Exp01
 			if(particulars.length()==0)
 			{
-				particulars = DatabaseManager.getExpenditureTypes().get(expTypeNo);
+				particulars = DatabaseManager.getAllExpenditureTypes().get(expTypeNo);
 			}
 			if(amount.length()==0)
 			{
@@ -1274,28 +1200,45 @@ public class DetailsActivity extends Activity
 			}
 			else if(quantity.length()==0)
 			{
-				quantity = ""+Math.round(Double.parseDouble(amount)/Double.parseDouble(rate));
+				quantity = "" + Double.parseDouble(amount)/Double.parseDouble(rate);
 			}
-			data = new String[]{"Wallet Debit", particulars, type, rate, quantity, amount, date};
+			transaction = new Transaction(id, createdTime, modifiedTime, date, type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
 		}
-		else if(data[0].equals("Bank Credit"))
+		else if(type.contains("Bank Credit"))
 		{
-			StringTokenizer tokens = new StringTokenizer(type,"/");
-			int bankNo = Integer.parseInt(tokens.nextToken());
-			int creditTypesNo = Integer.parseInt(tokens.nextToken());
+			int bankNo = Integer.parseInt(type.substring(12, 14));    // Bank Credit 01 Income
+			int creditTypesNo = 0;
+			if(type.contains("Income"))
+			{
+				creditTypesNo = 0;
+			}
+			else if(type.contains("Savings"))
+			{
+				creditTypesNo = 1;
+			}
 			particulars = DatabaseManager.getBankName(bankNo) + " Credit: " + creditTypes[creditTypesNo] + ": " + particulars;
-			data = new String[]{"Bank Credit", particulars, type, rate, quantity, amount, date};
+			transaction = new Transaction(id, createdTime, modifiedTime, date, type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
 		}
-		else if(data[0].equals("Bank Debit"))
+		else if(type.contains("Bank Debit"))
 		{
-			StringTokenizer tokens = new StringTokenizer(type,"/");
-			int bankNo = Integer.parseInt(tokens.nextToken());
-			int debitTypesNo = Integer.parseInt(tokens.nextToken());
+			int bankNo = Integer.parseInt(type.substring(11, 13));  // Bank Debit 01 Withdraw
+			int debitTypesNo = 0;
+			if(type.contains("Withdraw"))
+			{
+				debitTypesNo = 0;
+			}
+			else if(type.contains("Exp"))
+			{
+				debitTypesNo = 1;
+			}
 			particulars = DatabaseManager.getBankName(bankNo) + " Withdrawal: "+ debitTypes[debitTypesNo] + ": " + particulars;
-			data = new String[]{"Bank Debit", particulars, type, rate, quantity, amount, date};
+			transaction = new Transaction(id, createdTime, modifiedTime, date, type, particulars, 
+					Double.parseDouble(rate), Double.parseDouble(quantity), Double.parseDouble(amount));
 		}
 		
-		return data;	
+		return transaction;	
 	}
 	
 	/**

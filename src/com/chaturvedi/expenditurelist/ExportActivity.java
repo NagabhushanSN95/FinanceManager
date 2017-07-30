@@ -172,12 +172,12 @@ public class ExportActivity extends Activity
 			{
 				exportWriter.write("<tr>\n");
 				exportWriter.write("\t<td>"+(i+1)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getDates().get(i)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getTypes().get(i)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getParticulars().get(i)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getRates().get(i)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getQuantities().get(i)+"</td>");
-				exportWriter.write("\t<td>"+DatabaseManager.getAmounts().get(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getDate(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getExactExpType(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getParticular(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getRate(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getQuantity(i)+"</td>");
+				exportWriter.write("\t<td>"+DatabaseManager.getAmount(i)+"</td>");
 				exportWriter.write("</tr>\n");
 			}
 			exportWriter.write("</table>");
@@ -195,8 +195,8 @@ public class ExportActivity extends Activity
 			exportWriter.write("\t<td>"+"Amount In wallet"+"</td>");
 			exportWriter.write("\t<td>"+currencySymbol+DatabaseManager.getWalletBalance()+"</td>");
 			exportWriter.write("</tr>\n");
-			ArrayList<String> bankNames = DatabaseManager.getBankNames();
-			ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
+			ArrayList<String> bankNames = DatabaseManager.getAllBankNames();
+			ArrayList<Double> bankBalances = DatabaseManager.getAllBankBalances();
 			for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 			{
 				exportWriter.write("<tr>\n");
