@@ -715,6 +715,7 @@ public class DetailsActivity extends Activity
 			public void onClick(DialogInterface dialog, int which)
 			{
 				DatabaseManager.deleteTransaction(transactions.get(contextMenuTransactionNo));
+				transactions = DatabaseManager.getAllTransactions();
 				buildBodyLayout();
 			}
 		});

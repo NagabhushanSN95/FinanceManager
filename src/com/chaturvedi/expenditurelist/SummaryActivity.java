@@ -376,6 +376,10 @@ public class SummaryActivity extends Activity
 		{
 			new Update50To54();
 		}
+		else if(oldVersionNo == 55)
+		{
+			
+		}
 		else
 		{
 			new Update43To50(SummaryActivity.this);

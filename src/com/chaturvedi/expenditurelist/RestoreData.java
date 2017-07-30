@@ -58,6 +58,12 @@ private Context context;
 			if(Integer.parseInt(keyDataReader.readLine()) != versionNo)
 			{
 				Toast.makeText(context, "Old Data. Cannot be Restored. Sorry!", Toast.LENGTH_LONG).show();
+				keyDataReader.close();
+				transactionsReader.close();
+				banksReader.close();
+				countersReader.close();
+				expTypesReader.close();
+				return;
 			}
 			int numTransactions = Integer.parseInt(keyDataReader.readLine());
 			int numBanks = Integer.parseInt(keyDataReader.readLine());
