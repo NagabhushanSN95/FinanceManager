@@ -32,3 +32,8 @@ Bug Fix: In TransactionsActivity, after adding a transaction, if that transactio
 4.2.0 (120)
  - Git Integration added
  - Change Log Added
+
+4.2.1 (121)
+ - .gitignore updated
+ - All files deleted except source code and some gradle settings. If any required file is found missing, please refer to files of previous version i.e. v4.2.0(120)
+ 
