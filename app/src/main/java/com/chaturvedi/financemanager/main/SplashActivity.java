@@ -16,6 +16,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.DisplayMetrics;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -328,6 +330,15 @@ public class SplashActivity extends Activity
 	 */
 	private void startSplash()
 	{
+		// For release version, display AppIcon instead of Krishna Picture
+		if ((this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0)
+		{
+			TextView krishna = (TextView) findViewById(R.id.krishna);
+			krishna.setVisibility(View.INVISIBLE);
+			ImageView splashIcon = (ImageView) findViewById(R.id.photo_krishna);
+			splashIcon.setImageResource(R.drawable.splash_icon);
+		}
+
 		// Set The Quote as the text for QuoteTextView
 		quoteView = (TextView) findViewById(R.id.quote);
 		quoteView.setText(quoteText);

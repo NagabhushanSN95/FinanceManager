@@ -232,6 +232,9 @@ public class Date
 	}
 	
 	/**
+	 * @param fullMonth Month and year in the format
+	 *      January-2015
+	 *      February-2015
 	 * @return The month in the format 
 	 * 		201501 (For January 2015)
 	 * 		201502 (For February 2015) and so on
@@ -245,31 +248,31 @@ public class Date
 		
 		if(month.contains("January"))
 		{
-			month1 = 01;
+			month1 = 1;
 		}
 		else if(month.contains("February"))
 		{
-			month1 = 02;
+			month1 = 2;
 		}
 		else if(month.contains("March"))
 		{
-			month1 = 03;
+			month1 = 3;
 		}
 		else if(month.contains("April"))
 		{
-			month1 = 04;
+			month1 = 4;
 		}
 		else if(month.contains("May"))
 		{
-			month1 = 05;
+			month1 = 5;
 		}
 		else if(month.contains("June"))
 		{
-			month1 = 06;
+			month1 = 6;
 		}
 		else if(month.contains("July"))
 		{
-			month1 = 07;
+			month1 = 7;
 		}
 		else if(month.contains("August"))
 		{
@@ -293,7 +296,7 @@ public class Date
 		}
 		else
 		{
-			month1 = 01;
+			month1 = 1;
 		}
 		long longMonth = year*100 + month1;
 		return longMonth;

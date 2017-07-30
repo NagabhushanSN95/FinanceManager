@@ -50,5 +50,9 @@
     {
         "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi\\bank_debit.png",
         "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\bank_debit.png"
+    },
+    {
+        "merged": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi\\expand_collapse_button.png",
+        "source": "D:\\Workspaces\\Android\\AndroidStudio\\FinanceManager\\app\\src\\main\\res\\drawable-hdpi\\expand_collapse_button.png"
     }
 ]

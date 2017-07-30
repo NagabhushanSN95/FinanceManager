@@ -16,8 +16,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    /*repositories {
+        maven {
+            url "https://jitpack.io"
+        }
+    }*/
 }
 
 dependencies {
     compile 'com.android.support:support-v4:19.1.0'
+    //compile 'com.github.AAkira:ExpandableLayout:v1.6.0'
 }

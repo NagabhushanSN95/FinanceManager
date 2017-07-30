@@ -5,6 +5,7 @@ package com.chaturvedi.financemanager.main;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -245,12 +246,14 @@ public class IncomeLayout extends RelativeLayout
 		{
 			incomeDestination = databaseAdapter.getWalletFromName((String) incomeDestinationSpinner.getSelectedItem());
 			code = "Credit Wallet" + formatter.format(incomeDestination.getID());
+			Log.d("SNB", "CP06: " + code);
 		}
 		else
 		{
 			incomeDestination = databaseAdapter.getBankFromName((String) incomeDestinationSpinner.getSelectedItem());
 			code = "Credit Bank" + formatter.format(incomeDestination.getID());
 		}
+		Log.d("SNB", "CP07: " + code);
 
 		String particulars = particularsEditText.getText().toString().trim();
 		Date date = new Date(dateEditText.getText().toString().trim());

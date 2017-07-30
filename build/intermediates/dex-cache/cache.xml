@@ -7,7 +7,7 @@
         jumboMode="true"
         optimize="true"
         revision="23.0.2"
-        sha1="265ed2fd0937af047254fd9410bba2fcedae9850">
+        sha1="7a9ff0979e4e7d0d2f48cf05df890ee241bce247">
         <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run-bootstrap_4fb4e464a38af6d384dae566fb0d45f8343a59fe\classes.dex" />
     </item>
     <item
@@ -25,7 +25,7 @@
         jumboMode="true"
         optimize="true"
         revision="23.0.2"
-        sha1="3f9df5cac2d96f70b1f770c25c8415af2195f806">
+        sha1="5f25ff6a3d2d1252677838f1988b30bad1808610">
         <dex dex="D:\Workspaces\Android\AndroidStudio\FinanceManager\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run_afa6c3b74b2abffd81d5bd2d246e491caa4845bd\classes.dex" />
     </item>
     <item

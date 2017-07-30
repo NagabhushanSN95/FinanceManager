@@ -774,18 +774,26 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	/**
 	 * To get transactions that satisfy certain criteria
 	 *
-	 * @param rules           		A list of rules. A transaction will be selected only if it satisfies atleast one of the rules
-	 * @param hiddenTransactions   	If false, hidden transactions are not returned.
-	 *                              If true, all transactions are returned.
-	 * @param offset          		Once all the transactions that satisfy the rules are retrieved, numTransactions number of
-	 *                              transactions from the bottom are selected after offset number of transactions.
-	 *                        		Eg, if offset is 200, numTransactions is 100 and total number of transactions are 1000,
-	 *                        		then transactions 701-800 are returned
-	 * @param numTransactions 		Number of transactions to return
+	 * @param monthYear					Used to filter transactions by month or year.
+	 *                              	Eg: 2017	: transactions of year 2017
+	 *                              		2017/01 : transactions of month 'January' of year 2017
+	 * @param startDate					Used to filter transactions by startDate and endDate.
+	 *                              	Transactions will be selected if date >= startDate
+	 * @param endDate					Transactions will be selected if date <= endDate
+	 * @param allowedTransactionTypes	Used to filter transactions based on type
+	 *                                  Transactions will be selected if their type satisfies atleast one in this list
+	 * @param hiddenTransactions   		If false, hidden transactions are not returned.
+	 *                              	If true, all transactions are returned.
+	 * @param offset          			Once all the transactions that satisfy the rules are retrieved, numTransactions number
+	 *                                  of transactions from the bottom are selected after offset number of transactions.
+	 *                        			Eg, if offset is 200, numTransactions is 100 and total number of transactions are 1000,
+	 *                        			then transactions 701-800 are returned
+	 * @param numTransactions 			Number of transactions to return
 	 * @return an ArrayList of Transactions
 	 */
-	public ArrayList<Transaction> getTransactions(ArrayList<String> rules, boolean hiddenTransactions,
-												  int offset, int numTransactions)
+	public ArrayList<Transaction> getTransactions(String monthYear, String startDate, String endDate,
+												  ArrayList<String> allowedTransactionTypes, String searchKeyword,
+												  boolean hiddenTransactions, int offset, int numTransactions)
 	{
 		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
 		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE ";
@@ -800,7 +808,41 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			selectQuery += "(" + KEY_HIDDEN + " = 0) ";
 		}
 
-		int actualOffset = getNumTransactions() - offset - numTransactions;
+		if(monthYear != null)
+		{
+			selectQuery += " AND " + "(" + KEY_DATE + " LIKE '" + monthYear + "%')";
+		}
+		else if(startDate!=null && endDate!=null)
+		{
+			selectQuery += " AND " + "(" + KEY_DATE + " >= '" + startDate + "' AND " + KEY_DATE + " <= '" + endDate + "')";
+		}
+
+		if(allowedTransactionTypes != null)
+		{
+			selectQuery += " AND " + "( ";
+			for(int i=0; i<allowedTransactionTypes.size(); i++)
+			{
+				if(i!=0)
+				{
+					selectQuery += " OR ";
+				}
+				String type = allowedTransactionTypes.get(i);
+				selectQuery += "(" + KEY_TYPE + " LIKE '" + type + "%')";
+			}
+			selectQuery += " )";
+		}
+
+		if(searchKeyword != null)
+		{
+			selectQuery += " AND " + "( " + KEY_PARTICULARS + " LIKE '%" + searchKeyword + "%' )";
+		}
+
+		// Find out how many transactions will be returned
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		int numTransactionsReturned = cursor.getCount();
+		cursor.close();
+		int actualOffset = numTransactionsReturned - offset - numTransactions;
 		if (actualOffset < 0)
 		{
 			// This happens in the following case
@@ -811,9 +853,9 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			actualOffset = 0;
 		}
 		selectQuery += " LIMIT " + actualOffset + ", " + numTransactions;
+		Log.d("SNB", "SELECT Query: " + selectQuery);
 
-		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = db.rawQuery(selectQuery, null);
+		cursor = db.rawQuery(selectQuery, null);
 		if (cursor.moveToFirst())
 		{
 			do
@@ -835,9 +877,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	{
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
-		values.put(KEY_DATE, transaction.getDate().getSavableDate());
 		values.put(KEY_CREATED_TIME, transaction.getCreatedTime().toString());
 		values.put(KEY_MODIFIED_TIME, transaction.getModifiedTime().toString());
+		values.put(KEY_DATE, transaction.getDate().getSavableDate());
+		values.put(KEY_TYPE, transaction.getType());
 		values.put(KEY_PARTICULARS, transaction.getParticular());
 		values.put(KEY_RATE, transaction.getRate());
 		values.put(KEY_QUANTITY, transaction.getQuantity());

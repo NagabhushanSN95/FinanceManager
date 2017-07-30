@@ -1,208 +1,218 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:2:1-158:12
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:2:1-172:12
 	package
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:3:11-50
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:2:11-50
 		INJECTED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml
 		INJECTED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml
 	android:versionName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:5:11-38
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:6:5-32
 		INJECTED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml
 		INJECTED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml
+	xmlns:tools
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:4:5-51
 	android:versionCode
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:4:11-36
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:5:5-30
 		INJECTED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml
 		INJECTED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml
 	xmlns:android
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:2:11-69
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:3:5-63
 uses-permission#android.permission.RECEIVE_SMS
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:7:1-65
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:9:2-66
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:7:18-63
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:9:19-64
 uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:8:1-76
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:10:2-77
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:8:18-74
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:10:19-75
 application
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:10:1-156:15
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:15:2-170:16
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:13:5-37
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:18:3-35
 	android:allowBackup
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:11:5-31
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:16:3-29
 	android:icon
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:12:5-38
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:17:3-36
 	android:theme
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:14:5-36
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:19:3-34
 activity#com.chaturvedi.financemanager.main.SplashActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:15:5-23:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:20:3-28:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:17:9-41
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:22:4-36
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:16:9-44
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:21:4-39
 intent-filter#android.intent.action.MAIN+android.intent.category.LAUNCHER
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:18:9-22:25
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:23:4-27:20
 action#android.intent.action.MAIN
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:19:13-64
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:24:5-56
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:19:21-62
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:24:13-54
 category#android.intent.category.LAUNCHER
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:21:13-72
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:26:5-64
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:21:23-70
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:26:15-62
 activity#com.chaturvedi.financemanager.setup.StartupActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:24:5-55
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:29:3-52
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:24:15-52
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:29:13-50
 activity#com.chaturvedi.financemanager.setup.SetupActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:25:5-53
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:30:3-50
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:25:15-50
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:30:13-48
 activity#com.chaturvedi.financemanager.main.SummaryActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:26:5-29:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:31:3-34:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:28:9-41
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:33:4-36
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:27:9-45
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:32:4-40
 activity#com.chaturvedi.financemanager.main.TransactionsActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:30:5-37:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:35:3-42:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:32:9-51
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:37:4-46
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:33:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:38:4-54
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:31:9-50
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:36:4-45
 meta-data#android.support.PARENT_ACTIVITY
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:34:9-36:52
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:39:4-41:44
 	android:value
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:36:13-50
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:41:5-42
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:35:13-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:40:5-51
 activity#com.chaturvedi.financemanager.main.AddTransactionActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:38:5-46:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:43:3-51:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:40:9-53
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:45:4-48
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:42:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:46:4-54
 	android:windowSoftInputMode
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:41:9-50
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:47:4-45
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:39:9-52
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:44:4-47
 activity#com.chaturvedi.financemanager.main.TemplatesActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:47:5-54:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:52:3-59:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:49:9-48
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:54:4-43
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:50:9-64
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:55:4-59
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:48:9-47
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:53:4-42
+activity#com.chaturvedi.financemanager.main.FilterActivity
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:60:3-67:14
+	android:label
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:62:4-52
+	android:parentActivityName
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:63:4-59
+	android:name
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:61:4-39
 activity#com.chaturvedi.financemanager.edit.EditActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:55:5-62:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:68:3-75:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:57:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:70:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:58:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:71:4-54
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:56:9-42
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:69:4-37
 activity#com.chaturvedi.financemanager.edit.EditWalletsActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:63:5-70:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:76:3-83:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:65:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:78:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:66:9-56
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:79:4-51
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:64:9-49
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:77:4-44
 activity#com.chaturvedi.financemanager.edit.EditBanksActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:71:5-78:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:84:3-91:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:73:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:86:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:74:9-56
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:87:4-51
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:72:9-47
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:85:4-42
 activity#com.chaturvedi.financemanager.edit.EditExpTypesActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:79:5-86:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:92:3-99:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:81:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:94:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:82:9-56
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:95:4-51
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:80:9-50
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:93:4-45
 activity#com.chaturvedi.financemanager.main.StatisticsActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:87:5-94:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:100:3-107:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:89:9-49
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:102:4-44
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:90:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:103:4-54
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:88:9-48
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:101:4-43
 activity#com.chaturvedi.financemanager.main.SettingsActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:95:5-102:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:108:3-115:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:97:9-47
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:110:4-42
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:98:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:111:4-54
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:96:9-46
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:109:4-41
 activity#com.chaturvedi.financemanager.help.HelpActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:103:5-110:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:116:3-123:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:105:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:118:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:106:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:119:4-54
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:104:9-42
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:117:4-37
 activity#com.chaturvedi.financemanager.help.GuideActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:111:5-118:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:124:3-131:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:113:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:126:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:114:9-56
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:127:4-51
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:112:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:125:4-38
 activity#com.chaturvedi.financemanager.help.FAQSummaryActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:119:5-126:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:132:3-139:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:121:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:134:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:122:9-56
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:135:4-51
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:120:9-48
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:133:4-43
 activity#com.chaturvedi.financemanager.help.FAQAnswerActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:127:5-134:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:140:3-147:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:129:9-43
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:142:4-38
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:130:9-61
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:143:4-56
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:128:9-47
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:141:4-42
 activity#com.chaturvedi.financemanager.help.AboutActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:135:5-142:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:148:3-155:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:137:9-53
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:150:4-48
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:138:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:151:4-54
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:136:9-43
-activity#com.chaturvedi.financemanager.main.ExtrasActivity
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:143:5-150:16
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:149:4-38
+activity#com.chaturvedi.financemanager.extras.ExtrasActivity
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:156:3-163:14
 	android:label
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:145:9-45
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:158:4-40
 	android:parentActivityName
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:146:9-59
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:159:4-54
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:144:9-44
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:157:4-41
 receiver#com.chaturvedi.financemanager.main.SmsReceiver
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:151:5-155:16
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:165:3-169:14
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:151:15-47
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:165:13-45
 intent-filter#android.provider.Telephony.SMS_RECEIVED
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:152:9-154:25
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:166:4-168:20
 	android:priority
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:152:24-46
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:166:19-41
 action#android.provider.Telephony.SMS_RECEIVED
-ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:153:13-77
+ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:167:5-69
 	android:name
-		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:153:21-75
+		ADDED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml:167:13-67
 uses-sdk
 INJECTED from D:\Workspaces\Android\AndroidStudio\FinanceManager\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 	android:targetSdkVersion

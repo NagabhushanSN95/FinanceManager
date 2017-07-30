@@ -22,6 +22,7 @@ public class Constants
 	public static final int REQUEST_CODE_EDIT_ACTIVITY = 104;
 	public static final int REQUEST_CODE_SETTINGS_ACTIVITY = 105;
 	public static final int REQUEST_CODE_EXTRAS_ACTIVITY = 106;
+	public static final int REQUEST_CODE_FILTERS = 107;
 
 	public static final String ACTION = "Action";
 	public static final String ACTION_ADD = "ActionAdd";
@@ -40,7 +41,31 @@ public class Constants
 	public static final String KEY_BANK_ID = "BankID";
 
 	public static final String KEY_AMOUNT = "Amount";
-	public static final String KEY_CREDIT = "Credit";
-	public static final String KEY_DEBIT = "Debit";
-	public static final String KEY_TRANSFER = "Transfer";
+
+	public static final int MIN_TRANSACTIONS_TO_DISPLAY = 50;
+
+	// Used in Filters
+	public static final String KEY_CREDIT_TRANSACTIONS = "Credit Transactions";
+	public static final String KEY_DEBIT_TRANSACTIONS = "Debit Transactions";
+	public static final String KEY_TRANSFER_TRANSACTIONS = "Transfer Transactions";
+	public static final String KEY_WALLETS = "Wallets";
+	public static final String KEY_BANKS = "Banks";
+	public static final String KEY_INTERVAL_TYPE = "IntervalType";
+	public static final String VALUE_ALL = "All";
+	public static final String KEY_INTERVAL_TYPE_MONTH = "Month";
+	public static final String VALUE_MONTH = "Month";
+	public static final String KEY_INTERVAL_TYPE_YEAR = "Year";
+	public static final String VALUE_YEAR = "Year";
+//	public static final String KEY_INTERVAL_TYPE_CUSTOM = "Custom";
+	public static final String VALUE_CUSTOM = "Custom";
+	public static final String KEY_START_DATE = "StartDate";
+	public static final String KEY_END_DATE = "EndDate";
+	public static final String KEY_ALLOWED_TRANSACTION_TYPES = "AllowedTransactionTypes";
+	public static final String KEY_SEARCH_KEYWORD = "SearchKeyword";
+	
+	public static final String VALUE_CREDIT = "Credit";
+	public static final String VALUE_DEBIT = "Debit";
+	public static final String VALUE_TRANSFER = "Transfer";
+	public static final String VALUE_WALLET = "Wallet";
+	public static final String VALUE_BANK = "Bank";
 }

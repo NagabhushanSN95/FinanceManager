@@ -191,29 +191,30 @@ public class Transaction implements Parcelable
 		String fullParticular = "";
 		if(parser.isIncome())
 		{
-			fullParticular += "Credit to " + parser.getIncomeDestinationName();
+			fullParticular += parser.getIncomeDestinationName();
 		}
 		else if(parser.isExpense())
 		{
-			fullParticular += "Debit from " + parser.getExpenseSourceName();
+			fullParticular += parser.getExpenseSourceName();
 		}
 		else if(parser.isTransfer())
 		{
-			fullParticular += "Transfer from " + parser.getTransferSourceName() + " to " + parser.getTransferDestinationName();
+			fullParticular += parser.getTransferSourceName() + " -> " + parser.getTransferDestinationName();
 		}
 		else
 		{
 			Toast.makeText(context, "Unknown Transaction Type\nTransaction/getDisplayParticular()", Toast.LENGTH_LONG).show();
 		}
+		fullParticular += ":\n" + particular;
 
-		if(particular.equals(""))
+		/*if(particular.equals(""))
 		{
 			fullParticular += ": " + particular;
 		}
 		else
 		{
 			fullParticular = particular;
-		}
+		}*/
 		return fullParticular;
 	}
 

@@ -25,7 +25,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,10 +40,7 @@ import java.util.ArrayList;
 
 public class TransactionsActivity extends Activity
 {
-	private String transactionsDisplayInterval = "Month";
-	private ArrayList<String> filterRules = null;
-	private boolean filteredState = false;    // true if Filtering and Search is applied. Else false.
-	// This is used in onBackPressed() method.
+//	private String transactionsDisplayInterval = "Month";
 	
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
@@ -63,6 +59,15 @@ public class TransactionsActivity extends Activity
 	private DecimalFormat formatterDisplay;
 	private Intent templatesIntent;
 	private Thread searchThread;
+
+	// Filters
+	private String transactionsDisplayIntervalType = Constants.VALUE_ALL;
+	private String transactionsDisplayIntervalMonthYear = null;
+	private String transactionsDisplayIntervalStartDate = null;
+	private String transactionsDisplayIntervalEndDate = null;
+	private ArrayList<String> allowedTransactionTypes = null;
+	private String searchKeyword = null;
+	private Button showMoreButton;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -116,10 +121,17 @@ public class TransactionsActivity extends Activity
 		// If Filtering or Search is applied, when back button is pressed, the TransactionsActivity should not close.
 		// Instead, filtering or search should be removed and original transactions should be displayed.
 		// If the back button is pressed when original transactions are showed, then the activity should be closed
+		boolean filteredState = (transactionsDisplayIntervalMonthYear != null) ||
+				(transactionsDisplayIntervalStartDate != null) || (transactionsDisplayIntervalEndDate != null) ||
+				(allowedTransactionTypes != null) || (searchKeyword != null);
 		if (filteredState)
 		{
+			transactionsDisplayIntervalMonthYear = null;
+			transactionsDisplayIntervalStartDate = null;
+			transactionsDisplayIntervalEndDate = null;
+			allowedTransactionTypes = null;
+			searchKeyword = null;
 			refreshBodyLayout();
-			filteredState = false;
 		}
 		else
 		{
@@ -130,7 +142,7 @@ public class TransactionsActivity extends Activity
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		// Inflate the menu; this adds items to the action bar if it is present.
+		// Inflate the menu; this adds childItems to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_transactions, menu);
 
 		// TODO: Quick Search button to be implemented Here
@@ -188,8 +200,9 @@ public class TransactionsActivity extends Activity
 				return true;
 
 			case R.id.action_transactionsDisplayOptions:
-				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
-//	TODO:			displayFilterOptions();
+//				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
+			displayFilterOptions();
+
 				return true;
 
 			// TODO: To be put as Quick Search Dialog
@@ -239,6 +252,12 @@ public class TransactionsActivity extends Activity
 					getTransactionsToDisplay();
 				}
 				break;
+
+			case Constants.REQUEST_CODE_FILTERS:
+				if(resultCode == RESULT_OK)
+				{
+					applyFilters(intent);
+				}
 		}
 		super.onActivityResult(requestCode, resultCode, intent);
 	}
@@ -296,23 +315,46 @@ public class TransactionsActivity extends Activity
 	{
 		SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 		
-		if (preferences.contains(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL))
+		/*if (preferences.contains(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 		{
 			transactionsDisplayInterval = preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
-		}
+		}*/
 	}
 	
 	private void getTransactionsToDisplay()
 	{
-		int numTransactionsToRetrieve = 100;
+		int numTransactionsToRetrieve = Constants.MIN_TRANSACTIONS_TO_DISPLAY;
 		if (transactions != null)
 		{
 			numTransactionsToRetrieve = parentLayout.getChildCount();
 		}
+		// Suppose, there were only 5 transactions displayed in filtered state, then on pressing back last 100 transactions
+		// should be displayed. But, since there were only 5 transactions displayed, parentLayout.getChildCount()
+		// will return 5. To overcome this, numTransactionsToretrieve will be rounded off to next 100
+		int minNumTransactions = (int) (Math.ceil(1.0*numTransactionsToRetrieve/Constants.MIN_TRANSACTIONS_TO_DISPLAY))
+				*Constants.MIN_TRANSACTIONS_TO_DISPLAY;
+		numTransactionsToRetrieve = Math.max(numTransactionsToRetrieve, minNumTransactions);
+
 		int offset = 0;
 		Log.d("SNB", "CP01: " + numTransactionsToRetrieve);
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
-		transactions = databaseAdapter.getTransactions(filterRules, false, offset, numTransactionsToRetrieve);
+		transactions = databaseAdapter.getTransactions(transactionsDisplayIntervalMonthYear,
+				transactionsDisplayIntervalStartDate, transactionsDisplayIntervalEndDate, allowedTransactionTypes, searchKeyword,
+				false, offset, numTransactionsToRetrieve);
+
+		if(transactions.size() < numTransactionsToRetrieve)
+		{
+			// This implies, there are no more transactions to show. Hence, remove the button
+			showMoreButton.setVisibility(View.GONE);
+		}
+		else
+		{
+			if(showMoreButton != null)
+			{
+				showMoreButton.setVisibility(View.VISIBLE);
+			}
+
+		}
 		Log.d("SNB", "CP02: " + transactions.size());
 		/*DecimalFormat formatter = new DecimalFormat("00");
 		if (transactionsDisplayInterval.equals("Month"))
@@ -337,12 +379,20 @@ public class TransactionsActivity extends Activity
 
 	private ArrayList<Transaction> getMoreTransactionsToDisplay()
 	{
-		int numTransactionsToRetrieve = 100;
+		int numTransactionsToRetrieve = Constants.MIN_TRANSACTIONS_TO_DISPLAY;
 		int offset = parentLayout.getChildCount();
 		Log.d("SNB", "CP03: " + numTransactionsToRetrieve);
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
-		ArrayList<Transaction> newTransactions = databaseAdapter.getTransactions(filterRules, false, offset, numTransactionsToRetrieve);
+		ArrayList<Transaction> newTransactions = databaseAdapter.getTransactions(transactionsDisplayIntervalMonthYear,
+				transactionsDisplayIntervalStartDate, transactionsDisplayIntervalEndDate, allowedTransactionTypes, searchKeyword,
+				false, offset, numTransactionsToRetrieve);
 		transactions.addAll(0, newTransactions);
+
+		if(newTransactions.size() < numTransactionsToRetrieve)
+		{
+			// This implies, there are no more transactions to show. Hence, remove the button
+			showMoreButton.setVisibility(View.GONE);
+		}
 		Log.d("SNB", "CP04: " + transactions.size());
 		return  newTransactions;
 	}
@@ -385,7 +435,7 @@ public class TransactionsActivity extends Activity
 	
 	private void buildBodyLayout()
 	{
-		Button showMoreButton = (Button) findViewById(R.id.button_showMoreTransactions);
+		showMoreButton = (Button) findViewById(R.id.button_showMoreTransactions);
 		showMoreButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -1496,6 +1546,72 @@ public class TransactionsActivity extends Activity
 			bankDebitDialog.show();
 
 		}*/
+	}
+
+	private void displayFilterOptions()
+	{
+		Intent filterIntent = new Intent(TransactionsActivity.this, FilterActivity.class);
+
+		// Send current filter state
+		filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE, transactionsDisplayIntervalType);
+		Log.d("SNB", "CP05: " + transactionsDisplayIntervalType);
+		if(transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
+		{
+			filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE_MONTH, transactionsDisplayIntervalMonthYear);
+		}
+		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_YEAR))
+		{
+			filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE_YEAR, transactionsDisplayIntervalMonthYear);
+		}
+		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
+		{
+			filterIntent.putExtra(Constants.KEY_START_DATE, transactionsDisplayIntervalStartDate);
+			filterIntent.putExtra(Constants.KEY_END_DATE, transactionsDisplayIntervalEndDate);
+		}
+		filterIntent.putStringArrayListExtra(Constants.KEY_ALLOWED_TRANSACTION_TYPES, allowedTransactionTypes);
+		filterIntent.putExtra(Constants.KEY_SEARCH_KEYWORD, searchKeyword);
+
+		startActivityForResult(filterIntent, Constants.REQUEST_CODE_FILTERS);
+	}
+
+	private void applyFilters(Intent intent)
+	{
+		transactionsDisplayIntervalType = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE);
+		if(transactionsDisplayIntervalType.equals(Constants.VALUE_ALL))
+		{
+			transactionsDisplayIntervalMonthYear = null;
+			transactionsDisplayIntervalStartDate = null;
+			transactionsDisplayIntervalEndDate = null;
+		}
+		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_YEAR))
+		{
+			transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE_YEAR);
+			transactionsDisplayIntervalStartDate = null;
+			transactionsDisplayIntervalEndDate = null;
+		}
+		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
+		{
+			transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE_MONTH);
+			transactionsDisplayIntervalStartDate = null;
+			transactionsDisplayIntervalEndDate = null;
+		}
+		else if(transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
+		{
+			transactionsDisplayIntervalMonthYear = null;
+			transactionsDisplayIntervalStartDate = intent.getStringExtra(Constants.KEY_START_DATE);
+			transactionsDisplayIntervalEndDate = intent.getStringExtra(Constants.KEY_END_DATE);
+		}
+		else
+		{
+			Toast.makeText(TransactionsActivity.this, "Unknown Interval Type. Can't filter.", Toast.LENGTH_LONG).show();
+			transactionsDisplayIntervalMonthYear = null;
+			transactionsDisplayIntervalStartDate = null;
+			transactionsDisplayIntervalEndDate = null;
+		}
+
+		allowedTransactionTypes = intent.getStringArrayListExtra(Constants.KEY_ALLOWED_TRANSACTION_TYPES);
+		searchKeyword = intent.getStringExtra(Constants.KEY_SEARCH_KEYWORD);
+		refreshBodyLayout();
 	}
 	
 	/* *

@@ -5,6 +5,7 @@
     <string name="krishna">Shree KRISHNAya Namaha</string>
     <string name="krishnarpanamastu">Sarvam Shree Krishnarpanamastu</string>
     <string name="aboutUs">About The Developer</string>
+    <string name="action_apply">Apply</string>
     <string name="action_edit">Edit Data</string>
     <string name="action_extras">Extras</string>
     <string name="action_filterTransactions">Filter</string>
@@ -32,6 +33,7 @@
     <string name="change">Change</string>
     <string name="clearData">Clear Data</string>
     <string name="contactDeveloper">Contact Developer</string>
+    <string name="contentExpand">Expand or Collapse</string>
     <string name="credit">Credit</string>
     <string name="currencySymbols">Currency Symbol</string>
     <string name="date">Date</string>
@@ -43,6 +45,9 @@
     <string name="expenditures">Expenditures</string>
     <string name="expenseSource">Debited from: </string>
     <string name="FAQ">FAQs</string>
+    <string name="filterByDate">Filter by Date</string>
+    <string name="filterByTransactionType">Filter by Transaction Types</string>
+    <string name="filterByWalletsBanks">Filter by Wallets/Banks</string>
     <string name="from">From:</string>
     <string name="transactionsDisplayInterval">Display Transactions By</string>
     <string name="transactionType">Type of Transaction: </string>
@@ -67,6 +72,7 @@
     <string name="instruction_expenditure_types">Enter Five Different Types Of Expenditures. 
         If You Leave The Fields Blank, Default Values Will Be Taken</string>
     <string name="instruction_export">The Data Will Be Exported To A Text File Named</string>
+    <string name="keyword">Keyword</string>
     <string name="label_aboutDeveloper">About Developer</string>
     <string name="label_addTransaction">Add Transaction</string>
     <string name="label_bankAccNo">A/c No</string>
@@ -75,6 +81,7 @@
     <string name="label_bankSmsName">SMS Name</string>
     <string name="label_edit">Edit Data</string>
     <string name="label_extras">Extras</string>
+    <string name="label_filterTransactions">Filter Transactions</string>
     <string name="label_help">Help</string>
     <string name="label_settings">Settings</string>
     <string name="label_statistics">Statistics</string>
@@ -88,6 +95,7 @@
     <string name="restore">Restore</string>
     <string name="restoreData">Restore Data</string>
     <string name="save">Save</string>
+    <string name="searchFor">Search for </string>
     <string name="setup">Set Up</string>
     <string name="showMoreTransactions">Show More</string>
     <string name="skip">Skip</string>
@@ -96,7 +104,7 @@
     <string name="title_amountSpent">Amount Spent</string>
     <string name="title_details">Details</string>
     <string name="title_expenditureType">Expenditure Type</string>
-    <string name="to">To: </string>
+    <string name="to">To</string>
     <string name="transfer">Transfer</string>
     <string name="transferDestination">Credited to: </string>
     <string name="transferSource">Debited from: </string>

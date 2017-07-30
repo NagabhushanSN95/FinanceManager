@@ -170,7 +170,7 @@ public class SummaryActivity extends Activity
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		// Inflate the menu; this adds items to the action bar if it is present.
+		// Inflate the menu; this adds childItems to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_summary, menu);
 		return true;
 	}
