@@ -86,6 +86,20 @@ public class EditExpenditureTypesActivity extends Activity
 		return true;
 	}
 	
+	@Override
+	public void onPause()
+	{
+		super.onPause();
+		DatabaseManager.saveDatabase();
+	}
+	
+	/*@Override
+	public void onStart()
+	{
+		super.onPause();
+		DatabaseManager.readDatabase();
+	}*/
+	
 	private void buildLayout()
 	{
 		typeTextFields = new ArrayList<EditText>();

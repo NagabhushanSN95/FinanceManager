@@ -113,15 +113,15 @@ public class DetailsActivity extends Activity
 	public void onPause()
 	{
 		super.onPause();
-		Toast.makeText(getApplicationContext(), "Details Acticity Paused", Toast.LENGTH_SHORT).show();
+		DatabaseManager.saveDatabase();
 	}
 	
-	@Override
+	/*@Override
 	public void onStart()
 	{
 		super.onPause();
-		Toast.makeText(getApplicationContext(), "Details Acticity Started", Toast.LENGTH_SHORT).show();
-	}
+		DatabaseManager.readDatabase();
+	}*/
 	
 	private void buildTitleLayout()
 	{

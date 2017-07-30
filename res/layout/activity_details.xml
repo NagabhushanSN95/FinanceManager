@@ -46,8 +46,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/krishna"
-        android:layout_above="@+id/button_layout"
-        android:layout_marginBottom="140dp" >
+        android:layout_above="@+id/button_layout" >
 
         <LinearLayout
             android:id="@+id/scroll_layout"

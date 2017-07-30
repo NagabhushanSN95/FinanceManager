@@ -154,12 +154,26 @@ public class SummaryActivity extends Activity
 		setData();
 	}
 	
-	@Override
+	/*@Override
 	public void onBackPressed()
 	{
 		DatabaseManager.saveDatabase();
 		super.onBackPressed();
+	}*/
+	
+	@Override
+	public void onPause()
+	{
+		super.onPause();
+		DatabaseManager.saveDatabase();
 	}
+	
+	/*@Override
+	public void onStart()
+	{
+		super.onPause();
+		DatabaseManager.readDatabase();
+	}*/
 	
 	private void buildLayout()
 	{
