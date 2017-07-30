@@ -45,7 +45,7 @@ public class DatabaseManager
 		context=cxt;
 		databaseAdapter = new DatabaseAdapter(context);
 		
-		// Initialize ArrayLists
+		/*// Initialize ArrayLists
 		bankNames = new ArrayList<String>();
 		bankBalances = new ArrayList<Double>();
 		bankSmsNames = new ArrayList<String>();
@@ -55,7 +55,7 @@ public class DatabaseManager
 		particulars = new ArrayList<String>();
 		rates = new ArrayList<Double>();
 		quantities = new ArrayList<Integer>();
-		amounts = new ArrayList<Double>();
+		amounts = new ArrayList<Double>();*/
 	}
 	
 	public static void setContext(Context cxt)
@@ -195,7 +195,7 @@ public class DatabaseManager
 		}
 		databaseAdapter.addAllExpenditureTypes(expTypes);
 		
-		counters = new ArrayList<Double>(10);
+		//counters = new ArrayList<Double>(10);
 		databaseAdapter.initializeCountersTable();
 		
 		databaseAdapter.close();
@@ -540,9 +540,6 @@ public class DatabaseManager
 	public static void setBankSmsNames(ArrayList<String> bankSmsNames)
 	{
 		DatabaseManager.bankSmsNames = bankSmsNames;
-		
-		Log.e("Expenditure List", ""+bankNames.size());
-		Log.e("Expenditure List", ""+bankSmsNames.size());
 	}
 
 	/**
@@ -581,6 +578,10 @@ public class DatabaseManager
 	
 	public static void addDate(String date)
 	{
+		if(DatabaseManager.dates==null)
+		{
+			DatabaseManager.dates = new ArrayList<String>();
+		}
 		DatabaseManager.dates.add(date);
 	}
 
@@ -602,11 +603,19 @@ public class DatabaseManager
 	
 	public static void addType(int expenditureTypeNo)
 	{
+		if(DatabaseManager.types==null)
+		{
+			DatabaseManager.types = new ArrayList<String>();
+		}
 		DatabaseManager.types.add(expenditureTypes.get(expenditureTypeNo));
 	}
 	
 	public static void addType(String type)
 	{
+		if(DatabaseManager.types==null)
+		{
+			DatabaseManager.types = new ArrayList<String>();
+		}
 		DatabaseManager.types.add(type);
 	}
 
@@ -628,6 +637,10 @@ public class DatabaseManager
 	
 	public static void addParticular(String particular)
 	{
+		if(DatabaseManager.particulars == null)
+		{
+			DatabaseManager.particulars = new ArrayList<String>();
+		}
 		DatabaseManager.particulars.add(particular);
 	}
 
@@ -649,11 +662,19 @@ public class DatabaseManager
 	
 	public static void addRate(double rate)
 	{
+		if(DatabaseManager.rates == null)
+		{
+			DatabaseManager.rates = new ArrayList<Double>();
+		}
 		DatabaseManager.rates.add(rate);
 	}
 	
 	public static void addRate(String rate)
 	{
+		if(DatabaseManager.rates == null)
+		{
+			DatabaseManager.rates = new ArrayList<Double>();
+		}
 		DatabaseManager.rates.add(Double.parseDouble(rate));
 	}
 
@@ -675,11 +696,19 @@ public class DatabaseManager
 	
 	public static void addQuantity(int quantity)
 	{
+		if(DatabaseManager.quantities == null)
+		{
+			DatabaseManager.quantities = new ArrayList<Integer>();
+		}
 		DatabaseManager.quantities.add(quantity);
 	}
 	
 	public static void addQuantity(String quantity)
 	{
+		if(DatabaseManager.quantities == null)
+		{
+			DatabaseManager.quantities = new ArrayList<Integer>();
+		}
 		DatabaseManager.quantities.add(Integer.parseInt(quantity));
 	}
 
@@ -701,11 +730,19 @@ public class DatabaseManager
 
 	public static void addAmount(double amount)
 	{
+		if(DatabaseManager.amounts == null)
+		{
+			DatabaseManager.amounts = new ArrayList<Double>();
+		}
 		DatabaseManager.amounts.add(amount);
 	}
 	
 	public static void addAmount(String amount)
 	{
+		if(DatabaseManager.amounts == null)
+		{
+			DatabaseManager.amounts = new ArrayList<Double>();
+		}
 		DatabaseManager.amounts.add(Double.parseDouble(amount));
 	}
 	
@@ -717,6 +754,17 @@ public class DatabaseManager
 	public static ArrayList<String> getExpenditureTypes()
 	{
 		return DatabaseManager.expenditureTypes;
+	}
+
+	public static void setCounters(ArrayList<Double> counters)
+	{
+		DatabaseManager.counters = counters;
+	}
+	
+	public static ArrayList<Double> getCounters()
+	{
+		return DatabaseManager.counters;
+		
 	}
 	
 	public static void setCounter(int counterNo, double amount)

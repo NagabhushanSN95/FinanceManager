@@ -159,6 +159,13 @@ public class ExpenditureSetupActivity extends Activity
 			DatabaseManager.setAmounts(new ArrayList<Double>());
 			DatabaseManager.setExpenditureTypes(expenditureTypes);
 			
+			ArrayList<Double> counters = new ArrayList<Double>(10);
+			for(int i=0; i<NUM_EXPENDITURE_TYPES*2; i++)
+			{
+				counters.add(0.0);
+			}
+			DatabaseManager.setCounters(counters);
+			
 			SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 			SharedPreferences.Editor editor = preferences.edit();
 			editor.putBoolean(KEY_ENABLE_SPLASH, true);

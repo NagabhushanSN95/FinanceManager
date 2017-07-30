@@ -76,7 +76,7 @@ public final class R {
         public static final int edit_date=0x7f09002c;
         public static final int edit_particulars=0x7f090030;
         public static final int edit_quantity=0x7f090034;
-        public static final int edit_rate=0x7f090033;
+        public static final int edit_rate=0x7f090032;
         public static final int expenditure_type1=0x7f09001b;
         public static final int expenditure_type2=0x7f09001c;
         public static final int expenditure_type3=0x7f09001d;
@@ -90,7 +90,7 @@ public final class R {
         public static final int krishna=0x7f090003;
         public static final int layout_parent=0x7f09000c;
         public static final int layout_title=0x7f090007;
-        public static final int list_types=0x7f090032;
+        public static final int list_types=0x7f090033;
         public static final int loading=0x7f090025;
         public static final int name=0x7f09003a;
         public static final int next=0x7f090040;

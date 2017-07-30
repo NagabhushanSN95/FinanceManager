@@ -1,5 +1,6 @@
 package com.chaturvedi.expenditurelist;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import android.app.Activity;
@@ -199,7 +200,8 @@ public class EditBanksActivity extends Activity
 	
 	private void setData()
 	{
-		walletField.setText(""+DatabaseManager.getWalletBalance());
+		DecimalFormat formatter = new DecimalFormat("###0");
+		walletField.setText(formatter.format(DatabaseManager.getWalletBalance()));
 		int numBanks = DatabaseManager.getNumBanks();
 		ArrayList<String> bankNames = DatabaseManager.getBankNames();
 		ArrayList<Double> bankBalances = DatabaseManager.getBankBalances();
@@ -208,7 +210,7 @@ public class EditBanksActivity extends Activity
 		{
 			addBank();
 			bankNameFields.get(i).setText(bankNames.get(i));
-			bankBalanceFields.get(i).setText(String.valueOf(bankBalances.get(i)));
+			bankBalanceFields.get(i).setText(formatter.format(bankBalances.get(i)));
 			bankSmsNameFields.get(i).setText(bankSmsNames.get(i));
 		}
 	}

@@ -259,16 +259,44 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.increamentNumTransations();
-				DatabaseManager.increamentWalletBalance(amountField.getText().toString());
-				DatabaseManager.increamentIncome(amountField.getText().toString());
-				DatabaseManager.addDate(dateField.getText().toString());
-				DatabaseManager.addType("Income");
-				DatabaseManager.addParticular(particularsField.getText().toString());
-				DatabaseManager.addRate(0);
-				DatabaseManager.addQuantity(0);
-				DatabaseManager.addAmount(amountField.getText().toString());
+				String particulars = particularsField.getText().toString().trim();
+				String amount = amountField.getText().toString();
+				boolean dataCorrect= false;
 				
+				if(particulars.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Particulars", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else if(amount.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else
+				{
+					dataCorrect = true;
+				}
+				
+				if(dataCorrect)
+				{
+					DatabaseManager.increamentNumTransations();
+					DatabaseManager.increamentWalletBalance(amount);
+					DatabaseManager.increamentIncome(amount);
+					DatabaseManager.addDate(dateField.getText().toString());
+					DatabaseManager.addType("Income");
+					DatabaseManager.addParticular(particularsField.getText().toString());
+					DatabaseManager.addRate(amount);
+					DatabaseManager.addQuantity(1);
+					DatabaseManager.addAmount(amount);
+				}
+				else
+				{
+					buildWalletCreditDialog();
+					particularsField.setText(particulars);
+					amountField.setText(amount);
+					walletCreditDialog.show();
+				}
 				buildBodyLayout();
 			}
 		});
@@ -295,17 +323,77 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseManager.increamentNumTransations();
-				DatabaseManager.decreamentWalletBalance(amountField.getText().toString());
-				DatabaseManager.increamentAmountSpent(amountField.getText().toString());
-				DatabaseManager.addDate(dateField.getText().toString());
-				DatabaseManager.addType(typesList.getSelectedItemPosition());
-				DatabaseManager.addParticular(particularsField.getText().toString());
-				DatabaseManager.addRate(rateField.getText().toString());
-				DatabaseManager.addQuantity(quantityField.getText().toString());
-				DatabaseManager.addAmount(amountField.getText().toString());
-				DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amountField.getText().toString());
+				String particulars = particularsField.getText().toString();
+				String rate = rateField.getText().toString();
+				String quantity = quantityField.getText().toString();
+				String amount = amountField.getText().toString();
+				boolean dataCorrect = false;
 				
+				if(particulars.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Particulars", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else if(amount.length()==0)
+				{
+					if(rate.length()==0)
+					{
+						Toast.makeText(getApplicationContext(), "Please Enter The Rate And Amount", Toast.LENGTH_LONG).show();
+						dataCorrect = false;
+					}
+					else if(quantity.length()==0)
+					{
+						amount = rate;
+						quantity = String.valueOf(1);
+						dataCorrect = true;
+					}
+					else
+					{
+						amount = ""+Double.parseDouble(rate)*Double.parseDouble(quantity);
+						dataCorrect = true;
+					}
+				}
+				else if(rate.length()==0)
+				{
+					if(quantity.length()==0)
+					{
+						rate = amount;
+						quantity = String.valueOf(1);
+					}
+					else
+					{
+						rate = ""+Double.parseDouble(amount)/Double.parseDouble(quantity);
+					}
+					dataCorrect = true;
+				}
+				else if(quantity.length()==0)
+				{
+					quantity = ""+Math.round(Double.parseDouble(amount)/Double.parseDouble(rate));
+					dataCorrect = true;
+				}
+				
+				if(dataCorrect)
+				{
+					DatabaseManager.increamentNumTransations();
+					DatabaseManager.decreamentWalletBalance(amount);
+					DatabaseManager.increamentAmountSpent(amount);
+					DatabaseManager.addDate(dateField.getText().toString());
+					DatabaseManager.addType(typesList.getSelectedItemPosition());
+					DatabaseManager.addParticular(particulars);
+					DatabaseManager.addRate(rate);
+					DatabaseManager.addQuantity(quantity);
+					DatabaseManager.addAmount(amount);
+					DatabaseManager.increamentCounter(typesList.getSelectedItemPosition(), amount);
+				}
+				else
+				{
+					buildWalletDebitDialog();
+					particularsField.setText(particulars);
+					rateField.setText(rate);
+					quantityField.setText(quantity);
+					amountField.setText(amount);
+					walletDebitDialog.show();
+				}
 				buildBodyLayout();
 			}
 		});
@@ -355,27 +443,45 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
+				// Determine Which Bank Is Selected
 				int bankNo=0;
-				try
+				for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 				{
-					for(int i=0; i<DatabaseManager.getNumBanks(); i++)
-					{
-						if(banks.get(i).isChecked())
-							bankNo=i;
-					}
-					DatabaseManager.increamentBankBalance(bankNo, amountField.getText().toString());
-					DatabaseManager.increamentIncome(amountField.getText().toString());
+					if(banks.get(i).isChecked())
+						bankNo=i;
+				}
+				
+				// Validate Data
+				String amount = amountField.getText().toString();
+				boolean dataCorrect = false;
+				
+				if(amount.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else
+				{
+					dataCorrect = true;
+				}
+				
+				if(dataCorrect)
+				{
+					DatabaseManager.increamentBankBalance(bankNo, amount);
+					DatabaseManager.increamentIncome(amount);
 					DatabaseManager.increamentNumTransations();
 					DatabaseManager.addDate(dateField.getText().toString());
 					DatabaseManager.addType("Income");
 					DatabaseManager.addParticular(DatabaseManager.getBankName(bankNo) + " Credit");
-					DatabaseManager.addRate(0);
-					DatabaseManager.addQuantity(0);
-					DatabaseManager.addAmount(amountField.getText().toString());
+					DatabaseManager.addRate(amount);
+					DatabaseManager.addQuantity(1);
+					DatabaseManager.addAmount(amount);
 				}
-				catch(Exception e)
+				else
 				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_SHORT).show();
+					buildBankCreditDialog();
+					amountField.setText(amount);
+					bankCreditDialog.show();
 				}
 				buildBodyLayout();
 			}
@@ -414,15 +520,30 @@ public class DetailsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
+				// Determine Which Bank Is Selected
 				int bankNo=0;
-				try
+				for(int i=0; i<DatabaseManager.getNumBanks(); i++)
 				{
-					
-					for(int i=0; i<DatabaseManager.getNumBanks(); i++)
-					{
-						if(banks.get(i).isChecked())
-							bankNo=i;
-					}
+					if(banks.get(i).isChecked())
+						bankNo=i;
+				}
+				
+				// Validate Data
+				String amount = amountField.getText().toString();
+				boolean dataCorrect = false;
+				
+				if(amount.length()==0)
+				{
+					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_LONG).show();
+					dataCorrect = false;
+				}
+				else
+				{
+					dataCorrect = true;
+				}
+				
+				if(dataCorrect)
+				{
 					DatabaseManager.decreamentBankBalance(bankNo, amountField.getText().toString());
 					DatabaseManager.increamentWalletBalance(amountField.getText().toString());
 					DatabaseManager.increamentNumTransations();
@@ -433,10 +554,13 @@ public class DetailsActivity extends Activity
 					DatabaseManager.addQuantity(0);
 					DatabaseManager.addAmount(amountField.getText().toString());
 				}
-				catch(Exception e)
+				else
 				{
-					Toast.makeText(getApplicationContext(), "Please Enter The Amount", Toast.LENGTH_SHORT).show();
+					buildBankDebitDialog();
+					amountField.setText(amount);
+					bankDebitDialog.show();
 				}
+				
 				buildBodyLayout();
 			}
 		});

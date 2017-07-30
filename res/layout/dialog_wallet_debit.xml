@@ -21,15 +21,17 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/particulars"
                 android:singleLine="true"
+                android:inputType="textCapWords"
                 android:ems="10"
-                android:nextFocusDown="@+id/list_types" >
+                android:nextFocusDown="@+id/edit_rate" >
                 <requestFocus/>
             </EditText>
             
             <Spinner
                 android:id="@+id/list_types"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:nextFocusDown="@+id/edit_rate" />
         </LinearLayout>
 
         <LinearLayout
