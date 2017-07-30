@@ -115,13 +115,13 @@ public final class R {
         public static final int krishna=0x7f090003;
         public static final int layout_currencySymbols=0x7f090036;
         public static final int layout_developer=0x7f090008;
+        public static final int layout_loading=0x7f09003c;
         public static final int layout_parent=0x7f090012;
         public static final int layout_title=0x7f09000d;
         public static final int list_creditTypes=0x7f090047;
         public static final int list_currencySymbols=0x7f090038;
         public static final int list_debitTypes=0x7f09004a;
         public static final int list_types=0x7f09004b;
-        public static final int loading=0x7f09003c;
         public static final int name=0x7f090058;
         public static final int next=0x7f09005e;
         public static final int parentLayout=0x7f090019;
@@ -182,8 +182,6 @@ public final class R {
         public static final int currency_symbols=0x7f040002;
         public static final int help=0x7f040003;
         public static final int quotes=0x7f040004;
-        public static final int quotes1=0x7f040005;
-        public static final int splash_screen_quotes=0x7f040006;
     }
     public static final class string {
         public static final int action_about=0x7f060003;

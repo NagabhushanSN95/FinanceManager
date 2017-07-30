@@ -57,15 +57,15 @@ public class SmsReceiver extends BroadcastReceiver
 						detailsIntent.putExtra("Bank Sms", true);
 						detailsIntent.putExtra("Bank Number", i);
 						
-						if(sender.toUpperCase().contains("ATMSBI"))
+						if(sender.toUpperCase().contains("SBI"))
 							readSBIMessage();
-						else if(sender.toUpperCase().contains("UNIONB"))
+						else if(sender.toUpperCase().contains("UNION"))
 							readUBIMessage();
-						else if(sender.toUpperCase().contains("SYNDBK"))
+						else if(sender.toUpperCase().contains("SYND"))
 							readSyndicateBankMessage();
-						else if(sender.toUpperCase().contains("KTKBNK"))
+						else if(sender.toUpperCase().contains("KTK"))
 							readKarnatakaBankMessage();
-						else if(sender.toUpperCase().contains("ANDBNK"))
+						else if(sender.toUpperCase().contains("AND"))
 							readAndhraBankMessage();
 						else
 							readBankMessage();

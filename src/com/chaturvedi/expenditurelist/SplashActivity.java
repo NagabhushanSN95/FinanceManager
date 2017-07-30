@@ -16,13 +16,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Build.VERSION;
 import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.Window;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout.LayoutParams;
+//import android.view.ViewGroup.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,13 +34,11 @@ public class SplashActivity extends Activity
 	private static int splashTime=5000;
 	
 	private TextView quoteView;
-	private ArrayList<String> quoteStrings;
 	private String quoteText;
 	private View progressLine;
-	private LinearLayout.LayoutParams lp;
+	private LayoutParams progressLineParams;
 	private int deviceWidth=1000;
 	private int progressStatus=00;
-	private Random randomNumber;
 	
 	private Intent nextActivityIntent;
 	
@@ -51,121 +46,131 @@ public class SplashActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
-		if(VERSION.SDK_INT<=10)
-		{
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.activity_splash);
-		}
-		else
-		{
-			setContentView(R.layout.activity_splash);
-			RelativeLayout actionBar=(RelativeLayout)findViewById(R.id.action_bar);
-			actionBar.setVisibility(View.GONE);
-		}
+		setContentView(R.layout.activity_splash);
 		
 		readPreferences();
-		startSplash();
-		//new DatabaseManager(this);
-	}
-	
-	private void startSplash()
-	{
+		// If Splash Screen is enabled by the user, read the quotes and start the Splash Screen
+		// Else, start the NextActivity
 		if(showSplash)
 		{
-			quoteView=(TextView)findViewById(R.id.quote);
-			quoteStrings=new ArrayList<String>();
-			InputStream quoteStream = getResources().openRawResource(R.raw.splash_screen_quotes);
-			BufferedReader quotesReader = new BufferedReader(new InputStreamReader(quoteStream));
-			randomNumber=new Random();
-			try
-			{
-				String line=quotesReader.readLine();
-				while(line!=null)
-				{
-					quoteStrings.add(line);
-					line=quotesReader.readLine();
-				}
-			}
-			catch(Exception e)
-			{
-				Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-			}
-			quoteText=quoteStrings.get(randomNumber.nextInt(quoteStrings.size()));
-			quoteView.setText(quoteText);
-			
-			new Handler().postDelayed(new Runnable() 
-			{
-				@Override
-				public void run()
-				{
-					startActivity(nextActivityIntent);
-					finish();
-				}
-			} ,splashTime);
-			
-			progressLine=(View)findViewById(R.id.progress_line);
-			DisplayMetrics metrics = new DisplayMetrics();
-			getWindowManager().getDefaultDisplay().getMetrics(metrics);
-			
-			deviceWidth=metrics.widthPixels;
-			lp=new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
-			progressLine.setLayoutParams(lp);
-			Timer timer=new Timer();
-			Refresh refresher= new Refresh();
-			int refreshTime=5000/deviceWidth+1;
-			timer.scheduleAtFixedRate(refresher, 0, refreshTime);
+			readQuotes();
+			startSplash();
 		}
 		else
 		{
 			startActivity(nextActivityIntent);
 			finish();
 		}
-			
-	}
-	
-	public class Refresh extends TimerTask
-	{
-		@Override
-		public void run() 
-		{
-			runOnUiThread(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					progressStatus++;
-					lp=new LinearLayout.LayoutParams(progressStatus, LayoutParams.MATCH_PARENT);
-					progressLine.setLayoutParams(lp);
-				}
-			});
-		}
 	}
 	
 	private void readPreferences()
 	{
+		// Read If Splash Screen Is Enabled By The User
 		SharedPreferences preferences = getSharedPreferences(SHARED_PREFERENCES_SETTINGS, 0);
 		if(preferences.contains(KEY_ENABLE_SPLASH))
 		{
 			showSplash=preferences.getBoolean(KEY_ENABLE_SPLASH, true);
-			//nextActivityIntent = new Intent(this, SummaryActivity.class);
 		}
 		else
 		{
 			showSplash = true;
-			//nextActivityIntent = new Intent(this, BanksSetupActivity.class);
 		}
 		
+		// Check If The Database Is Initialized
 		preferences = getSharedPreferences(SHARED_PREFERENCES_DATABASE, 0);
 		if(preferences.contains(KEY_DATABASE_INITIALIZED))
 		{
+			// Since Database Is Initialized, Start The SummaryActivity (Home Screen Of The App)
 			nextActivityIntent = new Intent(this, SummaryActivity.class);
 		}
 		else
 		{
+			// Since Database is not Initialized, Start the Setup
 			nextActivityIntent = new Intent(this, BanksSetupActivity.class);
 		}
 	}
 	
+	/**
+	 * Reads The Quotes from the "quotes.txt" raw file to display in the Splash Screen
+	 */
+	private void readQuotes()
+	{
+		ArrayList<String> quoteStrings=new ArrayList<String>();
+		InputStream quoteStream = getResources().openRawResource(R.raw.quotes);
+		BufferedReader quotesReader = new BufferedReader(new InputStreamReader(quoteStream));
+		Random randomNumber=new Random();
+		try
+		{
+			String line=quotesReader.readLine();
+			while(line!=null)
+			{
+				quoteStrings.add(line);
+				line=quotesReader.readLine();
+			}
+		}
+		catch(Exception e)
+		{
+			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		// Select A Random Quote
+		quoteText=quoteStrings.get(randomNumber.nextInt(quoteStrings.size()));
+	}
+	
+	/**
+	 *  Displays The Splash Screen
+	 */
+	private void startSplash()
+	{
+		// Set The Quote as the text for QuoteTextView
+		quoteView=(TextView)findViewById(R.id.quote);
+		quoteView.setText(quoteText);
+		
+		// Schedule to start the NextActivity after the specified time (splashTime)
+		new Handler().postDelayed(new Runnable() 
+		{
+			@Override
+			public void run()
+			{
+				startActivity(nextActivityIntent);
+				finish();
+			}
+		} ,splashTime);
+		
+		// Get a reference to Progress Line View
+		progressLine=(View)findViewById(R.id.progress_line);
+		progressLineParams=(LayoutParams) progressLine.getLayoutParams();
+		// Calculate the device width in pixels
+		DisplayMetrics metrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		deviceWidth=metrics.widthPixels;
+
+		// Calculate the refresh time to update the ProgressBar
+		int refreshTime=(splashTime/deviceWidth)+1;
+		// Schedule to increment the length of ProgressBar repeatedly at intervals calculated above
+		Timer timer=new Timer();
+		timer.scheduleAtFixedRate(new TimerTask()
+		{
+			@Override
+			public void run()
+			{
+				runOnUiThread(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						// Increment the length of ProgressBar by 1dp and update
+						progressStatus++;
+						progressLineParams=new LayoutParams(progressStatus, LayoutParams.MATCH_PARENT);
+						progressLine.setLayoutParams(progressLineParams);
+					}
+				});
+			}
+		}, 0, refreshTime);
+	}
+	
+	/**
+	 * Disable the Back Button
+	 */
 	@Override
 	public void onBackPressed()
 	{
