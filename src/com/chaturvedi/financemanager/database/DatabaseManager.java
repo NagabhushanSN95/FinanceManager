@@ -381,7 +381,7 @@ public class DatabaseManager
 		
 		DatabaseManager.decreamentNumTransactions();
 		DatabaseManager.transactions.remove(transactionNo);
-		transaction.setID(transactionNo);
+		transaction.setID(transactionNo + 1);
 		databaseAdapter.deleteTransaction(transaction);
 	}
 	
