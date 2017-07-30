@@ -226,6 +226,17 @@ public class EditBanksActivity extends Activity
 		linearLayouts.add(layout);
 		linearLayoutParams.add(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 		
+		/*AutoCompleteTextView bankNameField = (AutoCompleteTextView) layout.findViewById(R.id.bankName);
+		String[] bankNameSuggestions = new String[]{"State Bank Of India", "Union Bank Of India"};
+		ArrayAdapter<String> bankNameSuggestionAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, bankNameSuggestions);
+		bankNameField.setAdapter(bankNameSuggestionAdapter);
+		bankNameField.setThreshold(1);
+		LayoutParams layoutParams=new LayoutParams(WIDTH_NAME_FIELDS, LayoutParams.WRAP_CONTENT);
+		layoutParams.setMargins(0, MARGIN_TOP_FIELDS, 0, 0);
+		bankNameField.setLayoutParams(layoutParams);
+		bankNameFields.add(bankNameField);
+		bankNameFieldParams.add(layoutParams);*/
+		
 		bankNameFields.add((EditText)layout.findViewById(R.id.bankName));
 		LayoutParams layoutParams=new LayoutParams(WIDTH_NAME_FIELDS, LayoutParams.WRAP_CONTENT);
 		layoutParams.setMargins(0, MARGIN_TOP_FIELDS, 0, 0);

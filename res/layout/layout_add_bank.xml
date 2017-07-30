@@ -18,6 +18,20 @@
         <requestFocus />
     </EditText>
 
+    <!--  <AutoCompleteTextView
+        android:id="@+id/bankName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="13sp"
+        android:inputType="textPersonName"
+        android:hint="@string/hint_bank_name"
+        android:nextFocusDown="@+id/bankBalance"
+        android:ems="10" >
+
+        <requestFocus />
+    </AutoCompleteTextView> -->
+
     <EditText
         android:id="@+id/bankBalance"
         android:layout_width="wrap_content"

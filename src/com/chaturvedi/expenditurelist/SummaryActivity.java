@@ -53,6 +53,7 @@ public class SummaryActivity extends Activity
 	private Intent statisticsIntent;
 	private Intent settingsIntent;
 	private Intent helpIntent;
+	private Intent aboutIntent;
 	private Intent exportIntent;
 	
 	@Override
@@ -106,6 +107,7 @@ public class SummaryActivity extends Activity
 		statisticsIntent=new Intent(this, StatisticsActivity.class);
 		settingsIntent=new Intent(this, SettingsActivity.class);
 		helpIntent = new Intent(this, HelpActivity.class);
+		aboutIntent = new Intent(this, AboutActivity.class);
 		exportIntent=new Intent(this, ExportActivity.class);
 	}
 
@@ -143,6 +145,10 @@ public class SummaryActivity extends Activity
 				
 			case R.id.action_help:
 				startActivity(helpIntent);
+				return true;
+				
+			case R.id.action_about:
+				startActivity(aboutIntent);
 				return true;
 				
 			case R.id.action_export:

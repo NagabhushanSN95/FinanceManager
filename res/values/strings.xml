@@ -3,6 +3,8 @@
 
     <string name="app_name">Expenditure List</string>
     <string name="krishna">Shree KRISHNAya Namaha</string>
+    <string name="krishnarpanamastu">Sarvam Shree Krishnarpanamastu</string>
+    <string name="action_about">About Developer</string>
     <string name="action_details">View Details</string>
     <string name="action_edit_banks">Edit Banks</string>
     <string name="action_edit_expenditure_types">Edit Expenditure Types</string>
