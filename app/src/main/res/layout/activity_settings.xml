@@ -47,11 +47,17 @@
         	android:layout_height="wrap_content" >
     	    </com.chaturvedi.customviews.SettingsLayout>
 
-    	    <com.chaturvedi.customviews.SettingsLayout
-    	        android:id="@+id/autoBackupRestore"
-        	android:layout_width="match_parent"
-        	android:layout_height="wrap_content" >
-    	    </com.chaturvedi.customviews.SettingsLayout>
+			<com.chaturvedi.customviews.SettingsLayout
+				android:id="@+id/autoBackupRestore"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content">
+			</com.chaturvedi.customviews.SettingsLayout>
+
+			<com.chaturvedi.customviews.SettingsLayout
+				android:id="@+id/dailyBackup"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content">
+			</com.chaturvedi.customviews.SettingsLayout>
     	</LinearLayout>
     </ScrollView>
 

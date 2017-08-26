@@ -1,10 +1,5 @@
 package com.chaturvedi.financemanager.main;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -22,15 +17,16 @@ import android.widget.Toast;
 import com.chaturvedi.customviews.SettingsLayout;
 import com.chaturvedi.customviews.SettingsLayout.OnSettingChangedListener;
 import com.chaturvedi.financemanager.R;
+import com.chaturvedi.financemanager.functions.Constants;
+import com.chaturvedi.financemanager.functions.Utilities;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 public class SettingsActivity extends Activity
 {
-	private static final String ALL_PREFERENCES = "AllPreferences";
-	private static final String KEY_SPLASH_DURATION = "SplashDuration";
-	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
-	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
-	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
-	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	
 	private final int SPLASH_DURATION_0     = 0;
 	private final int SPLASH_DURATION_5000  = 1;
@@ -55,6 +51,8 @@ public class SettingsActivity extends Activity
 	private int transactionsDisplayInterval = TRANSACTIONS_MONTHLY;
 	private SettingsLayout autoBackupRestoreSetting;
 	private int autoBackupRestoreValue;
+	private SettingsLayout dailyBackupSetting;
+	private boolean dailyBackupSelected;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -108,10 +106,10 @@ public class SettingsActivity extends Activity
 			@Override
 			public void onSettingChanged()
 			{
-				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 				SharedPreferences.Editor editor = preferences.edit();
 				splashDuration = splashDurationSetting.getSelectedOptionNo()*5000;
-				editor.putInt(KEY_SPLASH_DURATION, splashDuration);
+				editor.putInt(Constants.KEY_SPLASH_DURATION, splashDuration);
 				editor.commit();
 			}
 		});
@@ -126,26 +124,26 @@ public class SettingsActivity extends Activity
 			@Override
 			public void onSettingChanged()
 			{
-				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 				SharedPreferences.Editor editor = preferences.edit();
 				
 				bankSmsResponse = bankSmsSetting.getSelectedOptionNo();
 				switch(bankSmsResponse)
 				{
 					case 0:
-						editor.putString(KEY_RESPOND_BANK_SMS, "NoResponse");
+						editor.putString(Constants.KEY_RESPOND_BANK_SMS, "NoResponse");
 						break;
 						
 					case 1:
-						editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
+						editor.putString(Constants.KEY_RESPOND_BANK_SMS, "Popup");
 						break;
 						
 					case 2:
-						editor.putString(KEY_RESPOND_BANK_SMS, "Automatic");
+						editor.putString(Constants.KEY_RESPOND_BANK_SMS, "Automatic");
 						break;
 						
 					default:
-						editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
+						editor.putString(Constants.KEY_RESPOND_BANK_SMS, "Popup");
 						break;
 				}
 				editor.commit();
@@ -161,12 +159,12 @@ public class SettingsActivity extends Activity
 			@Override
 			public void onSettingChanged()
 			{
-				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 				SharedPreferences.Editor editor = preferences.edit();
 				currencySymbolSelected = (String) currencySymbolSetting.getSelectedOption();
 				if(currencySymbolSelected.equalsIgnoreCase("None"))
 					currencySymbolSelected = " ";
-				editor.putString(KEY_CURRENCY_SYMBOL, currencySymbolSelected);
+				editor.putString(Constants.KEY_CURRENCY_SYMBOL, currencySymbolSelected);
 				editor.commit();
 			}
 		});
@@ -181,25 +179,25 @@ public class SettingsActivity extends Activity
 			@Override
 			public void onSettingChanged()
 			{
-				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 				SharedPreferences.Editor editor = preferences.edit();
 				transactionsDisplayInterval = transactionsDisplayIntervalSetting.getSelectedOptionNo();
 				switch(transactionsDisplayInterval)
 				{
 					case 0:
-						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+						editor.putString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 						break;
 						
 					case 1:
-						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Year");
+						editor.putString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Year");
 						break;
 						
 					case 2:
-						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "All");
+						editor.putString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "All");
 						break;
 						
 					default:
-						editor.putString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "All");
+						editor.putString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "All");
 						break;
 				}
 				editor.commit();
@@ -216,7 +214,7 @@ public class SettingsActivity extends Activity
 			@Override
 			public void onSettingChanged()
 			{
-				SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 				SharedPreferences.Editor editor = preferences.edit();
 				
 				autoBackupRestoreValue = autoBackupRestoreSetting.getSelectedOptionNo();
@@ -234,19 +232,47 @@ public class SettingsActivity extends Activity
 						autoBackupRestoreValue = 4;
 						break;
 				}
-				editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, autoBackupRestoreValue);
+				editor.putInt(Constants.KEY_AUTOMATIC_BACKUP_RESTORE, autoBackupRestoreValue);
 				editor.commit();
+			}
+		});
+		
+		dailyBackupSetting = (SettingsLayout) findViewById(R.id.dailyBackup);
+		dailyBackupSetting.setSettingName("Daily Backup");
+		String[] dailyBackupSettingOptions = new String[]{Constants.VALUE_DAILY_BACKUP_ENABLED,
+				Constants.VALUE_DAILY_BACKUP_DISABLED};
+		dailyBackupSetting.setOptions(dailyBackupSettingOptions);
+		if (dailyBackupSelected)
+		{
+			dailyBackupSetting.setSelection(0);
+		}
+		else
+		{
+			dailyBackupSetting.setSelection(1);
+		}
+		dailyBackupSetting.setSettingChangedListener(new OnSettingChangedListener()
+		{
+			@Override
+			public void onSettingChanged()
+			{
+				SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
+				SharedPreferences.Editor editor = preferences.edit();
+				String dailyBackupSelectedString = dailyBackupSetting.getSelectedOption();
+				dailyBackupSelected = dailyBackupSelectedString.equals(Constants.VALUE_DAILY_BACKUP_ENABLED);
+				editor.putBoolean(Constants.KEY_DAILY_BACKUP, dailyBackupSelected);
+				editor.commit();
+				Utilities.setDailyBackupService(SettingsActivity.this, dailyBackupSelected);
 			}
 		});
 	}
 	
 	private void readPreferences()
 	{
-		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
+		SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
 		int splashDurationMillis;
-		if(preferences.contains(KEY_SPLASH_DURATION))
+		if (preferences.contains(Constants.KEY_SPLASH_DURATION))
 		{
-			splashDurationMillis = preferences.getInt(KEY_SPLASH_DURATION, 5000);
+			splashDurationMillis = preferences.getInt(Constants.KEY_SPLASH_DURATION, 5000);
 			switch(splashDurationMillis)
 			{
 				case 0:
@@ -270,9 +296,9 @@ public class SettingsActivity extends Activity
 					break;
 			}
 		}
-		if(preferences.contains(KEY_RESPOND_BANK_SMS))
+		if (preferences.contains(Constants.KEY_RESPOND_BANK_SMS))
 		{
-			String bankSmsResponse1 = preferences.getString(KEY_RESPOND_BANK_SMS, "Popup");
+			String bankSmsResponse1 = preferences.getString(Constants.KEY_RESPOND_BANK_SMS, "Popup");
 			if(bankSmsResponse1.equals("Popup"))
 				bankSmsResponse = BANK_SMS_POPUP;
 			else if(bankSmsResponse1.equals("NoResponse"))
@@ -282,13 +308,13 @@ public class SettingsActivity extends Activity
 			else
 				bankSmsResponse = BANK_SMS_POPUP;
 		}
-		if(preferences.contains(KEY_CURRENCY_SYMBOL))
+		if (preferences.contains(Constants.KEY_CURRENCY_SYMBOL))
 		{
-			currencySymbolSelected=preferences.getString(KEY_CURRENCY_SYMBOL, "Rs ");
+			currencySymbolSelected = preferences.getString(Constants.KEY_CURRENCY_SYMBOL, "Rs ");
 		}
-		if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
+		if (preferences.contains(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 		{
-			String interval=preferences.getString(KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
+			String interval = preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 			if(interval.equals("Month"))
 				transactionsDisplayInterval = TRANSACTIONS_MONTHLY;
 			else if(interval.equals("Year"))
@@ -300,9 +326,9 @@ public class SettingsActivity extends Activity
 		}
 		
 		// Retrieve Automatic Backup And Restore Status
-		if(preferences.contains(KEY_AUTOMATIC_BACKUP_RESTORE))
+		if (preferences.contains(Constants.KEY_AUTOMATIC_BACKUP_RESTORE))
 		{
-			autoBackupRestoreValue = preferences.getInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+			autoBackupRestoreValue = preferences.getInt(Constants.KEY_AUTOMATIC_BACKUP_RESTORE, 3);
 		}
 		switch(autoBackupRestoreValue)
 		{
@@ -319,6 +345,11 @@ public class SettingsActivity extends Activity
 		case 4:
 			autoBackupRestoreValue = 2;
 			break;
+		}
+		
+		if (preferences.contains(Constants.KEY_DAILY_BACKUP))
+		{
+			dailyBackupSelected = preferences.getBoolean(Constants.KEY_DAILY_BACKUP, false);
 		}
 	}
 	

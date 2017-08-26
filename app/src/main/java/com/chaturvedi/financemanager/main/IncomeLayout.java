@@ -7,24 +7,13 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.*;
 
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.datastructures.Date;
-import com.chaturvedi.financemanager.datastructures.MoneyStorage;
-import com.chaturvedi.financemanager.datastructures.Template;
-import com.chaturvedi.financemanager.datastructures.Time;
-import com.chaturvedi.financemanager.datastructures.Transaction;
+import com.chaturvedi.financemanager.datastructures.*;
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 
 import java.text.DecimalFormat;
@@ -40,7 +29,7 @@ public class IncomeLayout extends RelativeLayout
 	private EditText amountEditText;
 	private EditText dateEditText;
 	private CheckBox addTemplateCheckBox;
-	private CheckBox includeInCountersCheckBox;
+	private CheckBox excludeInCountersCheckBox;
 
 	public IncomeLayout(Context context)
 	{
@@ -105,7 +94,7 @@ public class IncomeLayout extends RelativeLayout
 			}
 		});
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
-		includeInCountersCheckBox = (CheckBox) findViewById(R.id.checkBox_includeInCounters);
+		excludeInCountersCheckBox = (CheckBox) findViewById(R.id.checkBox_excludeFromCounters);
 
 		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(getContext(),
 				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleCreditTemplatesNames());
@@ -155,11 +144,11 @@ public class IncomeLayout extends RelativeLayout
 		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
 		amountEditText.setText(String.valueOf(transaction.getAmount()));
 		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate()));
-		includeInCountersCheckBox.setChecked(transaction.isIncludeInCounters());
+		excludeInCountersCheckBox.setChecked(!transaction.isIncludeInCounters());
 	}
 
 	public void setData(int incomeDestinationNo, String particulars, String rateText, String quantityText, String amountText,
-						String date, boolean addTemplate, boolean includeInCounters)
+						String date, boolean addTemplate, boolean excludeInCounters)
 	{
 		incomeDestinationSpinner.setSelection(incomeDestinationNo);
 		particularsEditText.setText(particulars);
@@ -168,7 +157,7 @@ public class IncomeLayout extends RelativeLayout
 		amountEditText.setText(amountText);
 		dateEditText.setText(date);
 		addTemplateCheckBox.setSelected(addTemplate);
-		includeInCountersCheckBox.setChecked(includeInCounters);
+		excludeInCountersCheckBox.setChecked(excludeInCounters);
 	}
 
 	public void setData(int bankID, double amount)
@@ -261,10 +250,10 @@ public class IncomeLayout extends RelativeLayout
 		Calendar now = Calendar.getInstance();
 		Time createdTime = new Time(now);
 		Time modifiedTime = new Time(now);
-		boolean includeInCounters = includeInCountersCheckBox.isChecked();
+		boolean excludeInCounters = excludeInCountersCheckBox.isChecked();
 
 		Transaction transaction = new Transaction(id, createdTime, modifiedTime, date, code, particulars, rate, quantity, amount,
-				false, includeInCounters);
+				false, !excludeInCounters);
 
 		if(addTemplateCheckBox.isChecked())
 		{
@@ -312,8 +301,8 @@ public class IncomeLayout extends RelativeLayout
 		return addTemplateCheckBox.isChecked();
 	}
 	
-	public boolean isIncludeInCounters()
+	public boolean isExcludeInCounters()
 	{
-		return includeInCountersCheckBox.isChecked();
+		return excludeInCountersCheckBox.isChecked();
 	}
 }

@@ -51,3 +51,14 @@ Bug Fix: In TransactionsActivity, after adding a transaction, if that transactio
  - Removed unused commented code in DatabaseManager.java
  - Old Backup reader methods in RestoreManager.java, which were not used and commented have been removed
  - WalletSetupFragment.java class, which is not used anymore has been removed
+
+4.3.1 (125)
+ - Few Code improvements suggested by Android Studio
+ - IncludeInCounters changed to ExcludeFromCounters only in frontend. In backend, it is still IncludeInCounters
+ - Backing up data will be done in a separate thread. UI will no more hang due to huge data. Backup result will also be displayed.
+ - Text centered vertically in IndefiniteWaitDialogs
+ - Daily Backup Added. It can be enabled or disabled from Settings. (Beta)
+ - APP_VERSION_NO constants moved from SplashActivity to Constants class
+ - SharedPreferences Key constants moved from SplashActivity to Constants class
+ - Manual Backup and Daily Backup return result now instead of void
+ - Flow Logging added for Daily Backup Code

@@ -11,11 +11,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.os.*;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
@@ -30,13 +26,7 @@ import com.chaturvedi.financemanager.extras.RestoreManager;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.setup.StartupActivity;
-import com.chaturvedi.financemanager.updates.Update107To110;
-import com.chaturvedi.financemanager.updates.Update110To111;
-import com.chaturvedi.financemanager.updates.Update111to124;
-import com.chaturvedi.financemanager.updates.Update68To88;
-import com.chaturvedi.financemanager.updates.Update88To89;
-import com.chaturvedi.financemanager.updates.Update89To96;
-import com.chaturvedi.financemanager.updates.Update96To107;
+import com.chaturvedi.financemanager.updates.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -52,11 +42,6 @@ public class SplashActivity extends Activity
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
-	private static int APP_VERSION_NO_88;
-	private static int APP_VERSION_NO_89;
-	private static int APP_VERSION_NO_96;
-	private static int APP_VERSION_NO_107;
-	private static int APP_VERSION_NO_110;
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
 	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
@@ -140,31 +125,26 @@ public class SplashActivity extends Activity
 		
 		// Compare the version of current and previous App. If the previous app was of old version, 
 		// run the Update Classes
-		APP_VERSION_NO_88 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_88));
-		APP_VERSION_NO_89 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_89));
-		APP_VERSION_NO_96 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_96));
-		APP_VERSION_NO_107 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_107));
-		APP_VERSION_NO_110 = Integer.parseInt(getResources().getString(R.string.APP_VERSION_110));
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if (canProceed && (previousVersionNo != currentVersionNo))
 		{
-			if (previousVersionNo < APP_VERSION_NO_88)
+			if (previousVersionNo < Constants.APP_VERSION_88)
 			{
 				new Update68To88(SplashActivity.this);
 			}
-			if (previousVersionNo < APP_VERSION_NO_89)
+			if (previousVersionNo < Constants.APP_VERSION_89)
 			{
 				new Update88To89(SplashActivity.this);
 			}
-			if (previousVersionNo < APP_VERSION_NO_96)
+			if (previousVersionNo < Constants.APP_VERSION_96)
 			{
 				new Update89To96(SplashActivity.this);
 			}
-			if (previousVersionNo < APP_VERSION_NO_107)
+			if (previousVersionNo < Constants.APP_VERSION_107)
 			{
 				new Update96To107(SplashActivity.this);
 			}
-			if (previousVersionNo < APP_VERSION_NO_110)
+			if (previousVersionNo < Constants.APP_VERSION_110)
 			{
 				new Update107To110(SplashActivity.this);
 			}
@@ -175,6 +155,10 @@ public class SplashActivity extends Activity
 			if (previousVersionNo < Constants.APP_VERSION_124)
 			{
 				new Update111to124(SplashActivity.this);
+			}
+			if (previousVersionNo < Constants.APP_VERSION_125)
+			{
+				new Update124to125(SplashActivity.this);
 			}
 			
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
@@ -377,7 +361,7 @@ public class SplashActivity extends Activity
 		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar_loading);
 		progressBar.setMax(deviceWidth);
 		
-		/** Change the colour (from blue) to pink for higher versions of android
+		/* Change the colour (from blue) to pink for higher versions of android
 		 For lower versions, green colour is good */
 		if (android.os.Build.VERSION.SDK_INT > 11)
 		{

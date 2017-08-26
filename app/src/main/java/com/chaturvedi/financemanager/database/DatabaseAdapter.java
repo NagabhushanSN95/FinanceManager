@@ -7,14 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.chaturvedi.financemanager.datastructures.Bank;
-import com.chaturvedi.financemanager.datastructures.Counters;
-import com.chaturvedi.financemanager.datastructures.Date;
-import com.chaturvedi.financemanager.datastructures.ExpenditureType;
-import com.chaturvedi.financemanager.datastructures.Template;
-import com.chaturvedi.financemanager.datastructures.Time;
-import com.chaturvedi.financemanager.datastructures.Transaction;
-import com.chaturvedi.financemanager.datastructures.Wallet;
+import com.chaturvedi.financemanager.datastructures.*;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -1297,7 +1290,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting single Row Of Counters
 	public Counters getCountersRow(String date)
 	{
-		Counters counter = null;
+		Counters counter;
 		int numExpTypes = getNumExpenditureTypes();
 //		DecimalFormat formatter = new DecimalFormat("00");
 		String queryString = "SELECT * FROM " + TABLE_COUNTERS + " WHERE " + KEY_DATE + " = '" + date + "'";
@@ -1672,7 +1665,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		long income = 0;
 		String countQuery = "SELECT sum(" + KEY_INCOME + ") FROM " + TABLE_COUNTERS + " WHERE " +
 				KEY_DATE + " LIKE '" + month + "%'";
-		;
+		
 		SQLiteDatabase db = this.getReadableDatabase();
 		Cursor cursor = db.rawQuery(countQuery, null);
 		if (cursor.moveToFirst())

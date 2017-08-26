@@ -3,11 +3,20 @@ package com.chaturvedi.financemanager.functions;
 
 public class Constants
 {
+	public static final int APP_VERSION_88 = 88;
+	public static final int APP_VERSION_89 = 89;
+	public static final int APP_VERSION_96 = 96;
 	public static final int APP_VERSION_107 = 107;
+	public static final int APP_VERSION_110 = 110;
 	public static final int APP_VERSION_111 = 111;
-	public static final int APP_VERSION_124 = 124; // In this version, includeInCounters field was added for transactions
-	public static final int CURRENT_APP_VERSION_NO = 124;
-
+	// In version 124, includeInCounters field was added for transactions
+	public static final int APP_VERSION_124 = 124;
+	// In version 125, daily backup setting was added
+	public static final int APP_VERSION_125 = 125;
+	
+	public static final int CURRENT_APP_VERSION_NO = 125;
+	
+	// Settings and Shared Preferences
 	public static final String ALL_PREFERENCES = "AllPreferences";
 	public static final String KEY_APP_VERSION = "AppVersionNo";
 	public static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
@@ -17,6 +26,8 @@ public class Constants
 	public static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	public static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
 	public static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
+	public static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
+	public static final String KEY_DAILY_BACKUP = "DailyBackup";
 
 	public static final int REQUEST_CODE_ADD_TRANSACTION = 101;
 	public static final int REQUEST_CODE_EDIT_TRANSACTION = 102;
@@ -41,7 +52,6 @@ public class Constants
 	public static final String TRANSFER_WITHDRAW = "Withdraw";
 
 	public static final String KEY_BANK_ID = "BankID";
-
 	public static final String KEY_AMOUNT = "Amount";
 
 	public static final int MIN_TRANSACTIONS_TO_DISPLAY = 50;
@@ -70,6 +80,11 @@ public class Constants
 	public static final String VALUE_TRANSFER = "Transfer";
 	public static final String VALUE_WALLET = "Wallet";
 	public static final String VALUE_BANK = "Bank";
-
-	public static final int TAG_TRANSACTION_ID = 201;
+	public static final String VALUE_DAILY_BACKUP_ENABLED = "Back-up";
+	public static final String VALUE_DAILY_BACKUP_DISABLED = "Do not back-up";
+	public static final boolean FLOW_LOGS_ENABLED = true;
+	public static final String VALUE_FLOW_LOGS = "Flow Logs";
+	
+	public static final int ACTION_BACKUP_SUCCESSFUL = 201;
+	public static final int ACTION_BACKUP_FAILURE = 202;
 }

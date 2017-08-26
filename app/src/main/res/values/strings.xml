@@ -67,7 +67,9 @@
     <string name="hint_search">Search Transactions</string>
     <string name="hint_walletBalance">Balance</string>
     <string name="hint_walletName">Wallet Name</string>
-    <string name="includeInCounters">Include in Counters</string>
+	<string name="excludeFromCounters">Exclude from Counters</string>
+	<string name="excludeFromExpenses">Exclude from Expenses</string>
+	<string name="excludeFromIncomes">Exclude from Incomes</string>
     <string name="incomeDestination">Credited to: </string>
     <string name="incomes">Incomes (Non Bank Transactions)</string>
     <string name="instruction_expenditure_types">Enter Five Different Types Of Expenditures. 

@@ -10,12 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.*;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -225,17 +220,17 @@ public class AddTransactionActivity extends Activity
 				amount = incomeLayout.getAmountText();
 				date = incomeLayout.getDate();
 				addTemplate = incomeLayout.isAddTemplateSelected();
-				includeInCounters = incomeLayout.isIncludeInCounters();
+				includeInCounters = !incomeLayout.isExcludeInCounters();
 
 				position = incomeLayout.getIncomeDestinationPosition();
 				switch (currentPosition)
 				{
 					case 1:
-						expenseLayout.setData(position, particulars, rate, quantity, amount, date, addTemplate, includeInCounters);
+						expenseLayout.setData(position, particulars, rate, quantity, amount, date, addTemplate, !includeInCounters);
 						break;
 
 					case 2:
-						transferLayout.setData(-1,position,particulars,rate,quantity,amount,date,addTemplate, includeInCounters);
+						transferLayout.setData(-1, position, particulars, rate, quantity, amount, date, addTemplate, !includeInCounters);
 						break;
 				}
 				break;
@@ -247,19 +242,19 @@ public class AddTransactionActivity extends Activity
 				amount = expenseLayout.getAmountText();
 				date = expenseLayout.getDate();
 				addTemplate = expenseLayout.isAddTemplateSelected();
-				includeInCounters = expenseLayout.isIncludeInCounters();
+				includeInCounters = !expenseLayout.isExcludeInCounters();
 
 				position = expenseLayout.getExpenseSourcePosition();
 				switch (currentPosition)
 				{
 					case 0:
 						incomeLayout.setData(position, particulars, rate, quantity, amount, date,
-								addTemplate, includeInCounters);
+								addTemplate, !includeInCounters);
 						break;
 
 					case 2:
 						transferLayout.setData(position, -1, particulars, rate, quantity, amount,
-								date, addTemplate, includeInCounters);
+								date, addTemplate, !includeInCounters);
 						break;
 				}
 				break;
@@ -271,20 +266,20 @@ public class AddTransactionActivity extends Activity
 				amount = transferLayout.getAmountText();
 				date = transferLayout.getDate();
 				addTemplate = transferLayout.isAddTemplateSelected();
-				includeInCounters = transferLayout.isIncludeInCounters();
+				includeInCounters = !transferLayout.isExcludeInCounters();
 
 				switch (currentPosition)
 				{
 					case 0:
 						int destinationPosition = transferLayout.getTransferDestinationPosition();
 						incomeLayout.setData(destinationPosition, particulars, rate, quantity,
-								amount, date, addTemplate, includeInCounters);
+								amount, date, addTemplate, !includeInCounters);
 						break;
 
 					case 1:
 						int sourcePosition = transferLayout.getTransferSourcePosition();
 						expenseLayout.setData(sourcePosition, particulars, rate, quantity, amount,
-								date, addTemplate, includeInCounters);
+								date, addTemplate, !includeInCounters);
 						break;
 				}
 				break;

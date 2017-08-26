@@ -7,13 +7,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.datastructures.Bank;
-import com.chaturvedi.financemanager.datastructures.Counters;
-import com.chaturvedi.financemanager.datastructures.ExpenditureType;
-import com.chaturvedi.financemanager.datastructures.Template;
-import com.chaturvedi.financemanager.datastructures.Time;
-import com.chaturvedi.financemanager.datastructures.Transaction;
-import com.chaturvedi.financemanager.datastructures.Wallet;
+import com.chaturvedi.financemanager.datastructures.*;
 import com.chaturvedi.financemanager.functions.Constants;
 
 import org.json.JSONException;
@@ -47,28 +41,35 @@ public class BackupManager
 		backupData(backupFile);
 	}
 	
-	public void dailyBackup()
+	public boolean dailyBackup()
 	{
-		String backupFolderName = "Chaturvedi/Finance Manager/Auto Backups";
+		String backupFolderName = "Chaturvedi/Finance Manager/Daily Backups";
 		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if(!financeFolder.exists() && !financeFolder.mkdirs())
-			return;
+		if (!financeFolder.exists() && !financeFolder.mkdirs())
+		{
+			return false;
+		}
 
 		String backupFileName = "Data Backup - " + (new Time(Calendar.getInstance())).getTimeForFileName() + ".snb";
 		File backupFile = new File(financeFolder, backupFileName);
 		backupData(backupFile);
+		return true;
 	}
-
-	public void manualBackup()
+	
+	public String[] manualBackup()
 	{
 		String backupFolderName = "Chaturvedi/Finance Manager/Backups";
 		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if(!financeFolder.exists() && !financeFolder.mkdirs())
-			return;
+		if (!financeFolder.exists() && !financeFolder.mkdirs())
+		{
+			return null;
+		}
 
 		String backupFileName = "Data Backup - " + (new Time(Calendar.getInstance())).getTimeForFileName() + ".snb";
 		File backupFile = new File(financeFolder, backupFileName);
 		backupData(backupFile);
+		
+		return new String[]{"Internal Storage/Android/" + backupFolderName, backupFileName};
 	}
 
 	/**

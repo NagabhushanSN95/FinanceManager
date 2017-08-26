@@ -3,13 +3,7 @@ package com.chaturvedi.financemanager.database;
 import android.content.Context;
 import android.util.Log;
 
-import com.chaturvedi.financemanager.datastructures.Bank;
-import com.chaturvedi.financemanager.datastructures.Counters;
-import com.chaturvedi.financemanager.datastructures.Date;
-import com.chaturvedi.financemanager.datastructures.ExpenditureType;
-import com.chaturvedi.financemanager.datastructures.Template;
-import com.chaturvedi.financemanager.datastructures.Transaction;
-import com.chaturvedi.financemanager.datastructures.Wallet;
+import com.chaturvedi.financemanager.datastructures.*;
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 
 import java.util.ArrayList;
@@ -62,7 +56,7 @@ public class DatabaseManager
 		// Gets All the months(In which transactions were made) in the format 201501, 201502, 201503,....
 		for(int i=0; i<transactions.size(); i++)
 		{
-			long longMonth = (long) transactions.get(i).getDate().getLongDate()/100;	//201501
+			long longMonth = transactions.get(i).getDate().getLongDate() / 100;    //201501
 			if(!longMonths.contains(longMonth))
 			{
 				longMonths.add(longMonth);
@@ -406,7 +400,7 @@ public class DatabaseManager
 		
 		// Go on comparing every fields. Whenever you find a difference, set isValid to false;
 		boolean isValid = true;
-		int numWallets = wallets1.size(), i = 0;
+		int numWallets = wallets1.size(), i;
 		for (i = 0; isValid && i < numWallets; i++)
 		{
 			if (wallets1.get(i).getID() != wallets2.get(i).getID())
@@ -443,7 +437,7 @@ public class DatabaseManager
 
 		// Go on comparing every fields. Whenever you find a difference, set isValid to false;
 		boolean isValid = true;
-		int numBanks = banks1.size(), i = 0;
+		int numBanks = banks1.size(), i;
 		for (i = 0; isValid && i < numBanks; i++)
 		{
 			if (banks1.get(i).getID() != banks2.get(i).getID())

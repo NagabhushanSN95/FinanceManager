@@ -8,26 +8,21 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.net.Uri;
-import android.os.Build;
+import android.os.*;
 import android.os.Build.VERSION;
-import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.*;
 
 import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.datastructures.Date;
+import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.AboutActivity;
 
 import java.util.ArrayList;
@@ -227,85 +222,73 @@ public class ExtrasActivity extends Activity
 	
 	private void backupData()
 	{
-		AlertDialog.Builder backupDialog = new AlertDialog.Builder(this);
-		backupDialog.setTitle("Back-Up Data");
-		backupDialog.setMessage("Are You Sure To Backup Data?");
-		backupDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
+		IndefiniteWaitDialog backupDialogBuilder = new IndefiniteWaitDialog(ExtrasActivity.this);
+		backupDialogBuilder.setTitle("Backing Up Data to SD Card");
+		backupDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
+		backupDialogBuilder.setCancelable(false);
+		final AlertDialog backupDialog = backupDialogBuilder.show();
+		
+		// Define Handler to pass messages
+		final Handler backupResultHandler = new Handler(Looper.getMainLooper())
 		{
 			@Override
-			public void onClick(DialogInterface dialog, int which)
+			public void handleMessage(Message backupResultMessage)
 			{
-				new BackupManager(ExtrasActivity.this).manualBackup();	// Backs Up Data to Backups Folder
-			}
-		});
-		backupDialog.setNegativeButton("Cancel", null);
-		backupDialog.show();
-	}
-	
-	/*private void restoreData()
-	{
-		AlertDialog.Builder restoreDialog = new AlertDialog.Builder(this);
-		restoreDialog.setTitle("Restore Data");
-		restoreDialog.setMessage("Are You Sure To Restore Data From SD Card And Overwrite Existing Data?");
-		restoreDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
-		{
-			@Override
-			public void onClick(DialogInterface dialog, int which)
-			{
-				IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(ExtrasActivity.this);
-				restoreDialogBuilder.setWaitText("Restoring Data. This may take few minutes depending on the Size of your Data");
-				final AlertDialog restoreDialog = restoreDialogBuilder.show();
-				*//** Restore in a seperate (non-ui) thread*//*
-				Thread restoreThread = new Thread(new Runnable()
+				String resultTitle;
+				String resultMessage;
+				switch (backupResultMessage.what)
 				{
-					@Override
-					public void run()
-					{
-						RestoreManager restoreManager = new RestoreManager(ExtrasActivity.this);
-						int result = restoreManager.readBackups("Finance Manager/Backups");
-						if(result == 0)
-						{
-							DatabaseManager.setWalletBalance(restoreManager.getWalletBalance());
-							DatabaseManager.setAllTransactions(restoreManager.getAllTransactions());
-							DatabaseManager.setAllBanks(restoreManager.getAllWallets());
-							int numExpTypesInDatabase = DatabaseManager.getNumExpenditureTypes();
-							DatabaseManager.setAllExpenditureTypes(restoreManager.getAllExpTypes());
-							if(restoreManager.getNumExpenditureTypes() != numExpTypesInDatabase)
-							{
-								Log.d("ExtrasActivity/restoreData()","Readjusting Counters Table: SD Card: " + 
-										restoreManager.getNumExpenditureTypes() + "|Database: " + numExpTypesInDatabase);
-								DatabaseManager.readjustCountersTable();
-							}
-							DatabaseManager.setAllCounters(restoreManager.getAllCounters());
-							DatabaseManager.setAllTemplates(restoreManager.getAllTemplates());
-							
-							restoreDialog.dismiss();
-							//Toast.makeText(getApplicationContext(), "Data Restored Successfully", Toast.LENGTH_LONG).show();
-						}
-						else if(result == 1)
-						{
-							Toast.makeText(getApplicationContext(), "No Backups Were Found.\n" + 
-									"Make sure the Backup Files are located in\n" + "Chaturvedi/Finance Manager Folder", 
-									Toast.LENGTH_LONG).show();
-						}
-						else if(result == 2)
-						{
-							Toast.makeText(getApplicationContext(), "Old Data. Cannot be Restored. Sorry!", 
-							Toast.LENGTH_LONG).show();
-						}
-						else if(result == 3)
-						{
-							Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block",
-									Toast.LENGTH_LONG).show();
-						}
-					}
-				});
-				restoreThread.start();
+					case Constants.ACTION_BACKUP_SUCCESSFUL:
+						String[] result = (String[]) backupResultMessage.obj;
+						resultTitle = "Backup Successful";
+						resultMessage = "Backup Folder: " + result[0] + "\n\n" +
+								"Backup Filename: " + result[1] + "\n";
+						break;
+					
+					case Constants.ACTION_BACKUP_FAILURE:
+						resultTitle = "Backup Failed";
+						resultMessage = "Please Try again.\n\n" +
+								"If the problem persists, please contact Developer";
+						break;
+					
+					default:
+						resultTitle = "Backup Failed";
+						resultMessage = "Unknown result. Please Try again. If the problem persists, please contact Developer";
+				}
+				
+				AlertDialog.Builder resultDialogBuilder = new AlertDialog.Builder(ExtrasActivity.this);
+				resultDialogBuilder.setTitle(resultTitle);
+				resultDialogBuilder.setMessage(resultMessage);
+				resultDialogBuilder.setPositiveButton("OK", null);
+				resultDialogBuilder.show();
+			}
+		};
+		
+		/* Backup in a separate non-ui thread */
+		Thread backupThread = new Thread(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				String[] result = new BackupManager(ExtrasActivity.this).manualBackup();    // Backs Up Data to Backups Folder
+				backupDialog.dismiss();
+				
+				if (result != null)
+				{
+					Message backupResultMessage = backupResultHandler.obtainMessage(
+							Constants.ACTION_BACKUP_SUCCESSFUL, result);
+					backupResultMessage.sendToTarget();
+				}
+				else
+				{
+					Message backupResultMessage = backupResultHandler.obtainMessage(
+							Constants.ACTION_BACKUP_FAILURE);
+					backupResultMessage.sendToTarget();
+				}
 			}
 		});
-		restoreDialog.setNegativeButton("Cancel", null);
-		restoreDialog.show();
-	}*/
+		backupThread.start();
+	}
 
 	private void restoreData(final Uri fileUri)
 	{
@@ -313,7 +296,8 @@ public class ExtrasActivity extends Activity
 		// TODO: and settings backup file. Restore both
 
 		IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(this);
-		restoreDialogBuilder.setWaitText("Restoring Data. This may take few minutes depending on the Size of your Data");
+		restoreDialogBuilder.setTitle("Restoring Data");
+		restoreDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		restoreDialogBuilder.setCancelable(false);
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();
 
@@ -382,8 +366,6 @@ public class ExtrasActivity extends Activity
 			}
 		});
 		restoreThread.start();
-
-
 	}
 	
 	private void clearData()
