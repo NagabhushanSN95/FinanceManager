@@ -42,7 +42,7 @@ public class Time
 		this.year = calendar.get(Calendar.YEAR);
 		this.month = calendar.get(Calendar.MONTH) + 1;
 		this.date = calendar.get(Calendar.DATE);
-		this.hour = calendar.get(Calendar.HOUR);
+		this.hour = calendar.get(Calendar.HOUR_OF_DAY);
 		this.minute = calendar.get(Calendar.MINUTE);
 		this.second = calendar.get(Calendar.SECOND);
 		this.millis = calendar.get(Calendar.MILLISECOND);
