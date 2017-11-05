@@ -85,6 +85,9 @@ public class Constants
 	public static final boolean FLOW_LOGS_ENABLED = true;
 	public static final String VALUE_FLOW_LOGS = "Flow Logs";
 	
+	public static final String[] MONTHS_IN_YEAR_ARRAY = {"January", "February", "March", "April",
+			"May", "June", "July", "August", "September", "October", "November", "December"};
+	
 	public static final int ACTION_BACKUP_SUCCESSFUL = 201;
 	public static final int ACTION_BACKUP_FAILURE = 202;
 }

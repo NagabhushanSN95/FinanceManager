@@ -91,3 +91,8 @@
  - Fixed a potential bug in retrieving time. Earlier time was retrieved in 12-hr format and no
         am/pm was stored. Now time is retrieved in 24-hr format.
  - Change Log file formatted.
+
+4.3.3 (127)
+ - FilterActivity.java renamed to TransactionsFilterActivtity.java
+ - activity_filter.xml renamed to activity_filter_transactions.xml
+ - Added basic filtering by year in StatisticsActivity

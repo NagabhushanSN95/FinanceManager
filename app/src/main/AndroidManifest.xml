@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="com.chaturvedi.financemanager"
 		  xmlns:android="http://schemas.android.com/apk/res/android"
-		  android:versionCode="126"
-		  android:versionName="4.3.2">
+		  android:versionCode="127"
+		  android:versionName="4.3.3">
 
 
 	<uses-permission android:name="android.permission.RECEIVE_SMS"/>
@@ -55,12 +55,12 @@
 				android:value=".main.SummaryActivity"/>
 		</activity>
 		<activity
-			android:name=".main.FilterActivity"
+			android:name=".main.TransactionsFilterActivity"
 			android:label="@string/label_filterTransactions"
 			android:parentActivityName=".main.TransactionsActivity">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
+				android:value=".main.TransactionsActivity"/>
 		</activity>
 		<activity
 			android:name=".edit.EditActivity"
@@ -101,6 +101,14 @@
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value=".main.SummaryActivity"/>
+		</activity>
+		<activity
+			android:name=".main.StatisticsFilterActivity"
+			android:label="@string/label_filterStatistics"
+			android:parentActivityName=".main.StatisticsActivity">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value=".main.StatisticsActivity"/>
 		</activity>
 		<activity
 			android:name=".main.SettingsActivity"

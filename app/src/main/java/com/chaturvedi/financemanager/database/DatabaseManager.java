@@ -41,38 +41,6 @@ public class DatabaseManager
 			databaseAdapter.updateTemplate(template);
 		}
 	}
-	
-	/**
-	 * @return The months in which Transactions were made in the format
-	 * January - 2015
-	 * February - 2015 and so on
-	 */
-	public static ArrayList<String> getExportableMonths(Context context)
-	{
-		ArrayList<Transaction> transactions = DatabaseAdapter.getInstance(context).getAllTransactions();
-		ArrayList<Long> longMonths = new ArrayList<Long>();		//201501, 201502,...
-		ArrayList<String> months = new ArrayList<String>();		//January - 2015, February - 2015
-		
-		// Gets All the months(In which transactions were made) in the format 201501, 201502, 201503,....
-		for(int i=0; i<transactions.size(); i++)
-		{
-			long longMonth = transactions.get(i).getDate().getLongDate() / 100;    //201501
-			if(!longMonths.contains(longMonth))
-			{
-				longMonths.add(longMonth);
-			}
-		}
-		
-		// Convert the months format from long (201501) to words (January - 2015)
-		for(int i=0; i<longMonths.size(); i++)
-		{
-			int month = (int) (longMonths.get(i) % 100);
-			int year = (int) (longMonths.get(i)/100);
-			String monthName = Date.getMonthName(month);
-			months.add(monthName + " - " + year);			//"January" + " - " + 2015 = "January - 2015"
-		}
-		return months;
-	}
 
 	/**
 	 * Adds a transaction
@@ -310,6 +278,40 @@ public class DatabaseManager
 
 		DatabaseManager.deleteTransaction(context, oldTransaction, false);
 		DatabaseManager.addTransaction(context, newTransaction, false);
+	}
+	
+	/**
+	 * @return The months in which Transactions were made in the format
+	 * January - 2015
+	 * February - 2015 and so on
+	 */
+	public static ArrayList<String> getExportableMonths(Context context)
+	{
+		// Todo: Use the below sqlite query
+		// SELECT DISTINCT REPLACE(substr(date,0,8), "/", "") AS month FROM counters WHERE month >= "201501" AND month <= "201512"
+		ArrayList<Transaction> transactions = DatabaseAdapter.getInstance(context).getAllTransactions();
+		ArrayList<Long> longMonths = new ArrayList<Long>();        //201501, 201502,...
+		ArrayList<String> months = new ArrayList<String>();        //January - 2015, February - 2015
+		
+		// Gets All the months(In which transactions were made) in the format 201501, 201502, 201503,....
+		for (int i = 0; i < transactions.size(); i++)
+		{
+			long longMonth = transactions.get(i).getDate().getLongDate() / 100;    //201501
+			if (!longMonths.contains(longMonth))
+			{
+				longMonths.add(longMonth);
+			}
+		}
+		
+		// Convert the months format from long (201501) to words (January - 2015)
+		for (int i = 0; i < longMonths.size(); i++)
+		{
+			int month = (int) (longMonths.get(i) % 100);
+			int year = (int) (longMonths.get(i) / 100);
+			String monthName = Date.getMonthName(month);
+			months.add(monthName + " - " + year);            //"January" + " - " + 2015 = "January - 2015"
+		}
+		return months;
 	}
 	
 	// Static Methods to compare two objects like transactions, banks...

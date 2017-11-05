@@ -11,20 +11,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
-import android.nfc.Tag;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.ContextMenu;
+import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -34,7 +27,6 @@ import android.widget.Toast;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.datastructures.Template;
 import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
 
@@ -1559,7 +1551,7 @@ public class TransactionsActivity extends Activity
 
 	private void displayFilterOptions()
 	{
-		Intent filterIntent = new Intent(TransactionsActivity.this, FilterActivity.class);
+		Intent filterIntent = new Intent(TransactionsActivity.this, TransactionsFilterActivity.class);
 
 		// Send current filter state
 		filterIntent.putExtra(Constants.KEY_INTERVAL_TYPE, transactionsDisplayIntervalType);

@@ -1,6 +1,9 @@
 package com.chaturvedi.financemanager.datastructures;
 
+import com.chaturvedi.financemanager.functions.Constants;
+
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 
@@ -300,5 +303,25 @@ public class Date
 		}
 		long longMonth = year*100 + month1;
 		return longMonth;
+	}
+	
+	/**
+	 * @param year Year
+	 *             2015
+	 * @return List of months in the given year
+	 * January-2015
+	 * February-2015
+	 * .
+	 * .
+	 * December-2015
+	 */
+	public static ArrayList<String> getMonthsList(String year)
+	{
+		ArrayList<String> monthsList = new ArrayList<String>(12);
+		for (String month : Constants.MONTHS_IN_YEAR_ARRAY)
+		{
+			monthsList.add(month + "-" + year);
+		}
+		return monthsList;
 	}
 }
