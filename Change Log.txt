@@ -96,3 +96,7 @@
  - FilterActivity.java renamed to TransactionsFilterActivtity.java
  - activity_filter.xml renamed to activity_filter_transactions.xml
  - Added basic filtering by year in StatisticsActivity
+
+4.3.4 (128)
+ - Bug Fix: App used to crash while selecting a template which contains a single quote in
+        particulars due to error in SQLite Query.

@@ -1805,9 +1805,9 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	public Template getTemplate(String particulars)
 	{
 		Template template = null;
-		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES + " WHERE " + KEY_PARTICULARS + " = '" + particulars + "'";
+		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES + " WHERE " + KEY_PARTICULARS + " = ?";
 		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = db.rawQuery(selectQuery, null);
+		Cursor cursor = db.rawQuery(selectQuery, new String[]{particulars});
 		if (cursor != null && cursor.moveToFirst())
 		{
 			template = new Template(cursor.getInt(0), cursor.getString(1), cursor.getString(2), cursor.getDouble(3),
