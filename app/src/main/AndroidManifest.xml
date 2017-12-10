@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.chaturvedi.financemanager"
+<manifest xmlns:tools="http://schemas.android.com/tools"
+		  package="com.chaturvedi.financemanager"
 		  xmlns:android="http://schemas.android.com/apk/res/android"
-		  android:versionCode="128"
-		  android:versionName="4.3.4">
+		  android:versionCode="129"
+		  android:versionName="4.3.5">
 
 
 	<uses-permission android:name="android.permission.RECEIVE_SMS"/>
@@ -165,6 +166,15 @@
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value=".main.SummaryActivity"/>
+		</activity>
+		<activity
+			android:name=".extras.ExportActivity"
+			android:label="@string/label_export"
+			android:parentActivityName=".extras.ExtrasActivity"
+			tools:targetApi="jelly_bean">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value=".extras.ExtrasActivity"/>
 		</activity>
 
 		<receiver android:name=".main.SmsReceiver">

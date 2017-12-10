@@ -100,3 +100,7 @@
 4.3.4 (128)
  - Bug Fix: App used to crash while selecting a template which contains a single quote in
         particulars due to error in SQLite Query.
+
+4.3.5 (129)
+ - Bug Fix: When editing a Bank, if the name is unchanged, it used to prompt for changing name. Fixed.
+ - Gradle upgraded to 3.0.1

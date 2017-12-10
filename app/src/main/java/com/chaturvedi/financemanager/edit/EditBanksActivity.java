@@ -6,25 +6,15 @@ import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.ContextMenu;
+import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.*;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.datastructures.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.datastructures.Bank;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -296,7 +286,7 @@ public class EditBanksActivity extends Activity
 				String bankBalance = bankBalanceField.getText().toString().trim();
 				String bankSmsName = bankSmsNameField.getText().toString().trim();
 				boolean isDeleted = bank.isDeleted();
-				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName, null);
+				boolean dataCorrect = verifyData(bankName, bankBalance, bankSmsName, bank.getName());
 				
 				if(dataCorrect)
 				{
