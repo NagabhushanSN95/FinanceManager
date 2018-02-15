@@ -9,35 +9,24 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.os.*;
-import android.os.Build.VERSION;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.*;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.chaturvedi.customviews.IndefiniteWaitDialog;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.datastructures.Date;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.AboutActivity;
-
-import java.util.ArrayList;
-import java.util.Calendar;
 
 public class ExtrasActivity extends Activity
 {
 	private static final int CODE_FILE_CHOOSER = 102;
 
-	private Intent aboutUsIntent;
-	
-	// Fields required for exportData()
-	private ArrayList<String> months;
-	private long exportLongMonth;
-	private EditText exportFileNameField;
 	
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
@@ -45,18 +34,10 @@ public class ExtrasActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_extras);
-		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
+		if (getActionBar() != null)
 		{
-			if(getActionBar() != null)
-			{
-				// Provide Up Button in Action Bar
-				getActionBar().setDisplayHomeAsUpEnabled(true);
-			}
-
-		}
-		else
-		{
-			// No Up Button in Action Bar
+			// Provide Up Button in Action Bar
+			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
 		
 		buildLayout();
@@ -104,7 +85,8 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void onClick(View v)
 			{
-				exportData();
+				Intent exportIntent = new Intent(ExtrasActivity.this, ExportActivity.class);
+				startActivity(exportIntent);
 			}
 		});
 		
@@ -142,82 +124,15 @@ public class ExtrasActivity extends Activity
 		});
 		
 		LinearLayout aboutDeveloperLayout = (LinearLayout) findViewById(R.id.layout_aboutUs);
-		aboutUsIntent = new Intent(this, AboutActivity.class);
 		aboutDeveloperLayout.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
+				Intent aboutUsIntent = new Intent(ExtrasActivity.this, AboutActivity.class);
 				startActivity(aboutUsIntent);
 			}
 		});
-	}
-	
-	private void exportData()
-	{
-		Spinner monthsList;
-		LayoutInflater exportDialogLayout;
-		View exportDialogView;
-		AlertDialog.Builder exportDialog;
-		
-		exportDialogLayout=LayoutInflater.from(this);
-		exportDialogView=exportDialogLayout.inflate(R.layout.dialog_export, null);
-		exportFileNameField=(EditText)exportDialogView.findViewById(R.id.editText_export_fileName);
-		
-		monthsList = (Spinner) exportDialogView.findViewById(R.id.monthsList);
-		months = DatabaseManager.getExportableMonths(ExtrasActivity.this); // Assigned at the top
-		months.add(0, "Current Month");					// Insert The Current Month at the top of the list
-		monthsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, months));
-		monthsList.setSelection(0);
-		monthsList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-		{
-			@Override
-			public void onItemSelected(AdapterView<?> arg0, View arg1, int monthNo, long arg3)
-			{
-				if(monthNo == 0)		// Current Month
-				{
-					Calendar calendar=Calendar.getInstance();
-					// Calendar return 0 for Jan, 1 for Feb,.. But Date.getMonthName requires 1 for Jan,..
-					int currentMonthNo = calendar.get(Calendar.MONTH) + 1;
-					String currentMonthName=Date.getMonthName(currentMonthNo);
-					int currentYear=calendar.get(Calendar.YEAR);
-					String exportFileName=currentMonthName + " - " + currentYear+".doc";
-					exportFileNameField.setText(exportFileName);
-					exportLongMonth = currentYear*100 + currentMonthNo;		//201501 for Jan 2015
-				}
-				else
-				{
-					String exportFileName = months.get(monthNo) + ".doc";
-					exportFileNameField.setText(exportFileName);
-					//months.get(monthNo) ==> January - 2015 
-					//exportLongMonth	  ==> 201501
-					exportLongMonth = Date.getLongMonth(months.get(monthNo));
-				}
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0)
-			{
-				
-			}
-		});
-		
-		exportDialog=new AlertDialog.Builder(this);
-		exportDialog.setTitle("Export Data");
-		exportDialog.setView(exportDialogView);
-		exportDialog.setPositiveButton("OK", new DialogInterface.OnClickListener()
-		{
-			@Override
-			public void onClick(DialogInterface dialog, int which)
-			{
-				String exportFileName=exportFileNameField.getText().toString();
-				new ExportManager().export(getApplicationContext(), exportFileName, exportLongMonth);
-			}
-		});
-		exportDialog.setNegativeButton("Cancel", null);
-		exportDialog.setCancelable(false);
-		exportDialog.create();
-		exportDialog.show();
 	}
 	
 	private void backupData()
@@ -293,15 +208,16 @@ public class ExtrasActivity extends Activity
 	private void restoreData(final Uri fileUri)
 	{
 		// TODO: CREATE a new Activity for Restoring. Give 2 options there. To select Data Backup file
-		// TODO: and settings backup file. Restore both
+		
+		// and settings backup file. Restore both
 
 		IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(this);
 		restoreDialogBuilder.setTitle("Restoring Data");
 		restoreDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		restoreDialogBuilder.setCancelable(false);
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();
-
-		/** Restore in a seperate (non-ui) thread */
+		
+		// Todo: Restore in a seperate (non-ui) thread
 		Thread restoreThread = new Thread(new Runnable()
 		{
 			@Override
@@ -338,7 +254,6 @@ public class ExtrasActivity extends Activity
 					databaseAdapter.addAllCountersRows(restoreManager.getAllCounters());
 					databaseAdapter.addAllTemplates(restoreManager.getAllTemplates());
 
-					// TODO: Restore Preferences also
 					restoreDialog.dismiss();
 				}
 				else if(result == 1)

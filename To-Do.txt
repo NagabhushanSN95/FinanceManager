@@ -1,5 +1,11 @@
+Rename expenditureFolder to financeManager folder
+In ExportActivity, add support to select destination folder to save the file
+In ExportActivity, provide option to save as pdf/doc/html?
+Add ScrollView in SummaryActivity
+Create custom widget to display huge data in chunks with show-more button
 Add daily backup
 Make daily backup alarm to be set after restart
+Create a jar for custom-views
 Provide settings to set how many daily backups to keep. Delete older backups
 Create custom view for Drop-down spinners to have <Select an item as 1st option>
 When Restoring, send error messages using a handler so that they can be displayed as toast texts

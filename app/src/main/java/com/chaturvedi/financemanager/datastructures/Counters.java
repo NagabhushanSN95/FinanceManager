@@ -1,5 +1,7 @@
 package com.chaturvedi.financemanager.datastructures;
 
+import com.chaturvedi.datastructures.Date;
+
 public class Counters
 {
 	private int id;
@@ -144,14 +146,6 @@ public class Counters
 	}
 
 	/**
-	 * @param id the id to set
-	 */
-	public void setID(int id)
-	{
-		this.id = id;
-	}
-
-	/**
 	 * @return the id
 	 */
 	public int getID()
@@ -160,11 +154,11 @@ public class Counters
 	}
 
 	/**
-	 * @param date the date to set
+	 * @param id the id to set
 	 */
-	public void setDate(Date date)
+	public void setID(int id)
 	{
-		this.date = date;
+		this.id = id;
 	}
 
 	/**
@@ -173,6 +167,14 @@ public class Counters
 	public Date getDate()
 	{
 		return date;
+	}
+	
+	/**
+	 * @param date the date to set
+	 */
+	public void setDate(Date date)
+	{
+		this.date = date;
 	}
 	
 	public void setExp(double[] exp)

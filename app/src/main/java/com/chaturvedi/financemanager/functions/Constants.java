@@ -36,6 +36,9 @@ public class Constants
 	public static final int REQUEST_CODE_SETTINGS_ACTIVITY = 105;
 	public static final int REQUEST_CODE_EXTRAS_ACTIVITY = 106;
 	public static final int REQUEST_CODE_FILTERS = 107;
+	
+	public static final int ACTION_BACKUP_SUCCESSFUL = 201;
+	public static final int ACTION_BACKUP_FAILURE = 202;
 
 	public static final String ACTION = "Action";
 	public static final String ACTION_ADD = "ActionAdd";
@@ -68,7 +71,6 @@ public class Constants
 	public static final String VALUE_MONTH = "Month";
 	public static final String KEY_INTERVAL_TYPE_YEAR = "Year";
 	public static final String VALUE_YEAR = "Year";
-//	public static final String KEY_INTERVAL_TYPE_CUSTOM = "Custom";
 	public static final String VALUE_CUSTOM = "Custom";
 	public static final String KEY_START_DATE = "StartDate";
 	public static final String KEY_END_DATE = "EndDate";
@@ -85,9 +87,5 @@ public class Constants
 	public static final boolean FLOW_LOGS_ENABLED = true;
 	public static final String VALUE_FLOW_LOGS = "Flow Logs";
 	
-	public static final String[] MONTHS_IN_YEAR_ARRAY = {"January", "February", "March", "April",
-			"May", "June", "July", "August", "September", "October", "November", "December"};
-	
-	public static final int ACTION_BACKUP_SUCCESSFUL = 201;
-	public static final int ACTION_BACKUP_FAILURE = 202;
+	public static final int YEAR_MINIMUM_VALUE = 2015;
 }

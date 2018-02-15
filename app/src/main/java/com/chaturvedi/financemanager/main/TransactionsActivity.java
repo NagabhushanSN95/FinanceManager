@@ -63,6 +63,20 @@ public class TransactionsActivity extends Activity
 
 	private String contextMenuTag;
 	
+	public static View findViewByTag(LinearLayout parentLayout, String tag)
+	{
+		for (int i = 0; i < parentLayout.getChildCount(); i++)
+		{
+			View child = parentLayout.getChildAt(i);
+			String tagObj = (String) child.getTag();
+			if (tagObj != null && tagObj.equals(tag))
+			{
+				return child;
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -84,7 +98,7 @@ public class TransactionsActivity extends Activity
 		buildTitleLayout();
 		buildBodyLayout();
 	}
-	
+
 	@Override
 	public void onResume()
 	{
@@ -132,7 +146,7 @@ public class TransactionsActivity extends Activity
 			super.onBackPressed();
 		}
 	}
-
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
@@ -179,7 +193,7 @@ public class TransactionsActivity extends Activity
 
 		return true;
 	}
-	
+
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		switch (item.getItemId())
@@ -224,7 +238,7 @@ public class TransactionsActivity extends Activity
 		}
 		return true;
 	}
-
+	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent)
 	{
@@ -321,7 +335,7 @@ public class TransactionsActivity extends Activity
 			transactionsDisplayInterval = preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		}*/
 	}
-	
+
 	private void getTransactionsToDisplay()
 	{
 		int numTransactionsToRetrieve = Constants.MIN_TRANSACTIONS_TO_DISPLAY;
@@ -358,7 +372,7 @@ public class TransactionsActivity extends Activity
 			}
 		}
 	}
-
+	
 	private ArrayList<Transaction> getMoreTransactionsToDisplay()
 	{
 		int numTransactionsToRetrieve = Constants.MIN_TRANSACTIONS_TO_DISPLAY;
@@ -511,14 +525,14 @@ public class TransactionsActivity extends Activity
 		parentLayout.addView(linearLayout);
 		registerForContextMenu(linearLayout);
 	}
-	
+
 	private void displayNewTransaction(Transaction transaction)
 	{
 		int slNo = parentLayout.getChildCount() + 1;
 		displayNewTransaction(slNo, transaction);
 		parentLayout.getChildAt(slNo - 1).requestFocus();
 	}
-
+	
 	private void insertTransaction(int position, int slNo, Transaction transaction)
 	{
 		int colour;
@@ -580,20 +594,6 @@ public class TransactionsActivity extends Activity
 			TextView slnoView = (TextView) parentLayout.getChildAt(i).findViewById(R.id.slno);
 			slnoView.setText(String.valueOf(i + 1));
 		}
-	}
-
-	private void editDisplayedTransaction(Transaction transaction)
-	{
-		LinearLayout layout = (LinearLayout) parentLayout.findViewWithTag(transaction.createTag());
-
-		TextView dateView = (TextView) layout.findViewById(R.id.date);
-		dateView.setText(transaction.getDate().getDisplayDate());
-		
-		TextView particularsView = (TextView) layout.findViewById(R.id.particulars);
-		particularsView.setText(transaction.getDisplayParticular(TransactionsActivity.this));
-		
-		TextView amountView = (TextView) layout.findViewById(R.id.amount);
-		amountView.setText(formatterDisplay.format(transaction.getAmount()));
 	}
 	
 	/* *
@@ -1176,6 +1176,20 @@ public class TransactionsActivity extends Activity
 		bankDebitDialog.setNegativeButton("Cancel", null);
 	}*/
 	
+	private void editDisplayedTransaction(Transaction transaction)
+	{
+		LinearLayout layout = (LinearLayout) parentLayout.findViewWithTag(transaction.createTag());
+		
+		TextView dateView = (TextView) layout.findViewById(R.id.date);
+		dateView.setText(transaction.getDate().getDisplayDate());
+		
+		TextView particularsView = (TextView) layout.findViewById(R.id.particulars);
+		particularsView.setText(transaction.getDisplayParticular(TransactionsActivity.this));
+		
+		TextView amountView = (TextView) layout.findViewById(R.id.amount);
+		amountView.setText(formatterDisplay.format(transaction.getAmount()));
+	}
+
 	/**
 	 * Delete the transaction
 	 *
@@ -1467,7 +1481,7 @@ public class TransactionsActivity extends Activity
 				@Override
 				public void onNothingSelected(AdapterView<?> arg0)
 				{
-					
+				
 				}
 			});
 			String oldBankName = DatabaseManager.getBank(oldBankNo).getName();
@@ -1577,55 +1591,43 @@ public class TransactionsActivity extends Activity
 	private void applyFilters(Intent intent)
 	{
 		transactionsDisplayIntervalType = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE);
-		if (transactionsDisplayIntervalType.equals(Constants.VALUE_ALL))
+		switch (transactionsDisplayIntervalType)
 		{
-			transactionsDisplayIntervalMonthYear = null;
-			transactionsDisplayIntervalStartDate = null;
-			transactionsDisplayIntervalEndDate = null;
-		}
-		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_YEAR))
-		{
-			transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE_YEAR);
-			transactionsDisplayIntervalStartDate = null;
-			transactionsDisplayIntervalEndDate = null;
-		}
-		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_MONTH))
-		{
-			transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants.KEY_INTERVAL_TYPE_MONTH);
-			transactionsDisplayIntervalStartDate = null;
-			transactionsDisplayIntervalEndDate = null;
-		}
-		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
-		{
-			transactionsDisplayIntervalMonthYear = null;
-			transactionsDisplayIntervalStartDate = intent.getStringExtra(Constants.KEY_START_DATE);
-			transactionsDisplayIntervalEndDate = intent.getStringExtra(Constants.KEY_END_DATE);
-		}
-		else
-		{
-			Toast.makeText(TransactionsActivity.this, "Unknown Interval Type. Can't filter.", Toast.LENGTH_LONG).show();
-			transactionsDisplayIntervalMonthYear = null;
-			transactionsDisplayIntervalStartDate = null;
-			transactionsDisplayIntervalEndDate = null;
+			case Constants.VALUE_ALL:
+				transactionsDisplayIntervalMonthYear = null;
+				transactionsDisplayIntervalStartDate = null;
+				transactionsDisplayIntervalEndDate = null;
+				break;
+			case Constants.VALUE_YEAR:
+				transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants
+						.KEY_INTERVAL_TYPE_YEAR);
+				transactionsDisplayIntervalStartDate = null;
+				transactionsDisplayIntervalEndDate = null;
+				break;
+			case Constants.VALUE_MONTH:
+				transactionsDisplayIntervalMonthYear = intent.getStringExtra(Constants
+						.KEY_INTERVAL_TYPE_MONTH);
+				transactionsDisplayIntervalStartDate = null;
+				transactionsDisplayIntervalEndDate = null;
+				break;
+			case Constants.VALUE_CUSTOM:
+				transactionsDisplayIntervalMonthYear = null;
+				transactionsDisplayIntervalStartDate = intent.getStringExtra(Constants
+						.KEY_START_DATE);
+				transactionsDisplayIntervalEndDate = intent.getStringExtra(Constants.KEY_END_DATE);
+				break;
+			default:
+				Toast.makeText(TransactionsActivity.this, "Unknown Interval Type. Can't filter.",
+						Toast.LENGTH_LONG).show();
+				transactionsDisplayIntervalMonthYear = null;
+				transactionsDisplayIntervalStartDate = null;
+				transactionsDisplayIntervalEndDate = null;
+				break;
 		}
 
 		allowedTransactionTypes = intent.getStringArrayListExtra(Constants.KEY_ALLOWED_TRANSACTION_TYPES);
 		searchKeyword = intent.getStringExtra(Constants.KEY_SEARCH_KEYWORD);
 		refreshBodyLayout();
-	}
-
-	public static View findViewByTag(LinearLayout parentLayout, String tag)
-	{
-		for (int i = 0; i < parentLayout.getChildCount(); i++)
-		{
-			View child = parentLayout.getChildAt(i);
-			String tagObj = (String) child.getTag();
-			if (tagObj != null && tagObj.equals(tag))
-			{
-				return child;
-			}
-		}
-		return null;
 	}
 	
 	/* *

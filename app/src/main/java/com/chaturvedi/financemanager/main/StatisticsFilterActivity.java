@@ -14,9 +14,9 @@ import android.view.View;
 import android.widget.*;
 
 import com.chaturvedi.customviews.ExpandCollapseItem;
+import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
-import com.chaturvedi.financemanager.datastructures.Date;
 import com.chaturvedi.financemanager.functions.Constants;
 
 import java.text.DecimalFormat;

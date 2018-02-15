@@ -38,7 +38,8 @@
     <string name="currencySymbols">Currency Symbol</string>
     <string name="date">Date</string>
     <string name="debit">Debit</string>
-    <string name="export">Export Data To SD Card</string>
+	<string name="export">Export Data</string>
+	<string name="exportDataToSd">Export Data To SD Card</string>
     <string name="editWallets">Edit Wallets</string>
     <string name="editBanks">Edit Banks</string>
     <string name="editExpTypes">Edit Expenditure Types</string>
@@ -83,6 +84,7 @@
     <string name="label_bankName">Bank Name</string>
     <string name="label_bankSmsName">SMS Name</string>
     <string name="label_edit">Edit Data</string>
+	<string name="label_export">Export Data</string>
     <string name="label_extras">Extras</string>
     <string name="label_filterTransactions">Filter Transactions</string>
 	<string name="label_filterStatistics">Filter Statistics</string>
@@ -119,6 +121,9 @@
     <string name="walletName">Wallet Name</string>
     <string name="wallet_view">Amount In Wallet</string>
     <string name="welcomeNote">Welcome. Let\'s Begin</string>
+	<string name="includeTransactionType">Include Transaction Type</string>
+	<string name="includeRateQuantity">Include Rate and Quantity</string>
+	<string name="includeWalletBankBalances">Include Current Wallet and Bank Balances</string>
     <color name="background">#E2ECFF</color>
     <color name="background_top">#E2ECFF</color>
     <color name="background_middle">#E2ECFF</color>

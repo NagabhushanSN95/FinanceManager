@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@drawable/background_activity_default">
+
+	<TextView
+		android:id="@+id/krishna"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentTop="true"
+		android:layout_centerHorizontal="true"
+		android:text="@string/krishna"/>
+
+	<ScrollView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/krishna"
+		android:layout_marginLeft="10dp"
+		android:layout_marginRight="10dp"
+		android:layout_marginTop="20dp">
+
+		<RelativeLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+			<com.chaturvedi.customviews.IntervalSelector
+				android:id="@+id/intervalSelector"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_alignParentTop="true"
+				app:minYear="2015">
+			</com.chaturvedi.customviews.IntervalSelector>
+
+			<CheckBox
+				android:id="@+id/checkBox_includeTransactionType"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/intervalSelector"
+				android:layout_marginTop="20dp"
+				android:text="@string/includeTransactionType"/>
+
+			<CheckBox
+				android:id="@+id/checkBox_includeRateQuantity"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/checkBox_includeTransactionType"
+				android:layout_marginTop="20dp"
+				android:text="@string/includeRateQuantity"/>
+
+			<CheckBox
+				android:id="@+id/checkBox_includeWalletBankBalances"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/checkBox_includeRateQuantity"
+				android:layout_marginTop="20dp"
+				android:text="@string/includeWalletBankBalances"/>
+
+			<EditText
+				android:id="@+id/editText_exportFileName"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/checkBox_includeWalletBankBalances"
+				android:layout_marginTop="20dp"
+				android:hint="@string/hint_export_fileName"/>
+
+			<Button
+				android:id="@+id/button_export"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/editText_exportFileName"
+				android:layout_marginTop="20dp"
+				android:text="@string/export"/>
+		</RelativeLayout>
+	</ScrollView>
+
+
+</RelativeLayout>

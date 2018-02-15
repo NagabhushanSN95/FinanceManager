@@ -19,10 +19,10 @@ import android.widget.TableRow.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.datastructures.Date;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.functions.Utilities;
 

@@ -5,10 +5,27 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.widget.Toast;
 
+import com.chaturvedi.datastructures.Date;
+import com.chaturvedi.datastructures.Time;
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 
 public class Transaction implements Parcelable
 {
+	public static final Parcelable.Creator<Transaction> CREATOR = new Parcelable
+			.Creator<Transaction>()
+	{
+		@Override
+		public Transaction createFromParcel(Parcel in)
+		{
+			return new Transaction(in);
+		}
+		
+		@Override
+		public Transaction[] newArray(int size)
+		{
+			return new Transaction[size];
+		}
+	};
 	private int id;
 	private Time createdTime; // The Time At Which The Transaction Is Created
 	private Time modifiedTime; // The Time At Which The Transaction Was Last Modified
@@ -20,7 +37,7 @@ public class Transaction implements Parcelable
 	private double amount;
 	private boolean hidden;
 	private boolean includeInCounters;
-	
+
 	public Transaction(int id, Time createdTime, Time modifiedTime, Date date, String type, String particular, double rate, double quantity, double amount, boolean hidden, boolean includeInCounters)
 	{
 		this.id = id;
@@ -72,13 +89,23 @@ public class Transaction implements Parcelable
 		this.hidden = transaction.hidden;
 		this.includeInCounters = transaction.includeInCounters;
 	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setID(int id)
+	
+	// Parcelable Part
+	public Transaction(Parcel in)
 	{
-		this.id = id;
+		String[] data = new String[11];
+		in.readStringArray(data);
+		id = Integer.parseInt(data[0]);
+		createdTime = new Time(data[1]);
+		modifiedTime = new Time(data[2]);
+		date = new Date(data[3]);
+		type = data[4];
+		particular = data[5];
+		rate = Double.parseDouble(data[6]);
+		quantity = Double.parseDouble(data[7]);
+		amount = Double.parseDouble(data[8]);
+		hidden = Boolean.parseBoolean(data[9]);
+		includeInCounters = Boolean.parseBoolean(data[10]);
 	}
 
 	/**
@@ -87,6 +114,22 @@ public class Transaction implements Parcelable
 	public int getID()
 	{
 		return id;
+	}
+	
+	/**
+	 * @param id the id to set
+	 */
+	public void setID(int id)
+	{
+		this.id = id;
+	}
+	
+	/**
+	 * @return the time at which the transaction is created
+	 */
+	public Time getCreatedTime()
+	{
+		return createdTime;
 	}
 
 	/**
@@ -100,9 +143,9 @@ public class Transaction implements Parcelable
 	/**
 	 * @return the time at which the transaction is created
 	 */
-	public Time getCreatedTime()
+	public Time getModifiedTime()
 	{
-		return createdTime;
+		return modifiedTime;
 	}
 
 	/**
@@ -114,13 +157,13 @@ public class Transaction implements Parcelable
 	}
 
 	/**
-	 * @return the time at which the transaction is created
+	 * @return the date
 	 */
-	public Time getModifiedTime()
+	public Date getDate()
 	{
-		return modifiedTime;
+		return date;
 	}
-
+	
 	/**
 	 * @param date the date to set
 	 */
@@ -130,13 +173,13 @@ public class Transaction implements Parcelable
 	}
 
 	/**
-	 * @return the date
+	 * @return the type
 	 */
-	public Date getDate()
+	public String getType()
 	{
-		return date;
+		return type;
 	}
-
+	
 	/**
 	 * @param type the type to set
 	 */
@@ -146,27 +189,19 @@ public class Transaction implements Parcelable
 	}
 
 	/**
-	 * @return the type
+	 * @return the particular
 	 */
-	public String getType()
+	public String getParticular()
 	{
-		return type;
+		return particular;
 	}
-
+	
 	/**
 	 * @param particular the particular to set
 	 */
 	public void setParticular(String particular)
 	{
 		this.particular = particular;
-	}
-
-	/**
-	 * @return the particular
-	 */
-	public String getParticular()
-	{
-		return particular;
 	}
 
 	/**
@@ -209,27 +244,19 @@ public class Transaction implements Parcelable
 	}
 
 	/**
-	 * @param rate the rate to set
-	 */
-	public void setRate(double rate)
-	{
-		this.rate = rate;
-	}
-
-	/**
 	 * @return the rate
 	 */
 	public double getRate()
 	{
 		return rate;
 	}
-
+	
 	/**
-	 * @param quantity the quantity to set
+	 * @param rate the rate to set
 	 */
-	public void setQuantity(double quantity)
+	public void setRate(double rate)
 	{
-		this.quantity = quantity;
+		this.rate = rate;
 	}
 
 	/**
@@ -239,15 +266,15 @@ public class Transaction implements Parcelable
 	{
 		return quantity;
 	}
-
+	
 	/**
-	 * @param amount the amount to set
+	 * @param quantity the quantity to set
 	 */
-	public void setAmount(double amount)
+	public void setQuantity(double quantity)
 	{
-		this.amount = amount;
+		this.quantity = quantity;
 	}
-
+	
 	/**
 	 * @return the amount
 	 */
@@ -256,19 +283,22 @@ public class Transaction implements Parcelable
 		return amount;
 	}
 	
-	public void setHidden(boolean hidden)
+	/**
+	 * @param amount the amount to set
+	 */
+	public void setAmount(double amount)
 	{
-		this.hidden = hidden;
+		this.amount = amount;
 	}
-
+	
 	public boolean isHidden()
 	{
 		return hidden;
 	}
 	
-	public void setIncludeInCounters(boolean includeInCounters)
+	public void setHidden(boolean hidden)
 	{
-		this.includeInCounters = includeInCounters;
+		this.hidden = hidden;
 	}
 	
 	public boolean isIncludeInCounters()
@@ -276,6 +306,11 @@ public class Transaction implements Parcelable
 		return includeInCounters;
 	}
 	
+	public void setIncludeInCounters(boolean includeInCounters)
+	{
+		this.includeInCounters = includeInCounters;
+	}
+
 	/**
 	 * Checks if the passed transaction is equal to this transaction except Modified Time, Particulars and Hidden
 	 * This is used while editing a transaction. If these are the only changes, only transaction needs to be updated and
@@ -322,35 +357,12 @@ public class Transaction implements Parcelable
 		{
 			return false;
 		}
-		if(includeInCounters != transaction2.includeInCounters)
-		{
-			return false;
-		}
-
-		return true;
+		return includeInCounters == transaction2.includeInCounters;
 	}
 
 	public String createTag()
 	{
 		return date.getYear() + "-" + id;
-	}
-
-	// Parcelable Part
-	public Transaction(Parcel in)
-	{
-		String[] data = new String[11];
-		in.readStringArray(data);
-		id = Integer.parseInt(data[0]);
-		createdTime = new Time(data[1]);
-		modifiedTime = new Time(data[2]);
-		date = new Date(data[3]);
-		type = data[4];
-		particular = data[5];
-		rate = Double.parseDouble(data[6]);
-		quantity = Double.parseDouble(data[7]);
-		amount = Double.parseDouble(data[8]);
-		hidden = Boolean.parseBoolean(data[9]);
-		includeInCounters = Boolean.parseBoolean(data[10]);
 	}
 
 	@Override
@@ -367,20 +379,5 @@ public class Transaction implements Parcelable
 				String.valueOf(includeInCounters)};
 		dest.writeStringArray(data);
 	}
-
-	public static final Parcelable.Creator<Transaction> CREATOR = new Parcelable.Creator<Transaction>()
-	{
-		@Override
-		public Transaction createFromParcel(Parcel in)
-		{
-			return new Transaction(in);
-		}
-
-		@Override
-		public Transaction[] newArray(int size)
-		{
-			return new Transaction[size];
-		}
-	};
 
 }

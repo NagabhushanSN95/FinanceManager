@@ -104,3 +104,19 @@
 4.3.5 (129)
  - Bug Fix: When editing a Bank, if the name is unchanged, it used to prompt for changing name. Fixed.
  - Gradle upgraded to 3.0.1
+
+4.3.6 (130)
+ - MinSdkVersion changed to 16
+ - TargetSdkVersion changed to 24
+ - com.chaturvedi.datastructures package created.
+ - Month enum added in com.chaturvedi.datastructures package
+ - Date and Time classes moved from com.chaturvedi.financemanager.datastructures package to
+        com.chaturvedi.datastructures
+ - IntervalSelector custom widget added in com.chaturvedi.customviews
+ - ExportActivity Added. Data of any interval can be exported.
+ - Added few utility methods in DatabaseAdapter.
+ - The generic getTransactions() method in DatabaseAdaptor has been deprecated. A similar method is
+        added which uses Date objects instead of Strings for start and end dates.
+ - isLeapYear() method added in com.chaturvedi.datastructures.Date class
+ - Export folder changed to "Android/Chaturvedi/Finance Manager"
+ - Minor bug fixes and enhancements

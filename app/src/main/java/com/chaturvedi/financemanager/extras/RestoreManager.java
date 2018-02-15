@@ -5,26 +5,15 @@ import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.chaturvedi.financemanager.datastructures.Bank;
-import com.chaturvedi.financemanager.datastructures.Counters;
-import com.chaturvedi.financemanager.datastructures.Date;
-import com.chaturvedi.financemanager.datastructures.ExpenditureType;
-import com.chaturvedi.financemanager.datastructures.Template;
-import com.chaturvedi.financemanager.datastructures.Transaction;
-import com.chaturvedi.financemanager.datastructures.Wallet;
+import com.chaturvedi.datastructures.Date;
+import com.chaturvedi.financemanager.datastructures.*;
 import com.chaturvedi.financemanager.functions.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
-
-import static com.chaturvedi.financemanager.R.string.APP_VERSION_107;
 
 public class RestoreManager
 {

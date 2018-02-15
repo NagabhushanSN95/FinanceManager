@@ -1,7 +1,5 @@
 package com.chaturvedi.customviews;
 
-import java.util.ArrayList;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,6 +9,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 
 public class SettingsLayout extends LinearLayout
 {
@@ -146,14 +146,14 @@ public class SettingsLayout extends LinearLayout
 		return options[optionSelected];
 	}
 	
-	public interface OnSettingChangedListener
-	{
-		public void onSettingChanged();
-	}
-	
 	public void setSettingChangedListener(OnSettingChangedListener listener)
 	{
 		settingListener = listener;
+	}
+	
+	public interface OnSettingChangedListener
+	{
+		void onSettingChanged();
 	}
 
 }

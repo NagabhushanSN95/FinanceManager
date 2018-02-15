@@ -10,10 +10,14 @@ import android.view.View;
 import android.widget.*;
 
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
+import com.chaturvedi.datastructures.Date;
+import com.chaturvedi.datastructures.Time;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.datastructures.*;
+import com.chaturvedi.financemanager.datastructures.MoneyStorage;
+import com.chaturvedi.financemanager.datastructures.Template;
+import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
 
