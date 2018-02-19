@@ -8,7 +8,6 @@ import android.content.res.TypedArray;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
@@ -61,7 +60,6 @@ public class IntervalSelector extends LinearLayout
 		if (minYear != null)
 		{
 			yearMinValue = Integer.parseInt(minYear);
-			Log.d("SNB", "YearMinValue set to: " + yearMinValue);
 		}
 		else
 		{
@@ -163,7 +161,6 @@ public class IntervalSelector extends LinearLayout
 		ArrayAdapter<String> yearAdapter = new ArrayAdapter<>(getContext(), android.R.layout
 				.simple_spinner_item, years);
 		yearSelector.setAdapter(yearAdapter);
-		Log.d("SNB", "Length: " + years.length);
 		yearSelector.setSelection(years.length - 1);
 		
 		fromDateTextView.setText(new Date(yearMinValue, 1, 1).getDisplayDate());
@@ -349,6 +346,11 @@ public class IntervalSelector extends LinearLayout
 		return (IntervalType) intervalTypeSelector.getSelectedItem();
 	}
 	
+	public void setIntervalType(IntervalType intervalType)
+	{
+		intervalTypeSelector.setSelection(intervalType.getOrdinal());
+	}
+	
 	@SuppressWarnings("unused")
 	public Month getSelectedMonth()
 	{
@@ -380,22 +382,46 @@ public class IntervalSelector extends LinearLayout
 	
 	public enum IntervalType
 	{
-		INTERVAL_MONTH("Month"),
-		INTERVAL_YEAR("Year"),
-		INTERVAL_ALL("All"),
-		INTERVAL_CUSTOM("Custom");
+		INTERVAL_MONTH("Month", 0),
+		INTERVAL_YEAR("Year", 1),
+		INTERVAL_ALL("All", 2),
+		INTERVAL_CUSTOM("Custom", 3);
 		
 		private String value;
+		private int ordinal;
 		
-		IntervalType(String value)
+		IntervalType(String value, int ordinal)
 		{
 			this.value = value;
+			this.ordinal = ordinal;
+		}
+		
+		public static IntervalType fromString(String value)
+		{
+			for (IntervalType intervalType : IntervalType.values())
+			{
+				if (intervalType.toString().equals(value))
+				{
+					return intervalType;
+				}
+			}
+			throw new RuntimeException("Invalid Interval Type: " + value);
 		}
 		
 		@Override
 		public String toString()
 		{
 			return value;
+		}
+		
+		public String getValue()
+		{
+			return value;
+		}
+		
+		public int getOrdinal()
+		{
+			return ordinal;
 		}
 	}
 	

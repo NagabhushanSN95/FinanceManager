@@ -120,3 +120,14 @@
  - isLeapYear() method added in com.chaturvedi.datastructures.Date class
  - Export folder changed to "Android/Chaturvedi/Finance Manager"
  - Minor bug fixes and enhancements
+
+4.3.7 (131)
+ - IndefiniteWaitDialog renamed to IndefiniteWaitDialogBuilder
+ - ProgressiveWaitDialogBuilder added
+ - export package created in com.chaturvedi.financemanager.extras
+ - Exporting to PDF added. IText library added.
+ - PdfExportManager and HtmlExportManager added.
+ - Exporting will be done in background thread. Progress will be shown on a dialog
+ - Few Exporting Preferences will be saved and restored when ExportActivity is reopened
+ - UI improvement in SummaryActivity. MarginTop set to 5% of screen height
+ - Bug Fix: App used to crash when transferring from Bank to Bank. Fixed.

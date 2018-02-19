@@ -15,14 +15,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.RelativeLayout;
+import android.widget.*;
 import android.widget.RelativeLayout.LayoutParams;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.chaturvedi.customviews.IndefiniteWaitDialog;
+import com.chaturvedi.customviews.IndefiniteWaitDialogBuilder;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.datastructures.ExpenditureType;
@@ -38,43 +34,41 @@ public class StartupActivity extends FragmentActivity
 	private static final int CODE_FILE_CHOOSER = 102;
 
 	private static final String ALL_PREFERENCES = "AllPreferences";
-	private SharedPreferences preferences;
 	private static final String KEY_APP_VERSION = "AppVersionNo";
-	private int CURRENT_APP_VERSION_NO;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
-	private int splashDuration = 5000;
 	private static final String KEY_QUOTE_NO = "QuoteNo";
 	private static final String KEY_NUM_EXP_TYPES = "NumExpTypes";
-	private final int NUM_EXP_TYPES=5;
 	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
 	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
 	private static final String KEY_RESPOND_BANK_SMS = "RespondToBankSms";
 	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
 	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
-	
+	private static final String setupInfoString = "You can setup your Finance Manager Account by " +
+			"adding the\n" +
+			"1) Amount in your wallet\n" +
+			"2) Setup Bank Accounts if any\n" +
+			"3) Configure Major types of Expenditures you make\n" +
+													"4) Setup your Preferences\n";
+	private static final String restoreInfoString = "If you have Finance Manager before and backed up your data,"+
+			"you can restore the data here.\n" +
+													"All your Transactions, Bank Details will be restored";
+	private static final String skipInfoString = "You can skip the setup and straight away start using the App\n" +
+			"1) Your Wallet Balance will be set to zero\n" +
+			"2) No Bank Accounts will be set up\n" +
+			"3) The Expenditure Types will be set to default\n" +
+													"4) All Preferences will be set to default\n";
+	private final int NUM_EXP_TYPES = 5;
+	private SharedPreferences preferences;
+	private int CURRENT_APP_VERSION_NO;
+	private int splashDuration = 5000;
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
 	private int WIDTH_BUTTON;
 	private int HEIGHT_BUTTON;
-	
 	private Intent setupIntent;
 	private Intent summaryIntent;
-	
-	private static final String setupInfoString = "You can setup your Finance Manager Account by adding the\n" + 
-													"1) Amount in your wallet\n" + 
-													"2) Setup Bank Accounts if any\n" + 
-													"3) Configure Major types of Expenditures you make\n" + 
-													"4) Setup your Preferences\n";
-	private static final String restoreInfoString = "If you have Finance Manager before and backed up your data,"+
-													"you can restore the data here.\n" + 
-													"All your Transactions, Bank Details will be restored";
-	private static final String skipInfoString = "You can skip the setup and straight away start using the App\n" +
-													"1) Your Wallet Balance will be set to zero\n" + 
-													"2) No Bank Accounts will be set up\n" + 
-													"3) The Expenditure Types will be set to default\n" + 
-													"4) All Preferences will be set to default\n";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -358,8 +352,8 @@ public class StartupActivity extends FragmentActivity
 	{
 		// TODO: CREATE a new Activity for Restoring. Give 2 options there. To select Data Backup file
 		// TODO: and settings backup file. Restore both
-
-		IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(this);
+		
+		IndefiniteWaitDialogBuilder restoreDialogBuilder = new IndefiniteWaitDialogBuilder(this);
 		restoreDialogBuilder.setWaitText("Restoring Data. This may take few minutes depending on the Size of your Data");
 		restoreDialogBuilder.setCancelable(false);
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();

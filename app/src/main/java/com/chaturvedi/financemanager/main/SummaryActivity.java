@@ -3,10 +3,6 @@
 package com.chaturvedi.financemanager.main;
 
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityOptions;
@@ -30,27 +26,36 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
-import com.chaturvedi.financemanager.extras.BackupManager;
-import com.chaturvedi.financemanager.datastructures.Bank;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.datastructures.Bank;
 import com.chaturvedi.financemanager.datastructures.Wallet;
 import com.chaturvedi.financemanager.edit.EditActivity;
+import com.chaturvedi.financemanager.extras.BackupManager;
 import com.chaturvedi.financemanager.extras.ExtrasActivity;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.HelpActivity;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+
 public class SummaryActivity extends Activity
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
-	private SharedPreferences preferences;
 	private static final String KEY_CURRENCY_SYMBOL = "CurrencySymbol";
-	private String currencySymbol = " ";
 	private static final String KEY_TRANSACTIONS_DISPLAY_INTERVAL = "TransactionsDisplayInterval";
-	private String transactionsDisplayInterval = "Month";
 	private static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
 	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
-	
+	private static final int DOUBLE_BACK_PRESS_INTERVAL = 2000;
+	private static LinearLayout parentLayout;
+	private static LayoutParams parentLayoutParams;
+	private static ArrayList<LinearLayout> layouts;
+	private static ArrayList<TextView> nameViews;
+	private static ArrayList<TextView> amountViews;
+	private SharedPreferences preferences;
+	private String currencySymbol = " ";
+	private String transactionsDisplayInterval = "Month";
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
@@ -61,24 +66,14 @@ public class SummaryActivity extends Activity
 	private int WIDTH_AMOUNT_VIEWS;
 	private int MARGIN_LEFT_NAME_VIEWS;
 	private int HEIGHT_TRANSACTION_BUTTONS;
-	
-	private static LinearLayout parentLayout;
-	private static LayoutParams parentLayoutParams;
-	private static ArrayList<LinearLayout> layouts;
-	private static ArrayList<TextView> nameViews;
-	private static ArrayList<TextView> amountViews;
-	
 	private Intent transactionsIntent;
 	private Intent editIntent;
 	private Intent statisticsIntent;
 	private Intent settingsIntent;
 	private Intent helpIntent;
 	private Intent extrasIntent;
-	
 	private Intent smsIntent;
-
 	private long lastBackPressedTime;
-	private static final int DOUBLE_BACK_PRESS_INTERVAL = 2000;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -231,13 +226,11 @@ public class SummaryActivity extends Activity
 	 */
 	private void calculateDimensions()
 	{
-		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SummaryActivity.this);
-
 		displayMetrics=new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		screenWidth=displayMetrics.widthPixels;
 		screenHeight=displayMetrics.heightPixels;
-		MARGIN_TOP_PARENT_LAYOUT=(screenHeight-(databaseAdapter.getNumVisibleBanks()*100))/6;
+		MARGIN_TOP_PARENT_LAYOUT = screenHeight * 5 / 100;
 		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*5/100;
 		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*5/100;
 		WIDTH_NAME_VIEWS=screenWidth*55/100;

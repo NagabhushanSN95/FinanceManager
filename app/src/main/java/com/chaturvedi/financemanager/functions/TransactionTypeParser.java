@@ -3,7 +3,6 @@
 package com.chaturvedi.financemanager.functions;
 
 import android.content.Context;
-import android.widget.Toast;
 
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.datastructures.Bank;
@@ -116,40 +115,40 @@ public class TransactionTypeParser
 			}
 			else
 			{
-				Toast.makeText(context, "Unknown Transfer Source", Toast.LENGTH_LONG).show();
+				throw new RuntimeException("Unknown Transfer Source. Type: " + type);
 			}
-
-			if(type.substring(18,24).equals("Wallet"))
-			{
-				isTransferDestinationWallet = true;
-				int walletID = Integer.parseInt(type.substring(24,26));
-				transferDestinationWallet = databaseAdapter.getWallet(walletID);
-				transferDestinationName = transferDestinationWallet.getName();
-			}
-			else if(type.substring(16,22).equals("Wallet"))
-			{
-				isTransferDestinationWallet = true;
-				int walletID = Integer.parseInt(type.substring(22,24));
-				transferDestinationWallet = databaseAdapter.getWallet(walletID);
-				transferDestinationName = transferDestinationWallet.getName();
-			}
-			else if(type.substring(18,22).equals("Bank"))
+			
+			if (type.substring(16, 20).equals("Bank"))
 			{
 				isTransferDestinationBank = true;
-				int bankID = Integer.parseInt(type.substring(22,24));
+				int bankID = Integer.parseInt(type.substring(20, 22));
 				transferDestinationBank = databaseAdapter.getBank(bankID);
 				transferDestinationName = transferDestinationBank.getName();
 			}
-			else if(type.substring(16,20).equals("Bank"))
+			else if (type.substring(18, 22).equals("Bank"))
 			{
 				isTransferDestinationBank = true;
-				int bankID = Integer.parseInt(type.substring(20,22));
+				int bankID = Integer.parseInt(type.substring(22, 24));
 				transferDestinationBank = databaseAdapter.getBank(bankID);
 				transferDestinationName = transferDestinationBank.getName();
+			}
+			else if (type.substring(16, 22).equals("Wallet"))
+			{
+				isTransferDestinationWallet = true;
+				int walletID = Integer.parseInt(type.substring(22, 24));
+				transferDestinationWallet = databaseAdapter.getWallet(walletID);
+				transferDestinationName = transferDestinationWallet.getName();
+			}
+			else if (type.substring(18, 24).equals("Wallet"))
+			{
+				isTransferDestinationWallet = true;
+				int walletID = Integer.parseInt(type.substring(24, 26));
+				transferDestinationWallet = databaseAdapter.getWallet(walletID);
+				transferDestinationName = transferDestinationWallet.getName();
 			}
 			else
 			{
-				Toast.makeText(context, "Unknown Transfer Destination", Toast.LENGTH_LONG).show();
+				throw new RuntimeException("Unknown Transfer Destination. Type: " + type);
 			}
 		}
 	}

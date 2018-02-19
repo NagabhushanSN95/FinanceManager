@@ -28,6 +28,13 @@ public class Constants
 	public static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
 	public static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	public static final String KEY_DAILY_BACKUP = "DailyBackup";
+	public static final String KEY_EXPORT_INTERVAL_TYPE = "ExportIntervalType";
+	public static final String KEY_EXPORT_INCLUDE_TRANSACTION_TYPE =
+			"ExportIncludeTransactionType";
+	public static final String KEY_EXPORT_INCLUDE_RATE_QUANTITY = "ExportIncludeRateQuantity";
+	public static final String KEY_EXPORT_INCLUDE_CURRENT_BALANCES =
+			"ExportIncludeCurrentWalletBankBalances";
+	public static final String KEY_EXPORT_FILE_FORMAT = "ExportFileFormat";
 
 	public static final int REQUEST_CODE_ADD_TRANSACTION = 101;
 	public static final int REQUEST_CODE_EDIT_TRANSACTION = 102;

@@ -16,10 +16,11 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.chaturvedi.customviews.IndefiniteWaitDialog;
+import com.chaturvedi.customviews.IndefiniteWaitDialogBuilder;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
+import com.chaturvedi.financemanager.extras.export.ExportActivity;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.AboutActivity;
 
@@ -137,7 +138,8 @@ public class ExtrasActivity extends Activity
 	
 	private void backupData()
 	{
-		IndefiniteWaitDialog backupDialogBuilder = new IndefiniteWaitDialog(ExtrasActivity.this);
+		IndefiniteWaitDialogBuilder backupDialogBuilder = new IndefiniteWaitDialogBuilder
+				(ExtrasActivity.this);
 		backupDialogBuilder.setTitle("Backing Up Data to SD Card");
 		backupDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		backupDialogBuilder.setCancelable(false);
@@ -210,8 +212,8 @@ public class ExtrasActivity extends Activity
 		// TODO: CREATE a new Activity for Restoring. Give 2 options there. To select Data Backup file
 		
 		// and settings backup file. Restore both
-
-		IndefiniteWaitDialog restoreDialogBuilder = new IndefiniteWaitDialog(this);
+		
+		IndefiniteWaitDialogBuilder restoreDialogBuilder = new IndefiniteWaitDialogBuilder(this);
 		restoreDialogBuilder.setTitle("Restoring Data");
 		restoreDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		restoreDialogBuilder.setCancelable(false);
