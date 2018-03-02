@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
 
+import com.chaturvedi.customviews.HintAdapter;
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.datastructures.Time;
@@ -66,12 +67,14 @@ public class ExpenseLayout extends RelativeLayout
 		ArrayList<String> expenditureTypesList = databaseAdapter.getAllVisibleExpenditureTypeNames();
 
 		expenseSourcesSpinner = (Spinner) findViewById(R.id.spinner_expenseSource);
-		final ArrayAdapter<String> expenseSourcesAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+		final HintAdapter expenseSourcesAdapter = new HintAdapter(getContext(), android.R.layout
+				.simple_spinner_item,
 				expenseSourcesList);
 		expenseSourcesSpinner.setAdapter(expenseSourcesAdapter);
+		expenseSourcesSpinner.setSelection(expenseSourcesAdapter.getCount());
 		particularsEditText = (MyAutoCompleteTextView) findViewById(R.id.editText_particulars);
 		expenseTypeSpinner = (Spinner) findViewById(R.id.spinner_expenseType);
-		final ArrayAdapter<String> expenseTypeAdapter = new ArrayAdapter<String>(getContext(),
+		final HintAdapter expenseTypeAdapter = new HintAdapter(getContext(),
 				android.R.layout.simple_spinner_item, expenditureTypesList);
 		expenseTypeSpinner.setAdapter(expenseTypeAdapter);
 		rateEditText = (EditText) findViewById(R.id.editText_rate);
@@ -89,11 +92,11 @@ public class ExpenseLayout extends RelativeLayout
 				myCalendar.set(Calendar.MONTH, monthOfYear);
 				myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 				Date date1 = new Date(myCalendar);
-				dateEditText.setText(date1.getDisplayDate());
+				dateEditText.setText(date1.getDisplayDate("/"));
 			}
 		};
 		dateEditText = (EditText) findViewById(R.id.editText_date);
-		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
+		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate("/"));
 		dateEditText.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -107,8 +110,8 @@ public class ExpenseLayout extends RelativeLayout
 		});
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
 		excludeInCountersCheckBox = (CheckBox) findViewById(R.id.checkBox_excludeFromCounters);
-
-		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(getContext(),
+		
+		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<>(getContext(),
 				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleDebitTemplatesNames());
 		particularsEditText.setAdapter(templatesAdapter);
 		particularsEditText.setThreshold(1);
@@ -160,7 +163,7 @@ public class ExpenseLayout extends RelativeLayout
 		rateEditText.setText(String.valueOf(transaction.getRate()));
 		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
 		amountEditText.setText(String.valueOf(transaction.getAmount()));
-		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate()));
+		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate("/")));
 		excludeInCountersCheckBox.setChecked(!transaction.isIncludeInCounters());
 	}
 
@@ -202,6 +205,18 @@ public class ExpenseLayout extends RelativeLayout
 		{
 			// Both rate and amount are empty
 			Toast.makeText(getContext(), "Please enter Rate or Amount", Toast.LENGTH_LONG).show();
+			return null;
+		}
+		if (expenseSourcesSpinner.getSelectedItem().equals(HintAdapter.HINT_TEXT))
+		{
+			Toast.makeText(getContext(), "Please select a wallet or bank where the money is " +
+					"debited", Toast.LENGTH_LONG).show();
+			return null;
+		}
+		if (expenseTypeSpinner.getSelectedItem().equals(HintAdapter.HINT_TEXT))
+		{
+			Toast.makeText(getContext(), "Please select an expenditure type", Toast.LENGTH_LONG)
+					.show();
 			return null;
 		}
 

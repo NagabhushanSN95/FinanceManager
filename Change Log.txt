@@ -91,6 +91,7 @@
  - Fixed a potential bug in retrieving time. Earlier time was retrieved in 12-hr format and no
         am/pm was stored. Now time is retrieved in 24-hr format.
  - Change Log file formatted.
+ - App released.
 
 4.3.3 (127)
  - FilterActivity.java renamed to TransactionsFilterActivtity.java
@@ -131,3 +132,10 @@
  - Few Exporting Preferences will be saved and restored when ExportActivity is reopened
  - UI improvement in SummaryActivity. MarginTop set to 5% of screen height
  - Bug Fix: App used to crash when transferring from Bank to Bank. Fixed.
+ - App released.
+
+4.3.8 (132)
+ - Update125to131 which was missing in previous release added.
+ - Toast message saying the app is updating will be displayed from SplashActivity instead of individual classes
+ - HintAdapter custom class added in com.chaturvedi.customviews. Shows "Select" at first and it will disappear once a selection is made
+ - IncomeLayout, ExpenseLayout and TransferLayout updated to use HintAdapter

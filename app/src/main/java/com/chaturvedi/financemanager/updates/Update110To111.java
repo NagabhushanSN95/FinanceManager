@@ -10,8 +10,6 @@ import android.widget.Toast;
 
 public class Update110To111 extends SQLiteOpenHelper
 {
-	private Context context;
-
 	// Database Version
 	private static final int DATABASE_VERSION = 1;
 	// Database Name
@@ -21,12 +19,12 @@ public class Update110To111 extends SQLiteOpenHelper
 	private static final String KEY_EXPENDITURE_TYPE_NAME = "expenditure_type_name";
 	private static final String KEY_NAME = "name";
 	private static final String KEY_DELETED = "deleted";
+	private Context context;
 
 	public Update110To111(Context cxt)
 	{
 		super(cxt, DATABASE_NAME, null, DATABASE_VERSION);
 		context = cxt;
-		Toast.makeText(context, "Updating...", Toast.LENGTH_LONG).show();
 
 		updateDatabase();
 

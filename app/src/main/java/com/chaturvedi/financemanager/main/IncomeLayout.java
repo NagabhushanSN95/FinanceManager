@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
 
+import com.chaturvedi.customviews.HintAdapter;
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.datastructures.Time;
@@ -63,9 +64,11 @@ public class IncomeLayout extends RelativeLayout
 		incomeDestinationsList.addAll(databaseAdapter.getAllVisibleBanksNames());
 
 		incomeDestinationSpinner = (Spinner) this.findViewById(R.id.spinner_incomeDestination);
-		final ArrayAdapter<String> incomeDestinationAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+		final HintAdapter incomeDestinationAdapter = new HintAdapter(getContext(), android.R
+				.layout.simple_spinner_item,
 				incomeDestinationsList);
 		incomeDestinationSpinner.setAdapter(incomeDestinationAdapter);
+		incomeDestinationSpinner.setSelection(incomeDestinationAdapter.getCount());    // Set Hint
 		particularsEditText = (MyAutoCompleteTextView) findViewById(R.id.editText_particulars);
 		rateEditText = (EditText) findViewById(R.id.editText_rate);
 		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
@@ -81,11 +84,11 @@ public class IncomeLayout extends RelativeLayout
 				myCalendar.set(Calendar.MONTH, monthOfYear);
 				myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 				Date date1 = new Date(myCalendar);
-				dateEditText.setText(date1.getDisplayDate());
+				dateEditText.setText(date1.getDisplayDate("/"));
 			}
 		};
 		dateEditText = (EditText) findViewById(R.id.editText_date);
-		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
+		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate("/"));
 		dateEditText.setOnClickListener(new OnClickListener()
 		{
 			@Override
@@ -99,8 +102,8 @@ public class IncomeLayout extends RelativeLayout
 		});
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
 		excludeInCountersCheckBox = (CheckBox) findViewById(R.id.checkBox_excludeFromCounters);
-
-		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(getContext(),
+		
+		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<>(getContext(),
 				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleCreditTemplatesNames());
 		particularsEditText.setAdapter(templatesAdapter);
 		particularsEditText.setThreshold(1);
@@ -147,7 +150,7 @@ public class IncomeLayout extends RelativeLayout
 		rateEditText.setText(String.valueOf(transaction.getRate()));
 		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
 		amountEditText.setText(String.valueOf(transaction.getAmount()));
-		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate()));
+		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate("/")));
 		excludeInCountersCheckBox.setChecked(!transaction.isIncludeInCounters());
 	}
 
@@ -194,6 +197,12 @@ public class IncomeLayout extends RelativeLayout
 		{
 			// Both rate and amount are empty
 			Toast.makeText(getContext(), "Please enter Rate or Amount", Toast.LENGTH_LONG).show();
+			return null;
+		}
+		if (incomeDestinationSpinner.getSelectedItem().equals(HintAdapter.HINT_TEXT))
+		{
+			Toast.makeText(getContext(), "Please select a wallet or bank where the money is " +
+					"credited", Toast.LENGTH_LONG).show();
 			return null;
 		}
 

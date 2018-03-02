@@ -1,16 +1,5 @@
 package com.chaturvedi.financemanager.updates;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import com.chaturvedi.financemanager.R;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -19,20 +8,23 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.widget.Toast;
 
+import com.chaturvedi.financemanager.R;
+
+import java.io.*;
+import java.util.ArrayList;
+
 public class Update68To88 extends SQLiteOpenHelper		// To create Templates Table
 {
-	private Context context;
-	private int CURRENT_APP_VERSION_NO;
-
 	private static final int DATABASE_VERSION = 1;
 	private static final String DATABASE_NAME = "expenditureManager";
+	private Context context;
+	private int CURRENT_APP_VERSION_NO;
 	public Update68To88(Context cxt)
 	{
 		super(cxt, DATABASE_NAME, null, DATABASE_VERSION);
 		context = cxt;
 		CURRENT_APP_VERSION_NO = Integer.parseInt(context.getResources().getString(R.string.currentAppVersion));
 		
-		Toast.makeText(context, "Updating The App", Toast.LENGTH_LONG).show();
 		updateDatabase();
 		updateSharedPreferences();
 		updateBackups();
@@ -164,14 +156,8 @@ public class Update68To88 extends SQLiteOpenHelper		// To create Templates Table
 			// From DatabaseInitialized to Database.
 			// So, check if that preferences file is there 
 			oldPreferences = context.getSharedPreferences(SHARED_PREFERENCES_DATABASE_INITIALIZED, 0);
-			if(oldPreferences.contains(KEY_DATABASE_INITIALIZED_OLD))
-			{
-				databaseInitialized = true;
-			}
-			else
-			{
-				databaseInitialized = false;
-			}
+			
+			databaseInitialized = oldPreferences.contains(KEY_DATABASE_INITIALIZED_OLD);
 		}
 		editor.putBoolean(KEY_DATABASE_INITIALIZED, databaseInitialized);
 		oldPreferences.edit().clear();							// Delete All Old Preferences

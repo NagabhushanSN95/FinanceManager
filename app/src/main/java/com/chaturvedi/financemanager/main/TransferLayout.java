@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
 
+import com.chaturvedi.customviews.HintAdapter;
 import com.chaturvedi.customviews.MyAutoCompleteTextView;
 import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.datastructures.Time;
@@ -68,13 +69,17 @@ public class TransferLayout extends RelativeLayout
 		transferDestinationsList.addAll(databaseAdapter.getAllVisibleBanksNames());
 
 		transferSourcesSpinner = (Spinner) findViewById(R.id.spinner_transferSource);
-		final ArrayAdapter<String> transferSourcesAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+		final HintAdapter transferSourcesAdapter = new HintAdapter(getContext(), android.R.layout
+				.simple_spinner_item,
 				transferSourcesList);
 		transferSourcesSpinner.setAdapter(transferSourcesAdapter);
+		transferSourcesSpinner.setSelection(transferSourcesAdapter.getCount());
 		transferDestinationsSpinner = (Spinner) findViewById(R.id.spinner_transferDestination);
-		final ArrayAdapter<String> transferDestinationsAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item,
+		final HintAdapter transferDestinationsAdapter = new HintAdapter(getContext(), android.R
+				.layout.simple_spinner_item,
 				transferDestinationsList);
 		transferDestinationsSpinner.setAdapter(transferDestinationsAdapter);
+		transferDestinationsSpinner.setSelection(transferDestinationsAdapter.getCount());
 		particularsEditText = (MyAutoCompleteTextView) findViewById(R.id.editText_particulars);
 		rateEditText = (EditText) findViewById(R.id.editText_rate);
 		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
@@ -90,11 +95,11 @@ public class TransferLayout extends RelativeLayout
 				myCalendar.set(Calendar.MONTH, monthOfYear);
 				myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 				Date date1 = new Date(myCalendar);
-				dateEditText.setText(date1.getDisplayDate());
+				dateEditText.setText(date1.getDisplayDate("/"));
 			}
 		};
 		dateEditText = (EditText) findViewById(R.id.editText_date);
-		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
+		dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate("/"));
 		dateEditText.setOnClickListener(new OnClickListener()
 		{
 			@Override
@@ -108,8 +113,8 @@ public class TransferLayout extends RelativeLayout
 		});
 		addTemplateCheckBox = (CheckBox) findViewById(R.id.checkBox_addTemplate);
 		excludeInCountersCheckBox = (CheckBox) findViewById(R.id.checkBox_excludeFromCounters);
-
-		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<String>(getContext(),
+		
+		final ArrayAdapter<String> templatesAdapter = new ArrayAdapter<>(getContext(),
 				R.layout.dropdown_multiline_item, R.id.textView_option, databaseAdapter.getVisibleTransferTemplatesNames());
 		particularsEditText.setAdapter(templatesAdapter);
 		particularsEditText.setThreshold(1);
@@ -174,7 +179,7 @@ public class TransferLayout extends RelativeLayout
 		rateEditText.setText(String.valueOf(transaction.getRate()));
 		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
 		amountEditText.setText(String.valueOf(transaction.getAmount()));
-		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate()));
+		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate("/")));
 		excludeInCountersCheckBox.setChecked(!transaction.isIncludeInCounters());
 	}
 
@@ -236,6 +241,18 @@ public class TransferLayout extends RelativeLayout
 		{
 			Toast.makeText(getContext(), "Please select different Source and Destination for Money Transfer", Toast.LENGTH_LONG)
 					.show();
+		}
+		if (transferSourcesSpinner.getSelectedItem().equals(HintAdapter.HINT_TEXT))
+		{
+			Toast.makeText(getContext(), "Please select a wallet or bank where the money is " +
+					"debited", Toast.LENGTH_LONG).show();
+			return null;
+		}
+		if (transferDestinationsSpinner.getSelectedItem().equals(HintAdapter.HINT_TEXT))
+		{
+			Toast.makeText(getContext(), "Please select a wallet or bank where the money is " +
+					"credited", Toast.LENGTH_LONG).show();
+			return null;
 		}
 
 		// Calculate Rate, Quantity, Amount if not specified

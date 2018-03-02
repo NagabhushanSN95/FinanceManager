@@ -11,12 +11,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,8 +19,6 @@ import java.util.StringTokenizer;
 
 public class Update107To110 extends SQLiteOpenHelper
 {
-	private Context context;
-
 	// Database Version
 	private static final int DATABASE_VERSION = 1;
 	// Database Name
@@ -36,26 +29,23 @@ public class Update107To110 extends SQLiteOpenHelper
 	private static final String TABLE_WALLET = "wallet";
 	private static final String TABLE_EXPENDITURE_TYPES = "expenditure_types";
 	private static final String TABLE_TEMPLATES = "templates";
-
 	// Common Column Names
 	private static final String KEY_DELETED = "deleted";
 	private static final String KEY_HIDDEN = "hidden";
-
 	// Transaction Table Columns names
 	private static final String KEY_CREATED_TIME = "created_time";
 	private static final String KEY_MODIFIED_TIME = "modified_time";
 	private static final String KEY_DATE = "date";
 	private static final String KEY_TYPE = "type";
 	private static final String KEY_PARTICULARS = "particulars";
-
 	// Banks Table Column Names
 	private static final String KEY_NAME = "name";
+	private Context context;
 
 	public Update107To110(Context cxt)
 	{
 		super(cxt, DATABASE_NAME, null, DATABASE_VERSION);
 		context = cxt;
-		Toast.makeText(context, "Updating...", Toast.LENGTH_LONG).show();
 
 		SQLiteDatabase db = this.getWritableDatabase();
 		updateTransactionsTable(db);
@@ -569,7 +559,7 @@ public class Update107To110 extends SQLiteOpenHelper
 
 	private ArrayList<String> getAllBanksNames()
 	{
-		ArrayList<String> banksNamesList = new ArrayList<String>();
+		ArrayList<String> banksNamesList = new ArrayList<>();
 		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_BANKS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -605,12 +595,14 @@ public class Update107To110 extends SQLiteOpenHelper
 		Toast.makeText(context, "Database onUpgrade called in Updata68 Class\nPlease Contact Developer ASAP",
 				Toast.LENGTH_LONG).show();
 	}
-
+	
+	@SuppressWarnings("unused")
 	private void updateBackups()
 	{
 		// Update Manual Backups
 		String backupFolderName = "Chaturvedi/Finance Manager/Backups";
 		File backupFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
+		
 		if(backupFolder.exists())
 		{
 			for(File file : backupFolder.listFiles())
@@ -621,7 +613,7 @@ public class Update107To110 extends SQLiteOpenHelper
 				}
 			}
 		}
-
+		
 		// Update Auto Backups
 		backupFolderName = "Chaturvedi/Finance Manager/Auto Backups";
 		backupFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
@@ -709,7 +701,7 @@ public class Update107To110 extends SQLiteOpenHelper
 
 				// Read Bank Details
 				backupReader.readLine();
-				banks = new ArrayList<Bank>(numBanks);
+				banks = new ArrayList<>(numBanks);
 				for(int i=0; i<numBanks; i++)
 				{
 					Bank bank = new Bank(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
@@ -720,7 +712,7 @@ public class Update107To110 extends SQLiteOpenHelper
 
 				// Read Transactions
 				backupReader.readLine();
-				transactions = new ArrayList<Transaction>(numTransactions);
+				transactions = new ArrayList<>(numTransactions);
 				for(int i=0; i<numTransactions; i++)
 				{
 					Transaction transaction = new Transaction(backupReader.readLine(),backupReader.readLine(),backupReader.readLine(),
@@ -732,7 +724,7 @@ public class Update107To110 extends SQLiteOpenHelper
 
 				// Read Counters
 				backupReader.readLine();
-				counters = new ArrayList<Counters>(numCountersRows);
+				counters = new ArrayList<>(numCountersRows);
 				for(int i=0; i<numCountersRows; i++)
 				{
 					int ID = Integer.parseInt(backupReader.readLine().trim());
@@ -749,7 +741,7 @@ public class Update107To110 extends SQLiteOpenHelper
 
 				// Read Expenditure Types
 				backupReader.readLine();
-				expTypes = new ArrayList<String>(numExpTypes);
+				expTypes = new ArrayList<>(numExpTypes);
 				for(int i=0; i<numExpTypes ; i++)
 				{
 					expTypes.add(backupReader.readLine().trim());
@@ -758,7 +750,7 @@ public class Update107To110 extends SQLiteOpenHelper
 
 				// Read templates
 				backupReader.readLine();
-				templates = new ArrayList<Template>();
+				templates = new ArrayList<>();
 				for(int i=0; i<numTemplates; i++)
 				{
 					String ID = backupReader.readLine().trim();
@@ -970,14 +962,6 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @param id the id to set
-		 */
-		public void setID(int id)
-		{
-			this.id = id;
-		}
-
-		/**
 		 * @return the id
 		 */
 		public int getID()
@@ -986,11 +970,11 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @param name the name to set
+		 * @param id the id to set
 		 */
-		public void setName(String name)
+		public void setID(int id)
 		{
-			this.name = name;
+			this.id = id;
 		}
 
 		/**
@@ -999,6 +983,14 @@ public class Update107To110 extends SQLiteOpenHelper
 		public String getName()
 		{
 			return name;
+		}
+		
+		/**
+		 * @param name the name to set
+		 */
+		public void setName(String name)
+		{
+			this.name = name;
 		}
 
 		/**
@@ -1010,19 +1002,19 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @param balance the balance to set
-		 */
-		public void setBalance(double balance)
-		{
-			this.balance = balance;
-		}
-
-		/**
 		 * @return the balance
 		 */
 		public double getBalance()
 		{
 			return balance;
+		}
+		
+		/**
+		 * @param balance the balance to set
+		 */
+		public void setBalance(double balance)
+		{
+			this.balance = balance;
 		}
 
 		/**
@@ -1069,19 +1061,27 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
+		 * @return the id
+		 */
+		public int getID()
+		{
+			return id;
+		}
+		
+		/**
 		 * @param id the id to set
 		 */
 		public void setID(int id)
 		{
 			this.id = id;
 		}
-
+		
 		/**
-		 * @return the id
+		 * @return the time at which the transaction is created
 		 */
-		public int getID()
+		Time getCreatedTime()
 		{
-			return id;
+			return createdTime;
 		}
 
 		/**
@@ -1095,9 +1095,9 @@ public class Update107To110 extends SQLiteOpenHelper
 		/**
 		 * @return the time at which the transaction is created
 		 */
-		Time getCreatedTime()
+		Time getModifiedTime()
 		{
-			return createdTime;
+			return modifiedTime;
 		}
 
 		/**
@@ -1109,13 +1109,13 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @return the time at which the transaction is created
+		 * @return the date
 		 */
-		Time getModifiedTime()
+		public Date getDate()
 		{
-			return modifiedTime;
+			return date;
 		}
-
+		
 		/**
 		 * @param date the date to set
 		 */
@@ -1125,13 +1125,13 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @return the date
+		 * @return the type
 		 */
-		public Date getDate()
+		public String getType()
 		{
-			return date;
+			return type;
 		}
-
+		
 		/**
 		 * @param type the type to set
 		 */
@@ -1141,13 +1141,13 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @return the type
+		 * @return the particular
 		 */
-		public String getType()
+		public String getParticular()
 		{
-			return type;
+			return particular;
 		}
-
+		
 		/**
 		 * @param particular the particular to set
 		 */
@@ -1157,35 +1157,19 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @return the particular
-		 */
-		public String getParticular()
-		{
-			return particular;
-		}
-
-		/**
-		 * @param rate the rate to set
-		 */
-		public void setRate(double rate)
-		{
-			this.rate = rate;
-		}
-
-		/**
 		 * @return the rate
 		 */
 		public double getRate()
 		{
 			return rate;
 		}
-
+		
 		/**
-		 * @param quantity the quantity to set
+		 * @param rate the rate to set
 		 */
-		public void setQuantity(double quantity)
+		public void setRate(double rate)
 		{
-			this.quantity = quantity;
+			this.rate = rate;
 		}
 
 		/**
@@ -1197,11 +1181,11 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @param amount the amount to set
+		 * @param quantity the quantity to set
 		 */
-		public void setAmount(double amount)
+		public void setQuantity(double quantity)
 		{
-			this.amount = amount;
+			this.quantity = quantity;
 		}
 
 		/**
@@ -1210,6 +1194,14 @@ public class Update107To110 extends SQLiteOpenHelper
 		public double getAmount()
 		{
 			return amount;
+		}
+		
+		/**
+		 * @param amount the amount to set
+		 */
+		public void setAmount(double amount)
+		{
+			this.amount = amount;
 		}
 
 		boolean isHidden()
@@ -1247,6 +1239,14 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
+		 * @return the id
+		 */
+		public int getID()
+		{
+			return id;
+		}
+		
+		/**
 		 * @param id the id to set
 		 */
 		public void setID(int id)
@@ -1255,27 +1255,19 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @return the id
+		 * @return the date
 		 */
-		public int getID()
+		public Date getDate()
 		{
-			return id;
+			return date;
 		}
-
+		
 		/**
 		 * @param date the date to set
 		 */
 		public void setDate(Date date)
 		{
 			this.date = date;
-		}
-
-		/**
-		 * @return the date
-		 */
-		public Date getDate()
-		{
-			return date;
 		}
 
 		public void setExp(double[] exp)
@@ -1352,19 +1344,19 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @param id the id to set
-		 */
-		public void setID(int id)
-		{
-			this.id = id;
-		}
-
-		/**
 		 * @return the id
 		 */
 		public int getID()
 		{
 			return id;
+		}
+		
+		/**
+		 * @param id the id to set
+		 */
+		public void setID(int id)
+		{
+			this.id = id;
 		}
 
 		/**
@@ -1376,6 +1368,14 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
+		 * @return the type
+		 */
+		public String getType()
+		{
+			return type;
+		}
+		
+		/**
 		 * @param type the type to set
 		 */
 		public void setType(String type)
@@ -1384,27 +1384,19 @@ public class Update107To110 extends SQLiteOpenHelper
 		}
 
 		/**
-		 * @return the type
+		 * @return the amount
 		 */
-		public String getType()
+		public double getAmount()
 		{
-			return type;
+			return amount;
 		}
-
+		
 		/**
 		 * @param amount the amount to set
 		 */
 		public void setAmount(double amount)
 		{
 			this.amount = amount;
-		}
-
-		/**
-		 * @return the amount
-		 */
-		public double getAmount()
-		{
-			return amount;
 		}
 
 		boolean isHidden()

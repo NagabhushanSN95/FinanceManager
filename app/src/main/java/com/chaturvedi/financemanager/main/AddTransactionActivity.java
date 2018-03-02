@@ -60,7 +60,7 @@ public class AddTransactionActivity extends Activity
 		transactionTypeSpinner = (Spinner) findViewById(R.id.spinner_transactionType);
 		transactionTypeSpinnerPosition = 0;
 		String[] transactionTypes = {Constants.TRANSACTION_INCOME, Constants.TRANSACTION_EXPENSE, Constants.TRANSACTION_TRANSFER};
-		transactionTypeSpinner.setAdapter(new ArrayAdapter<String>(AddTransactionActivity.this,
+		transactionTypeSpinner.setAdapter(new ArrayAdapter<>(AddTransactionActivity.this,
 				android.R.layout.simple_spinner_item, transactionTypes));
 		transactionTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
 		{
@@ -78,87 +78,99 @@ public class AddTransactionActivity extends Activity
 		});
 
 		action = intent.getStringExtra(Constants.ACTION);
-		if (action.equals(Constants.ACTION_ADD))
+		switch (action)
 		{
-			String transactionType = intent.getStringExtra(Constants.TRANSACTION_TYPE);
-			if(transactionType.equals(Constants.TRANSACTION_INCOME))
+			case Constants.ACTION_ADD:
 			{
-				transactionTypeSpinner.setSelection(0);
-			}
-			else if(transactionType.equals(Constants.TRANSACTION_EXPENSE))
-			{
-				transactionTypeSpinner.setSelection(1);
-			}
-			else if(transactionType.equals(Constants.TRANSACTION_TRANSFER))
-			{
-				transactionTypeSpinner.setSelection(2);
-			}
-		}
-		else if (action.equals(Constants.ACTION_EDIT))
-		{
-			oldTransaction = intent.getParcelableExtra(Constants.TRANSACTION);
-			checkForValidity(oldTransaction);
-			if(oldTransaction.getType().contains("Credit"))
-			{
-				transactionTypeSpinner.setSelection(0);
-				incomeLayout.setData(oldTransaction);
-			}
-			else if(oldTransaction.getType().contains("Debit"))
-			{
-				transactionTypeSpinner.setSelection(1);
-				// The above statement initiates a callback to change layout from IncomeLayout (which is default) to ExpenseLayout
-				// The callback replaces contents of ExpenseLayout fields with those of IncomeLayout fields
-				// But the call back is called after all methods are executed. So, is expenseLayout.setData() is called
-				// without a handler, this method is executed first and then the callback. As a result, there won't be any data
-				// filled in the fields of expenseLayout. Using handler ensures that expenseLayout.setData() is called
-				// after the callback
-				new Handler().postDelayed(new Runnable()
+				String transactionType = intent.getStringExtra(Constants.TRANSACTION_TYPE);
+				switch (transactionType)
 				{
-					@Override
-					public void run()
-					{
-						expenseLayout.setData(oldTransaction);
-					}
-				}, 300);
+					case Constants.TRANSACTION_INCOME:
+						transactionTypeSpinner.setSelection(0);
+						break;
+					case Constants.TRANSACTION_EXPENSE:
+						transactionTypeSpinner.setSelection(1);
+						break;
+					case Constants.TRANSACTION_TRANSFER:
+						transactionTypeSpinner.setSelection(2);
+						break;
+				}
+				break;
 			}
-			else if(oldTransaction.getType().contains("Transfer"))
+			case Constants.ACTION_EDIT:
 			{
-				transactionTypeSpinner.setSelection(2);
-				new Handler().postDelayed(new Runnable()
+				oldTransaction = intent.getParcelableExtra(Constants.TRANSACTION);
+				checkForValidity(oldTransaction);
+				if (oldTransaction.getType().contains("Credit"))
 				{
-					@Override
-					public void run()
+					transactionTypeSpinner.setSelection(0);
+					incomeLayout.setData(oldTransaction);
+				}
+				else if (oldTransaction.getType().contains("Debit"))
+				{
+					transactionTypeSpinner.setSelection(1);
+					// The above statement initiates a callback to change layout from IncomeLayout
+					// (which is default) to ExpenseLayout
+					// The callback replaces contents of ExpenseLayout fields with those of
+					// IncomeLayout fields
+					// But the call back is called after all methods are executed. So, is
+					// expenseLayout.setData() is called
+					// without a handler, this method is executed first and then the callback. As
+					// a result, there won't be any data
+					// filled in the fields of expenseLayout. Using handler ensures that
+					// expenseLayout.setData() is called
+					// after the callback
+					new Handler().postDelayed(new Runnable()
 					{
-						transferLayout.setData(oldTransaction);
-					}
-				}, 300);
+						@Override
+						public void run()
+						{
+							expenseLayout.setData(oldTransaction);
+						}
+					}, 300);
+				}
+				else if (oldTransaction.getType().contains("Transfer"))
+				{
+					transactionTypeSpinner.setSelection(2);
+					new Handler().postDelayed(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							transferLayout.setData(oldTransaction);
+						}
+					}, 300);
+				}
+				else
+				{
+					Toast.makeText(this, "Unable to detect Transaction Type of old transaction",
+							Toast.LENGTH_SHORT).show();
+					transactionTypeSpinner.setSelection(0);
+				}
+				break;
 			}
-			else
+			case Constants.ACTION_BANK_SMS:
 			{
-				Toast.makeText(this, "Unable to detect Transaction Type of old transaction", Toast.LENGTH_SHORT).show();
-				transactionTypeSpinner.setSelection(0);
-			}
-		}
-		else if(action.equals(Constants.ACTION_BANK_SMS))
-		{
-			String transactionType = intent.getStringExtra(Constants.TRANSACTION_TYPE);
-			int bankID = intent.getIntExtra(Constants.KEY_BANK_ID, 1);
-			double amount = intent.getDoubleExtra(Constants.KEY_AMOUNT, 0);
-			if(transactionType.equals(Constants.TRANSACTION_INCOME))
-			{
-				transactionTypeSpinner.setSelection(0);
-				expenseLayout.setData(bankID, amount);
-			}
-			else if(transactionType.equals(Constants.TRANSACTION_EXPENSE))
-			{
-				transactionTypeSpinner.setSelection(1);
-				incomeLayout.setData(bankID, amount);
-			}
-			else if(transactionType.equals(Constants.TRANSACTION_TRANSFER))
-			{
-				transactionTypeSpinner.setSelection(2);
-				String transferType = intent.getStringExtra(Constants.TRANSFER_TYPE);
-				transferLayout.setData(transferType, bankID, amount);
+				String transactionType = intent.getStringExtra(Constants.TRANSACTION_TYPE);
+				int bankID = intent.getIntExtra(Constants.KEY_BANK_ID, 1);
+				double amount = intent.getDoubleExtra(Constants.KEY_AMOUNT, 0);
+				switch (transactionType)
+				{
+					case Constants.TRANSACTION_INCOME:
+						transactionTypeSpinner.setSelection(0);
+						expenseLayout.setData(bankID, amount);
+						break;
+					case Constants.TRANSACTION_EXPENSE:
+						transactionTypeSpinner.setSelection(1);
+						incomeLayout.setData(bankID, amount);
+						break;
+					case Constants.TRANSACTION_TRANSFER:
+						transactionTypeSpinner.setSelection(2);
+						String transferType = intent.getStringExtra(Constants.TRANSFER_TYPE);
+						transferLayout.setData(transferType, bankID, amount);
+						break;
+				}
+				break;
 			}
 		}
 
@@ -355,24 +367,25 @@ public class AddTransactionActivity extends Activity
 		{
 			return null;
 		}
-
-		if(action.equals(Constants.ACTION_ADD))
+		
+		switch (action)
 		{
-			DatabaseManager.addTransaction(AddTransactionActivity.this, transaction, true);
-		}
-		else if(action.equals(Constants.ACTION_EDIT))
-		{
-			transaction.setID(oldTransaction.getID());
-			transaction.setCreatedTime(oldTransaction.getCreatedTime());
-			DatabaseManager.editTransaction(AddTransactionActivity.this, oldTransaction, transaction);
-		}
-		else if(action.equals(Constants.ACTION_BANK_SMS))
-		{
-			DatabaseManager.addTransaction(AddTransactionActivity.this, transaction, true);
-		}
-		else
-		{
-			Toast.makeText(AddTransactionActivity.this, "Unknown Action: " + action, Toast.LENGTH_LONG).show();
+			case Constants.ACTION_ADD:
+				DatabaseManager.addTransaction(AddTransactionActivity.this, transaction, true);
+				break;
+			case Constants.ACTION_EDIT:
+				transaction.setID(oldTransaction.getID());
+				transaction.setCreatedTime(oldTransaction.getCreatedTime());
+				DatabaseManager.editTransaction(AddTransactionActivity.this, oldTransaction,
+						transaction);
+				break;
+			case Constants.ACTION_BANK_SMS:
+				DatabaseManager.addTransaction(AddTransactionActivity.this, transaction, true);
+				break;
+			default:
+				Toast.makeText(AddTransactionActivity.this, "Unknown Action: " + action, Toast
+						.LENGTH_LONG).show();
+				break;
 		}
 		return transaction;
 	}

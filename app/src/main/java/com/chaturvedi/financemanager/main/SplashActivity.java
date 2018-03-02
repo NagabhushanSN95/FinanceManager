@@ -36,18 +36,17 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-//import android.view.ViewGroup.LayoutParams;
 
 public class SplashActivity extends Activity
 {
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
 	private static final String KEY_SPLASH_DURATION = "SplashDuration";
-	private int splashDuration = 5000;
 	private static final String KEY_DATABASE_INITIALIZED = "DatabaseInitialized";
-	private boolean databaseInitialized = true;
 	private static final String KEY_QUOTE_NO = "QuoteNo";
 	private static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
+	private int splashDuration = 5000;
+	private boolean databaseInitialized = true;
 	private AutomaticBackupAndRestoreManager autoRestoreManager;
 	
 	private boolean splashComplete = false;                // Completion Of Splash Duration
@@ -86,7 +85,7 @@ public class SplashActivity extends Activity
 
 	private void checkForUpdates()
 	{
-		int currentVersionNo = 0, previousVersionNo = 0;
+		int currentVersionNo = 0, previousVersionNo;
 		
 		// Get the Current Version No Of The Current App
 		try
@@ -126,8 +125,9 @@ public class SplashActivity extends Activity
 		// Compare the version of current and previous App. If the previous app was of old version, 
 		// run the Update Classes
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
-		if (canProceed && (previousVersionNo != currentVersionNo))
+		if (canProceed && (previousVersionNo < currentVersionNo))
 		{
+			Toast.makeText(this, "Updating...", Toast.LENGTH_LONG).show();
 			if (previousVersionNo < Constants.APP_VERSION_88)
 			{
 				new Update68To88(SplashActivity.this);
@@ -160,9 +160,13 @@ public class SplashActivity extends Activity
 			{
 				new Update124to125(SplashActivity.this);
 			}
+			if (previousVersionNo < Constants.APP_VERSION_131)
+			{
+				new Update125to131(SplashActivity.this);
+			}
 			
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
-			editor.commit();
+			editor.apply();
 		}
 	}
 	
@@ -221,7 +225,7 @@ public class SplashActivity extends Activity
 			autoRestoreManager = new AutomaticBackupAndRestoreManager(3);
 			editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
 		}
-		editor.commit();
+		editor.apply();
 	}
 	
 	/**
@@ -229,7 +233,7 @@ public class SplashActivity extends Activity
 	 */
 	private void readQuotes()
 	{
-		ArrayList<String> quotes = new ArrayList<String>();
+		ArrayList<String> quotes = new ArrayList<>();
 		InputStream tipsStream = getResources().openRawResource(R.raw.tips);
 		BufferedReader tipsReader = new BufferedReader(new InputStreamReader(tipsStream));
 		InputStream quoteStream = getResources().openRawResource(R.raw.quotes);
@@ -361,14 +365,12 @@ public class SplashActivity extends Activity
 		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar_loading);
 		progressBar.setMax(deviceWidth);
 		
-		/* Change the colour (from blue) to pink for higher versions of android
-		 For lower versions, green colour is good */
-		if (android.os.Build.VERSION.SDK_INT > 11)
-		{
-			Drawable progressBarDrawable = this.getResources().getDrawable(R.drawable.progress_bar_pink);
-			progressBar.setProgressDrawable(progressBarDrawable);
-			progressBar.getLayoutParams().height = 6;
-		}
+		// Change the colour (from blue) to pink
+		Drawable progressBarDrawable = this.getResources().getDrawable(R.drawable
+				.progress_bar_pink);
+		
+		progressBar.setProgressDrawable(progressBarDrawable);
+		progressBar.getLayoutParams().height = 6;
 		
 		// Calculate the refresh time to update the ProgressBar
 		int refreshTime = (splashDuration / deviceWidth) + 1;

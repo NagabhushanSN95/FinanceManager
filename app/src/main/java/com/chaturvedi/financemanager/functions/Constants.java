@@ -1,6 +1,7 @@
 // Shree KRISHNAya Namaha
 package com.chaturvedi.financemanager.functions;
 
+@SuppressWarnings("WeakerAccess")
 public class Constants
 {
 	public static final int APP_VERSION_88 = 88;
@@ -13,6 +14,7 @@ public class Constants
 	public static final int APP_VERSION_124 = 124;
 	// In version 125, daily backup setting was added
 	public static final int APP_VERSION_125 = 125;
+	public static final int APP_VERSION_131 = 131;
 	
 	public static final int CURRENT_APP_VERSION_NO = 125;
 	
@@ -35,7 +37,7 @@ public class Constants
 	public static final String KEY_EXPORT_INCLUDE_CURRENT_BALANCES =
 			"ExportIncludeCurrentWalletBankBalances";
 	public static final String KEY_EXPORT_FILE_FORMAT = "ExportFileFormat";
-
+	
 	public static final int REQUEST_CODE_ADD_TRANSACTION = 101;
 	public static final int REQUEST_CODE_EDIT_TRANSACTION = 102;
 	public static final int REQUEST_CODE_TRANSACTIONS_ACTIVITY = 103;
@@ -46,12 +48,12 @@ public class Constants
 	
 	public static final int ACTION_BACKUP_SUCCESSFUL = 201;
 	public static final int ACTION_BACKUP_FAILURE = 202;
-
+	
 	public static final String ACTION = "Action";
 	public static final String ACTION_ADD = "ActionAdd";
 	public static final String ACTION_EDIT = "ActionEdit";
 	public static final String ACTION_BANK_SMS = "BankSms";
-
+	
 	public static final String TRANSACTION = "Transaction";
 	public static final String TRANSACTION_TYPE = "TransactionType";
 	public static final String TRANSACTION_INCOME = "Income";
@@ -60,12 +62,12 @@ public class Constants
 	public static final String TRANSFER_TYPE = "TransferType";
 	public static final String TRANSFER_PAY_IN = "Pay_In";
 	public static final String TRANSFER_WITHDRAW = "Withdraw";
-
+	
 	public static final String KEY_BANK_ID = "BankID";
 	public static final String KEY_AMOUNT = "Amount";
-
+	
 	public static final int MIN_TRANSACTIONS_TO_DISPLAY = 50;
-
+	
 	// Used in Filters
 	public static final String KEY_CREDIT_TRANSACTIONS = "Credit Transactions";
 	public static final String KEY_DEBIT_TRANSACTIONS = "Debit Transactions";
