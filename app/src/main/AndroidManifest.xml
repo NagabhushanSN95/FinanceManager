@@ -2,8 +2,8 @@
 <manifest package="com.chaturvedi.financemanager"
 		  xmlns:android="http://schemas.android.com/apk/res/android"
 		  xmlns:tools="http://schemas.android.com/tools"
-		  android:versionCode="132"
-		  android:versionName="4.3.8">
+		  android:versionCode="133"
+		  android:versionName="4.3.9">
 
 
 	<uses-permission android:name="android.permission.RECEIVE_SMS"/>

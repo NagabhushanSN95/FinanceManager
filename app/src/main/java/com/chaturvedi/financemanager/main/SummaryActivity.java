@@ -103,25 +103,10 @@ public class SummaryActivity extends Activity
 			{
 				SharedPreferences.Editor editor = preferences.edit();
 				editor.putBoolean(Constants.KEY_BANK_SMS_ARRIVED, false);
-				editor.commit();
+				editor.apply();
 				performSMSTransaction();
 			}
 		}
-	}
-	
-	@Override
-	public void onResume()
-	{
-		super.onResume();
-		// If some other app is opened while using Finance Manager and then returned, the RAM might be cleared.
-		// So, transactions might have been lost. So, read the database Again
-		/*if(DatabaseManager.getNumTransactions()==0)
-		{
-			DatabaseManager.setContext(SummaryActivity.this);
-			DatabaseManager.readDatabase();
-			buildBodyLayout();
-			setData();
-		}*/
 	}
 	
 	@Override
@@ -170,6 +155,7 @@ public class SummaryActivity extends Activity
 		return true;
 	}
 	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		switch(item.getItemId())
@@ -177,23 +163,23 @@ public class SummaryActivity extends Activity
 			case R.id.action_transactions:
 				startActivityForResult(transactionsIntent, Constants.REQUEST_CODE_TRANSACTIONS_ACTIVITY);
 				return true;
-				
+			
 			case R.id.action_edit:
 				startActivityForResult(editIntent, Constants.REQUEST_CODE_EDIT_ACTIVITY);
 				return true;
-				
+			
 			case R.id.action_statistics:
 				startActivity(statisticsIntent);
 				return true;
-				
+			
 			case R.id.action_settings:
 				startActivityForResult(settingsIntent, Constants.REQUEST_CODE_SETTINGS_ACTIVITY);
 				return true;
-				
+			
 			case R.id.action_help:
 				startHelpActivity();
 				return true;
-				
+			
 			case R.id.action_extras:
 				startActivityForResult(extrasIntent, Constants.REQUEST_CODE_EXTRAS_ACTIVITY);
 				return true;

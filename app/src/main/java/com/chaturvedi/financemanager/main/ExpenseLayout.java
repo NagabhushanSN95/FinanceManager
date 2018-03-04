@@ -29,8 +29,10 @@ import java.util.Calendar;
 public class ExpenseLayout extends RelativeLayout
 {
 	private Spinner expenseSourcesSpinner;
+	private HintAdapter expenseSourcesAdapter;
 	private MyAutoCompleteTextView particularsEditText;
 	private Spinner expenseTypeSpinner;
+	private HintAdapter expenseTypeAdapter;
 	private EditText rateEditText;
 	private EditText quantityEditText;
 	private EditText amountEditText;
@@ -67,16 +69,17 @@ public class ExpenseLayout extends RelativeLayout
 		ArrayList<String> expenditureTypesList = databaseAdapter.getAllVisibleExpenditureTypeNames();
 
 		expenseSourcesSpinner = (Spinner) findViewById(R.id.spinner_expenseSource);
-		final HintAdapter expenseSourcesAdapter = new HintAdapter(getContext(), android.R.layout
+		expenseSourcesAdapter = new HintAdapter(getContext(), android.R.layout
 				.simple_spinner_item,
 				expenseSourcesList);
 		expenseSourcesSpinner.setAdapter(expenseSourcesAdapter);
 		expenseSourcesSpinner.setSelection(expenseSourcesAdapter.getCount());
 		particularsEditText = (MyAutoCompleteTextView) findViewById(R.id.editText_particulars);
 		expenseTypeSpinner = (Spinner) findViewById(R.id.spinner_expenseType);
-		final HintAdapter expenseTypeAdapter = new HintAdapter(getContext(),
+		expenseTypeAdapter = new HintAdapter(getContext(),
 				android.R.layout.simple_spinner_item, expenditureTypesList);
 		expenseTypeSpinner.setAdapter(expenseTypeAdapter);
+		expenseTypeSpinner.setSelection(expenseTypeAdapter.getCount());
 		rateEditText = (EditText) findViewById(R.id.editText_rate);
 		quantityEditText = (EditText) findViewById(R.id.editText_quantity);
 		amountEditText = (EditText) findViewById(R.id.editText_amount);
@@ -124,11 +127,10 @@ public class ExpenseLayout extends RelativeLayout
 				Template selectedTemplate = databaseAdapter.getTemplate(particularsEditText.getText().toString());
 				TransactionTypeParser parser = new TransactionTypeParser(getContext(), selectedTemplate.getType());
 				String expenseSourceName = parser.getExpenseSourceName();
-				int expenseSourcePosition = expenseSourcesAdapter.getPosition(expenseSourceName);
-				expenseSourcesSpinner.setSelection(expenseSourcePosition);
+				expenseSourcesSpinner.setSelection(expenseSourcesAdapter.getPosition
+						(expenseSourceName));
 				String expenditureTypeName = parser.getExpenditureType().getName();
-				int expenditureTypePosition = expenseTypeAdapter.getPosition(expenditureTypeName);
-				expenseTypeSpinner.setSelection(expenditureTypePosition);
+				expenseTypeSpinner.setSelection(expenseTypeAdapter.getPosition(expenditureTypeName));
 				rateEditText.setText(String.valueOf(selectedTemplate.getAmount()));
 			}
 		});
@@ -144,33 +146,32 @@ public class ExpenseLayout extends RelativeLayout
 			Toast.makeText(getContext(), "Transaction is not Expense", Toast.LENGTH_SHORT).show();
 			return;
 		}
-		int expenseSourceNo;
+		String expenseSourceName;
 		if (parser.isExpenseSourceWallet())
 		{
-			// IDs start with 1. Hence, 1 is subtracted
-			expenseSourceNo = parser.getExpenseSourceWallet().getID() - 1;
+			expenseSourceName = parser.getExpenseSourceWallet().getName();
 		}
 		else
 		{
-			// Banks are displayed after wallets. Hence, numWallets is added
-			expenseSourceNo = DatabaseAdapter.getInstance(getContext()).getNumVisibleWallets() +
-					parser.getExpenseSourceBank().getID() - 1;
+			expenseSourceName = parser.getExpenseSourceBank().getName();
 		}
-		expenseSourcesSpinner.setSelection(expenseSourceNo);
+		expenseSourcesSpinner.setSelection(expenseSourcesAdapter.getPosition(expenseSourceName));
 
 		particularsEditText.setText(transaction.getParticular());
-		expenseTypeSpinner.setSelection(parser.getExpenditureType().getId() - 1); // -1 Since IDs start with 1
+		expenseTypeSpinner.setSelection(expenseTypeAdapter.getPosition(parser.getExpenditureType()
+				.getName()));
 		rateEditText.setText(String.valueOf(transaction.getRate()));
 		quantityEditText.setText(String.valueOf(transaction.getQuantity()));
 		amountEditText.setText(String.valueOf(transaction.getAmount()));
 		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate("/")));
 		excludeInCountersCheckBox.setChecked(!transaction.isIncludeInCounters());
 	}
-
-	public void setData(int expenseSourceNo, String particulars, String rateText, String quantityText, String amountText,
+	
+	public void setData(String expenseSourceName, String particulars, String rateText, String
+			quantityText, String amountText,
 						String date, boolean addTemplate, boolean excludeInCounters)
 	{
-		expenseSourcesSpinner.setSelection(expenseSourceNo);
+		expenseSourcesSpinner.setSelection(expenseSourcesAdapter.getPosition(expenseSourceName));
 		particularsEditText.setText(particulars);
 		rateEditText.setText(rateText);
 		quantityEditText.setText(quantityText);
@@ -183,10 +184,9 @@ public class ExpenseLayout extends RelativeLayout
 	public void setData(int bankID, double amount)
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
-
-		// -1 because BankIDs start with 1 and index start with 0
-		int expenseSourceNo = databaseAdapter.getNumVisibleWallets() + bankID - 1;
-		expenseSourcesSpinner.setSelection(expenseSourceNo);
+		
+		String expenseSourceName = databaseAdapter.getBank(bankID).getName();
+		expenseSourcesSpinner.setSelection(expenseSourcesAdapter.getPosition(expenseSourceName));
 
 		amountEditText.setText(String.valueOf(amount));
 		//dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
@@ -296,10 +296,10 @@ public class ExpenseLayout extends RelativeLayout
 
 		return transaction;
 	}
-
-	public int getExpenseSourcePosition()
+	
+	public String getExpenseSourceName()
 	{
-		return expenseSourcesSpinner.getSelectedItemPosition();
+		return (String) expenseSourcesSpinner.getSelectedItem();
 	}
 
 	public String getParticulars()

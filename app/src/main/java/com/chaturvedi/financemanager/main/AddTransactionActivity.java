@@ -16,7 +16,7 @@ import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
-import com.chaturvedi.financemanager.functions.TransactionTypeParser;
+import com.chaturvedi.financemanager.functions.Utilities;
 
 public class AddTransactionActivity extends Activity
 {
@@ -113,13 +113,12 @@ public class AddTransactionActivity extends Activity
 					// (which is default) to ExpenseLayout
 					// The callback replaces contents of ExpenseLayout fields with those of
 					// IncomeLayout fields
-					// But the call back is called after all methods are executed. So, is
-					// expenseLayout.setData() is called
-					// without a handler, this method is executed first and then the callback. As
-					// a result, there won't be any data
-					// filled in the fields of expenseLayout. Using handler ensures that
-					// expenseLayout.setData() is called
-					// after the callback
+					// But the callback is called after all methods are executed.
+					// So, if expenseLayout.setData() is called without a handler, this method is
+					// executed first and then the callback.
+					// As a result, there won't be any data filled in the fields of expenseLayout.
+					// Using handler ensures that expenseLayout.setData() is called after the
+					// callback
 					new Handler().postDelayed(new Runnable()
 					{
 						@Override
@@ -219,7 +218,6 @@ public class AddTransactionActivity extends Activity
 			return;
 		}
 
-		int position;
 		String particulars, rate, quantity, amount, date;
 		boolean addTemplate, includeInCounters;
 		
@@ -233,16 +231,18 @@ public class AddTransactionActivity extends Activity
 				date = incomeLayout.getDate();
 				addTemplate = incomeLayout.isAddTemplateSelected();
 				includeInCounters = !incomeLayout.isExcludeInCounters();
-
-				position = incomeLayout.getIncomeDestinationPosition();
+				
+				String incomeDestinationName = incomeLayout.getIncomeDestinationName();
 				switch (currentPosition)
 				{
 					case 1:
-						expenseLayout.setData(position, particulars, rate, quantity, amount, date, addTemplate, !includeInCounters);
+						expenseLayout.setData(incomeDestinationName, particulars, rate, quantity,
+								amount, date, addTemplate, !includeInCounters);
 						break;
 
 					case 2:
-						transferLayout.setData(-1, position, particulars, rate, quantity, amount, date, addTemplate, !includeInCounters);
+						transferLayout.setData(null, incomeDestinationName, particulars, rate,
+								quantity, amount, date, addTemplate, !includeInCounters);
 						break;
 				}
 				break;
@@ -255,17 +255,17 @@ public class AddTransactionActivity extends Activity
 				date = expenseLayout.getDate();
 				addTemplate = expenseLayout.isAddTemplateSelected();
 				includeInCounters = !expenseLayout.isExcludeInCounters();
-
-				position = expenseLayout.getExpenseSourcePosition();
+				
+				String expenseSourceName = expenseLayout.getExpenseSourceName();
 				switch (currentPosition)
 				{
 					case 0:
-						incomeLayout.setData(position, particulars, rate, quantity, amount, date,
+						incomeLayout.setData(expenseSourceName, particulars, rate, quantity, amount, date,
 								addTemplate, !includeInCounters);
 						break;
 
 					case 2:
-						transferLayout.setData(position, -1, particulars, rate, quantity, amount,
+						transferLayout.setData(expenseSourceName, null, particulars, rate, quantity, amount,
 								date, addTemplate, !includeInCounters);
 						break;
 				}
@@ -283,14 +283,15 @@ public class AddTransactionActivity extends Activity
 				switch (currentPosition)
 				{
 					case 0:
-						int destinationPosition = transferLayout.getTransferDestinationPosition();
-						incomeLayout.setData(destinationPosition, particulars, rate, quantity,
+						String transferDestinationName = transferLayout
+								.getTransferDestinationName();
+						incomeLayout.setData(transferDestinationName, particulars, rate, quantity,
 								amount, date, addTemplate, !includeInCounters);
 						break;
 
 					case 1:
-						int sourcePosition = transferLayout.getTransferSourcePosition();
-						expenseLayout.setData(sourcePosition, particulars, rate, quantity, amount,
+						String transferSourceName = transferLayout.getTransferSourceName();
+						expenseLayout.setData(transferSourceName, particulars, rate, quantity, amount,
 								date, addTemplate, !includeInCounters);
 						break;
 				}
@@ -392,80 +393,14 @@ public class AddTransactionActivity extends Activity
 
 	private void checkForValidity(Transaction oldTransaction)
 	{
-		boolean invalid = false;
-		TransactionTypeParser parser = new TransactionTypeParser(AddTransactionActivity.this, oldTransaction.getType());
-		if(parser.isIncome())
-		{
-			if(parser.isIncomeDestinationWallet() && parser.getIncomeDestinationWallet().isDeleted())
-			{
-				invalid = true;
-			}
-			else if(parser.isIncomeDestinationBank() && parser.getIncomeDestinationBank().isDeleted())
-			{
-				invalid = true;
-			}
-			/*else
-			{
-				Toast.makeText(AddTransactionActivity.this, "Unknown Income Destination", Toast.LENGTH_LONG).show();
-			}*/
-		}
-		else if(parser.isExpense())
-		{
-			if(parser.isExpenseSourceWallet() && parser.getExpenseSourceWallet().isDeleted())
-			{
-				invalid = true;
-			}
-			else if(parser.isExpenseSourceBank() && parser.getExpenseSourceBank().isDeleted())
-			{
-				invalid = true;
-			}
-			/*else
-			{
-				Toast.makeText(AddTransactionActivity.this, "Unknown Expense Source", Toast.LENGTH_LONG).show();
-			}*/
-
-			if(parser.getExpenditureType().isDeleted())
-			{
-				invalid = true;
-			}
-		}
-		else if(parser.isTransfer())
-		{
-			if(parser.isTransferSourceWallet() && parser.getTransferSourceWallet().isDeleted())
-			{
-				invalid = true;
-			}
-			else if(parser.isTransferSourceBank() && parser.getTransferSourceBank().isDeleted())
-			{
-				invalid = true;
-			}
-			/*else
-			{
-				Toast.makeText(AddTransactionActivity.this, "Unknown Transfer Source", Toast.LENGTH_LONG).show();
-			}*/
-
-			if(parser.isTransferDestinationWallet() && parser.getTransferDestinationWallet().isDeleted())
-			{
-				invalid = true;
-			}
-			else if(parser.isTransferDestinationBank() && parser.getTransferDestinationBank().isDeleted())
-			{
-				invalid = true;
-			}
-			/*else
-			{
-				Toast.makeText(AddTransactionActivity.this, "Unknown Transfer Destination", Toast.LENGTH_LONG).show();
-			}*/
-		}
-		else
-		{
-			Toast.makeText(AddTransactionActivity.this, "Unknown Transaction Type", Toast.LENGTH_LONG).show();
-		}
-
+		boolean invalid = Utilities.isTransactionValidForEditing(AddTransactionActivity.this, oldTransaction);
+		
 		if(invalid)
 		{
-			Toast.makeText(AddTransactionActivity.this, "Unsupported Action. This transaction is dependent on Deleted Wallets," +
-					"or Banks or Expenditure Types. Please contact Developer for assistance", Toast.LENGTH_LONG).show();
+			Toast.makeText(AddTransactionActivity.this, "Unsupported Action. This transaction is " +
+					"dependent on Deleted Wallets," +
+					"or Banks or Expenditure Types. Please restore it in EditData Activity and try" +
+					" again. Please contact Developer for any assistance", Toast.LENGTH_LONG).show();
 			Intent resultIntent = new Intent();
 			setResult(Activity.RESULT_CANCELED, resultIntent);
 			finish();

@@ -14,7 +14,7 @@ public class IndefiniteWaitDialogBuilder extends AlertDialog.Builder
 	private LinearLayout layout;
 	
 	@SuppressLint("InflateParams")
-	// For passing num to inflate. Justified here, because there is no parent view
+	// For passing null to inflate. Justified here, because there is no parent view
 	public IndefiniteWaitDialogBuilder(Context cxt)
 	{
 		super(cxt);

@@ -68,7 +68,7 @@ public class StatisticsActivity extends Activity
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		// Inflate the menu; this adds childItems to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.menu_statistics, menu);
+		getMenuInflater().inflate(R.menu.activity_statistics, menu);
 		
 		return true;
 	}

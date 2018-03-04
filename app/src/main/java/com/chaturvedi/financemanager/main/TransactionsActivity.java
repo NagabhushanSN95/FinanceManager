@@ -29,17 +29,14 @@ import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
+import com.chaturvedi.financemanager.functions.Utilities;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class TransactionsActivity extends Activity
 {
-//	private String transactionsDisplayInterval = "Month";
 	
-	private DisplayMetrics displayMetrics;
-	private int screenWidth;
-	private int screenHeight;
 	private int WIDTH_SLNO;
 	private int WIDTH_DATE;
 	private int WIDTH_PARTICULARS;
@@ -51,8 +48,7 @@ public class TransactionsActivity extends Activity
 	private ArrayList<Transaction> transactions;
 	private DecimalFormat formatterTextFields;
 	private DecimalFormat formatterDisplay;
-	private Intent templatesIntent;
-
+	
 	// Filters
 	private String transactionsDisplayIntervalType = Constants.VALUE_ALL;
 	private String transactionsDisplayIntervalMonthYear = null;
@@ -203,7 +199,8 @@ public class TransactionsActivity extends Activity
 				return true;
 
 			case R.id.action_templates:
-				templatesIntent = new Intent(TransactionsActivity.this, TemplatesActivity.class);
+				Intent templatesIntent = new Intent(TransactionsActivity.this, TemplatesActivity
+						.class);
 				startActivity(templatesIntent);
 				return true;
 
@@ -308,19 +305,11 @@ public class TransactionsActivity extends Activity
 	 */
 	private void calculateDimensions()
 	{
-		displayMetrics = new DisplayMetrics();
+		DisplayMetrics displayMetrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-		screenWidth = displayMetrics.widthPixels;
-		screenHeight = displayMetrics.heightPixels;
+		int screenWidth = displayMetrics.widthPixels;
 		
-		if (VERSION.SDK_INT <= 10)
-		{
-			WIDTH_DATE = 25 * screenWidth / 100 - 6;
-		}
-		else
-		{
-			WIDTH_DATE = 25 * screenWidth / 100 - 12;
-		}
+		WIDTH_DATE = 25 * screenWidth / 100 - 12;
 		WIDTH_SLNO = 10 * screenWidth / 100;
 		WIDTH_PARTICULARS = 45 * screenWidth / 100;
 		WIDTH_AMOUNT = 20 * screenWidth / 100;
@@ -1198,6 +1187,22 @@ public class TransactionsActivity extends Activity
 	 */
 	private void deleteTransaction(final String tag)
 	{
+		int transactionId = Integer.parseInt(tag.split("-")[1]);
+		final Transaction oldTransaction = DatabaseAdapter.getInstance(TransactionsActivity.this)
+				.getTransaction(transactionId);
+		boolean invalid = Utilities.isTransactionValidForEditing(this, oldTransaction);
+		
+		if (invalid)
+		{
+			// Todo: To be replaced by AlertDialog
+			Toast.makeText(this, "Unsupported Action. This transaction is dependent on Deleted " +
+					"Wallets," +
+					"or Banks or Expenditure Types. Please restore it in EditData Activity and try" +
+					" again. Please contact Developer for any assistance", Toast.LENGTH_LONG)
+					.show();
+			return;
+		}
+		
 		final LinearLayout layout = (LinearLayout) parentLayout.findViewWithTag(tag);
 		String slNo = ((TextView) layout.findViewById(R.id.slno)).getText().toString();
 		AlertDialog.Builder deleteDialog = new AlertDialog.Builder(this);
@@ -1208,10 +1213,7 @@ public class TransactionsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				int transactionId = Integer.parseInt(tag.split("-")[1]);
-				Transaction transaction = DatabaseAdapter.getInstance(TransactionsActivity.this)
-						.getTransaction(transactionId);
-				DatabaseManager.deleteTransaction(TransactionsActivity.this, transaction, true);
+				DatabaseManager.deleteTransaction(TransactionsActivity.this, oldTransaction, true);
 				int viewNo = parentLayout.indexOfChild(layout);
 				deleteTransactionFromLayout(viewNo);
 				getTransactionsToDisplay();

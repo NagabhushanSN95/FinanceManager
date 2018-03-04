@@ -2,6 +2,7 @@
 
 package com.chaturvedi.financemanager.datastructures;
 
+@SuppressWarnings("unused")
 public class Bank implements MoneyStorage
 {
 	private int id;
@@ -10,7 +11,7 @@ public class Bank implements MoneyStorage
 	private double balance;
 	private String smsName;
 	private boolean deleted;
-
+	
 	public Bank(int id, String name, String accNo, double balance, String smsName, boolean deleted)
 	{
 		this.id = id;
@@ -21,16 +22,8 @@ public class Bank implements MoneyStorage
 		this.deleted = deleted;
 	}
 	
-	/*public Bank(int id, String name, String accNo, String balance, String smsName)
-	{
-		this.id=id;
-		this.name=name;
-		this.accNo=accNo;
-		this.balance=Double.parseDouble(balance);
-		this.smsName=smsName;
-	}*/
-	
 	public Bank(String id, String name, String accNo, String balance, String smsName, String deleted)
+	
 	{
 		this.id=Integer.parseInt(id);
 		this.name=name;
@@ -39,15 +32,7 @@ public class Bank implements MoneyStorage
 		this.smsName=smsName;
 		this.deleted = Boolean.parseBoolean(deleted);
 	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setID(int id)
-	{
-		this.id = id;
-	}
-
+	
 	/**
 	 * @return the id
 	 */
@@ -55,15 +40,15 @@ public class Bank implements MoneyStorage
 	{
 		return id;
 	}
-
+	
 	/**
-	 * @param name the name to set
+	 * @param id the id to set
 	 */
-	public void setName(String name)
+	public void setID(int id)
 	{
-		this.name = name;
+		this.id = id;
 	}
-
+	
 	/**
 	 * @return the name
 	 */
@@ -71,15 +56,15 @@ public class Bank implements MoneyStorage
 	{
 		return name;
 	}
-
+	
 	/**
-	 * @param accNo the accNo to set
+	 * @param name the name to set
 	 */
-	public void setAccNo(String accNo)
+	public void setName(String name)
 	{
-		this.accNo = accNo;
+		this.name = name;
 	}
-
+	
 	/**
 	 * @return the accNo
 	 */
@@ -87,21 +72,29 @@ public class Bank implements MoneyStorage
 	{
 		return accNo;
 	}
-
+	
 	/**
-	 * @param balance the balance to set
+	 * @param accNo the accNo to set
 	 */
-	public void setBalance(double balance)
+	public void setAccNo(String accNo)
 	{
-		this.balance = balance;
+		this.accNo = accNo;
 	}
-
+	
 	/**
 	 * @return the balance
 	 */
 	public double getBalance()
 	{
 		return balance;
+	}
+	
+	/**
+	 * @param balance the balance to set
+	 */
+	public void setBalance(double balance)
+	{
+		this.balance = balance;
 	}
 	
 	public void incrementBalance(double amount)
@@ -113,15 +106,7 @@ public class Bank implements MoneyStorage
 	{
 		balance -= amount;
 	}
-
-	/**
-	 * @param smsName the smsName to set
-	 */
-	public void setSmsName(String smsName)
-	{
-		this.smsName = smsName;
-	}
-
+	
 	/**
 	 * @return the smsName
 	 */
@@ -129,14 +114,22 @@ public class Bank implements MoneyStorage
 	{
 		return smsName;
 	}
-
-	public void setDeleted(boolean deleted)
+	
+	/**
+	 * @param smsName the smsName to set
+	 */
+	public void setSmsName(String smsName)
 	{
-		this.deleted = deleted;
+		this.smsName = smsName;
 	}
-
+	
 	public boolean isDeleted()
 	{
 		return deleted;
+	}
+	
+	public void setDeleted(boolean deleted)
+	{
+		this.deleted = deleted;
 	}
 }

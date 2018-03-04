@@ -29,7 +29,9 @@ import java.util.Calendar;
 public class TransferLayout extends RelativeLayout
 {
 	private Spinner transferSourcesSpinner;
+	private HintAdapter transferSourcesAdapter;
 	private Spinner transferDestinationsSpinner;
+	private HintAdapter transferDestinationsAdapter;
 	private MyAutoCompleteTextView particularsEditText;
 	private EditText rateEditText;
 	private EditText quantityEditText;
@@ -69,13 +71,13 @@ public class TransferLayout extends RelativeLayout
 		transferDestinationsList.addAll(databaseAdapter.getAllVisibleBanksNames());
 
 		transferSourcesSpinner = (Spinner) findViewById(R.id.spinner_transferSource);
-		final HintAdapter transferSourcesAdapter = new HintAdapter(getContext(), android.R.layout
+		transferSourcesAdapter = new HintAdapter(getContext(), android.R.layout
 				.simple_spinner_item,
 				transferSourcesList);
 		transferSourcesSpinner.setAdapter(transferSourcesAdapter);
 		transferSourcesSpinner.setSelection(transferSourcesAdapter.getCount());
 		transferDestinationsSpinner = (Spinner) findViewById(R.id.spinner_transferDestination);
-		final HintAdapter transferDestinationsAdapter = new HintAdapter(getContext(), android.R
+		transferDestinationsAdapter = new HintAdapter(getContext(), android.R
 				.layout.simple_spinner_item,
 				transferDestinationsList);
 		transferDestinationsSpinner.setAdapter(transferDestinationsAdapter);
@@ -128,10 +130,10 @@ public class TransferLayout extends RelativeLayout
 				TransactionTypeParser parser = new TransactionTypeParser(getContext(), selectedTemplate.getType());
 				String transferSourceName = parser.getTransferSourceName();
 				String transferDestinationName = parser.getIncomeDestinationName();
-				int transferSourcePosition = transferSourcesAdapter.getPosition(transferSourceName);
-				int transferDestinationPosition = transferDestinationsAdapter.getPosition(transferDestinationName);
-				transferSourcesSpinner.setSelection(transferSourcePosition);
-				transferDestinationsSpinner.setSelection(transferDestinationPosition);
+				transferSourcesSpinner.setSelection(transferSourcesAdapter.getPosition
+						(transferSourceName));
+				transferDestinationsSpinner.setSelection(transferDestinationsAdapter.getPosition
+						(transferDestinationName));
 				rateEditText.setText(String.valueOf(selectedTemplate.getAmount()));
 			}
 		});
@@ -146,34 +148,28 @@ public class TransferLayout extends RelativeLayout
 			Toast.makeText(getContext(), "Transaction is not Transfer", Toast.LENGTH_SHORT).show();
 			return;
 		}
-
-		int transferSourceNo;
+		
+		String transferSourceName;
 		if(parser.isTransferSourceWallet())
 		{
-			// IDs start with 1. Hence, 1 is subtracted
-			transferSourceNo = parser.getTransferSourceWallet().getID() - 1;
+			transferSourceName = parser.getTransferSourceWallet().getName();
 		}
 		else
 		{
-			// Banks are displayed after wallets. Hence, numWallets is added
-			transferSourceNo = DatabaseAdapter.getInstance(getContext()).getNumVisibleWallets() +
-					parser.getTransferSourceBank().getID() - 1;
+			transferSourceName = parser.getTransferSourceBank().getName();
 		}
-		transferSourcesSpinner.setSelection(transferSourceNo);
-
-		int transferDestinationNo;
+		transferSourcesSpinner.setSelection(transferSourcesAdapter.getPosition(transferSourceName));
+		
+		String transferDestinationName;
 		if(parser.isTransferDestinationWallet())
 		{
-			// IDs start with 1. Hence, 1 is subtracted
-			transferDestinationNo = parser.getTransferDestinationWallet().getID() - 1;
+			transferDestinationName = parser.getTransferDestinationWallet().getName();
 		}
 		else
 		{
-			// Banks are displayed after wallets. Hence, numWallets is added
-			transferDestinationNo = DatabaseAdapter.getInstance(getContext()).getNumVisibleWallets() +
-					parser.getTransferDestinationBank().getID() - 1;
+			transferDestinationName = parser.getTransferDestinationBank().getName();
 		}
-		transferDestinationsSpinner.setSelection(transferDestinationNo);
+		transferDestinationsSpinner.setSelection(transferDestinationsAdapter.getPosition(transferDestinationName));
 
 		particularsEditText.setText(transaction.getParticular());
 		rateEditText.setText(String.valueOf(transaction.getRate()));
@@ -182,17 +178,18 @@ public class TransferLayout extends RelativeLayout
 		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate("/")));
 		excludeInCountersCheckBox.setChecked(!transaction.isIncludeInCounters());
 	}
-
-	public void setData(int transferSourceNo, int transferDestinationNo, String particulars, String rateText, String quantityText,
+	
+	public void setData(String transferSourceName, String transferDestinationName, String
+			particulars, String rateText, String quantityText,
 						String amountText, String date, boolean addTemplate, boolean excludeInCounters)
 	{
-		if(transferSourceNo != -1)
+		if (transferSourceName != null)
 		{
-			transferSourcesSpinner.setSelection(transferSourceNo);
+			transferSourcesSpinner.setSelection(transferSourcesAdapter.getPosition(transferSourceName));
 		}
-		if(transferDestinationNo != -1)
+		if (transferDestinationName != null)
 		{
-			transferDestinationsSpinner.setSelection(transferDestinationNo);
+			transferDestinationsSpinner.setSelection(transferDestinationsAdapter.getPosition(transferDestinationName));
 		}
 		particularsEditText.setText(particulars);
 		rateEditText.setText(rateText);
@@ -202,20 +199,19 @@ public class TransferLayout extends RelativeLayout
 		addTemplateCheckBox.setSelected(addTemplate);
 		excludeInCountersCheckBox.setChecked(excludeInCounters);
 	}
-
-	public void setData(String transferType, int bankID, double amount)
+	
+	public void setData(String transferType, int bankId, double amount)
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
-
-		// -1 because BankIDs start with 1 and index start with 0
-		int bankPosition = databaseAdapter.getNumVisibleWallets() + bankID-1;
+		
+		String bankName = databaseAdapter.getBank(bankId).getName();
 		if(transferType.equals(Constants.TRANSFER_PAY_IN))
 		{
-			transferDestinationsSpinner.setSelection(bankPosition);
+			transferDestinationsSpinner.setSelection(transferDestinationsAdapter.getPosition(bankName));
 		}
 		else
 		{
-			transferSourcesSpinner.setSelection(bankPosition);
+			transferSourcesSpinner.setSelection(transferSourcesAdapter.getPosition(bankName));
 		}
 
 		amountEditText.setText(String.valueOf(amount));
@@ -342,15 +338,15 @@ public class TransferLayout extends RelativeLayout
 
 		return transaction;
 	}
-
-	public int getTransferSourcePosition()
+	
+	public String getTransferSourceName()
 	{
-		return transferSourcesSpinner.getSelectedItemPosition();
+		return (String) transferSourcesSpinner.getSelectedItem();
 	}
-
-	public int getTransferDestinationPosition()
+	
+	public String getTransferDestinationName()
 	{
-		return transferDestinationsSpinner.getSelectedItemPosition();
+		return (String) transferDestinationsSpinner.getSelectedItem();
 	}
 
 	public String getParticulars()

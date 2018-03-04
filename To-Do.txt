@@ -1,3 +1,4 @@
+In TransactionsActivity, if a transaction is changed from expense to income, colour doesn't change. Fix it.
 In ExportActivity, add support to select destination folder to save the file
 Create custom widget to display huge data in chunks with show-more button
 Add daily backup

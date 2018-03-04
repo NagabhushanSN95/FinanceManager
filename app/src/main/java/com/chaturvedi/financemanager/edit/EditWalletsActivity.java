@@ -1,121 +1,183 @@
 package com.chaturvedi.financemanager.edit;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.ContextMenu;
+import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.*;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.datastructures.Wallet;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EditWalletsActivity extends Activity
 {
-	private DisplayMetrics displayMetrics;
-	private int screenWidth;
-	private int screenHeight;
+	public static final int ID_EDIT_WALLET = 1101;
+	public static final int ID_DELETE_WALLET = 1102;
+	private static final int ID_RESTORE_WALLET = 1103;
+	
 	private int MARGIN_TOP_PARENT_LAYOUT;
 	private int MARGIN_BOTTOM_PARENT_LAYOUT;
 	private int MARGIN_LEFT_PARENT_LAYOUT;
 	private int MARGIN_RIGHT_PARENT_LAYOUT;
 	private int WIDTH_NAME_VIEWS;
 	private int WIDTH_BALANCE_VIEWS;
-	private int MARGIN_TOP_VIEWS;
 	
-	private LinearLayout parentLayout;
-	private LayoutParams parentLayoutParams;
-	private Button addWalletButton;
+	private LinearLayout activeWalletsLayout;
+	private LinearLayout deletedWalletsLayout;
 	
 	private AlertDialog.Builder addWalletDialog;
 	private EditText walletNameField;
 	private EditText walletBalanceField;
-
-	private static ArrayList<Wallet> wallets;
-	private int contextMenuWalletNo;
-
+	
+	private boolean showDeletedWallets;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_edit_wallets);
+		// Provide Up Button in Action Bar
+		if (getActionBar() != null)
+		{
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+		}
 		
-		displayMetrics=new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-		screenWidth=displayMetrics.widthPixels;
-		screenHeight=displayMetrics.heightPixels;
-		MARGIN_TOP_PARENT_LAYOUT=screenHeight*5/100;
-		MARGIN_BOTTOM_PARENT_LAYOUT=20;
-		MARGIN_LEFT_PARENT_LAYOUT=screenWidth*3/100;
-		MARGIN_RIGHT_PARENT_LAYOUT=screenWidth*3/100;
-		WIDTH_NAME_VIEWS=screenWidth*60/100;
-		WIDTH_BALANCE_VIEWS=screenWidth*30/100;
-		MARGIN_TOP_VIEWS=5;
-		
+		calculateDimensions();
 		buildLayout();
 	}
 	
-	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
 	{
-		super.onCreateContextMenu(menu, view, menuInfo);
-		contextMenuWalletNo = parentLayout.indexOfChild(view);
-		menu.setHeaderTitle("Options For Wallet "+(contextMenuWalletNo +1));
-		menu.add(0, view.getId(), 0, "Edit");
-		menu.add(0, view.getId(), 0, "Delete");
+		// Inflate the menu; this adds childItems to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.activity_edit_wallets, menu);
+		return true;
 	}
 	
-	public boolean onContextItemSelected(MenuItem item)
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		if(item.getTitle().equals("Edit"))
+		switch (item.getItemId())
 		{
-			editWallet(contextMenuWalletNo);
-			buildLayout();
+			case R.id.action_toggleDisplayDeletedWallets:
+				showDeletedWallets = !showDeletedWallets;
+				if (showDeletedWallets)
+				{
+					item.setTitle("Hide Deleted Wallets");
+					deletedWalletsLayout.setVisibility(View.VISIBLE);
+				}
+				else
+				{
+					item.setTitle("Show Deleted Wallets");
+					deletedWalletsLayout.setVisibility(View.GONE);
+				}
+				return true;
+			
+			default:
+				return super.onOptionsItemSelected(item);
 		}
-		else if(item.getTitle().equals("Delete"))
+	}
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo)
+	{
+		String walletName = ((TextView) view.findViewById(R.id.walletName)).getText().toString();
+		Wallet wallet = DatabaseAdapter.getInstance(this).getWalletFromName(walletName);
+		menu.setHeaderTitle("Options");
+		if (!wallet.isDeleted())
 		{
-			deleteWallet(contextMenuWalletNo);
-			//buildLayout();
+			menu.add(Menu.NONE, ID_EDIT_WALLET, Menu.NONE, "Edit \"" + walletName + "\"");
+			menu.add(Menu.NONE, ID_DELETE_WALLET, Menu.NONE, "Delete \"" + walletName + "\"");
 		}
 		else
 		{
+			menu.add(Menu.NONE, ID_RESTORE_WALLET, Menu.NONE, "Restore \"" + walletName + "\"");
+		}
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item)
+	{
+		int walletId = getWalletIdFromMenuItem(item);
+		if (walletId != -1)
+		{
+			switch (item.getItemId())
+			{
+				case ID_EDIT_WALLET:
+					editWallet(walletId);
+					rebuildLayout();
+					break;
+				
+				case ID_DELETE_WALLET:
+					deleteWallet(walletId);
+					break;
+				
+				case ID_RESTORE_WALLET:
+					restoreWallet(walletId);
+					break;
+				
+				default:
+					return super.onContextItemSelected(item);
+			}
+		}
+		else
+		{
+			Toast.makeText(this, "Unable to detect selected Wallet. Please try again. Please " +
+					"contact developer if the problem persists", Toast.LENGTH_LONG).show();
 			return false;
 		}
 		return true;
 	}
-
+	
+	private void calculateDimensions()
+	{
+		DisplayMetrics displayMetrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		int screenWidth = displayMetrics.widthPixels;
+		int screenHeight = displayMetrics.heightPixels;
+		MARGIN_TOP_PARENT_LAYOUT = screenHeight * 5 / 100;
+		MARGIN_BOTTOM_PARENT_LAYOUT = 20;
+		MARGIN_LEFT_PARENT_LAYOUT = screenWidth * 3 / 100;
+		MARGIN_RIGHT_PARENT_LAYOUT = screenWidth * 3 / 100;
+		WIDTH_NAME_VIEWS = screenWidth * 60 / 100;
+		WIDTH_BALANCE_VIEWS = screenWidth * 30 / 100;
+	}
+	
+	private void rebuildLayout()
+	{
+		activeWalletsLayout.removeAllViews();
+		deletedWalletsLayout.removeAllViews();
+		buildLayout();
+	}
+	
 	private void buildLayout()
 	{
 		// If Release Version, Make Krishna TextView Invisible
-		if(0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
+		if (0 == (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
 		{
 			TextView krishna = (TextView) findViewById(R.id.krishna);
 			krishna.setVisibility(View.INVISIBLE);
 		}
 		
-		parentLayout=(LinearLayout)findViewById(R.id.parentLayout);
-		parentLayoutParams=(LayoutParams) parentLayout.getLayoutParams();
-		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT, MARGIN_RIGHT_PARENT_LAYOUT,
+		LinearLayout parentLayout = (LinearLayout) findViewById(R.id.parentLayout);
+		LayoutParams parentLayoutParams = (LayoutParams) parentLayout.getLayoutParams();
+		parentLayoutParams.setMargins(MARGIN_LEFT_PARENT_LAYOUT, MARGIN_TOP_PARENT_LAYOUT,
+				MARGIN_RIGHT_PARENT_LAYOUT,
 				MARGIN_BOTTOM_PARENT_LAYOUT);
 		parentLayout.setLayoutParams(parentLayoutParams);
-		parentLayout.removeAllViews();
 		
-		addWalletButton =(Button)findViewById(R.id.button_addWallet);
+		Button addWalletButton = (Button) findViewById(R.id.button_addWallet);
 		addWalletButton.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -125,31 +187,55 @@ public class EditWalletsActivity extends Activity
 				addWalletDialog.show();
 			}
 		});
-
+		
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(EditWalletsActivity.this);
 		DecimalFormat formatter = new DecimalFormat("#,##0.##");
-		int numWallets = databaseAdapter.getNumVisibleWallets();
-		wallets = databaseAdapter.getAllVisibleWallets();
 		
-		for(int i=0; i<numWallets; i++)
+		activeWalletsLayout = (LinearLayout) findViewById(R.id.activeWalletsLayout);
+		for (Wallet wallet : databaseAdapter.getAllVisibleWallets())
 		{
 			LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
-			LinearLayout layout = (LinearLayout) layoutInflater.inflate(R.layout.layout_display_wallet, null);
+			LinearLayout layout = (LinearLayout) layoutInflater.inflate(R.layout
+					.layout_display_wallet, activeWalletsLayout, false);
 			TextView walletNameView = (TextView) layout.findViewById(R.id.walletName);
 			TextView walletBalanceView = (TextView) layout.findViewById(R.id.walletBalance);
 			
-			walletNameView.setText(wallets.get(i).getName());
-			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams.WRAP_CONTENT);
-			//nameViewParams.setMargins(MARGIN_LEFT_NAME_VIEWS, 0, 0, 0);
+			walletNameView.setText(wallet.getName());
+			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams
+					.WRAP_CONTENT);
 			walletNameView.setLayoutParams(nameViewParams);
 			
-			walletBalanceView.setText(formatter.format(wallets.get(i).getBalance()));
-			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams.WRAP_CONTENT);
-			//nameViewParams.setMargins(MARGIN_LEFT_BALANCE_VIEWS, 0, 0, 0);
+			walletBalanceView.setText(formatter.format(wallet.getBalance()));
+			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams
+					.WRAP_CONTENT);
 			walletBalanceView.setLayoutParams(balanceViewParams);
 			walletBalanceView.setGravity(Gravity.END);
 			
-			parentLayout.addView(layout);
+			activeWalletsLayout.addView(layout);
+			registerForContextMenu(layout);
+		}
+		
+		deletedWalletsLayout = (LinearLayout) findViewById(R.id.deletedWalletsLayout);
+		for (Wallet wallet : databaseAdapter.getAllDeletedWallets())
+		{
+			LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
+			LinearLayout layout = (LinearLayout) layoutInflater.inflate(R.layout
+					.layout_display_wallet, activeWalletsLayout, false);
+			TextView walletNameView = (TextView) layout.findViewById(R.id.walletName);
+			TextView walletBalanceView = (TextView) layout.findViewById(R.id.walletBalance);
+			
+			walletNameView.setText(wallet.getName());
+			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams
+					.WRAP_CONTENT);
+			walletNameView.setLayoutParams(nameViewParams);
+			
+			walletBalanceView.setText(formatter.format(wallet.getBalance()));
+			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams
+					.WRAP_CONTENT);
+			walletBalanceView.setLayoutParams(balanceViewParams);
+			walletBalanceView.setGravity(Gravity.END);
+			
+			deletedWalletsLayout.addView(layout);
 			registerForContextMenu(layout);
 		}
 	}
@@ -159,8 +245,11 @@ public class EditWalletsActivity extends Activity
 		addWalletDialog = new AlertDialog.Builder(this);
 		addWalletDialog.setTitle("Add A New Wallet");
 		addWalletDialog.setMessage("Enter The Particulars");
-		LayoutInflater layoutInflater=LayoutInflater.from(this);
-		final LinearLayout addWalletLayout=(LinearLayout)layoutInflater.inflate(R.layout.dialog_add_wallet, null);
+		LayoutInflater layoutInflater = LayoutInflater.from(this);
+		@SuppressLint("InflateParams")
+		// For passing null to inflate method. Justified here, because there is no parent view
+		final LinearLayout addWalletLayout = (LinearLayout) layoutInflater.inflate(R.layout
+				.dialog_add_wallet, null);
 		addWalletDialog.setView(addWalletLayout);
 		
 		walletNameField = (EditText) addWalletLayout.findViewById(R.id.walletName);
@@ -171,33 +260,34 @@ public class EditWalletsActivity extends Activity
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
-				DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(EditWalletsActivity.this);
+				DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(EditWalletsActivity
+						.this);
 				int id = databaseAdapter.getIDforNextWallet();
 				String walletName = walletNameField.getText().toString().trim();
 				String walletBalance = walletBalanceField.getText().toString().trim();
 				boolean dataCorrect = verifyData(walletName, walletBalance, null);
 				
-				if(dataCorrect)
+				if (dataCorrect)
 				{
-					Wallet wallet = new Wallet(id, walletName, Double.parseDouble(walletBalance), false);
+					Wallet wallet = new Wallet(id, walletName, Double.parseDouble(walletBalance),
+							false);
 					databaseAdapter.addWallet(wallet);
 				}
 				else
 				{
 					buildAddWalletDialog();
-					walletNameField.setText(walletName+" ");
+					walletNameField.setText(walletName);
 					walletBalanceField.setText(walletBalance);
 					addWalletDialog.show();
 				}
-				buildLayout();
+				rebuildLayout();
 			}
 		});
 	}
 	
-	private void editWallet(final int walletNo)
+	private void editWallet(int walletId)
 	{
-		//ArrayList<Bank> wallets = DatabaseManager.getAllBanks();
-		final Wallet wallet = wallets.get(walletNo);
+		final Wallet wallet = DatabaseAdapter.getInstance(this).getWallet(walletId);
 		buildAddWalletDialog();
 		walletNameField.setText(wallet.getName());
 		walletBalanceField.setText(String.valueOf(wallet.getBalance()));
@@ -213,16 +303,17 @@ public class EditWalletsActivity extends Activity
 				boolean isDeleted = wallet.isDeleted();
 				boolean dataCorrect = verifyData(walletName, walletBalance, wallet.getName());
 				
-				if(dataCorrect)
+				if (dataCorrect)
 				{
-					Wallet newWallet = new Wallet(id, walletName, Double.parseDouble(walletBalance), isDeleted);
+					Wallet newWallet = new Wallet(id, walletName, Double.parseDouble
+							(walletBalance), isDeleted);
 					DatabaseAdapter.getInstance(EditWalletsActivity.this).updateWallet(newWallet);
-					buildLayout();
+					rebuildLayout();
 				}
 				else
 				{
 					buildAddWalletDialog();
-					walletNameField.setText(walletName+" ");
+					walletNameField.setText(walletName);
 					walletBalanceField.setText(walletBalance);
 					addWalletDialog.show();
 				}
@@ -230,21 +321,42 @@ public class EditWalletsActivity extends Activity
 		});
 		addWalletDialog.show();
 	}
-
-	private void deleteWallet(final int contextMenuWalletNo)
+	
+	private void deleteWallet(int walletId)
 	{
-		final Wallet wallet = wallets.get(contextMenuWalletNo);
+		final Wallet wallet = DatabaseAdapter.getInstance(this).getWallet(walletId);
 		AlertDialog.Builder deleteDialog = new AlertDialog.Builder(EditWalletsActivity.this);
 		deleteDialog.setTitle("Delete Wallet");
-		deleteDialog.setMessage("Are you sure you want to delete wallet '" + wallet.getName() + "'?");
+		deleteDialog.setMessage("Are you sure you want to delete wallet '" + wallet.getName() +
+				"'?");
 		deleteDialog.setPositiveButton("Delete", new DialogInterface.OnClickListener()
 		{
 			@Override
 			public void onClick(DialogInterface dialog, int which)
 			{
 				DatabaseAdapter.getInstance(EditWalletsActivity.this).deleteWallet(wallet.getID());
-				wallets.remove(contextMenuWalletNo);
-				parentLayout.removeViewAt(contextMenuWalletNo);
+				rebuildLayout();
+			}
+		});
+		deleteDialog.setNegativeButton("Cancel", null);
+		deleteDialog.show();
+	}
+	
+	private void restoreWallet(int walletId)
+	{
+		final Wallet wallet = DatabaseAdapter.getInstance(this).getWallet(walletId);
+		AlertDialog.Builder deleteDialog = new AlertDialog.Builder(EditWalletsActivity.this);
+		deleteDialog.setTitle("Restore Wallet");
+		deleteDialog.setMessage("Are you sure you want to restore wallet '" + wallet.getName() +
+				"'?");
+		deleteDialog.setPositiveButton("Restore", new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				DatabaseAdapter.getInstance(EditWalletsActivity.this).restoreWallet(wallet.getID
+						());
+				rebuildLayout();
 			}
 		});
 		deleteDialog.setNegativeButton("Cancel", null);
@@ -254,23 +366,27 @@ public class EditWalletsActivity extends Activity
 	private boolean verifyData(String walletName, String walletBalance, String origWalletName)
 	{
 		boolean dataCorrect;
-		if(walletName.length()==0)
+		if (walletName.length() == 0)
 		{
-			Toast.makeText(getApplicationContext(), "Please Enter The Wallet Name", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Please Enter The Wallet Name", Toast
+					.LENGTH_LONG).show();
 			dataCorrect = false;
 		}
-		else if(walletBalance.length()==0)
+		else if (walletBalance.length() == 0)
 		{
-			Toast.makeText(getApplicationContext(), "Please Enter The Wallet Balance", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Please Enter The Wallet Balance", Toast
+					.LENGTH_LONG).show();
 			dataCorrect = false;
 		}
-		else if(origWalletName!= null && walletName.equals(origWalletName))
+		else if (origWalletName != null && walletName.equals(origWalletName))
 		{
 			dataCorrect = true;
 		}
-		else if(DatabaseAdapter.getInstance(EditWalletsActivity.this).getWalletFromName(walletName) != null)
+		else if (DatabaseAdapter.getInstance(EditWalletsActivity.this).getWalletFromName
+				(walletName) != null)
 		{
-			Toast.makeText(getApplicationContext(), "Please Enter A Unique Wallet Name", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Please Enter A Unique Wallet Name", Toast
+					.LENGTH_LONG).show();
 			dataCorrect = false;
 		}
 		else
@@ -278,5 +394,18 @@ public class EditWalletsActivity extends Activity
 			dataCorrect = true;
 		}
 		return dataCorrect;
+	}
+	
+	private int getWalletIdFromMenuItem(MenuItem menuItem)
+	{
+		int walletId = -1;
+		String title = menuItem.getTitle().toString();
+		Matcher walletNameMatcher = Pattern.compile(".+\"(.+)\"").matcher(title);
+		if (walletNameMatcher.find())
+		{
+			String walletName = walletNameMatcher.group(1);
+			walletId = DatabaseAdapter.getInstance(this).getWalletFromName(walletName).getID();
+		}
+		return walletId;
 	}
 }

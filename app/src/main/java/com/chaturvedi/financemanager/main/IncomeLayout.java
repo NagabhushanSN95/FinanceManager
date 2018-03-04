@@ -28,6 +28,7 @@ import java.util.Calendar;
 public class IncomeLayout extends RelativeLayout
 {
 	private Spinner incomeDestinationSpinner;
+	private HintAdapter incomeDestinationAdapter;
 	private MyAutoCompleteTextView particularsEditText;
 	private EditText rateEditText;
 	private EditText quantityEditText;
@@ -64,7 +65,7 @@ public class IncomeLayout extends RelativeLayout
 		incomeDestinationsList.addAll(databaseAdapter.getAllVisibleBanksNames());
 
 		incomeDestinationSpinner = (Spinner) this.findViewById(R.id.spinner_incomeDestination);
-		final HintAdapter incomeDestinationAdapter = new HintAdapter(getContext(), android.R
+		incomeDestinationAdapter = new HintAdapter(getContext(), android.R
 				.layout.simple_spinner_item,
 				incomeDestinationsList);
 		incomeDestinationSpinner.setAdapter(incomeDestinationAdapter);
@@ -116,8 +117,8 @@ public class IncomeLayout extends RelativeLayout
 				Template selectedTemplate = databaseAdapter.getTemplate(particularsEditText.getText().toString());
 				String incomeDestinationName = (new TransactionTypeParser(getContext(), selectedTemplate.getType())).
 						getIncomeDestinationName();
-				int incomeDestinationPosition = incomeDestinationAdapter.getPosition(incomeDestinationName);
-				incomeDestinationSpinner.setSelection(incomeDestinationPosition);
+				incomeDestinationSpinner.setSelection(incomeDestinationAdapter.getPosition
+						(incomeDestinationName));
 				rateEditText.setText(String.valueOf(selectedTemplate.getAmount()));
 			}
 		});
@@ -132,19 +133,17 @@ public class IncomeLayout extends RelativeLayout
 			Toast.makeText(getContext(), "Transaction is not Income", Toast.LENGTH_SHORT).show();
 			return;
 		}
-		int incomeDestinationNo;
+		String incomeDestinationName;
 		if(parser.isIncomeDestinationWallet())
 		{
-			// IDs start with 1. Hence, 1 is subtracted
-			incomeDestinationNo = parser.getIncomeDestinationWallet().getID() - 1;
+			incomeDestinationName = parser.getIncomeDestinationWallet().getName();
 		}
 		else
 		{
-			// Banks are displayed after wallets. Hence, numWallets is added
-			incomeDestinationNo = DatabaseAdapter.getInstance(getContext()).getNumVisibleWallets() +
-					parser.getIncomeDestinationBank().getID() - 1;
+			incomeDestinationName = parser.getIncomeDestinationBank().getName();
 		}
-		incomeDestinationSpinner.setSelection(incomeDestinationNo);
+		incomeDestinationSpinner.setSelection(incomeDestinationAdapter.getPosition
+				(incomeDestinationName));
 
 		particularsEditText.setText(transaction.getParticular());
 		rateEditText.setText(String.valueOf(transaction.getRate()));
@@ -153,11 +152,12 @@ public class IncomeLayout extends RelativeLayout
 		dateEditText.setText(String.valueOf(transaction.getDate().getDisplayDate("/")));
 		excludeInCountersCheckBox.setChecked(!transaction.isIncludeInCounters());
 	}
-
-	public void setData(int incomeDestinationNo, String particulars, String rateText, String quantityText, String amountText,
+	
+	public void setData(String incomeDestinationName, String particulars, String rateText, String
+			quantityText, String amountText,
 						String date, boolean addTemplate, boolean excludeInCounters)
 	{
-		incomeDestinationSpinner.setSelection(incomeDestinationNo);
+		incomeDestinationSpinner.setSelection(incomeDestinationAdapter.getPosition(incomeDestinationName));
 		particularsEditText.setText(particulars);
 		rateEditText.setText(rateText);
 		quantityEditText.setText(quantityText);
@@ -166,14 +166,13 @@ public class IncomeLayout extends RelativeLayout
 		addTemplateCheckBox.setSelected(addTemplate);
 		excludeInCountersCheckBox.setChecked(excludeInCounters);
 	}
-
-	public void setData(int bankID, double amount)
+	
+	public void setData(int bankId, double amount)
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(getContext());
-
-		// -1 because BankIDs start with 1 and index start with 0
-		int incomeDestinationNo = databaseAdapter.getNumVisibleWallets() + bankID-1;
-		incomeDestinationSpinner.setSelection(incomeDestinationNo);
+		
+		String incomeDestinationName = databaseAdapter.getBank(bankId).getName();
+		incomeDestinationSpinner.setSelection(incomeDestinationAdapter.getPosition(incomeDestinationName));
 
 		amountEditText.setText(String.valueOf(amount));
 		//dateEditText.setText(new Date(Calendar.getInstance()).getDisplayDate());
@@ -278,10 +277,10 @@ public class IncomeLayout extends RelativeLayout
 
 		return transaction;
 	}
-
-	public int getIncomeDestinationPosition()
+	
+	public String getIncomeDestinationName()
 	{
-		return incomeDestinationSpinner.getSelectedItemPosition();
+		return (String) incomeDestinationSpinner.getSelectedItem();
 	}
 
 	public String getParticulars()

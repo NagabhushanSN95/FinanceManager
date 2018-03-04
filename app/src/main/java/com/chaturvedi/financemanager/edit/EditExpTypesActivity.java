@@ -9,12 +9,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.*;
 
 import com.chaturvedi.customviews.InputDialog;
 import com.chaturvedi.financemanager.R;
@@ -25,16 +20,21 @@ import java.util.ArrayList;
 
 public class EditExpTypesActivity extends Activity
 {
+	private static ArrayList<ExpenditureType> expTypes;
 	private LinearLayout parentLayout;
 	private int contextMenuExpTypeNo;
-	
-	private static ArrayList<ExpenditureType> expTypes;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_edit_exp_types);
+		// Provide Up Button in Action Bar
+		if (getActionBar() != null)
+		{
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+		
 		buildLayout();
 	}
 	

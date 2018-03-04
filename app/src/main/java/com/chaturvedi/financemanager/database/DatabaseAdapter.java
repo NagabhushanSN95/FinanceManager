@@ -278,6 +278,28 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		db.close();
 		return walletsNamesList;
 	}
+	
+	public ArrayList<Wallet> getAllDeletedWallets()
+	{
+		ArrayList<Wallet> wallets = new ArrayList<Wallet>();
+		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 1";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				Wallet wallet = new Wallet(cursor.getInt(0), cursor.getString(1), cursor.getDouble
+						(2),
+						cursor.getString(3).equals("1"));
+				wallets.add(wallet);
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return wallets;
+	}
 
 //	public Wallet getWalletFromName(String walletName)
 //	{
@@ -310,6 +332,15 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(KEY_DELETED, true);
+		db.update(TABLE_WALLETS, values, KEY_ID + " = ?", new String[]{String.valueOf(walletID)});
+		db.close();
+	}
+	
+	public void restoreWallet(int walletID)
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
+		ContentValues values = new ContentValues();
+		values.put(KEY_DELETED, false);
 		db.update(TABLE_WALLETS, values, KEY_ID + " = ?", new String[]{String.valueOf(walletID)});
 		db.close();
 	}
@@ -478,6 +509,27 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		return bankList;
 	}
 	
+	public ArrayList<Bank> getAllDeletedBanks()
+	{
+		ArrayList<Bank> bankList = new ArrayList<Bank>();
+		String selectQuery = "SELECT * FROM " + TABLE_BANKS + " WHERE " + KEY_DELETED + " = 1";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				Bank bank = new Bank(cursor.getInt(0), cursor.getString(1), cursor.getString(2),
+						cursor.getDouble(3), cursor.getString(4), cursor.getString(5).equals("1"));
+				bankList.add(bank);
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return bankList;
+	}
+	
 	public ArrayList<String> getAllBanksNames()
 	{
 		ArrayList<String> banksNamesList = new ArrayList<String>();
@@ -534,6 +586,15 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(KEY_DELETED, true);
+		db.update(TABLE_BANKS, values, KEY_ID + " = ?", new String[]{String.valueOf(bankID)});
+		db.close();
+	}
+	
+	public void restoreBank(int bankID)
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
+		ContentValues values = new ContentValues();
+		values.put(KEY_DELETED, false);
 		db.update(TABLE_BANKS, values, KEY_ID + " = ?", new String[]{String.valueOf(bankID)});
 		db.close();
 	}

@@ -17,35 +17,12 @@ public class Wallet implements MoneyStorage
 		this.deleted = deleted;
 	}
 
-//	public Wallet(String id, String name, String balance)
-//	{
-//		this.id=Integer.parseInt(id);
-//		this.name=name;
-//		this.balance=Double.parseDouble(balance);
-//	}
-//
-//	public Wallet(int id, String name, String balance)
-//	{
-//		this.id=id;
-//		this.name=name;
-//		this.balance=Double.parseDouble(balance);
-//	}
-
 	public Wallet(String id, String name, String balance, String deleted)
 	{
 		this.id=Integer.parseInt(id);
 		this.name=name;
 		this.balance=Double.parseDouble(balance);
-		//this.deleted = deleted.equals("1");
 		this.deleted = Boolean.parseBoolean(deleted);
-	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setID(int id)
-	{
-		this.id = id;
 	}
 
 	/**
@@ -57,11 +34,11 @@ public class Wallet implements MoneyStorage
 	}
 
 	/**
-	 * @param name the name to set
+	 * @param id the id to set
 	 */
-	public void setName(String name)
+	public void setID(int id)
 	{
-		this.name = name;
+		this.id = id;
 	}
 
 	/**
@@ -73,11 +50,11 @@ public class Wallet implements MoneyStorage
 	}
 
 	/**
-	 * @param balance the balance to set
+	 * @param name the name to set
 	 */
-	public void setBalance(double balance)
+	public void setName(String name)
 	{
-		this.balance = balance;
+		this.name = name;
 	}
 
 	/**
@@ -86,6 +63,14 @@ public class Wallet implements MoneyStorage
 	public double getBalance()
 	{
 		return balance;
+	}
+	
+	/**
+	 * @param balance the balance to set
+	 */
+	public void setBalance(double balance)
+	{
+		this.balance = balance;
 	}
 	
 	public void incrementBalance(double amount)
@@ -98,13 +83,13 @@ public class Wallet implements MoneyStorage
 		balance -= amount;
 	}
 
-	public void setDeleted(boolean deleted)
-	{
-		this.deleted = deleted;
-	}
-
 	public boolean isDeleted()
 	{
 		return deleted;
+	}
+	
+	public void setDeleted(boolean deleted)
+	{
+		this.deleted = deleted;
 	}
 }

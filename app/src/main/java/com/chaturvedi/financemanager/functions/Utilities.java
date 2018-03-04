@@ -7,15 +7,19 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.chaturvedi.financemanager.BuildConfig;
+import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.extras.DailyBackupService;
 
 import java.util.Arrays;
 import java.util.Calendar;
 
+@SuppressWarnings("WeakerAccess")
 public class Utilities
 {
+	@SuppressWarnings("unused")
 	public static void logDebugMode(String message)
 	{
 		logDebugMode("Finance Manager", message);
@@ -100,5 +104,68 @@ public class Utilities
 		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 		alarmManager.cancel(pendingIntent);
 		Utilities.logMethodEnd(Utilities.class.getName(), "disableDailyBackupService");
+	}
+	
+	public static boolean isTransactionValidForEditing(Context context, Transaction oldTransaction)
+	{
+		boolean isValid = true;
+		TransactionTypeParser parser = new TransactionTypeParser(context, oldTransaction.getType
+				());
+		if (parser.isIncome())
+		{
+			if (parser.isIncomeDestinationWallet() && parser.getIncomeDestinationWallet()
+					.isDeleted())
+			{
+				isValid = false;
+			}
+			else if (parser.isIncomeDestinationBank() && parser.getIncomeDestinationBank()
+					.isDeleted())
+			{
+				isValid = false;
+			}
+		}
+		else if (parser.isExpense())
+		{
+			if (parser.isExpenseSourceWallet() && parser.getExpenseSourceWallet().isDeleted())
+			{
+				isValid = false;
+			}
+			else if (parser.isExpenseSourceBank() && parser.getExpenseSourceBank().isDeleted())
+			{
+				isValid = false;
+			}
+			
+			if (parser.getExpenditureType().isDeleted())
+			{
+				isValid = false;
+			}
+		}
+		else if (parser.isTransfer())
+		{
+			if (parser.isTransferSourceWallet() && parser.getTransferSourceWallet().isDeleted())
+			{
+				isValid = false;
+			}
+			else if (parser.isTransferSourceBank() && parser.getTransferSourceBank().isDeleted())
+			{
+				isValid = false;
+			}
+			
+			if (parser.isTransferDestinationWallet() && parser.getTransferDestinationWallet()
+					.isDeleted())
+			{
+				isValid = false;
+			}
+			else if (parser.isTransferDestinationBank() && parser.getTransferDestinationBank()
+					.isDeleted())
+			{
+				isValid = false;
+			}
+		}
+		else
+		{
+			Toast.makeText(context, "Unknown Transaction Type", Toast.LENGTH_LONG).show();
+		}
+		return !isValid;
 	}
 }

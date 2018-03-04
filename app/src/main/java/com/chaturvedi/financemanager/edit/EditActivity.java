@@ -1,11 +1,8 @@
 package com.chaturvedi.financemanager.edit;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.os.Build;
-import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
@@ -21,20 +18,15 @@ public class EditActivity extends Activity
 	private Intent editBanksIntent;
 	private Intent editExpTypesIntent;
 	
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_edit);
-		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)
+		// Provide Up Button in Action Bar
+		if (getActionBar() != null)
 		{
-			// Provide Up Button in Action Bar
 			getActionBar().setDisplayHomeAsUpEnabled(true);
-		}
-		else
-		{
-			// No Up Button in Action Bar
 		}
 		
 		buildLayout();
