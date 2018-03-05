@@ -141,6 +141,15 @@
  - IncomeLayout, ExpenseLayout and TransferLayout updated to use HintAdapter
 
 4.3.9 (133)
- - Deleted wallets and banks can be restored
+ - Added support to restore deleted wallets and banks
  - Multiple bug fixes related to deleting wallets or banks
  - menu_statistics renamed to activity_statistics in res/menu/ folder
+
+4.4.0 (134)
+ - Removed instruction in EditExpTypesActivity
+ - Added support to restore deleted Expenditure Types
+ - Bug Fix: Earlier, after opening EditWallets/BanksActivity, deleted items used to be displayed. Fixed.
+ - In Edit Activities, deleted items will be displayed in gray colour
+ - FAQs updated (Removed stale and irrelevant FAQs)
+ - Added Update131to134 class
+ - App released.

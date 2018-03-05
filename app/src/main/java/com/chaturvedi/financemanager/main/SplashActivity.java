@@ -51,9 +51,9 @@ public class SplashActivity extends Activity
 	
 	private boolean splashComplete = false;                // Completion Of Splash Duration
 	private boolean initializationComplete = false;        // Completion Of Database Reading & Auto Restore
-	private boolean activityAlive = true;                // Set to false when back button is pressed. So, next activity will ot be started
+	private boolean activityAlive = true;                // Set to false when back button is
+	// pressed. So, next activity will not be started
 	
-	private TextView quoteView;
 	private String quoteText;
 	private int deviceWidth = 1000;
 	private int timerProgress = 0;
@@ -163,6 +163,10 @@ public class SplashActivity extends Activity
 			if (previousVersionNo < Constants.APP_VERSION_131)
 			{
 				new Update125to131(SplashActivity.this);
+			}
+			if (previousVersionNo < Constants.APP_VERSION_134)
+			{
+				new Update131to134(SplashActivity.this);
 			}
 			
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
@@ -336,7 +340,7 @@ public class SplashActivity extends Activity
 		}
 
 		// Set The Quote as the text for QuoteTextView
-		quoteView = (TextView) findViewById(R.id.quote);
+		TextView quoteView = (TextView) findViewById(R.id.quote);
 		quoteView.setText(quoteText);
 		
 		// Schedule to start the NextActivity after the specified time (splashTime)

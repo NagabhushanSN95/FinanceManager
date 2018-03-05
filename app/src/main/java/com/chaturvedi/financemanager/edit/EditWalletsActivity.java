@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.*;
@@ -228,15 +229,22 @@ public class EditWalletsActivity extends Activity
 			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams
 					.WRAP_CONTENT);
 			walletNameView.setLayoutParams(nameViewParams);
+			walletNameView.setTextColor(Color.GRAY);
 			
 			walletBalanceView.setText(formatter.format(wallet.getBalance()));
 			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams
 					.WRAP_CONTENT);
 			walletBalanceView.setLayoutParams(balanceViewParams);
 			walletBalanceView.setGravity(Gravity.END);
+			walletBalanceView.setTextColor(Color.GRAY);
 			
 			deletedWalletsLayout.addView(layout);
 			registerForContextMenu(layout);
+		}
+		
+		if (!showDeletedWallets)
+		{
+			deletedWalletsLayout.setVisibility(View.GONE);
 		}
 	}
 	

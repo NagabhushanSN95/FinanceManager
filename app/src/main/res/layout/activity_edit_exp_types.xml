@@ -13,12 +13,12 @@
         android:text="@string/krishna" />
     
     <ScrollView
-        android:id="@+id/scrollView_expTypes"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_below="@+id/krishna"
-        android:layout_above="@+id/button_add_expType" >
+		android:id="@+id/scrollView_expTypes"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_above="@+id/button_add_expType"
+		android:layout_below="@+id/krishna"
+		android:layout_marginTop="30dp">
 
         <LinearLayout 
             android:id="@+id/parentLayout"
@@ -26,12 +26,17 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" >
 
-            <TextView
-                android:id="@+id/instruction_expTypes"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/instruction_expenditure_types" />
+			<LinearLayout
+				android:id="@+id/activeExpTypesLayout"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"/>
+
+			<LinearLayout
+				android:id="@+id/deletedExpTypesLayout"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"/>
        	</LinearLayout>
     </ScrollView>
 

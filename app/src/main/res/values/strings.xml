@@ -127,6 +127,7 @@
 	<string name="exportFileFormat">Format</string>
     <string name="action_showDeletedBanks">Show Deleted Banks</string>
     <string name="action_showDeletedWallets">Show Deleted Wallets</string>
+	<string name="action_toggleDisplayDeletedExpTypes">Show Deleted Items</string>
 	<color name="background">#E2ECFF</color>
     <color name="background_top">#E2ECFF</color>
     <color name="background_middle">#E2ECFF</color>

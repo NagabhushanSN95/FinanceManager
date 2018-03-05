@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class DatabaseAdapter extends SQLiteOpenHelper
 {
 	private static final int DATABASE_VERSION = 1;
@@ -220,7 +221,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<Wallet> getAllWallets()
 	{
-		ArrayList<Wallet> wallets = new ArrayList<Wallet>();
+		ArrayList<Wallet> wallets = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_WALLETS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -241,7 +242,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<Wallet> getAllVisibleWallets()
 	{
-		ArrayList<Wallet> wallets = new ArrayList<Wallet>();
+		ArrayList<Wallet> wallets = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -262,7 +263,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<String> getAllVisibleWalletsNames()
 	{
-		ArrayList<String> walletsNamesList = new ArrayList<String>();
+		ArrayList<String> walletsNamesList = new ArrayList<>();
 		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -281,7 +282,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<Wallet> getAllDeletedWallets()
 	{
-		ArrayList<Wallet> wallets = new ArrayList<Wallet>();
+		ArrayList<Wallet> wallets = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_WALLETS + " WHERE " + KEY_DELETED + " = 1";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -469,7 +470,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<Bank> getAllBanks()
 	{
-		ArrayList<Bank> bankList = new ArrayList<Bank>();
+		ArrayList<Bank> bankList = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_BANKS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -490,7 +491,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<Bank> getAllVisibleBanks()
 	{
-		ArrayList<Bank> bankList = new ArrayList<Bank>();
+		ArrayList<Bank> bankList = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_BANKS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -511,7 +512,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<Bank> getAllDeletedBanks()
 	{
-		ArrayList<Bank> bankList = new ArrayList<Bank>();
+		ArrayList<Bank> bankList = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_BANKS + " WHERE " + KEY_DELETED + " = 1";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -532,7 +533,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<String> getAllBanksNames()
 	{
-		ArrayList<String> banksNamesList = new ArrayList<String>();
+		ArrayList<String> banksNamesList = new ArrayList<>();
 		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_BANKS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -551,7 +552,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<String> getAllVisibleBanksNames()
 	{
-		ArrayList<String> banksNamesList = new ArrayList<String>();
+		ArrayList<String> banksNamesList = new ArrayList<>();
 		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_BANKS + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -725,7 +726,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting All Transactions
 	public ArrayList<Transaction> getAllTransactions()
 	{
-		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
+		ArrayList<Transaction> transactionList = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -749,7 +750,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting All Visible Transactions
 	public ArrayList<Transaction> getAllVisibleTransactions()
 	{
-		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
+		ArrayList<Transaction> transactionList = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE " + KEY_HIDDEN + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -778,7 +779,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	 */
 	public ArrayList<Transaction> getMonthlyVisibleTransactions(String month)
 	{
-		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
+		ArrayList<Transaction> transactionList = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE " + KEY_HIDDEN + " = 0 AND " + KEY_DATE +
 				" LIKE '" + month + "%'";
 		SQLiteDatabase db = this.getWritableDatabase();
@@ -808,7 +809,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	 */
 	public ArrayList<Transaction> getYearlyVisibleTransactions(String year)
 	{
-		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
+		ArrayList<Transaction> transactionList = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE " + KEY_HIDDEN + " = 0 AND " + KEY_DATE +
 				" LIKE '" + year + "%'";
 		SQLiteDatabase db = this.getWritableDatabase();
@@ -860,52 +861,56 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 												  ArrayList<String> allowedTransactionTypes, String searchKeyword,
 												  boolean hiddenTransactions, int offset, int numTransactions)
 	{
-		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
-		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE ";
+		ArrayList<Transaction> transactionList = new ArrayList<>();
+		StringBuilder selectQuery = new StringBuilder("SELECT * FROM " + TABLE_TRANSACTIONS +
+				"WHERE ");
 		if (hiddenTransactions)
 		{
 			// This is unnecessary. But if there are no rules, then there won't be any conditions after 'WHERE'.
 			// This will cause a syntax error. To prevent that, this dummy statement is used.
-			selectQuery += "(" + KEY_HIDDEN + " LIKE '%') ";
+			selectQuery.append("(" + KEY_HIDDEN + " LIKE '%') ");
 		}
 		else
 		{
-			selectQuery += "(" + KEY_HIDDEN + " = 0) ";
+			selectQuery.append("(" + KEY_HIDDEN + " = 0) ");
 		}
 		
 		if (monthYear != null)
 		{
-			selectQuery += " AND " + "(" + KEY_DATE + " LIKE '" + monthYear + "%')";
+			selectQuery.append(" AND " + "(" + KEY_DATE + " LIKE '").append(monthYear).append
+					("%')");
 		}
 		else if (startDate != null && endDate != null)
 		{
-			selectQuery += " AND " + "(" + KEY_DATE + " >= '" + startDate + "' AND " + KEY_DATE +
-					" <= '" + endDate + "')";
+			selectQuery.append(" AND " + "(" + KEY_DATE + " >= '").append(startDate).append("' " +
+					"AND" +
+					" ").append(KEY_DATE).append(" <= '").append(endDate).append("')");
 		}
 		
 		if (allowedTransactionTypes != null)
 		{
-			selectQuery += " AND " + "( ";
+			selectQuery.append(" AND " + "( ");
 			for (int i = 0; i < allowedTransactionTypes.size(); i++)
 			{
 				if (i != 0)
 				{
-					selectQuery += " OR ";
+					selectQuery.append(" OR ");
 				}
 				String type = allowedTransactionTypes.get(i);
-				selectQuery += "(" + KEY_TYPE + " LIKE '" + type + "%')";
+				selectQuery.append("(" + KEY_TYPE + " LIKE '").append(type).append("%')");
 			}
-			selectQuery += " )";
+			selectQuery.append(" )");
 		}
 		
 		if (searchKeyword != null)
 		{
-			selectQuery += " AND " + "( " + KEY_PARTICULARS + " LIKE '%" + searchKeyword + "%' )";
+			selectQuery.append(" AND " + "( " + KEY_PARTICULARS + " LIKE '%").append
+					(searchKeyword).append("%' )");
 		}
 		
 		// Find out how many transactions will be returned
 		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = db.rawQuery(selectQuery, null);
+		Cursor cursor = db.rawQuery(selectQuery.toString(), null);
 		int numTransactionsReturned = cursor.getCount();
 		cursor.close();
 		int actualOffset = numTransactionsReturned - offset - numTransactions;
@@ -918,10 +923,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			numTransactions += actualOffset;
 			actualOffset = 0;
 		}
-		selectQuery += " LIMIT " + actualOffset + ", " + numTransactions;
+		selectQuery.append(" LIMIT ").append(actualOffset).append(", ").append(numTransactions);
 		Log.d("SNB", "SELECT Query: " + selectQuery);
 		
-		cursor = db.rawQuery(selectQuery, null);
+		cursor = db.rawQuery(selectQuery.toString(), null);
 		if (cursor.moveToFirst())
 		{
 			do
@@ -964,58 +969,62 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	 *                                   to limit the number of transactions returned
 	 * @return an ArrayList of Transactions
 	 */
+	@SuppressWarnings("SameParameterValue")
 	public ArrayList<Transaction> getTransactions(String monthYear, Date startDate, Date endDate,
 												  ArrayList<String> allowedTransactionTypes,
 												  String searchKeyword,
 												  boolean hiddenTransactions, int offset, int
 														  numTransactions)
 	{
-		ArrayList<Transaction> transactionList = new ArrayList<Transaction>();
-		String selectQuery = "SELECT * FROM " + TABLE_TRANSACTIONS + " WHERE ";
+		ArrayList<Transaction> transactionList = new ArrayList<>();
+		StringBuilder selectQuery = new StringBuilder("SELECT * FROM " + TABLE_TRANSACTIONS + " " +
+				"WHERE ");
 		if (hiddenTransactions)
 		{
 			// This is unnecessary. But if there are no rules, then there won't be any conditions
 			// after 'WHERE'.
 			// This will cause a syntax error. To prevent that, this dummy statement is used.
-			selectQuery += "(" + KEY_HIDDEN + " LIKE '%') ";
+			selectQuery.append("(" + KEY_HIDDEN + " LIKE '%') ");
 		}
 		else
 		{
-			selectQuery += "(" + KEY_HIDDEN + " = 0) ";
+			selectQuery.append("(" + KEY_HIDDEN + " = 0) ");
 		}
 		
 		if (monthYear != null)
 		{
-			selectQuery += " AND " + "(" + KEY_DATE + " LIKE '" + monthYear + "%')";
+			selectQuery.append(" AND " + "(" + KEY_DATE + " LIKE '").append(monthYear).append("%')");
 		}
 		else if (startDate != null && endDate != null)
 		{
-			selectQuery += " AND " + "(" + KEY_DATE + " >= '" + startDate.getSavableDate() +
-					"' AND " + KEY_DATE + " <= '" + endDate.getSavableDate() + "')";
+			selectQuery.append(" AND " + "(" + KEY_DATE + " >= '").append(startDate.getSavableDate
+					()).append("' AND ").append(KEY_DATE).append(" <= '").append(endDate
+					.getSavableDate()).append("')");
 		}
 		
 		if (allowedTransactionTypes != null)
 		{
-			selectQuery += " AND " + "( ";
+			selectQuery.append(" AND " + "( ");
 			for (int i = 0; i < allowedTransactionTypes.size(); i++)
 			{
 				if (i != 0)
 				{
-					selectQuery += " OR ";
+					selectQuery.append(" OR ");
 				}
 				String type = allowedTransactionTypes.get(i);
-				selectQuery += "(" + KEY_TYPE + " LIKE '" + type + "%')";
+				selectQuery.append("(" + KEY_TYPE + " LIKE '").append(type).append("%')");
 			}
-			selectQuery += " )";
+			selectQuery.append(" )");
 		}
 		
 		if (searchKeyword != null)
 		{
-			selectQuery += " AND " + "( " + KEY_PARTICULARS + " LIKE '%" + searchKeyword + "%' )";
+			selectQuery.append(" AND " + "( " + KEY_PARTICULARS + " LIKE '%").append
+					(searchKeyword).append("%' )");
 		}
 		
 		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = db.rawQuery(selectQuery, null);
+		Cursor cursor = db.rawQuery(selectQuery.toString(), null);
 		if (numTransactions >= 0)
 		{
 			// Find out how many transactions will be returned
@@ -1031,11 +1040,11 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 				numTransactions += actualOffset;
 				actualOffset = 0;
 			}
-			selectQuery += " LIMIT " + actualOffset + ", " + numTransactions;
+			selectQuery.append(" LIMIT ").append(actualOffset).append(", ").append(numTransactions);
 		}
 		Log.d("SNB", "SELECT Query: " + selectQuery);
 		
-		cursor = db.rawQuery(selectQuery, null);
+		cursor = db.rawQuery(selectQuery.toString(), null);
 		if (cursor.moveToFirst())
 		{
 			do
@@ -1248,7 +1257,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<ExpenditureType> getAllExpenditureTypes()
 	{
-		ArrayList<ExpenditureType> expTypes = new ArrayList<ExpenditureType>();
+		ArrayList<ExpenditureType> expTypes = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_EXPENDITURE_TYPES;
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -1268,7 +1277,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<ExpenditureType> getAllVisibleExpenditureTypes()
 	{
-		ArrayList<ExpenditureType> expTypes = new ArrayList<ExpenditureType>();
+		ArrayList<ExpenditureType> expTypes = new ArrayList<>();
 		String selectQuery = "SELECT * FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -1290,7 +1299,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	
 	public ArrayList<String> getAllVisibleExpenditureTypeNames()
 	{
-		ArrayList<String> expTypes = new ArrayList<String>();
+		ArrayList<String> expTypes = new ArrayList<>();
 		String selectQuery = "SELECT " + KEY_NAME + " FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_DELETED + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(selectQuery, null);
@@ -1299,6 +1308,30 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 			do
 			{
 				expTypes.add(cursor.getString(0));
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return expTypes;
+	}
+	
+	public ArrayList<ExpenditureType> getAllDeletedExpenditureTypes()
+	{
+		ArrayList<ExpenditureType> expTypes = new ArrayList<>();
+		String selectQuery = "SELECT * FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_DELETED
+				+ " = 1";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		// looping through all rows and adding to list
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				ExpenditureType expenditureType = new ExpenditureType(cursor.getInt(0), cursor
+						.getString(1),
+						cursor.getString(2).equals("1"));
+				expTypes.add(expenditureType);
 			}
 			while (cursor.moveToNext());
 		}
@@ -1323,6 +1356,16 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		SQLiteDatabase db = this.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(KEY_DELETED, true);
+		db.update(TABLE_EXPENDITURE_TYPES, values, KEY_ID + " = ?",
+				new String[]{String.valueOf(expTypeID)});
+		db.close();
+	}
+	
+	public void restoreExpenditureType(int expTypeID)
+	{
+		SQLiteDatabase db = this.getWritableDatabase();
+		ContentValues values = new ContentValues();
+		values.put(KEY_DELETED, false);
 		db.update(TABLE_EXPENDITURE_TYPES, values, KEY_ID + " = ?",
 				new String[]{String.valueOf(expTypeID)});
 		db.close();
@@ -1545,7 +1588,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting All Transactions
 	public ArrayList<Counters> getAllCountersRows()
 	{
-		ArrayList<Counters> countersRows = new ArrayList<Counters>();
+		ArrayList<Counters> countersRows = new ArrayList<>();
 		int numExpTypes = getNumExpenditureTypes();
 		String selectQuery = "SELECT * FROM " + TABLE_COUNTERS;
 		SQLiteDatabase db = this.getWritableDatabase();
@@ -1656,25 +1699,28 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		int oldNumExpTypes = cursor.getColumnCount() - 6;
 		cursor.close();
 		// Fill in old values
-		String queryString = "INSERT INTO " + TABLE_COUNTERS + " (" + KEY_ID + ", " + KEY_DATE + ", ";
+		StringBuilder queryString = new StringBuilder("INSERT INTO " + TABLE_COUNTERS + " (" +
+				KEY_ID + ", " + KEY_DATE + ", ");
 		for (int i = 0; i < oldNumExpTypes; i++)
 		{
-			queryString += "expenditure_" + formatter.format(i + 1) + ", ";
+			queryString.append("expenditure_").append(formatter.format(i + 1)).append(", ");
 		}
-		queryString += KEY_AMOUNT_SPENT + ", " + KEY_INCOME + ", " + KEY_SAVINGS + ", " + KEY_WITHDRAWAL + ") ";
-		queryString += "SELECT " + KEY_ID + ", " + KEY_DATE + ", ";
+		queryString.append(KEY_AMOUNT_SPENT + ", " + KEY_INCOME + ", " + KEY_SAVINGS + ", " +
+				KEY_WITHDRAWAL + ") ");
+		queryString.append("SELECT " + KEY_ID + ", " + KEY_DATE + ", ");
 		for (int i = 0; i < oldNumExpTypes; i++)
 		{
-			queryString += "expenditure_" + formatter.format(i + 1) + ", ";
+			queryString.append("expenditure_").append(formatter.format(i + 1)).append(", ");
 		}
-		queryString += KEY_AMOUNT_SPENT + ", " + KEY_INCOME + ", " + KEY_SAVINGS + ", " + KEY_WITHDRAWAL;
-		queryString += " FROM " + oldTableName + "; ";
-		Log.d("Readjust Counters Table", queryString);
+		queryString.append(KEY_AMOUNT_SPENT + ", " + KEY_INCOME + ", " + KEY_SAVINGS + ", " +
+				KEY_WITHDRAWAL);
+		queryString.append(" FROM ").append(oldTableName).append("; ");
+		Log.d("Readjust Counters Table", queryString.toString());
 		if (!db.isOpen())
 		{
 			db = this.getWritableDatabase();
 		}
-		db.execSQL(queryString);
+		db.execSQL(queryString.toString());
 		
 		// Delete Old Table
 		db.execSQL("DROP TABLE " + oldTableName);
@@ -1711,19 +1757,17 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		double[] counters = new double[getNumVisibleExpenditureTypes() + 4];
 		DecimalFormat formatter = new DecimalFormat("00");
 		
-		String selectQuery = "SELECT ";
+		StringBuilder selectQuery = new StringBuilder("SELECT ");
 		for (int i = 0; i < getNumVisibleExpenditureTypes(); i++)
 		{
-			selectQuery += "sum(expenditure_" + formatter.format(i + 1) + "), ";
+			selectQuery.append("sum(expenditure_").append(formatter.format(i + 1)).append("), ");
 		}
-		selectQuery = selectQuery + "sum(" + KEY_AMOUNT_SPENT + "), " +
-				"sum(" + KEY_INCOME + "), " +
-				"sum(" + KEY_SAVINGS + "), " +
-				"sum(" + KEY_WITHDRAWAL + ") " +
-				" FROM " + TABLE_COUNTERS;
+		selectQuery.append("sum(" + KEY_AMOUNT_SPENT + "), " + "sum(" + KEY_INCOME + "), " +
+				"sum" +
+				"(" + KEY_SAVINGS + "), " + "sum(" + KEY_WITHDRAWAL + ") " + " FROM " + TABLE_COUNTERS);
 		
 		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = db.rawQuery(selectQuery, null);
+		Cursor cursor = db.rawQuery(selectQuery.toString(), null);
 		if (cursor.moveToFirst())
 		{
 			for (int i = 0; i < getNumVisibleExpenditureTypes() + 4; i++)
@@ -1747,19 +1791,18 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		double[] counters = new double[getNumVisibleExpenditureTypes() + 4];
 		DecimalFormat formatter = new DecimalFormat("00");
 		
-		String selectQuery = "SELECT ";
+		StringBuilder selectQuery = new StringBuilder("SELECT ");
 		for (int i = 0; i < getNumVisibleExpenditureTypes(); i++)
 		{
-			selectQuery += "sum(expenditure_" + formatter.format(i + 1) + "), ";
+			selectQuery.append("sum(expenditure_").append(formatter.format(i + 1)).append("), ");
 		}
-		selectQuery = selectQuery + "sum(" + KEY_AMOUNT_SPENT + "), " +
-				"sum(" + KEY_INCOME + "), " +
-				"sum(" + KEY_SAVINGS + "), " +
-				"sum(" + KEY_WITHDRAWAL + ") " +
-				" FROM " + TABLE_COUNTERS + " WHERE " + KEY_DATE + " LIKE '" + month + "%'";
+		selectQuery.append("sum(" + KEY_AMOUNT_SPENT + "), " + "sum(" + KEY_INCOME + "), " +
+				"sum" +
+				"(" + KEY_SAVINGS + "), " + "sum(" + KEY_WITHDRAWAL + ") " + " FROM " +
+				TABLE_COUNTERS + " WHERE " + KEY_DATE + " LIKE '").append(month).append("%'");
 		
 		SQLiteDatabase db = this.getWritableDatabase();
-		Cursor cursor = db.rawQuery(selectQuery, null);
+		Cursor cursor = db.rawQuery(selectQuery.toString(), null);
 		if (cursor.moveToFirst())
 		{
 			for (int i = 0; i < getNumVisibleExpenditureTypes() + 4; i++)
@@ -1812,7 +1855,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		db.close();
 		return counters;
 	}
-
+	
 	/**
 	 * Calculates the sum of AmountSpent Column in Counters Table
 	 *
@@ -2158,7 +2201,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting All Templates
 	public ArrayList<Template> getAllTemplates()
 	{
-		ArrayList<Template> templatesList = new ArrayList<Template>();
+		ArrayList<Template> templatesList = new ArrayList<>();
 		// Select All Query
 		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES;
 		SQLiteDatabase db = this.getWritableDatabase();
@@ -2182,7 +2225,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting All Templates
 	public ArrayList<Template> getAllVisibleTemplates()
 	{
-		ArrayList<Template> templatesList = new ArrayList<Template>();
+		ArrayList<Template> templatesList = new ArrayList<>();
 		// Select All Query
 		String selectQuery = "SELECT * FROM " + TABLE_TEMPLATES + " WHERE " + KEY_HIDDEN + " = 0";
 		SQLiteDatabase db = this.getWritableDatabase();
@@ -2206,7 +2249,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting Names of Visible Templates for Transaction Type Credit
 	public ArrayList<String> getVisibleCreditTemplatesNames()
 	{
-		ArrayList<String> templatesList = new ArrayList<String>();
+		ArrayList<String> templatesList = new ArrayList<>();
 		// Select Query
 		String selectQuery = "SELECT " + KEY_PARTICULARS + " FROM " + TABLE_TEMPLATES + " WHERE " + KEY_TYPE
 				+ " LIKE 'Credit%' AND " + KEY_HIDDEN + " = 0";
@@ -2229,7 +2272,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting Names of Visible Templates for Transaction Type Debit
 	public ArrayList<String> getVisibleDebitTemplatesNames()
 	{
-		ArrayList<String> templatesList = new ArrayList<String>();
+		ArrayList<String> templatesList = new ArrayList<>();
 		// Select Query
 		String selectQuery = "SELECT " + KEY_PARTICULARS + " FROM " + TABLE_TEMPLATES + " WHERE " + KEY_TYPE
 				+ " LIKE 'Debit%' AND " + KEY_HIDDEN + " = 0";
@@ -2252,7 +2295,7 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 	// Getting Names of Visible Templates for Transaction Type Transfer
 	public ArrayList<String> getVisibleTransferTemplatesNames()
 	{
-		ArrayList<String> templatesList = new ArrayList<String>();
+		ArrayList<String> templatesList = new ArrayList<>();
 		// Select Query
 		String selectQuery = "SELECT " + KEY_PARTICULARS + " FROM " + TABLE_TEMPLATES + " WHERE " + KEY_TYPE
 				+ " LIKE 'Transfer%' AND " + KEY_HIDDEN + " = 0";

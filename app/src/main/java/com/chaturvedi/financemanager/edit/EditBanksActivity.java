@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.*;
@@ -240,15 +241,22 @@ public class EditBanksActivity extends Activity
 			LayoutParams nameViewParams = new LayoutParams(WIDTH_NAME_VIEWS, LayoutParams
 					.WRAP_CONTENT);
 			bankNameView.setLayoutParams(nameViewParams);
+			bankNameView.setTextColor(Color.GRAY);
 			
 			bankBalanceView.setText(formatter.format(bank.getBalance()));
 			LayoutParams balanceViewParams = new LayoutParams(WIDTH_BALANCE_VIEWS, LayoutParams
 					.WRAP_CONTENT);
 			bankBalanceView.setLayoutParams(balanceViewParams);
 			bankBalanceView.setGravity(Gravity.END);
+			bankBalanceView.setTextColor(Color.GRAY);
 			
 			deletedBanksLayout.addView(layout);
 			registerForContextMenu(layout);
+		}
+		
+		if (!showDeletedBanks)
+		{
+			deletedBanksLayout.setVisibility(View.GONE);
 		}
 	}
 	
