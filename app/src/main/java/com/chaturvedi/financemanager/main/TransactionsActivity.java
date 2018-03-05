@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
-import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
@@ -24,6 +23,7 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
@@ -52,8 +52,8 @@ public class TransactionsActivity extends Activity
 	// Filters
 	private String transactionsDisplayIntervalType = Constants.VALUE_ALL;
 	private String transactionsDisplayIntervalMonthYear = null;
-	private String transactionsDisplayIntervalStartDate = null;
-	private String transactionsDisplayIntervalEndDate = null;
+	private Date transactionsDisplayIntervalStartDate = null;
+	private Date transactionsDisplayIntervalEndDate = null;
 	private ArrayList<String> allowedTransactionTypes = null;
 	private String searchKeyword = null;
 
@@ -78,14 +78,10 @@ public class TransactionsActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_transactions);
-		if (VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB)
+		// Provide Up Button in Action Bar
+		if (getActionBar() != null)
 		{
-			// Provide Up Button in Action Bar
 			getActionBar().setDisplayHomeAsUpEnabled(true);
-		}
-		else
-		{
-			// No Up Button in Action Bar
 		}
 		
 		calculateDimensions();
@@ -1581,8 +1577,10 @@ public class TransactionsActivity extends Activity
 		}
 		else if (transactionsDisplayIntervalType.equals(Constants.VALUE_CUSTOM))
 		{
-			filterIntent.putExtra(Constants.KEY_START_DATE, transactionsDisplayIntervalStartDate);
-			filterIntent.putExtra(Constants.KEY_END_DATE, transactionsDisplayIntervalEndDate);
+			filterIntent.putExtra(Constants.KEY_START_DATE, transactionsDisplayIntervalStartDate
+					.getSavableDate());
+			filterIntent.putExtra(Constants.KEY_END_DATE, transactionsDisplayIntervalEndDate
+					.getSavableDate());
 		}
 		filterIntent.putStringArrayListExtra(Constants.KEY_ALLOWED_TRANSACTION_TYPES, allowedTransactionTypes);
 		filterIntent.putExtra(Constants.KEY_SEARCH_KEYWORD, searchKeyword);
@@ -1614,9 +1612,9 @@ public class TransactionsActivity extends Activity
 				break;
 			case Constants.VALUE_CUSTOM:
 				transactionsDisplayIntervalMonthYear = null;
-				transactionsDisplayIntervalStartDate = intent.getStringExtra(Constants
-						.KEY_START_DATE);
-				transactionsDisplayIntervalEndDate = intent.getStringExtra(Constants.KEY_END_DATE);
+				transactionsDisplayIntervalStartDate = new Date(intent.getStringExtra(Constants
+						.KEY_START_DATE));
+				transactionsDisplayIntervalEndDate = new Date(intent.getStringExtra(Constants.KEY_END_DATE));
 				break;
 			default:
 				Toast.makeText(TransactionsActivity.this, "Unknown Interval Type. Can't filter.",

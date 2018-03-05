@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.StringTokenizer;
 
+@SuppressWarnings("WeakerAccess")
 public class Date
 {
 	private int year;
@@ -100,40 +101,40 @@ public class Date
 		{
 			case 1:
 				return "January";
-				
+			
 			case 2:
 				return "February";
-				
+			
 			case 3:
 				return "March";
-				
+			
 			case 4:
 				return "April";
-				
+			
 			case 5:
 				return "May";
-				
+			
 			case 6:
 				return "June";
-				
+			
 			case 7:
 				return "July";
-				
+			
 			case 8:
 				return "August";
-				
+			
 			case 9:
 				return "September";
-				
+			
 			case 10:
 				return "October";
-				
+			
 			case 11:
 				return "November";
-				
+			
 			case 12:
 				return "December";
-				
+			
 			default:
 				return "";
 		}
@@ -294,6 +295,7 @@ public class Date
 		return getShortDate("/");
 	}
 	
+	@SuppressWarnings("SameParameterValue")
 	public String getShortDate(String separator)
 	{
 		return this.date + separator + this.month;
@@ -302,14 +304,12 @@ public class Date
 	public String getSavableDate()
 	{
 		DecimalFormat formatter = new DecimalFormat("00");
-		String date = year + "/" + formatter.format(month) + "/" + formatter.format(this.date);
-		return date;
+		return year + "/" + formatter.format(month) + "/" + formatter.format(this.date);
 	}
 	
 	public long getLongDate()
 	{
-		long date = year * 10000 + month * 100 + this.date;
-		return date;
+		return (long) (year * 10000 + month * 100 + this.date);
 	}
 	
 	public boolean isNotEqualTo(Date date2)

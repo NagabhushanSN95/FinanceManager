@@ -16,6 +16,7 @@ public class Constants
 	public static final int APP_VERSION_125 = 125;
 	public static final int APP_VERSION_131 = 131;
 	public static final int APP_VERSION_134 = 134;
+	public static final int APP_VERSION_135 = 135;
 	
 	public static final int CURRENT_APP_VERSION_NO = 125;
 	

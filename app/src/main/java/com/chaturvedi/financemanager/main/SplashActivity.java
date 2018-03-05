@@ -82,7 +82,8 @@ public class SplashActivity extends Activity
 		Thread databaseReaderThread = new Thread(new DatabaseReaderRunnable());
 		databaseReaderThread.start();
 	}
-
+	
+	@SuppressWarnings("StatementWithEmptyBody")
 	private void checkForUpdates()
 	{
 		int currentVersionNo = 0, previousVersionNo;
@@ -91,11 +92,13 @@ public class SplashActivity extends Activity
 		try
 		{
 			currentVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
+			
 		}
 		catch (NameNotFoundException e)
 		{
 			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In\n" +
 					"SplashActivity\\checkForUpdates\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+			
 		}
 		
 		// Get the version no stored in the preferences. This contains the version no of the app, when it was 
@@ -134,7 +137,7 @@ public class SplashActivity extends Activity
 			}
 			if (previousVersionNo < Constants.APP_VERSION_89)
 			{
-				new Update88To89(SplashActivity.this);
+				// No Update
 			}
 			if (previousVersionNo < Constants.APP_VERSION_96)
 			{
@@ -162,11 +165,15 @@ public class SplashActivity extends Activity
 			}
 			if (previousVersionNo < Constants.APP_VERSION_131)
 			{
-				new Update125to131(SplashActivity.this);
+				// No Update
 			}
 			if (previousVersionNo < Constants.APP_VERSION_134)
 			{
-				new Update131to134(SplashActivity.this);
+				// No Update
+			}
+			if (previousVersionNo < Constants.APP_VERSION_135)
+			{
+				// No Update
 			}
 			
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);

@@ -585,8 +585,8 @@ public class TransactionsFilterActivity extends Activity
 		{
 			String startDate = intent.getStringExtra(Constants.KEY_START_DATE);
 			String endDate = intent.getStringExtra(Constants.KEY_END_DATE);
-			startDate = new Date(startDate).getDisplayDate();
-			endDate = new Date(endDate).getDisplayDate();
+			startDate = new Date(startDate).getDisplayDate("/");
+			endDate = new Date(endDate).getDisplayDate("/");
 			fromDateTextView.setText(startDate);
 			toDateTextView.setText(endDate);
 		}

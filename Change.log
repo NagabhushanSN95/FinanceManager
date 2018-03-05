@@ -153,3 +153,11 @@
  - FAQs updated (Removed stale and irrelevant FAQs)
  - Added Update131to134 class
  - App released.
+
+4.4.1 (135)
+ - Release.log added
+ - 'Change Log.txt' renamed to Change.log
+ - Bug Fix in DatabaseAdapter getTransactions() deprecated method
+ - All instances of getTransactions() deprecated method replaced with newer version
+ - UpdateClasses with no updates deleted (88to89, 125to131, 131to134)
+ - App released.
