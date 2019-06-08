@@ -38,3 +38,6 @@ v4.4.0 (Optional update)
 1. While adding a transaction, wallet/bank/expenditure_types won't be selected automatically. Select hint will be displayed
 2. You can display and restore your deleted wallets/banks/expenditure_types
 3. Under the hood fixes
+
+v4.4.1 (Mandatory Update from v4.4.0. Others optional)
+1. Critical bug fix
