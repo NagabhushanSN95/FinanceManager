@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 28
 
     defaultConfig {
         applicationId "com.chaturvedi.financemanager"
-        minSdkVersion 16
-        targetSdkVersion 24
+        minSdkVersion 21
+        targetSdkVersion 28
     }
 
     buildTypes {
@@ -24,6 +24,6 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:24.2.1'
-    compile 'com.itextpdf:itextg:5.5.10'
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.itextpdf:itextg:5.5.10'
 }
