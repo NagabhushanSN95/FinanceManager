@@ -114,7 +114,7 @@ public class SettingsActivity extends Activity
 			}
 		});
 		
-		bankSmsSetting = (SettingsLayout) findViewById(R.id.bankSms);
+		/*bankSmsSetting = (SettingsLayout) findViewById(R.id.bankSms);
 		bankSmsSetting.setSettingName("Action For Bank Messages");
 		String[] bankSmsOptions = {"Don't Respond", "Show Pop-up", "Automatic Transaction"};
 		bankSmsSetting.setOptions(bankSmsOptions);
@@ -148,7 +148,7 @@ public class SettingsActivity extends Activity
 				}
 				editor.commit();
 			}
-		});
+		});*/
 		
 		currencySymbolSetting = (SettingsLayout) findViewById(R.id.currencySymbols);
 		currencySymbolSetting.setSettingName("Currency Symbol");

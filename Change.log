@@ -161,3 +161,8 @@
  - All instances of getTransactions() deprecated method replaced with newer version
  - UpdateClasses with no updates deleted (88to89, 125to131, 131to134)
  - App released.
+
+4.4.2 (136)
+ - Project ported to Android Studio 3.4
+ - SD Read and Write permissions will be asked at run time
+ - Reading Bank SMS functionality disabled (commented)

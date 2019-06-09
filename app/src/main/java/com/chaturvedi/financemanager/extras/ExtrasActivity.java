@@ -1,20 +1,26 @@
 package com.chaturvedi.financemanager.extras;
 
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.*;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.chaturvedi.customviews.IndefiniteWaitDialogBuilder;
 import com.chaturvedi.financemanager.R;
@@ -27,8 +33,11 @@ import com.chaturvedi.financemanager.help.AboutActivity;
 public class ExtrasActivity extends Activity
 {
 	private static final int CODE_FILE_CHOOSER = 102;
+	private static final int EXPORT_REQUEST_PERMISSION = 201;
+	private static final int BACKUP_REQUEST_PERMISSION = 202;
+	private static final int RESTORE_REQUEST_PERMISSION = 203;
 
-	
+
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -40,10 +49,10 @@ public class ExtrasActivity extends Activity
 			// Provide Up Button in Action Bar
 			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
-		
+
 		buildLayout();
 	}
-	
+
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		switch(item.getItemId())
@@ -56,8 +65,55 @@ public class ExtrasActivity extends Activity
 	}
 
 	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+										   @NonNull int[] grantResults)
+	{
+		boolean permissionGranted =
+				(grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED);
+		switch (requestCode)
+		{
+			case EXPORT_REQUEST_PERMISSION:
+				if (permissionGranted)
+				{
+					startExportActivity();
+				}
+				else
+				{
+					Toast.makeText(ExtrasActivity.this, "Please provide Write permission to " +
+							"export data to SD card", Toast.LENGTH_LONG).show();
+				}
+				break;
+
+			case BACKUP_REQUEST_PERMISSION:
+				if (permissionGranted)
+				{
+					backupData();
+				}
+				else
+				{
+					Toast.makeText(ExtrasActivity.this, "Please provide Write permission to " +
+							"backup data to SD card", Toast.LENGTH_LONG).show();
+				}
+				break;
+
+			case RESTORE_REQUEST_PERMISSION:
+				if (permissionGranted)
+				{
+					chooseRestoreFile();
+				}
+				else
+				{
+					Toast.makeText(ExtrasActivity.this, "Please provide Read permission to " +
+							"restore data from SD card", Toast.LENGTH_LONG).show();
+				}
+				break;
+		}
+	}
+
+	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent)
 	{
+		//noinspection SwitchStatementWithTooFewBranches
 		switch (requestCode)
 		{
 			case CODE_FILE_CHOOSER:
@@ -65,12 +121,11 @@ public class ExtrasActivity extends Activity
 				{
 					// Get the Uri of the selected file
 					Uri uri = intent.getData();
-					// TODO: Doesn't work when Default File Chooser is used. Works with ES File Explorer
 					restoreData(uri);
 				}
 		}
 	}
-	
+
 	protected void buildLayout()
 	{
 		// If Release Version, Make Krishna TextView Invisible
@@ -79,41 +134,37 @@ public class ExtrasActivity extends Activity
 			TextView krishna = (TextView) findViewById(R.id.krishna);
 			krishna.setVisibility(View.INVISIBLE);
 		}
-		
+
 		LinearLayout exportLayout = (LinearLayout) findViewById(R.id.layout_export);
 		exportLayout.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
-				Intent exportIntent = new Intent(ExtrasActivity.this, ExportActivity.class);
-				startActivity(exportIntent);
+				checkExportPermissions();
 			}
 		});
-		
+
 		LinearLayout backupLayout = (LinearLayout) findViewById(R.id.layout_backup);
 		backupLayout.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
-				backupData();
+				checkBackupPermissions();
 			}
 		});
-		
+
 		LinearLayout restoreLayout = (LinearLayout) findViewById(R.id.layout_restore);
 		restoreLayout.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
-				// Start Activity to choose file
-				Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-				fileIntent.setType("*/*"); // intent type to filter application based on your requirement
-				startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
+				checkRestorePermissions();
 			}
 		});
-		
+
 		LinearLayout clearLayout = (LinearLayout) findViewById(R.id.layout_clear);
 		clearLayout.setOnClickListener(new View.OnClickListener()
 		{
@@ -123,7 +174,7 @@ public class ExtrasActivity extends Activity
 				clearData();
 			}
 		});
-		
+
 		LinearLayout aboutDeveloperLayout = (LinearLayout) findViewById(R.id.layout_aboutUs);
 		aboutDeveloperLayout.setOnClickListener(new View.OnClickListener()
 		{
@@ -135,7 +186,7 @@ public class ExtrasActivity extends Activity
 			}
 		});
 	}
-	
+
 	private void backupData()
 	{
 		IndefiniteWaitDialogBuilder backupDialogBuilder = new IndefiniteWaitDialogBuilder
@@ -144,7 +195,7 @@ public class ExtrasActivity extends Activity
 		backupDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		backupDialogBuilder.setCancelable(false);
 		final AlertDialog backupDialog = backupDialogBuilder.show();
-		
+
 		// Define Handler to pass messages
 		final Handler backupResultHandler = new Handler(Looper.getMainLooper())
 		{
@@ -161,18 +212,18 @@ public class ExtrasActivity extends Activity
 						resultMessage = "Backup Folder: " + result[0] + "\n\n" +
 								"Backup Filename: " + result[1] + "\n";
 						break;
-					
+
 					case Constants.ACTION_BACKUP_FAILURE:
 						resultTitle = "Backup Failed";
 						resultMessage = "Please Try again.\n\n" +
 								"If the problem persists, please contact Developer";
 						break;
-					
+
 					default:
 						resultTitle = "Backup Failed";
 						resultMessage = "Unknown result. Please Try again. If the problem persists, please contact Developer";
 				}
-				
+
 				AlertDialog.Builder resultDialogBuilder = new AlertDialog.Builder(ExtrasActivity.this);
 				resultDialogBuilder.setTitle(resultTitle);
 				resultDialogBuilder.setMessage(resultMessage);
@@ -180,7 +231,7 @@ public class ExtrasActivity extends Activity
 				resultDialogBuilder.show();
 			}
 		};
-		
+
 		/* Backup in a separate non-ui thread */
 		Thread backupThread = new Thread(new Runnable()
 		{
@@ -189,7 +240,7 @@ public class ExtrasActivity extends Activity
 			{
 				String[] result = new BackupManager(ExtrasActivity.this).manualBackup();    // Backs Up Data to Backups Folder
 				backupDialog.dismiss();
-				
+
 				if (result != null)
 				{
 					Message backupResultMessage = backupResultHandler.obtainMessage(
@@ -207,18 +258,79 @@ public class ExtrasActivity extends Activity
 		backupThread.start();
 	}
 
+	private void checkExportPermissions()
+	{
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+		{
+			// Permission is not granted
+			ActivityCompat.requestPermissions(ExtrasActivity.this,
+					new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+					EXPORT_REQUEST_PERMISSION);
+		}
+		else
+		{
+			// Permission Granted
+			startExportActivity();
+		}
+	}
+
+	private void startExportActivity()
+	{
+		Intent exportIntent = new Intent(ExtrasActivity.this, ExportActivity.class);
+		startActivity(exportIntent);
+	}
+
+	private void checkBackupPermissions()
+	{
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+		{
+			// Permission is not granted
+			ActivityCompat.requestPermissions(ExtrasActivity.this,
+					new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+					BACKUP_REQUEST_PERMISSION);
+		}
+		else
+		{
+			// Permission Granted
+			backupData();
+		}
+	}
+
+	private void checkRestorePermissions()
+	{
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+		{
+			// Permission is not granted
+			ActivityCompat.requestPermissions(ExtrasActivity.this,
+					new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+					RESTORE_REQUEST_PERMISSION);
+		}
+		else
+		{
+			// Permission Granted
+			chooseRestoreFile();
+		}
+	}
+
+	private void chooseRestoreFile()
+	{
+		Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+		fileIntent.setType("*/*");
+		startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
+	}
+
 	private void restoreData(final Uri fileUri)
 	{
 		// TODO: CREATE a new Activity for Restoring. Give 2 options there. To select Data Backup file
-		
+
 		// and settings backup file. Restore both
-		
+
 		IndefiniteWaitDialogBuilder restoreDialogBuilder = new IndefiniteWaitDialogBuilder(this);
 		restoreDialogBuilder.setTitle("Restoring Data");
 		restoreDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		restoreDialogBuilder.setCancelable(false);
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();
-		
+
 		// Todo: Restore in a seperate (non-ui) thread
 		Thread restoreThread = new Thread(new Runnable()
 		{
@@ -284,7 +396,7 @@ public class ExtrasActivity extends Activity
 		});
 		restoreThread.start();
 	}
-	
+
 	private void clearData()
 	{
 		AlertDialog.Builder clearDialog = new AlertDialog.Builder(this);

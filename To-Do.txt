@@ -8,17 +8,25 @@ Provide settings to set how many daily backups to keep. Delete older backups
 Create custom view for Drop-down spinners to have <Select an item as 1st option>
 When Restoring, send error messages using a handler so that they can be displayed as toast texts
 Improve filters in StatisticsActivity
-Display deleted Wallets and Banks and provide option to undelete them
-Give Option to re-order expTypes
 Create custom TableView with fixed header and 1st column
+Create custom widget to display huge data in chunks with show-more button
+Add daily backup
 
 Add Cancel Button in Backup and Restore Dialogs
 In Transactions activity, provide options to settings, statistics, extras, etc
 Add, Edit Template
 Give Option to save only Template Name and ExpType i.e. give option to not have amount
-pdf and doc file export
+doc file export
 Restore Preferences
 In SQL Queries, use args for strings instead of building them into Query to prevent errors due to '
+Give Option to re-order expTypes
+Add new feature rules.
+
+In ExportActivity, add support to select destination folder to save the file
+Create a jar for custom-views
+
+Add Cancel Button in Backup and Restore Dialogs
+In Transactions activity, provide options to settings, statistics, extras, etc
 In Startup and Setup Activities, give Info ImageButton for Info and redirect to Help for more Info
 Help: Guide/Demo/FAQs/Mail
 Redesign About Developer Page

@@ -3,15 +3,18 @@
 
 package com.chaturvedi.financemanager.main;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.*;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
@@ -48,24 +51,24 @@ public class SplashActivity extends Activity
 	private int splashDuration = 5000;
 	private boolean databaseInitialized = true;
 	private AutomaticBackupAndRestoreManager autoRestoreManager;
-	
+
 	private boolean splashComplete = false;                // Completion Of Splash Duration
 	private boolean initializationComplete = false;        // Completion Of Database Reading & Auto Restore
 	private boolean activityAlive = true;                // Set to false when back button is
 	// pressed. So, next activity will not be started
-	
+
 	private String quoteText;
 	private int deviceWidth = 1000;
 	private int timerProgress = 0;
 	private int databaseReadProgress = 0;
-	
+
 	private int quotesNo = 0;
 	private int NUM_TIPS = 0;
 	private int NUM_TOTAL_QUOTES = 0;
-	
+
 	private Handler databaseHandler;
 	private Intent nextActivityIntent;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -77,31 +80,31 @@ public class SplashActivity extends Activity
 		readQuotes();
 		startSplash();
 		defineHandler();
-		
+
 		// Read the database in a separate (non-ui) thread
 		Thread databaseReaderThread = new Thread(new DatabaseReaderRunnable());
 		databaseReaderThread.start();
 	}
-	
+
 	@SuppressWarnings("StatementWithEmptyBody")
 	private void checkForUpdates()
 	{
 		int currentVersionNo = 0, previousVersionNo;
-		
+
 		// Get the Current Version No Of The Current App
 		try
 		{
 			currentVersionNo = this.getPackageManager().getPackageInfo(this.getPackageName(), 0).versionCode;
-			
+
 		}
 		catch (NameNotFoundException e)
 		{
 			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In\n" +
 					"SplashActivity\\checkForUpdates\n" + e.getMessage(), Toast.LENGTH_LONG).show();
-			
+
 		}
-		
-		// Get the version no stored in the preferences. This contains the version no of the app, when it was 
+
+		// Get the version no stored in the preferences. This contains the version no of the app, when it was
 		// previously opened. So, if the app is updated now, this field contains version no of old app.
 		// So, update classes can be run
 		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
@@ -124,8 +127,8 @@ public class SplashActivity extends Activity
 				previousVersionNo = -1;                // Denotes App has been opened for first time
 			}
 		}
-		
-		// Compare the version of current and previous App. If the previous app was of old version, 
+
+		// Compare the version of current and previous App. If the previous app was of old version,
 		// run the Update Classes
 		boolean canProceed = (currentVersionNo != 0) && (previousVersionNo > 0);
 		if (canProceed && (previousVersionNo < currentVersionNo))
@@ -175,12 +178,12 @@ public class SplashActivity extends Activity
 			{
 				// No Update
 			}
-			
+
 			editor.putInt(KEY_APP_VERSION, currentVersionNo);
 			editor.apply();
 		}
 	}
-	
+
 	private void readPreferences()
 	{
 		SharedPreferences preferences = getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
@@ -196,7 +199,7 @@ public class SplashActivity extends Activity
 			splashDuration = 5000;
 			editor.putInt(KEY_SPLASH_DURATION, 5000);
 		}
-		
+
 		// Check If The Database Is Initialized
 		if (preferences.contains(KEY_DATABASE_INITIALIZED))
 		{
@@ -212,7 +215,7 @@ public class SplashActivity extends Activity
 			databaseInitialized = false;
 			nextActivityIntent = new Intent(this, StartupActivity.class);
 		}
-		
+
 		// Retrieve Num Quote Reads
 		if (preferences.contains(KEY_QUOTE_NO))
 		{
@@ -224,7 +227,7 @@ public class SplashActivity extends Activity
 			quotesNo = 0;
 			editor.putInt(KEY_QUOTE_NO, 1);
 		}
-		
+
 		// Retrieve Automatic Backup And Restore Status
 		if (preferences.contains(KEY_AUTOMATIC_BACKUP_RESTORE))
 		{
@@ -238,7 +241,7 @@ public class SplashActivity extends Activity
 		}
 		editor.apply();
 	}
-	
+
 	/**
 	 * Reads The Quotes from the "quotes.txt" raw file to display in the Splash Screen
 	 */
@@ -266,7 +269,7 @@ public class SplashActivity extends Activity
 				NUM_TIPS++;
 				line = tipsReader.readLine();
 			}
-			
+
 			// Read the lines in "quotes" Raw File
 			line = quotesReader.readLine();
 			while (line != null)
@@ -275,7 +278,7 @@ public class SplashActivity extends Activity
 				NUM_TOTAL_QUOTES++;
 				line = quotesReader.readLine();
 			}
-			
+
 			// Read the lines in "facts" Raw File
 			line = factsReader.readLine();
 			while (line != null)
@@ -284,7 +287,7 @@ public class SplashActivity extends Activity
 				NUM_TOTAL_QUOTES++;
 				line = factsReader.readLine();
 			}
-			
+
 			// Read the lines in "cricket" Raw File
 			line = cricketReader.readLine();
 			while (line != null)
@@ -293,7 +296,7 @@ public class SplashActivity extends Activity
 				NUM_TOTAL_QUOTES++;
 				line = cricketReader.readLine();
 			}
-			
+
 			// Read the lines in "movies" Raw File
 			line = moviesReader.readLine();
 			while (line != null)
@@ -307,7 +310,7 @@ public class SplashActivity extends Activity
 		{
 			Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 		}
-		
+
 		// If Debug Version, Don't display Tips
 		if (0 != (this.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE))
 		{
@@ -331,7 +334,7 @@ public class SplashActivity extends Activity
 			quoteText = quotes.get(randomNumber.nextInt(NUM_TOTAL_QUOTES) + NUM_TIPS);
 		}
 	}
-	
+
 	/**
 	 * Displays The Splash Screen
 	 */
@@ -349,7 +352,7 @@ public class SplashActivity extends Activity
 		// Set The Quote as the text for QuoteTextView
 		TextView quoteView = (TextView) findViewById(R.id.quote);
 		quoteView.setText(quoteText);
-		
+
 		// Schedule to start the NextActivity after the specified time (splashTime)
 		//if(splashDuration > 0)
 		{
@@ -367,22 +370,22 @@ public class SplashActivity extends Activity
 				}
 			}, splashDuration);
 		}
-		
+
 		// Calculate the device width in pixels
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
 		deviceWidth = metrics.widthPixels;
-		
+
 		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar_loading);
 		progressBar.setMax(deviceWidth);
-		
+
 		// Change the colour (from blue) to pink
 		Drawable progressBarDrawable = this.getResources().getDrawable(R.drawable
 				.progress_bar_pink);
-		
+
 		progressBar.setProgressDrawable(progressBarDrawable);
 		progressBar.getLayoutParams().height = 6;
-		
+
 		// Calculate the refresh time to update the ProgressBar
 		int refreshTime = (splashDuration / deviceWidth) + 1;
 		// Schedule to increment the length of ProgressBar repeatedly at intervals calculated above
@@ -408,7 +411,7 @@ public class SplashActivity extends Activity
 			}
 		}, 0, refreshTime);
 	}
-	
+
 	private void defineHandler()
 	{
 		databaseHandler = new Handler(Looper.getMainLooper())
@@ -440,11 +443,11 @@ public class SplashActivity extends Activity
 					default:
 						super.handleMessage(databaseMessage);
 				}
-				
+
 			}
 		};
 	}
-	
+
 	/**
 	 * Disable the Back Button
 	 */
@@ -454,7 +457,7 @@ public class SplashActivity extends Activity
 		activityAlive = false;
 		super.onBackPressed();
 	}
-	
+
 	private class DatabaseReaderRunnable implements Runnable
 	{
 		@Override
@@ -462,10 +465,11 @@ public class SplashActivity extends Activity
 		{
 			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 			Looper.prepare();
-			
+
 			if (databaseInitialized)
 			{
-				if (autoRestoreManager.getValue() > 1)
+				if (autoRestoreManager.getValue() > 1 &&
+						(ContextCompat.checkSelfPermission(SplashActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED))
 				{
 					// Read the backups and see if there is any change
 					String autoBackupPath = Environment.getExternalStoragePublicDirectory("Android").getPath() +
@@ -479,7 +483,7 @@ public class SplashActivity extends Activity
 					{
 						DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(SplashActivity.this);
 						//If found any error, restore
-						
+
 						// Wallet Balance
 						if (!DatabaseManager.areEqualWallets(databaseAdapter.getAllWallets(), restoreManager.getAllWallets()))
 						{
@@ -540,7 +544,7 @@ public class SplashActivity extends Activity
 							}
 						}
 						databaseReadProgress = 75;
-						
+
 						// Expenditure Types
 						if (!DatabaseManager.areEqualExpTypes(databaseAdapter.getAllExpenditureTypes(),
 								restoreManager.getAllExpTypes()))
@@ -561,7 +565,7 @@ public class SplashActivity extends Activity
 							}
 						}
 						databaseReadProgress = 80;
-						
+
 						// Counters
 						if (!DatabaseManager.areEqualCounters(databaseAdapter.getAllCountersRows(),
 								restoreManager.getAllCounters(), databaseAdapter.getNumExpenditureTypes()))
@@ -582,7 +586,7 @@ public class SplashActivity extends Activity
 							}
 						}
 						databaseReadProgress = 90;
-						
+
 						// Templates
 						if (!DatabaseManager.areEqualTemplates(databaseAdapter.getAllTemplates(),
 								restoreManager.getAllTemplates()))

@@ -3,6 +3,7 @@
 package com.chaturvedi.financemanager.main;
 
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityOptions;
@@ -10,9 +11,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -123,7 +126,8 @@ public class SummaryActivity extends Activity
 				AutomaticBackupAndRestoreManager manager = new AutomaticBackupAndRestoreManager(value);
 				backup = manager.isAutomaticBackup();
 			}
-			if(backup)
+			if(backup &&
+					(ContextCompat.checkSelfPermission(SummaryActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED))
 			{
 				final Thread backupThread = new Thread(new Runnable()
 				{
