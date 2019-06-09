@@ -1,15 +1,20 @@
 package com.chaturvedi.financemanager.setup;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -32,6 +37,7 @@ public class StartupActivity extends FragmentActivity
 {
 	private static final int CODE_SETUP_ACTIVITY = 101;
 	private static final int CODE_FILE_CHOOSER = 102;
+	private static final int RESTORE_REQUEST_PERMISSION = 203;
 
 	private static final String ALL_PREFERENCES = "AllPreferences";
 	private static final String KEY_APP_VERSION = "AppVersionNo";
@@ -69,19 +75,42 @@ public class StartupActivity extends FragmentActivity
 	private int HEIGHT_BUTTON;
 	private Intent setupIntent;
 	private Intent summaryIntent;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_startup);
-		
+
 		CURRENT_APP_VERSION_NO = Integer.parseInt(getResources().getString(R.string.currentAppVersion));
 		preferences = this.getSharedPreferences(ALL_PREFERENCES, Context.MODE_PRIVATE);
 		calculateDimensions();
 		buildLayout();
 		buildInfoButtons();
 		setAnimation();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+										   @NonNull int[] grantResults)
+	{
+		boolean permissionGranted =
+				(grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED);
+		//noinspection SwitchStatementWithTooFewBranches
+		switch (requestCode)
+		{
+			case RESTORE_REQUEST_PERMISSION:
+				if (permissionGranted)
+				{
+					chooseRestoreFile();
+				}
+				else
+				{
+					Toast.makeText(StartupActivity.this, "Please provide Read permission to " +
+							"restore data from SD card", Toast.LENGTH_LONG).show();
+				}
+				break;
+		}
 	}
 
 	@Override
@@ -112,7 +141,7 @@ public class StartupActivity extends FragmentActivity
 				break;
 		}
 	}
-	
+
 	/**
 	 * Calculate the values of various Dimension Fields
 	 */
@@ -122,15 +151,15 @@ public class StartupActivity extends FragmentActivity
 		getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 		screenWidth=displayMetrics.widthPixels;
 		screenHeight=displayMetrics.heightPixels;
-		
+
 		WIDTH_BUTTON = screenWidth*60/100;
 		HEIGHT_BUTTON = screenHeight*10/100;
-		
+
 		setupIntent = new Intent(StartupActivity.this, SetupActivity.class);
 		summaryIntent = new Intent(StartupActivity.this, SummaryActivity.class);
-		
+
 	}
-	
+
 	private void buildLayout()
 	{
 		// If Release Version, Make Krishna TextView Invisible
@@ -139,15 +168,15 @@ public class StartupActivity extends FragmentActivity
 			TextView krishna = (TextView) findViewById(R.id.krishna);
 			krishna.setVisibility(View.INVISIBLE);
 		}
-		
+
 		TextView financeManager = (TextView) findViewById(R.id.textView_FinanceManager);
 		RelativeLayout.LayoutParams financeManagerTextParams = (LayoutParams) financeManager.getLayoutParams();
 		financeManagerTextParams.topMargin = screenHeight * 10/100;
-		
+
 		TextView welcomeText = (TextView) findViewById(R.id.textView_welcome);
 		RelativeLayout.LayoutParams welcomeTextParams = (LayoutParams) welcomeText.getLayoutParams();
 		welcomeTextParams.topMargin = screenHeight * 3/100;
-		
+
 		Button setupButton = (Button) findViewById(R.id.button_setup);
 		RelativeLayout.LayoutParams setupButtonParams = (LayoutParams) setupButton.getLayoutParams();
 		setupButtonParams.width = WIDTH_BUTTON;
@@ -162,7 +191,7 @@ public class StartupActivity extends FragmentActivity
 				startActivityForResult(setupIntent, CODE_SETUP_ACTIVITY);
 			}
 		});
-		
+
 		Button restoreButton = (Button) findViewById(R.id.button_restore);
 		RelativeLayout.LayoutParams restoreButtonParams = (LayoutParams) restoreButton.getLayoutParams();
 		restoreButtonParams.width = WIDTH_BUTTON;
@@ -173,12 +202,10 @@ public class StartupActivity extends FragmentActivity
 			@Override
 			public void onClick(View v)
 			{
-				Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-				fileIntent.setType("*/*"); // intent type to filter application based on your requirement
-				startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
+				checkRestorePermissions();
 			}
 		});
-		
+
 		Button skipButton = (Button) findViewById(R.id.button_skip);
 		RelativeLayout.LayoutParams skipButtonParams = (LayoutParams) skipButton.getLayoutParams();
 		skipButtonParams.width = WIDTH_BUTTON;
@@ -193,19 +220,19 @@ public class StartupActivity extends FragmentActivity
 			}
 		});
 	}
-	
+
 	private void buildInfoButtons()
 	{
 		TranslateAnimation dialogEnterAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, -2.0f, Animation.RELATIVE_TO_SELF, 0.0f);
 		dialogEnterAnimation.setDuration(1000);
 		dialogEnterAnimation.setFillAfter(true);
 		dialogEnterAnimation.setFillEnabled(true);
-		
+
 		TranslateAnimation dialogExitAnimation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, -2.0f);
 		dialogExitAnimation.setDuration(1000);
 		dialogExitAnimation.setFillAfter(true);
 		dialogExitAnimation.setFillEnabled(true);
-		
+
 		// Info (Information) Buttons
 		ImageButton setupInfoButton = (ImageButton) findViewById(R.id.infoButton_setup);
 		setupInfoButton.setOnClickListener(new View.OnClickListener()
@@ -252,23 +279,23 @@ public class StartupActivity extends FragmentActivity
 			}
 		});
 	}
-	
+
 	private void setAnimation()
 	{
 		final TextView appNameView = (TextView) findViewById(R.id.textView_FinanceManager);
-		
-		final TranslateAnimation anim1 = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, 
+
+		final TranslateAnimation anim1 = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
 				Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_PARENT, -1f, Animation.RELATIVE_TO_SELF, 0.5f);
 		//anim1.setRepeatCount(0);
 		anim1.setDuration(800);
-		
-		final TranslateAnimation anim2 = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, 
+
+		final TranslateAnimation anim2 = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
 				Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, -0.3f);
 		//anim2.setRepeatCount(1);
 		//anim2.setRepeatMode(Animation.REVERSE);
 		anim2.setDuration(300);
-		
-		final TranslateAnimation anim3 = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0, 
+
+		final TranslateAnimation anim3 = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0,
 				Animation.RELATIVE_TO_SELF, 0, Animation.RELATIVE_TO_SELF, -0.3f, Animation.RELATIVE_TO_SELF, 0);
 		//anim3.setRepeatCount(1);
 		//anim3.setRepeatMode(Animation.REVERSE);
@@ -347,18 +374,41 @@ public class StartupActivity extends FragmentActivity
 			letter.setLayoutParams(letterParams);
 		}*/
 	}
-	
+
+	private void checkRestorePermissions()
+	{
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+		{
+			// Permission is not granted
+			ActivityCompat.requestPermissions(StartupActivity.this,
+					new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+					RESTORE_REQUEST_PERMISSION);
+		}
+		else
+		{
+			// Permission Granted
+			chooseRestoreFile();
+		}
+	}
+
+	private void chooseRestoreFile()
+	{
+		Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+		fileIntent.setType("*/*");
+		startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
+	}
+
 	private void restoreData(final Uri fileUri)
 	{
 		// TODO: CREATE a new Activity for Restoring. Give 2 options there. To select Data Backup file
 		// TODO: and settings backup file. Restore both
-		
+
 		IndefiniteWaitDialogBuilder restoreDialogBuilder = new IndefiniteWaitDialogBuilder(this);
 		restoreDialogBuilder.setWaitText("Restoring Data. This may take few minutes depending on the Size of your Data");
 		restoreDialogBuilder.setCancelable(false);
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();
-		
-		/** Restore in a seperate (non-ui) thread */
+
+		/* Restore in a separate (non-ui) thread */
 		Thread restoreThread = new Thread(new Runnable()
 		{
 			@Override
@@ -396,7 +446,7 @@ public class StartupActivity extends FragmentActivity
 					catch (NameNotFoundException e)
 					{
 						appVersionNo = CURRENT_APP_VERSION_NO;
-						Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
+						Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " +
 								"StartupActivity/restoreData\n" + e.getMessage(), Toast.LENGTH_LONG).show();
 					}
 					editor.putInt(KEY_APP_VERSION, appVersionNo);
@@ -410,7 +460,7 @@ public class StartupActivity extends FragmentActivity
 					editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
 					editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
 					editor.commit();
-					
+
 					//Toast.makeText(getApplicationContext(), "Data Restored Successfully", Toast.LENGTH_LONG).show();
 					startActivity(summaryIntent);
 					restoreDialog.dismiss();
@@ -441,10 +491,10 @@ public class StartupActivity extends FragmentActivity
 			}
 		});
 		restoreThread.start();
-		
-		
+
+
 	}
-	
+
 	private void skipSetup()
 	{
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(StartupActivity.this);
@@ -459,7 +509,7 @@ public class StartupActivity extends FragmentActivity
 		expTypes.add(new ExpenditureType(4, getResources().getString(R.string.hint_exp04), false));
 		expTypes.add(new ExpenditureType(5, getResources().getString(R.string.hint_exp05), false));
 		databaseAdapter.addAllExpenditureTypes(expTypes);
-		
+
 		// Store Default Preferences
 		SharedPreferences.Editor editor = preferences.edit();
 		int appVersionNo;
@@ -470,7 +520,7 @@ public class StartupActivity extends FragmentActivity
 		catch (NameNotFoundException e)
 		{
 			appVersionNo = CURRENT_APP_VERSION_NO;
-			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " + 
+			Toast.makeText(getApplicationContext(), "Error In Retrieving Version No In " +
 					"StartupActivity/skipSetup\n" + e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 		editor.putInt(KEY_APP_VERSION, appVersionNo);
@@ -484,7 +534,7 @@ public class StartupActivity extends FragmentActivity
 		editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
 		editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
 		editor.commit();
-		
+
 		startActivityForResult(summaryIntent, 0);
 		super.onBackPressed();
 	}
