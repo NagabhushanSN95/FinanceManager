@@ -17,9 +17,8 @@
         android:id="@+id/details_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
         android:layout_below="@+id/krishna"
-        android:layout_above="@+id/button_layout" >
+        android:layout_alignParentStart="true">
 
         <LinearLayout
             android:id="@+id/scroll_layout"
@@ -54,14 +53,14 @@
                     android:id="@+id/imageView_nagabhushan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
                     android:src="@drawable/nagabhushan" />
                 
                 <TextView
                     android:id="@+id/textView_nagabhushan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_toRightOf="@+id/imageView_nagabhushan" />
+                    android:layout_toEndOf="@+id/imageView_nagabhushan" />
                 
                 <LinearLayout
                     android:layout_width="match_parent"
