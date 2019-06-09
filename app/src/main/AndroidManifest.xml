@@ -6,7 +6,7 @@
 		  android:versionName="4.4.2">
 
 
-	<uses-permission android:name="android.permission.RECEIVE_SMS"/>
+	<!--<uses-permission android:name="android.permission.RECEIVE_SMS"/>-->
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 	<!--<uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>-->
 
@@ -178,13 +178,13 @@
 				android:value=".extras.ExtrasActivity"/>
 		</activity>
 
-		<receiver
-			android:name=".main.SmsReceiver"
-			android:permission="android.permission.BROADCAST_SMS">
-			<intent-filter android:priority="100">
-				<action android:name="android.provider.Telephony.SMS_RECEIVED"/>
-			</intent-filter>
-		</receiver>
+		<!--<receiver-->
+			<!--android:name=".main.SmsReceiver"-->
+			<!--android:permission="android.permission.BROADCAST_SMS">-->
+			<!--<intent-filter android:priority="100">-->
+				<!--<action android:name="android.provider.Telephony.SMS_RECEIVED"/>-->
+			<!--</intent-filter>-->
+		<!--</receiver>-->
 
 		<service android:name=".extras.DailyBackupService"/>
 	</application>
