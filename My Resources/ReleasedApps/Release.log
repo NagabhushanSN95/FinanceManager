@@ -41,3 +41,7 @@ v4.4.0 (Optional update)
 
 v4.4.1 (Mandatory Update from v4.4.0. Others optional)
 1. Critical bug fix
+
+v4.4.2
+1. Permissions will be requested during run-time
+2. Reading Bank SMS functionality disabled
