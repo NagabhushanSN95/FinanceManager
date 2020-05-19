@@ -8,3 +8,4 @@ build/
 app/build
 OpenCV/*
 app/src/main/jniLibs/**/*.so
+auxil/*
