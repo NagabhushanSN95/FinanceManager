@@ -53,7 +53,9 @@ public class SettingsActivity extends Activity
 	private int autoBackupRestoreValue;
 	private SettingsLayout dailyBackupSetting;
 	private boolean dailyBackupSelected;
-	
+    private SettingsLayout sortTransactionsSetting;
+    private String sortTransactionsSelected = Constants.VALUE_SORT_TRANSACTIONS_CREATED;
+
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -236,7 +238,7 @@ public class SettingsActivity extends Activity
 				editor.commit();
 			}
 		});
-		
+
 		dailyBackupSetting = (SettingsLayout) findViewById(R.id.dailyBackup);
 		dailyBackupSetting.setSettingName("Daily Backup");
 		String[] dailyBackupSettingOptions = new String[]{Constants.VALUE_DAILY_BACKUP_ENABLED,
@@ -264,6 +266,26 @@ public class SettingsActivity extends Activity
 				Utilities.setDailyBackupService(SettingsActivity.this, dailyBackupSelected);
 			}
 		});
+
+        sortTransactionsSetting = findViewById(R.id.sortTransactions);
+        sortTransactionsSetting.setSettingName("Sort Transactions By");
+        String[] sortTransactionsSettingOptions = new String[]{
+                Constants.VALUE_SORT_TRANSACTIONS_DATE,
+                Constants.VALUE_SORT_TRANSACTIONS_CREATED,
+                Constants.VALUE_SORT_TRANSACTIONS_MODIFIED
+        };
+        sortTransactionsSetting.setOptions(sortTransactionsSettingOptions);
+        sortTransactionsSetting.setSelection(sortTransactionsSelected);
+        sortTransactionsSetting.setSettingChangedListener(new OnSettingChangedListener() {
+            @Override
+            public void onSettingChanged() {
+                SharedPreferences preferences = getSharedPreferences(Constants.ALL_PREFERENCES, Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = preferences.edit();
+                String sortTransactionsSelectedString = sortTransactionsSetting.getSelectedOption();
+                editor.putString(Constants.KEY_SORT_TRANSACTIONS, sortTransactionsSelectedString);
+                editor.apply();
+            }
+        });
 	}
 	
 	private void readPreferences()
@@ -351,6 +373,9 @@ public class SettingsActivity extends Activity
 		{
 			dailyBackupSelected = preferences.getBoolean(Constants.KEY_DAILY_BACKUP, false);
 		}
+        if (preferences.contains(Constants.KEY_SORT_TRANSACTIONS)) {
+            sortTransactionsSelected = preferences.getString(Constants.KEY_SORT_TRANSACTIONS, Constants.VALUE_SORT_TRANSACTIONS_DATE);
+        }
 	}
 	
 	private void readCurrencySymbolsFile()

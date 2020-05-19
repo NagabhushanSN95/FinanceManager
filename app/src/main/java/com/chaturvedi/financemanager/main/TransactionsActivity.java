@@ -15,8 +15,12 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.*;
+import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -56,6 +60,7 @@ public class TransactionsActivity extends Activity
 	private Date transactionsDisplayIntervalEndDate = null;
 	private ArrayList<String> allowedTransactionTypes = null;
 	private String searchKeyword = null;
+    private String sortBy;
 
 	private String contextMenuTag;
 	
@@ -319,6 +324,8 @@ public class TransactionsActivity extends Activity
 		{
 			transactionsDisplayInterval = preferences.getString(Constants.KEY_TRANSACTIONS_DISPLAY_INTERVAL, "Month");
 		}*/
+
+        sortBy = preferences.getString(Constants.KEY_SORT_TRANSACTIONS, Constants.VALUE_SORT_TRANSACTIONS_CREATED);
 	}
 
 	private void getTransactionsToDisplay()
@@ -339,7 +346,7 @@ public class TransactionsActivity extends Activity
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
 		transactions = databaseAdapter.getTransactions(transactionsDisplayIntervalMonthYear,
 				transactionsDisplayIntervalStartDate, transactionsDisplayIntervalEndDate, allowedTransactionTypes, searchKeyword,
-				false, offset, numTransactionsToRetrieve);
+                false, sortBy, offset, numTransactionsToRetrieve);
 
 		if (transactions.size() < numTransactionsToRetrieve)
 		{
@@ -365,7 +372,7 @@ public class TransactionsActivity extends Activity
 		DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(TransactionsActivity.this);
 		ArrayList<Transaction> newTransactions = databaseAdapter.getTransactions(transactionsDisplayIntervalMonthYear,
 				transactionsDisplayIntervalStartDate, transactionsDisplayIntervalEndDate, allowedTransactionTypes, searchKeyword,
-				false, offset, numTransactionsToRetrieve);
+                false, sortBy, offset, numTransactionsToRetrieve);
 		transactions.addAll(0, newTransactions);
 
 		if (newTransactions.size() < numTransactionsToRetrieve)

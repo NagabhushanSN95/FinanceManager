@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SettingsLayout extends LinearLayout
 {
@@ -130,11 +131,16 @@ public class SettingsLayout extends LinearLayout
 			options[i] = optionsList.get(i);
 		}
 	}
-	
+
 	public void setSelection(int optionNo)
 	{
 		settingSelectedView.setText(options[optionNo]);
 	}
+
+    public void setSelection(String option) {
+        int optionNo = Arrays.asList(options).indexOf(option);
+        setSelection(optionNo);
+    }
 	
 	public int getSelectedOptionNo()
 	{

@@ -22,8 +22,9 @@ abstract class ExportManager
 	static final int CODE_EXPORT_SUCCESSFUL = 1101;
 	static final int CODE_EXPORT_FAILED = 1102;
 	protected String currencySymbol = " ";
+    private String sortBy;
 	protected DecimalFormat formatter;
-	
+
 	protected Context context;
 	ExportMetaData exportMetaData;
 	Handler exportHandler;
@@ -48,6 +49,7 @@ abstract class ExportManager
 		{
 			currencySymbol = " ";
 		}
+        sortBy = preferences.getString(Constants.KEY_SORT_TRANSACTIONS, Constants.VALUE_SORT_TRANSACTIONS_CREATED);
 	}
 	
 	String getTitle()
@@ -82,7 +84,7 @@ abstract class ExportManager
 	protected List<Transaction> getTransactions()
 	{
 		return DatabaseAdapter.getInstance(context).getTransactions(null, exportMetaData
-				.getStartDate(), exportMetaData.getEndDate(), null, null, false, 0, -1);
+                .getStartDate(), exportMetaData.getEndDate(), null, null, false, sortBy, 0, -1);
 	}
 	
 	File getExportFile() throws Exception

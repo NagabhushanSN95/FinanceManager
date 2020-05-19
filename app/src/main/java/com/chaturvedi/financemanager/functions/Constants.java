@@ -32,6 +32,7 @@ public class Constants
 	public static final String KEY_BANK_SMS_ARRIVED = "HasNewBankSmsArrived";
 	public static final String KEY_AUTOMATIC_BACKUP_RESTORE = "AutomaticBackupAndRestore";
 	public static final String KEY_DAILY_BACKUP = "DailyBackup";
+    public static final String KEY_SORT_TRANSACTIONS = "SortTransactions";
 	public static final String KEY_EXPORT_INTERVAL_TYPE = "ExportIntervalType";
 	public static final String KEY_EXPORT_INCLUDE_TRANSACTION_TYPE =
 			"ExportIncludeTransactionType";
@@ -99,4 +100,7 @@ public class Constants
 	public static final String VALUE_FLOW_LOGS = "Flow Logs";
 	
 	public static final int YEAR_MINIMUM_VALUE = 2015;
+    public static final String VALUE_SORT_TRANSACTIONS_DATE = "Date";
+    public static final String VALUE_SORT_TRANSACTIONS_CREATED = "Created Time";
+    public static final String VALUE_SORT_TRANSACTIONS_MODIFIED = "Modified Time";
 }
