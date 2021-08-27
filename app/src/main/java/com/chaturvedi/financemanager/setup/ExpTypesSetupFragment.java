@@ -1,12 +1,8 @@
 package com.chaturvedi.financemanager.setup;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -19,17 +15,20 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import androidx.fragment.app.Fragment;
+
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.datastructures.ExpenditureType;
 
-public class ExpTypesSetupFragment extends Fragment
-{
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class ExpTypesSetupFragment extends Fragment {
 	private View expTypesSetupView;
 	private static ArrayList<String> expTypes;
-	
+
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-	{
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		expTypesSetupView = inflater.inflate(R.layout.fragment_setup_exp_types, container, false);
 		
 		buildLayout();

@@ -11,17 +11,22 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.chaturvedi.customviews.IndefiniteWaitDialogBuilder;
 import com.chaturvedi.financemanager.R;
@@ -58,16 +63,16 @@ public class StartupActivity extends FragmentActivity
 													"4) Setup your Preferences\n";
 	private static final String restoreInfoString = "If you have Finance Manager before and backed up your data,"+
 			"you can restore the data here.\n" +
-													"All your Transactions, Bank Details will be restored";
+			"All your Transactions, Bank Details will be restored";
 	private static final String skipInfoString = "You can skip the setup and straight away start using the App\n" +
 			"1) Your Wallet Balance will be set to zero\n" +
 			"2) No Bank Accounts will be set up\n" +
 			"3) The Expenditure Types will be set to default\n" +
-													"4) All Preferences will be set to default\n";
+			"4) All Preferences will be set to default\n";
 	private final int NUM_EXP_TYPES = 5;
 	private SharedPreferences preferences;
 	private int CURRENT_APP_VERSION_NO;
-	private int splashDuration = 5000;
+	private final int splashDuration = 5000;
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;
@@ -458,8 +463,8 @@ public class StartupActivity extends FragmentActivity
 					editor.putString(KEY_CURRENCY_SYMBOL, " ");
 					editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
 					editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
-					editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
-					editor.commit();
+					editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 1);
+					editor.apply();
 
 					//Toast.makeText(getApplicationContext(), "Data Restored Successfully", Toast.LENGTH_LONG).show();
 					startActivity(summaryIntent);
@@ -533,7 +538,7 @@ public class StartupActivity extends FragmentActivity
 		editor.putString(KEY_RESPOND_BANK_SMS, "Popup");
 		editor.putBoolean(KEY_BANK_SMS_ARRIVED, false);
 		editor.putInt(KEY_AUTOMATIC_BACKUP_RESTORE, 3);
-		editor.commit();
+		editor.apply();
 
 		startActivityForResult(summaryIntent, 0);
 		super.onBackPressed();

@@ -1,33 +1,32 @@
 package com.chaturvedi.financemanager.help;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.NavUtils;
+
 import com.chaturvedi.financemanager.R;
 
-public class GuideActivity extends Activity
-{
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+public class GuideActivity extends Activity {
 	private ArrayList<TextView> textViews;
 	private ArrayList<String> helpTexts;
-	
+
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
-	protected void onCreate(Bundle savedInstanceState)
-	{
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_guide);
 		if(VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB)

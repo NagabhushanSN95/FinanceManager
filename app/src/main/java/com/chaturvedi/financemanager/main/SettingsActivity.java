@@ -8,11 +8,12 @@ import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.app.NavUtils;
 
 import com.chaturvedi.customviews.SettingsLayout;
 import com.chaturvedi.customviews.SettingsLayout.OnSettingChangedListener;
@@ -348,9 +349,8 @@ public class SettingsActivity extends Activity
 		}
 		
 		// Retrieve Automatic Backup And Restore Status
-		if (preferences.contains(Constants.KEY_AUTOMATIC_BACKUP_RESTORE))
-		{
-			autoBackupRestoreValue = preferences.getInt(Constants.KEY_AUTOMATIC_BACKUP_RESTORE, 3);
+		if (preferences.contains(Constants.KEY_AUTOMATIC_BACKUP_RESTORE)) {
+			autoBackupRestoreValue = preferences.getInt(Constants.KEY_AUTOMATIC_BACKUP_RESTORE, 1);
 		}
 		switch(autoBackupRestoreValue)
 		{

@@ -1,17 +1,10 @@
 package com.chaturvedi.financemanager.setup;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -30,11 +23,18 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.fragment.app.Fragment;
+
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.datastructures.Bank;
 
-public class BanksSetupFragment extends Fragment
-{
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+
+public class BanksSetupFragment extends Fragment {
 	private DisplayMetrics displayMetrics;
 	private int screenWidth;
 	private int screenHeight;

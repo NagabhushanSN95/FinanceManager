@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -26,6 +25,8 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.app.NavUtils;
 
 import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.financemanager.R;
@@ -1168,16 +1169,15 @@ public class TransactionsActivity extends Activity
 		bankDebitDialog.setNegativeButton("Cancel", null);
 	}*/
 	
-	private void editDisplayedTransaction(Transaction transaction)
-	{
+	private void editDisplayedTransaction(Transaction transaction) {
 		LinearLayout layout = (LinearLayout) parentLayout.findViewWithTag(transaction.createTag());
-		
+
 		TextView dateView = (TextView) layout.findViewById(R.id.date);
-		dateView.setText(transaction.getDate().getDisplayDate());
-		
+		dateView.setText(transaction.getDate().getDisplayDate("/"));
+
 		TextView particularsView = (TextView) layout.findViewById(R.id.particulars);
 		particularsView.setText(transaction.getDisplayParticular(TransactionsActivity.this));
-		
+
 		TextView amountView = (TextView) layout.findViewById(R.id.amount);
 		amountView.setText(formatterDisplay.format(transaction.getAmount()));
 	}

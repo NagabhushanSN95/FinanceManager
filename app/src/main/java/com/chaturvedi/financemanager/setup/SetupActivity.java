@@ -1,17 +1,10 @@
 package com.chaturvedi.financemanager.setup;
 
-import java.util.ArrayList;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.Button;
@@ -19,12 +12,20 @@ import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.Toast;
 
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.datastructures.Bank;
 import com.chaturvedi.financemanager.datastructures.ExpenditureType;
 import com.chaturvedi.financemanager.datastructures.Wallet;
 import com.chaturvedi.financemanager.main.SummaryActivity;
-import com.chaturvedi.financemanager.datastructures.Bank;
+
+import java.util.ArrayList;
 
 public class SetupActivity extends FragmentActivity
 {

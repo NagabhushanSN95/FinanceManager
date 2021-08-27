@@ -12,7 +12,12 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.chaturvedi.customviews.IntervalSelector;
 import com.chaturvedi.customviews.ProgressiveWaitDialogBuilder;
@@ -23,6 +28,7 @@ import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.functions.Constants;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.Calendar;
 
 public class ExportActivity extends Activity
@@ -144,17 +150,17 @@ public class ExportActivity extends Activity
 	private String getDefaultExportFileName(IntervalSelector intervalSelector)
 	{
 		String filename;
-		switch (intervalSelector.getSelectedIntervalType())
-		{
+		switch (intervalSelector.getSelectedIntervalType()) {
 			case INTERVAL_MONTH:
-				filename = "Finance Manager Statement for " + intervalSelector.getSelectedMonth()
+				DecimalFormat formatter = new DecimalFormat("00");
+				filename = intervalSelector.getSelectedYear() + formatter.format(intervalSelector.getSelectedMonth().getMonthNo()) + " Finance Manager Statement for " + intervalSelector.getSelectedMonth()
 						.toString() + " - " + intervalSelector.getSelectedYear();
 				break;
-			
+
 			case INTERVAL_YEAR:
 				filename = "Finance Manager Statement for " + intervalSelector.getSelectedYear();
 				break;
-			
+
 			case INTERVAL_ALL:
 				DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(ExportActivity.this);
 				filename = "Finance Manager Statement from " + databaseAdapter

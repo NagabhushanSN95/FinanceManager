@@ -1,30 +1,30 @@
 package com.chaturvedi.financemanager.help;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.NavUtils;
+
 import com.chaturvedi.financemanager.R;
 
-public class FAQAnswerActivity extends Activity
-{
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+public class FAQAnswerActivity extends Activity {
 	private int FAQNo;
 	private ArrayList<String> FAQQuestions;
 	private ArrayList<String> FAQAnswers;
-	
+
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	protected void onCreate(Bundle savedInstanceState)

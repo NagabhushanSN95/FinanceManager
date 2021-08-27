@@ -13,14 +13,19 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.*;
-import android.support.v4.content.ContextCompat;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
@@ -29,7 +34,13 @@ import com.chaturvedi.financemanager.extras.RestoreManager;
 import com.chaturvedi.financemanager.functions.AutomaticBackupAndRestoreManager;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.setup.StartupActivity;
-import com.chaturvedi.financemanager.updates.*;
+import com.chaturvedi.financemanager.updates.Update107To110;
+import com.chaturvedi.financemanager.updates.Update110To111;
+import com.chaturvedi.financemanager.updates.Update111to124;
+import com.chaturvedi.financemanager.updates.Update124to125;
+import com.chaturvedi.financemanager.updates.Update68To88;
+import com.chaturvedi.financemanager.updates.Update89To96;
+import com.chaturvedi.financemanager.updates.Update96To107;
 
 import java.io.BufferedReader;
 import java.io.File;
