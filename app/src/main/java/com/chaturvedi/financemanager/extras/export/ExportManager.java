@@ -2,6 +2,7 @@ package com.chaturvedi.financemanager.extras.export;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 
@@ -87,15 +88,16 @@ abstract class ExportManager
                 .getStartDate(), exportMetaData.getEndDate(), null, null, false, sortBy, 0, -1);
 	}
 	
-	File getExportFile() throws Exception
-	{
+	File getExportFile() throws Exception {
 		String exportFolderPath = "Chaturvedi/Finance Manager";
-		File exportFolder = new File(Environment.getExternalStoragePublicDirectory("Android"),
-				exportFolderPath);
-		if (!exportFolder.exists())
-		{
-			if (!exportFolder.mkdirs())
-			{
+		File exportFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			exportFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + exportFolderPath);
+		} else {
+			exportFolder = new File(Environment.getExternalStorageDirectory() + "/" + exportFolderPath);
+		}
+		if (!exportFolder.exists()) {
+			if (!exportFolder.mkdirs()) {
 				throw new Exception("Failed to create File");
 			}
 		}
