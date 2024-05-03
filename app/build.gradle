@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.chaturvedi.financemanager"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdk 33
     }
 
     buildTypes {
@@ -15,6 +15,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+    namespace 'com.chaturvedi.financemanager'
 
     /*repositories {
         maven {
