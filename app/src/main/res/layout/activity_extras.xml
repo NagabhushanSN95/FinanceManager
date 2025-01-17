@@ -121,13 +121,40 @@
     </LinearLayout>
     
     <LinearLayout
-		android:id="@+id/layout_aboutUs"
+		android:id="@+id/layout_import_zerodha_coin"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_below="@+id/layout_clear"
 		android:layout_marginLeft="10dp"
 		android:layout_marginRight="10dp"
 		android:layout_marginTop="5dp"
+		android:background="@drawable/button_extras"
+		android:clickable="true"
+		android:orientation="vertical">
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="10dp"
+			android:layout_marginRight="10dp"
+			android:text="@string/import_zerodha_coin"
+			android:textSize="20sp" />
+
+		<View
+			android:layout_width="match_parent"
+			android:layout_height="1dp"
+			android:layout_marginTop="15dp"
+			android:background="#DDDDDD" />
+	</LinearLayout>
+
+	<LinearLayout
+		android:id="@+id/layout_aboutUs"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/layout_import_zerodha_coin"
+		android:layout_marginLeft="10dp"
+		android:layout_marginTop="5dp"
+		android:layout_marginRight="10dp"
 		android:background="@drawable/button_extras"
 		android:clickable="true"
 		android:orientation="vertical">

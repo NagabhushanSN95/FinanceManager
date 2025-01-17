@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId "com.chaturvedi.financemanager"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdk 33
     }
 

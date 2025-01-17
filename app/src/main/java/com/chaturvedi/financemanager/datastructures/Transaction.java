@@ -5,6 +5,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
 import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.datastructures.Time;
 import com.chaturvedi.financemanager.functions.TransactionTypeParser;
@@ -378,6 +380,22 @@ public class Transaction implements Parcelable
 				particular, String.valueOf(rate), String.valueOf(quantity), String.valueOf(amount), String.valueOf(hidden),
 				String.valueOf(includeInCounters)};
 		dest.writeStringArray(data);
+	}
+
+	@NonNull
+	@Override
+	public String toString() {
+		return "ID: " + id + "\n" +
+				"Created Time: " + createdTime + "\n" +
+				"Modified Time: " + modifiedTime + "\n" +
+				"Date: " + date + "\n" +
+				"Type: " + type + "\n" +
+				"Particular: " + particular + "\n" +
+				"Rate: " + rate + "\n" +
+				"Quantity: " + quantity + "\n" +
+				"Amount: " + amount + "\n" +
+				"Hidden: " + hidden + "\n" +
+				"Include In Counters: " + includeInCounters + "\n";
 	}
 
 }
