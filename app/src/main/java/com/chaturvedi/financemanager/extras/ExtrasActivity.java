@@ -463,7 +463,6 @@ public class ExtrasActivity extends Activity
 		restoreDialogBuilder.setCancelable(false);
 		final AlertDialog restoreDialog = restoreDialogBuilder.show();
 
-		// Todo: Restore in a seperate (non-ui) thread
 		Thread importThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -474,21 +473,47 @@ public class ExtrasActivity extends Activity
 					for (Transaction transaction : importManager.getAllTransactions()) {
 						DatabaseManager.addTransaction(ExtrasActivity.this, transaction, true);
 					}
-					restoreDialog.dismiss();  // TODO: Show the number of transactions imported
-				} else if (result == 1) {
-					// TODO: Send these messages using a handler. Display Toast in that handler
-					/*Toast.makeText(getApplicationContext(), "No Backups Were Found.\nMake sure the Backup Files " +
-							"are located in\nChaturvedi/Finance Manager Folder", Toast.LENGTH_LONG).show();*/
-					Log.d("importZerodhaCoin()", "No Zerodha Coin Statements were found.\nPlease select a file exported using Zerodha Coin");
-					restoreDialog.dismiss();
-				} else if (result == 3) {
-					/*Toast.makeText(getApplicationContext(), "Error in Restoring Data\nControl Entered Catch Block",
-							Toast.LENGTH_LONG).show();*/
-					Log.d("importZerodhaCoin()", "Error in Restoring Data\nControl Entered Catch Block");
-					restoreDialog.dismiss();
 				}
+				restoreDialog.dismiss();
+
+				// Show result in a dialog on the UI thread
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						if (result == 0) {
+							showImportCompleteDialog(result, importManager.getAllTransactions().size());
+						} else {
+							showImportCompleteDialog(result, 0);
+						}
+					}
+				});
 			}
 		});
 		importThread.start();
+	}
+
+	// Method to show the import complete dialog
+	private void showImportCompleteDialog(int result, int transactionCount) {
+		String message = "";
+		if (result == 0) {
+			message = "Successfully imported " + transactionCount + " transactions from Zerodha Coin.";
+		} else if (result == 1) {
+			Log.d("importZerodhaCoin()", "No Zerodha Coin Statements were found.\nPlease select a file exported using Zerodha Coin");
+			message = "No Zerodha Coin Statements were found.\nPlease select a file exported using Zerodha Coin";
+		} else if (result == 2) {
+			Log.d("importZerodhaCoin()", "Error in Importing Zerodha Coin Statement\nControl Entered Catch Block");
+			message = "Error in Importing Zerodha Coin Statement";
+		}
+
+		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+		dialogBuilder.setTitle("Import Complete");
+		dialogBuilder.setMessage(message);
+		dialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		dialogBuilder.show();
 	}
 }

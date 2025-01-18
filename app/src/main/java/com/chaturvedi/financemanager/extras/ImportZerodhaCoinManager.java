@@ -3,11 +3,11 @@ package com.chaturvedi.financemanager.extras;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.datastructures.Time;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
+import com.chaturvedi.financemanager.datastructures.Bank;
 import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
 
@@ -15,10 +15,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -53,6 +53,8 @@ public class ImportZerodhaCoinManager {
      * 2 error occurs
      */
     private int parseZerodhaCoinStatement(Uri fileUri) {
+        String investments_bank_id = get_investments_bank_id();
+        String host_bank_id = get_host_bank_id();
         transactions = new ArrayList<>();
         try {
             InputStream inputStream = context.getContentResolver().openInputStream(fileUri);
@@ -86,9 +88,7 @@ public class ImportZerodhaCoinManager {
             Collections.reverse(lines);
 
             for (String line : lines) {
-                Log.d("ImportZerodhaCoin", "Line: " + line1);  // TODO: Remove this
                 String[] values = line.split(",", -1);
-                Log.d("ImportZerodhaCoin", "Values: " + Arrays.toString(values));  // TODO: Remove this
                 if (values.length < headers.length) {
                     continue; // Skip malformed rows
                 }
@@ -142,14 +142,14 @@ public class ImportZerodhaCoinManager {
 
                 String expType, particulars;
                 if (transactionMode.equalsIgnoreCase("BUY")) {
-                    expType = "Transfer Bank03 Bank16";
+                    expType = "Transfer " + host_bank_id + " " + investments_bank_id;
                     if (remarks.toLowerCase().contains("sip") || tag.toLowerCase().contains("sip")) {
                         particulars = "Mutual Funds SIP Installment - " + schemeName;
                     } else {
                         particulars = "Invested In Mutual Funds - " + schemeName;
                     }
                 } else {
-                    expType = "Transfer Bank16 Bank03";
+                    expType = "Transfer " + investments_bank_id + " " + host_bank_id;
                     particulars = "Redeemed Mutual Funds - " + schemeName;
                 }
 
@@ -240,8 +240,9 @@ public class ImportZerodhaCoinManager {
 
             numTransactions = transactions.size();
             return 0;
-        } catch (IOException | ParseException e) {
-            Toast.makeText(context, "Error in parsing Zerodha Coin Statement\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+        } catch (IOException | ParseException | NullPointerException |
+                 StringIndexOutOfBoundsException e) {
+//            Toast.makeText(context, "Error in parsing Zerodha Coin Statement\n" + e.getMessage(), Toast.LENGTH_LONG).show();
             return 2;
         }
     }
@@ -282,6 +283,24 @@ public class ImportZerodhaCoinManager {
         }
         schemeName = schemeNameBuilder.toString().trim();
         return schemeName;
+    }
+
+    private String get_investments_bank_id() {
+        String investments_bank_id = null;
+        DecimalFormat formatter = new DecimalFormat("00");
+        DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+        ArrayList<Bank> banks = databaseAdapter.getAllBanks();
+        // Iterate through all banks and get the id of the bank who name == "Investments". Return bank{id}
+        for (Bank bank : banks) {
+            if (bank.getName().equalsIgnoreCase("Investments")) {
+                investments_bank_id = "Bank" + formatter.format(bank.getID());
+            }
+        }
+        return investments_bank_id;
+    }
+
+    private String get_host_bank_id() {
+        return "Bank03";  // TODO: Do not hard-code
     }
 
     public int getResult() {
