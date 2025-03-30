@@ -7,7 +7,7 @@ DB_NAME="expenditureManager"                 # Replace with your database name
 ANDROID_STUDIO_VERSION="2024.2"              # Replace with your Android Studio version
 DEVICE_NAME="Google Pixel 8a"               # Replace with your device name
 #OUTPUT_PATH="/Users/nagabhushan/Library/Caches/Google/AndroidStudio${ANDROID_STUDIO_VERSION}/device-explorer/${DEVICE_NAME}/_/data/data/${PACKAGE_NAME}/databases/${DB_NAME}"
- OUTPUT_PATH="/Users/nagabhushan/Downloads/FinanceManager/${DB_NAME}"
+OUTPUT_PATH="/Users/nagabhushan/Downloads/FinanceManager/${DB_NAME}"
 OUTPUT_DIRPATH=$(dirname "$OUTPUT_PATH")
 
 # Ensure OUTPUT_PATH exists
