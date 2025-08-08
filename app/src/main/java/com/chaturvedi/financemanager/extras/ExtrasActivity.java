@@ -32,12 +32,13 @@ import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.extras.export.ExportActivity;
+import com.chaturvedi.financemanager.extras.zerodha.ZerodhaImportActivity;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.AboutActivity;
 
 public class ExtrasActivity extends Activity
 {
-	private static final int CODE_FILE_CHOOSER = 102;
+	private static final int CODE_FILE_CHOOSER_RESTORE = 102;
 	private static final int EXPORT_REQUEST_PERMISSION = 201;
 	private static final int BACKUP_REQUEST_PERMISSION = 202;
 	private static final int RESTORE_REQUEST_PERMISSION = 203;
@@ -118,16 +119,21 @@ public class ExtrasActivity extends Activity
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent)
 	{
-		//noinspection SwitchStatementWithTooFewBranches
-		switch (requestCode)
-		{
-			case CODE_FILE_CHOOSER:
-				if(resultCode == RESULT_OK)
-				{
-					// Get the Uri of the selected file
-					Uri uri = intent.getData();
-					restoreData(uri);
-				}
+		super.onActivityResult(requestCode, resultCode, intent);
+
+		if (resultCode == RESULT_OK && intent != null && intent.getData() != null) {
+			Uri fileUri = intent.getData();
+
+			switch (requestCode) {
+				case CODE_FILE_CHOOSER_RESTORE:
+					restoreData(fileUri);
+					break;
+
+				default:
+					Log.e("onActivityResult", "Unknown request code: " + requestCode);
+			}
+		} else {
+			Log.e("onActivityResult", "No file selected or invalid result");
 		}
 	}
 
@@ -177,6 +183,14 @@ public class ExtrasActivity extends Activity
 			public void onClick(View v)
 			{
 				clearData();
+			}
+		});
+
+		LinearLayout importZerodhaLayout = (LinearLayout) findViewById(R.id.layout_import_zerodha);
+		importZerodhaLayout.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startZerodhaImportActivity();
 			}
 		});
 
@@ -321,7 +335,7 @@ public class ExtrasActivity extends Activity
 	{
 		Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
 		fileIntent.setType("*/*");
-		startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
+		startActivityForResult(fileIntent, CODE_FILE_CHOOSER_RESTORE);
 	}
 
 	private void restoreData(final Uri fileUri)
@@ -417,5 +431,10 @@ public class ExtrasActivity extends Activity
 		});
 		clearDialog.setNegativeButton("Cancel", null);
 		clearDialog.show();
+	}
+
+	private void startZerodhaImportActivity() {
+		Intent importZerodhaIntent = new Intent(ExtrasActivity.this, ZerodhaImportActivity.class);
+		startActivity(importZerodhaIntent);
 	}
 }

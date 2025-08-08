@@ -136,7 +136,7 @@ public class TransferLayout extends RelativeLayout
 				Template selectedTemplate = databaseAdapter.getTemplate(particularsEditText.getText().toString());
 				TransactionTypeParser parser = new TransactionTypeParser(getContext(), selectedTemplate.getType());
 				String transferSourceName = parser.getTransferSourceName();
-				String transferDestinationName = parser.getIncomeDestinationName();
+				String transferDestinationName = parser.getTransferDestinationName();
 				transferSourcesSpinner.setSelection(transferSourcesAdapter.getPosition
 						(transferSourceName));
 				transferDestinationsSpinner.setSelection(transferDestinationsAdapter.getPosition

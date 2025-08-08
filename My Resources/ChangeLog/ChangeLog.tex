@@ -39,19 +39,19 @@ linkcolor = black
         \item A new method getTransactions() is created in DatabaseAdapter that takes filterRules, hiddenTransactions, offset and numTransactions as parameters.
         filterRules is an ArrayList of Strings.
         Not defined how to use yet.
-        It returns 'numTractions' number of transactions from bottom with given offset.
+        It returns `numTractions' number of transactions from bottom with given offset.
         \item TransactionsActivity buildLayout updated to display last 100 transactions by default
         \item Show More button added which when clicked displays 100 more transactions
     \end{itemize}
 
     \section{v4.1.1 (117)}\label{sec:117}
     \begin{itemize}
-        \item Created a custom view "ExpandCollapseItem" which is used in Filtering Transactions
+        \item Created a custom view ``ExpandCollapseItem'' which is used in Filtering Transactions
         \item FilterActivity created that lets user filter transactions by date, transaction type, wallets/banks and a search keyword
         \item Bug Fix: While editing transactions, in DatabaseAdapter, transactionType was not updated - Fixed.
         \item While displaying particulars in TransactionsActivity, wallets/banks will be prefixed
         \item For build version, in SplashActivity, app icon will be displayed instead of Krishna Photo.
-        Also, "Shree KRISHNAya Namaha" will be hidden
+        Also, ``Shree KRISHNAya Namaha'' will be hidden
         \item In TransactionsActivity, while displaying particulars, source/destination (Wallet/Bank) will be displayed and particular on next line
     \end{itemize}
 
@@ -59,7 +59,7 @@ linkcolor = black
     \begin{itemize}
         \item Bug Fix: In TransactionsActivity, after adding a transaction, if that transaction is edited or deleted, instead of selecting that Transaction, some other Transaction was getting selected.
         Earlier, contextMenuTransactionNo field was used to get transactions and all.
-        Now, for each transactionLayout, a tag of the format "yyyy-id" (Eg: 2017-123) will be set and this tag is used to retrieve transactions as well as layouts
+        Now, for each transactionLayout, a tag of the format ``yyyy-id'' (Eg: 2017-123) will be set and this tag is used to retrieve transactions as well as layouts
     \end{itemize}
 
     \section{v4.1.3 (119)}\label{sec:119}
@@ -163,7 +163,7 @@ linkcolor = black
         \item The generic getTransactions() method in DatabaseAdaptor has been deprecated.
         A similar method is added which uses Date objects instead of Strings for start and end dates.
         \item isLeapYear() method added in com.chaturvedi.datastructures.Date class
-        \item Export folder changed to "Android/Chaturvedi/Finance Manager"
+        \item Export folder changed to ``Android/Chaturvedi/Finance Manager''
         \item Minor bug fixes and enhancements
     \end{itemize}
 
@@ -189,7 +189,7 @@ linkcolor = black
         \item Update125to131 which was missing in previous release added.
         \item Toast message saying the app is updating will be displayed from SplashActivity instead of individual classes
         \item HintAdapter custom class added in com.chaturvedi.customviews.
-        Shows "Select" at first and it will disappear once a selection is made
+        Shows ``Select'' at first and it will disappear once a selection is made
         \item IncomeLayout, ExpenseLayout and TransferLayout updated to use HintAdapter
     \end{itemize}
 
@@ -214,7 +214,7 @@ linkcolor = black
     \section{v4.4.1 (135)}\label{sec:135}
     \begin{itemize}
         \item Release.log added
-        \item 'Change Log.txt' renamed to Change.log
+        \item `Change Log.txt' renamed to Change.log
         \item Bug Fix in DatabaseAdapter getTransactions() deprecated method
         \item All instances of getTransactions() deprecated method replaced with newer version
         \item UpdateClasses with no updates deleted (88to89, 125to131, 131to134)
@@ -242,6 +242,38 @@ linkcolor = black
         \item Project ported to Android Studio 4.2.2
         \item When exporting a month, default filename changed to prepend year and month number at the beginning.
         This helps in automatic sorting of exports in filesystem.
-        \item Default Value for Automatic Backup and Restore setting changed from "Automatic Backup and Restore" to "Automatic Backup".
+        \item Default Value for Automatic Backup and Restore setting changed from ``Automatic Backup and Restore'' to ``Automatic Backup''.
+    \end{itemize}
+
+
+    \section{v4.4.4 (138)}\label{sec:138}
+    \begin{itemize}
+        \item Project ported to Android Studio 2020.3.1 Patch 2.
+        \item Backup and Export updated to save files in Documents folder instead of Android folder.
+        \item Bug Fix: Destination name in transfer template.
+    \end{itemize}
+
+
+    \section{v4.4.5 (139)}\label{sec:139}
+    \begin{itemize}
+        \item Some automatic updates.
+        \item Target version changed to 33.
+    \end{itemize}
+
+
+    \section{v4.5.0 (140)}\label{sec:140}
+    \begin{itemize}
+        \item Added support to import Zerodha Coin Statement.
+        \item Investments hidden in summary layout by default.
+        A menu item added to toggle its visibility.
+        \item Minimum SDK version changed from 21 to 24.
+    \end{itemize}
+
+
+    \section{v4.5.1 (141)}\label{sec:141}
+    \begin{itemize}
+        \item Created a new ZerodhImportsActivity to import Zerodha statements.
+        \item Added support to import Zerodha Kite tradebook and dividends statement.
+        \item Minimum SDK version changed from 24 to 26.
     \end{itemize}
 \end{document}

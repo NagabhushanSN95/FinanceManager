@@ -3,6 +3,7 @@ package com.chaturvedi.financemanager.extras;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
@@ -38,8 +39,13 @@ public class BackupManager
 	public void autoBackup()
 	{
 		String backupFolderName = "Chaturvedi/Finance Manager/Auto Backups";
-		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if(!financeFolder.exists() && !financeFolder.mkdirs())
+		File financeFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			financeFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + backupFolderName);
+		} else {
+			financeFolder = new File(Environment.getExternalStorageDirectory() + "/" + backupFolderName);
+		}
+		if (!financeFolder.exists() && !financeFolder.mkdirs())
 			return;
 
 		String backupFileName = "Auto Data Backup.snb";
@@ -47,12 +53,15 @@ public class BackupManager
 		backupData(backupFile);
 	}
 	
-	public boolean dailyBackup()
-	{
+	public boolean dailyBackup() {
 		String backupFolderName = "Chaturvedi/Finance Manager/Daily Backups";
-		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if (!financeFolder.exists() && !financeFolder.mkdirs())
-		{
+		File financeFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			financeFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + backupFolderName);
+		} else {
+			financeFolder = new File(Environment.getExternalStorageDirectory() + "/" + backupFolderName);
+		}
+		if (!financeFolder.exists() && !financeFolder.mkdirs()) {
 			return false;
 		}
 
@@ -62,20 +71,23 @@ public class BackupManager
 		return true;
 	}
 	
-	public String[] manualBackup()
-	{
+	public String[] manualBackup() {
 		String backupFolderName = "Chaturvedi/Finance Manager/Backups";
-		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if (!financeFolder.exists() && !financeFolder.mkdirs())
-		{
+		File financeFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			financeFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + backupFolderName);
+		} else {
+			financeFolder = new File(Environment.getExternalStorageDirectory() + "/" + backupFolderName);
+		}
+		if (!financeFolder.exists() && !financeFolder.mkdirs()) {
 			return null;
 		}
 
 		String backupFileName = "Data Backup - " + (new Time(Calendar.getInstance())).getTimeForFileName() + ".snb";
 		File backupFile = new File(financeFolder, backupFileName);
 		backupData(backupFile);
-		
-		return new String[]{"Internal Storage/Android/" + backupFolderName, backupFileName};
+
+		return new String[]{"Internal Storage/Documents/" + backupFolderName, backupFileName};
 	}
 
 	/**
