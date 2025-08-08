@@ -31,15 +31,14 @@ import com.chaturvedi.customviews.IndefiniteWaitDialogBuilder;
 import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
-import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.extras.export.ExportActivity;
+import com.chaturvedi.financemanager.extras.zerodha.ZerodhaImportActivity;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.AboutActivity;
 
 public class ExtrasActivity extends Activity
 {
 	private static final int CODE_FILE_CHOOSER_RESTORE = 102;
-	private static final int CODE_FILE_CHOOSER_ZERODHA_COIN = 103;
 	private static final int EXPORT_REQUEST_PERMISSION = 201;
 	private static final int BACKUP_REQUEST_PERMISSION = 202;
 	private static final int RESTORE_REQUEST_PERMISSION = 203;
@@ -130,10 +129,6 @@ public class ExtrasActivity extends Activity
 					restoreData(fileUri);
 					break;
 
-				case CODE_FILE_CHOOSER_ZERODHA_COIN:
-					importZerodhaCoin(fileUri);
-					break;
-
 				default:
 					Log.e("onActivityResult", "Unknown request code: " + requestCode);
 			}
@@ -191,11 +186,11 @@ public class ExtrasActivity extends Activity
 			}
 		});
 
-		LinearLayout importZerodhaCoinLayout = (LinearLayout) findViewById(R.id.layout_import_zerodha_coin);
-		importZerodhaCoinLayout.setOnClickListener(new View.OnClickListener() {
+		LinearLayout importZerodhaLayout = (LinearLayout) findViewById(R.id.layout_import_zerodha);
+		importZerodhaLayout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				checkZerodhaCoinImportPermissions();
+				startZerodhaImportActivity();
 			}
 		});
 
@@ -438,82 +433,8 @@ public class ExtrasActivity extends Activity
 		clearDialog.show();
 	}
 
-	private void checkZerodhaCoinImportPermissions() {
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-			// Permission is not granted
-			ActivityCompat.requestPermissions(ExtrasActivity.this,
-					new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-					RESTORE_REQUEST_PERMISSION);
-		} else {
-			// Permission Granted
-			chooseZerodhaCoinFile();
-		}
-	}
-
-	private void chooseZerodhaCoinFile() {
-		Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
-		fileIntent.setType("*/*");
-		startActivityForResult(fileIntent, CODE_FILE_CHOOSER_ZERODHA_COIN);
-	}
-
-	private void importZerodhaCoin(final Uri fileUri) {
-		IndefiniteWaitDialogBuilder restoreDialogBuilder = new IndefiniteWaitDialogBuilder(this);
-		restoreDialogBuilder.setTitle("Importing Data from Zerodha Coin");
-		restoreDialogBuilder.setWaitText("This may take few seconds depending on the Size of your Data");
-		restoreDialogBuilder.setCancelable(false);
-		final AlertDialog restoreDialog = restoreDialogBuilder.show();
-
-		Thread importThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				// Import Data
-				ImportZerodhaCoinManager importManager = new ImportZerodhaCoinManager(ExtrasActivity.this, fileUri);
-				int result = importManager.getResult();
-				if (result == 0) {
-					for (Transaction transaction : importManager.getAllTransactions()) {
-						DatabaseManager.addTransaction(ExtrasActivity.this, transaction, true);
-					}
-				}
-				restoreDialog.dismiss();
-
-				// Show result in a dialog on the UI thread
-				runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						if (result == 0) {
-							showImportCompleteDialog(result, importManager.getAllTransactions().size());
-						} else {
-							showImportCompleteDialog(result, 0);
-						}
-					}
-				});
-			}
-		});
-		importThread.start();
-	}
-
-	// Method to show the import complete dialog
-	private void showImportCompleteDialog(int result, int transactionCount) {
-		String message = "";
-		if (result == 0) {
-			message = "Successfully imported " + transactionCount + " transactions from Zerodha Coin.";
-		} else if (result == 1) {
-			Log.d("importZerodhaCoin()", "No Zerodha Coin Statements were found.\nPlease select a file exported using Zerodha Coin");
-			message = "No Zerodha Coin Statements were found.\nPlease select a file exported using Zerodha Coin";
-		} else if (result == 2) {
-			Log.d("importZerodhaCoin()", "Error in Importing Zerodha Coin Statement\nControl Entered Catch Block");
-			message = "Error in Importing Zerodha Coin Statement";
-		}
-
-		AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-		dialogBuilder.setTitle("Import Complete");
-		dialogBuilder.setMessage(message);
-		dialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-			}
-		});
-		dialogBuilder.show();
+	private void startZerodhaImportActivity() {
+		Intent importZerodhaIntent = new Intent(ExtrasActivity.this, ZerodhaImportActivity.class);
+		startActivity(importZerodhaIntent);
 	}
 }

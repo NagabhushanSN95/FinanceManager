@@ -1,4 +1,4 @@
-package com.chaturvedi.financemanager.extras;
+package com.chaturvedi.financemanager.extras.zerodha;
 
 import android.content.Context;
 import android.net.Uri;
@@ -8,6 +8,7 @@ import com.chaturvedi.datastructures.Date;
 import com.chaturvedi.datastructures.Time;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.datastructures.Bank;
+import com.chaturvedi.financemanager.datastructures.ExpenditureType;
 import com.chaturvedi.financemanager.datastructures.Transaction;
 import com.chaturvedi.financemanager.functions.Constants;
 
@@ -22,10 +23,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
-public class ImportZerodhaCoinManager {
+public class ImportZerodhaKiteTradebookManager {
     private Context context;
 
     private int result;
@@ -38,7 +41,7 @@ public class ImportZerodhaCoinManager {
      * @param cxt     Context Eg: ExtrasActivity.this
      * @param fileUri The URI of the Zerodha Coin CSV file
      */
-    public ImportZerodhaCoinManager(Context cxt, Uri fileUri) {
+    public ImportZerodhaKiteTradebookManager(Context cxt, Uri fileUri) {
         context = cxt;
         result = parseZerodhaCoinStatement(fileUri);
 
@@ -55,6 +58,7 @@ public class ImportZerodhaCoinManager {
     private int parseZerodhaCoinStatement(Uri fileUri) {
         String investments_bank_id = get_investments_bank_id();
         String host_bank_id = get_host_bank_id();
+        String dpChargesExpType = getDpChargesExpType();
         transactions = new ArrayList<>();
         try {
             InputStream inputStream = context.getContentResolver().openInputStream(fileUri);
@@ -67,8 +71,8 @@ public class ImportZerodhaCoinManager {
             String[] headers = null;
             boolean isHeader = true;
 
-            SimpleDateFormat csvDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
-            SimpleDateFormat csvDateTimeFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.ENGLISH);
+            SimpleDateFormat csvDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            SimpleDateFormat csvDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss", Locale.ENGLISH);
             SimpleDateFormat dbDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.ENGLISH);
             SimpleDateFormat dbDateTimeFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm/ss/S", Locale.ENGLISH);
 
@@ -84,8 +88,9 @@ public class ImportZerodhaCoinManager {
                 }
                 lines.add(line1);
             }
-            // Reverse all the lines
-            Collections.reverse(lines);
+
+            // Keep a set of DP charges per stock per day. Multiple stock sell options in the same day does not incur multiple DP charges
+            Set<String> dpChargesSet = new HashSet<>();
 
             for (String line : lines) {
                 String[] values = line.split(",", -1);
@@ -94,40 +99,24 @@ public class ImportZerodhaCoinManager {
                 }
 
                 // Extract columns
-                String schemeName = getColumnValue(headers, values, "scheme_name");
-                schemeName = processSchemeName(schemeName);
-
-                String transactionMode = getColumnValue(headers, values, "transaction_mode");
+                String ticker = getColumnValue(headers, values, "symbol");
+                String trade_type = getColumnValue(headers, values, "trade_type");
                 String tradeDateStr = getColumnValue(headers, values, "trade_date");
-                String orderedAt = getColumnValue(headers, values, "ordered_at");
-                String amountStr = getColumnValue(headers, values, "amount");
-                String unitsStr = getColumnValue(headers, values, "units");
-                String status = getColumnValue(headers, values, "status");
-                String remarks = getColumnValue(headers, values, "remarks");
-                String tag = getColumnValue(headers, values, "tag");
+                String orderExecutionTime = getColumnValue(headers, values, "order_execution_time");
+                String rateStr = getColumnValue(headers, values, "price");
+                String quantityStr = getColumnValue(headers, values, "quantity");
 
-                if (!"COMPLETE".equalsIgnoreCase(status)) {
-                    continue; // Filter rows by status
-                }
-
-                if ("SELL".equalsIgnoreCase(transactionMode) && remarks.contains("on")) {
-                    String[] remarkParts = remarks.split("on");
-                    if (remarkParts.length > 1) {
-                        tradeDateStr = remarkParts[1].trim().split(" ")[0];
-                    }
-                }
-
-                double amount = Double.parseDouble(amountStr);
-                double units = Double.parseDouble(unitsStr);
+                double rate = Double.parseDouble(rateStr);
+                double quantity = Double.parseDouble(quantityStr);
 
                 Time createdTime;
                 java.util.Date parsedDateTime;
                 try {
-                    parsedDateTime = csvDateTimeFormat.parse(tradeDateStr + " " + orderedAt);
+                    parsedDateTime = csvDateTimeFormat.parse(orderExecutionTime);
 //                    createdTime = dbDateTimeFormat.format(parsedDateTime) + "/" + (++lastMilliseconds);
                     createdTime = new Time(dbDateTimeFormat.format(parsedDateTime));
                 } catch (ParseException e) {
-                    Log.e("ImportZerodhaCoin", "Error parsing date/time: " + e.getMessage());
+                    Log.e("Import Zerodha Kite Tradebook", "Error parsing order execution time: " + e.getMessage());
                     continue;
                 }
 
@@ -136,21 +125,17 @@ public class ImportZerodhaCoinManager {
                 try {
                     tradeDate = new Date(dbDateFormat.format(csvDateFormat.parse(tradeDateStr)));
                 } catch (ParseException e) {
-                    Log.e("ImportZerodhaCoin", "Error parsing trade date: " + e.getMessage());
+                    Log.e("Import Zerodha Kite Tradebook", "Error parsing trade date: " + e.getMessage());
                     continue;
                 }
 
                 String expType, particulars;
-                if (transactionMode.equalsIgnoreCase("BUY")) {
+                if (trade_type.equalsIgnoreCase("BUY")) {
                     expType = "Transfer " + host_bank_id + " " + investments_bank_id;
-                    if (remarks.toLowerCase().contains("sip") || tag.toLowerCase().contains("sip")) {
-                        particulars = "Mutual Funds SIP Installment - " + schemeName;
-                    } else {
-                        particulars = "Invested In Mutual Funds - " + schemeName;
-                    }
+                    particulars = "Bought Stocks - " + ticker;
                 } else {
                     expType = "Transfer " + investments_bank_id + " " + host_bank_id;
-                    particulars = "Redeemed Mutual Funds - " + schemeName;
+                    particulars = "Sold Stocks - " + ticker;
                 }
 
                 Transaction transaction = new Transaction(
@@ -160,13 +145,38 @@ public class ImportZerodhaCoinManager {
                         tradeDate,
                         expType,
                         particulars,
-                        amount / units, // rate
-                        units, // quantity
-                        amount, // amount
+                        rate, // rate
+                        quantity, // quantity
+                        rate * quantity, // rate
                         false, // hidden
                         true // includeInCounters
                 );
                 transactions.add(transaction);
+
+                // Add DP Charges for selling stocks
+                if (trade_type.equalsIgnoreCase("SELL")) {
+                    String dpChargesKey = tradeDateStr + "|" + ticker;
+                    if (!dpChargesSet.contains(dpChargesKey)) {
+                        double dpCharges = 15.34;
+                        String expTypeDp = "Debit " + host_bank_id + " " + dpChargesExpType;
+                        String particularsDp = "Depository Participant Charges For Selling Stocks - " + ticker;
+                        Transaction dpChargesTransaction = new Transaction(
+                                0, // Temporary ID
+                                createdTime,
+                                modifiedTime,
+                                tradeDate,
+                                expTypeDp,
+                                particularsDp,
+                                dpCharges, // rate
+                                1, // quantity
+                                dpCharges, // rate
+                                false, // hidden
+                                true // includeInCounters
+                        );
+                        transactions.add(dpChargesTransaction);
+                        dpChargesSet.add(dpChargesKey);
+                    }
+                }
 
                 // Update min and max date
                 if (minDate == null || csvDateFormat.parse(tradeDateStr).before(minDate)) {
@@ -189,12 +199,6 @@ public class ImportZerodhaCoinManager {
                     return t1.getCreatedTime().toString().compareTo(t2.getCreatedTime().toString());
                 }
             });
-
-            // Log all the transactions
-            Log.d("ImportZerodhaCoin", "Read Transactions:");  // TODO: Remove this
-            for (Transaction transaction : transactions) {
-                Log.d("ImportZerodhaCoin", transaction.toString());
-            }
 
             // Filter out transactions if they already exist in the database - including repetitions
             DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
@@ -232,12 +236,6 @@ public class ImportZerodhaCoinManager {
                 transaction.getCreatedTime().setMillis(++lastMilliseconds);
             }
 
-            // Log all the filtered transactions
-            Log.d("ImportZerodhaCoin", "Filtered Transactions:");  // TODO: Remove this
-            for (Transaction transaction : transactions) {
-                Log.d("ImportZerodhaCoin", transaction.toString());
-            }
-
             numTransactions = transactions.size();
             return 0;
         } catch (IOException | ParseException | NullPointerException |
@@ -254,8 +252,8 @@ public class ImportZerodhaCoinManager {
         return transaction.getDate().getSavableDate() + "|" +
                 transaction.getType() + "|" +
                 transaction.getParticular() + "|" +
-                transaction.getQuantity() + "|" +
-                transaction.getAmount();
+                transaction.getRate() + "|" +
+                transaction.getQuantity();
     }
 
     /**
@@ -268,21 +266,6 @@ public class ImportZerodhaCoinManager {
             }
         }
         return "";
-    }
-
-    private String processSchemeName(String schemeName) {
-        // Replace & with 'And' to avoid issues with SQL
-        schemeName = schemeName.replace("&", "And");
-        // Ensure that each word starts with capital letter. Rest of the letters are retained as is
-        String[] schemeNameParts = schemeName.split(" ");
-        StringBuilder schemeNameBuilder = new StringBuilder();
-        for (String schemeNamePart : schemeNameParts) {
-            schemeNameBuilder.append(schemeNamePart.substring(0, 1).toUpperCase());
-            schemeNameBuilder.append(schemeNamePart.substring(1));
-            schemeNameBuilder.append(" ");
-        }
-        schemeName = schemeNameBuilder.toString().trim();
-        return schemeName;
     }
 
     private String get_investments_bank_id() {
@@ -300,7 +283,31 @@ public class ImportZerodhaCoinManager {
     }
 
     private String get_host_bank_id() {
-        return "Bank03";  // TODO: Do not hard-code
+        String investments_bank_id = null;
+        DecimalFormat formatter = new DecimalFormat("00");
+        DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+        ArrayList<Bank> banks = databaseAdapter.getAllBanks();
+        // Iterate through all banks and get the id of the bank who name == "Investments". Return bank{id}
+        for (Bank bank : banks) {
+            if (bank.getName().equalsIgnoreCase("Zerodha Demat")) {
+                investments_bank_id = "Bank" + formatter.format(bank.getID());
+            }
+        }
+        return investments_bank_id;
+    }
+
+    private String getDpChargesExpType() {
+        String dpChargesExpType = null;
+        DecimalFormat formatter = new DecimalFormat("00");
+        DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);
+        ArrayList<ExpenditureType> expTypes = databaseAdapter.getAllExpenditureTypes();
+        // Iterate through all expenditure types and get the id of the expType whose name == "Trading". Return expType{id}
+        for (ExpenditureType expType : expTypes) {
+            if (expType.getName().equalsIgnoreCase("Trading")) {
+                dpChargesExpType = "Exp" + formatter.format(expType.getId());
+            }
+        }
+        return dpChargesExpType;
     }
 
     public int getResult() {

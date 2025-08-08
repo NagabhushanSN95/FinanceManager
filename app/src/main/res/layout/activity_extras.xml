@@ -121,7 +121,7 @@
     </LinearLayout>
     
     <LinearLayout
-		android:id="@+id/layout_import_zerodha_coin"
+		android:id="@+id/layout_import_zerodha"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_below="@+id/layout_clear"
@@ -137,7 +137,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginLeft="10dp"
 			android:layout_marginRight="10dp"
-			android:text="@string/import_zerodha_coin"
+			android:text="@string/import_zerodha"
 			android:textSize="20sp" />
 
 		<View
@@ -151,7 +151,7 @@
 		android:id="@+id/layout_aboutUs"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_below="@+id/layout_import_zerodha_coin"
+		android:layout_below="@+id/layout_import_zerodha"
 		android:layout_marginLeft="10dp"
 		android:layout_marginTop="5dp"
 		android:layout_marginRight="10dp"

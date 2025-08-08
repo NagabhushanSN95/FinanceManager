@@ -71,7 +71,10 @@
 	<string name="excludeFromCounters">Exclude from Counters</string>
 	<string name="excludeFromExpenses">Exclude from Expenses</string>
 	<string name="excludeFromIncomes">Exclude from Incomes</string>
+    <string name="import_zerodha">Import Zerodha Statements</string>
     <string name="import_zerodha_coin">Import Zerodha Coin Statement</string>
+    <string name="import_zerodha_kite_tradebook">Import Zerodha Kite Tradebook</string>
+    <string name="import_zerodha_kite_dividends">Import Zerodha Kite Dividends Statement</string>
     <string name="incomeDestination">Credited to: </string>
     <string name="incomes">Incomes (Non Bank Transactions)</string>
     <string name="instruction_expenditure_types">Enter Five Different Types Of Expenditures. 
@@ -87,6 +90,7 @@
     <string name="label_edit">Edit Data</string>
 	<string name="label_export">Export Data</string>
     <string name="label_extras">Extras</string>
+    <string name="label_importZerodha">Import Zerodha Statements</string>
     <string name="label_filterTransactions">Filter Transactions</string>
 	<string name="label_filterStatistics">Filter Statistics</string>
     <string name="label_help">Help</string>
