@@ -1309,6 +1309,23 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		return numExpTypes;
 	}
 
+	public int[] getVisibleExpenditureTypesIDs() {
+		int[] ids = new int[getNumVisibleExpenditureTypes()];
+		String selectQuery = "SELECT " + KEY_ID + " FROM " + TABLE_EXPENDITURE_TYPES + " WHERE " + KEY_DELETED + " = 0";
+		SQLiteDatabase db = this.getWritableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		if (cursor.moveToFirst()) {
+			int i = 0;
+			do {
+				ids[i++] = cursor.getInt(0);
+			}
+			while (cursor.moveToNext());
+		}
+		cursor.close();
+		db.close();
+		return ids;
+	}
+
     // Get the id of the next Expenditure Type to be added i.e. id(last expType)+1
 	public int getIDforNextExpenditureType()
 	{
@@ -1700,9 +1717,10 @@ public class DatabaseAdapter extends SQLiteOpenHelper
 		DecimalFormat formatter = new DecimalFormat("00");
 
         StringBuilder selectQuery = new StringBuilder("SELECT ");
+		int[] visibleExpenditureTypesIDs = getVisibleExpenditureTypesIDs();
 		for (int i = 0; i < getNumVisibleExpenditureTypes(); i++)
 		{
-			selectQuery.append("sum(expenditure_").append(formatter.format(i + 1)).append("), ");
+			selectQuery.append("sum(expenditure_").append(formatter.format(visibleExpenditureTypesIDs[i])).append("), ");
 		}
 		selectQuery.append("sum(" + KEY_AMOUNT_SPENT + "), " + "sum(" + KEY_INCOME + "), " +
 				"sum" +

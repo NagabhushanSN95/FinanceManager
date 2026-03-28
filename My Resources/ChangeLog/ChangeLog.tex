@@ -272,8 +272,20 @@ linkcolor = black
 
     \section{v4.5.1 (141)}\label{sec:141}
     \begin{itemize}
-        \item Created a new ZerodhImportsActivity to import Zerodha statements.
+        \item Created a new ZerodhaImportsActivity to import Zerodha statements.
         \item Added support to import Zerodha Kite tradebook and dividends statement.
         \item Minimum SDK version changed from 24 to 26.
+    \end{itemize}
+
+
+    \section{v4.5.2 (142)}\label{sec:142}
+    \begin{itemize}
+        \item Bug fix while showing Statistics.
+        If an expenditure type is deleted, the code used to show its statistics under the next expenditure type.
+        Now, all transactions of the deleted expenditure type will be hidden.
+        \item For mutual funds, nav is now not calculated as amount/units.
+        Instead, it is read from the Zerodha statement.
+        As a result, there might be some residual amount i.e. amount - (units*nav) may not be zero.
+        \item Rate is rounded to 4 decimal places while importing Zerodha Kite statement.
     \end{itemize}
 \end{document}

@@ -100,8 +100,9 @@ public class ImportZerodhaCoinManager {
                 String transactionMode = getColumnValue(headers, values, "transaction_mode");
                 String tradeDateStr = getColumnValue(headers, values, "trade_date");
                 String orderedAt = getColumnValue(headers, values, "ordered_at");
-                String amountStr = getColumnValue(headers, values, "amount");
+                String navStr = getColumnValue(headers, values, "nav");
                 String unitsStr = getColumnValue(headers, values, "units");
+                String amountStr = getColumnValue(headers, values, "amount");
                 String status = getColumnValue(headers, values, "status");
                 String remarks = getColumnValue(headers, values, "remarks");
                 String tag = getColumnValue(headers, values, "tag");
@@ -117,8 +118,9 @@ public class ImportZerodhaCoinManager {
                     }
                 }
 
-                double amount = Double.parseDouble(amountStr);
+                double nav = Double.parseDouble(navStr);
                 double units = Double.parseDouble(unitsStr);
+                double amount = Double.parseDouble(amountStr);
 
                 Time createdTime;
                 java.util.Date parsedDateTime;
@@ -160,7 +162,7 @@ public class ImportZerodhaCoinManager {
                         tradeDate,
                         expType,
                         particulars,
-                        amount / units, // rate
+                        nav, // rate
                         units, // quantity
                         amount, // amount
                         false, // hidden
@@ -189,12 +191,6 @@ public class ImportZerodhaCoinManager {
                     return t1.getCreatedTime().toString().compareTo(t2.getCreatedTime().toString());
                 }
             });
-
-            // Log all the transactions
-            Log.d("ImportZerodhaCoin", "Read Transactions:");  // TODO: Remove this
-            for (Transaction transaction : transactions) {
-                Log.d("ImportZerodhaCoin", transaction.toString());
-            }
 
             // Filter out transactions if they already exist in the database - including repetitions
             DatabaseAdapter databaseAdapter = DatabaseAdapter.getInstance(context);

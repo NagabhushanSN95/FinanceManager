@@ -43,7 +43,7 @@ public class ImportZerodhaKiteTradebookManager {
      */
     public ImportZerodhaKiteTradebookManager(Context cxt, Uri fileUri) {
         context = cxt;
-        result = parseZerodhaCoinStatement(fileUri);
+        result = parseZerodhaKiteTradebook(fileUri);
 
     }
 
@@ -55,7 +55,7 @@ public class ImportZerodhaKiteTradebookManager {
      * 1 if no file exists
      * 2 error occurs
      */
-    private int parseZerodhaCoinStatement(Uri fileUri) {
+    private int parseZerodhaKiteTradebook(Uri fileUri) {
         String investments_bank_id = get_investments_bank_id();
         String host_bank_id = get_host_bank_id();
         String dpChargesExpType = getDpChargesExpType();
@@ -249,10 +249,11 @@ public class ImportZerodhaKiteTradebookManager {
      * Generates a unique key for a transaction based on its attributes.
      */
     private String generateTransactionKey(Transaction transaction) {
+        double rate = Math.round(transaction.getRate() * 10000.0) / 10000.0;  // round rate to 4 decimal places
         return transaction.getDate().getSavableDate() + "|" +
                 transaction.getType() + "|" +
                 transaction.getParticular() + "|" +
-                transaction.getRate() + "|" +
+                rate + "|" +
                 transaction.getQuantity();
     }
 
