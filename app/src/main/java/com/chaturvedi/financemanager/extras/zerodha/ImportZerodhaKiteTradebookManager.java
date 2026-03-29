@@ -107,6 +107,7 @@ public class ImportZerodhaKiteTradebookManager {
                 String quantityStr = getColumnValue(headers, values, "quantity");
 
                 double rate = Double.parseDouble(rateStr);
+                rate = Math.round(rate * 10000.0) / 10000.0;  // Round rate to 4 decimal places
                 double quantity = Double.parseDouble(quantityStr);
 
                 Time createdTime;
