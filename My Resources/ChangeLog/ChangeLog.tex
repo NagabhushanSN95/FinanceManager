@@ -288,4 +288,11 @@ linkcolor = black
         As a result, there might be some residual amount i.e. amount - (units*nav) may not be zero.
         \item Rate is rounded to 4 decimal places while importing Zerodha Kite statement.
     \end{itemize}
+
+
+    \section{v4.5.3 (143)}\label{sec:143}
+    \begin{itemize}
+        \item Added support to import Zerodha Transaction Charges from a csv file.
+        \item In all Zerodha import managers, the created time and modified time of imported transactions are now set to the current date and time (i.e., when the import is performed), instead of the transaction date.
+    \end{itemize}
 \end{document}

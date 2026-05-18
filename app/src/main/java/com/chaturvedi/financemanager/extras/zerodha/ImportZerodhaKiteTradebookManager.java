@@ -72,9 +72,9 @@ public class ImportZerodhaKiteTradebookManager {
             boolean isHeader = true;
 
             SimpleDateFormat csvDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-            SimpleDateFormat csvDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss", Locale.ENGLISH);
             SimpleDateFormat dbDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.ENGLISH);
             SimpleDateFormat dbDateTimeFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm/ss/S", Locale.ENGLISH);
+            String importTimeStr = dbDateTimeFormat.format(new java.util.Date());
 
             java.util.Date minDate = null;
             java.util.Date maxDate = null;
@@ -110,16 +110,7 @@ public class ImportZerodhaKiteTradebookManager {
                 rate = Math.round(rate * 10000.0) / 10000.0;  // Round rate to 4 decimal places
                 double quantity = Double.parseDouble(quantityStr);
 
-                Time createdTime;
-                java.util.Date parsedDateTime;
-                try {
-                    parsedDateTime = csvDateTimeFormat.parse(orderExecutionTime);
-//                    createdTime = dbDateTimeFormat.format(parsedDateTime) + "/" + (++lastMilliseconds);
-                    createdTime = new Time(dbDateTimeFormat.format(parsedDateTime));
-                } catch (ParseException e) {
-                    Log.e("Import Zerodha Kite Tradebook", "Error parsing order execution time: " + e.getMessage());
-                    continue;
-                }
+                Time createdTime = new Time(importTimeStr);
 
                 Time modifiedTime = createdTime;
                 Date tradeDate;

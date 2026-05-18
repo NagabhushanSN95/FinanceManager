@@ -67,10 +67,10 @@ public class ImportZerodhaKiteDividendsManager {
             }
 
             SimpleDateFormat csvDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-            SimpleDateFormat csvDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.ENGLISH);
             SimpleDateFormat dbDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.ENGLISH);
             SimpleDateFormat dbDateTimeFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm/ss/S", Locale.ENGLISH);
             SimpleDateFormat exDividendDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+            String importTimeStr = dbDateTimeFormat.format(new java.util.Date());
 
             List<String> headers = tableData.get(0);
             tableData.remove(0);
@@ -89,16 +89,7 @@ public class ImportZerodhaKiteDividendsManager {
                 double rate = Double.parseDouble(rateStr);
                 double quantity = Double.parseDouble(quantityStr);
 
-                Time createdTime;
-                java.util.Date parsedDateTime;
-                try {
-                    parsedDateTime = csvDateTimeFormat.parse(dateStr + " " + "12:00 AM");
-//                    createdTime = dbDateTimeFormat.format(parsedDateTime) + "/" + (++lastMilliseconds);
-                    createdTime = new Time(dbDateTimeFormat.format(parsedDateTime));
-                } catch (ParseException e) {
-                    Log.e("Import Zerodha Kite Dividends Manager", "Error parsing date/time: " + e.getMessage());
-                    continue;
-                }
+                Time createdTime = new Time(importTimeStr);
 
                 Time modifiedTime = createdTime;
                 Date creditDate;

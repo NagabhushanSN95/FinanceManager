@@ -31,9 +31,11 @@ public class ZerodhaImportActivity extends Activity {
     private static final int CODE_FILE_CHOOSER_COIN = 101;
     private static final int CODE_FILE_CHOOSER_KITE_TRADEBOOK = 102;
     private static final int CODE_FILE_CHOOSER_KITE_DIVIDENDS = 103;
+    private static final int CODE_FILE_CHOOSER_KITE_TRANSACTION_CHARGES = 104;
     private static final int PERMISSION_COIN = 201;
     private static final int PERMISSION_KITE_TRADEBOOK = 202;
     private static final int PERMISSION_KITE_DIVIDENDS = 203;
+    private static final int PERMISSION_KITE_TRANSACTION_CHARGES = 204;
 
 
     @Override
@@ -88,6 +90,15 @@ public class ZerodhaImportActivity extends Activity {
                             "read Zerodha Kite Dividends", Toast.LENGTH_LONG).show();
                 }
                 break;
+
+            case PERMISSION_KITE_TRANSACTION_CHARGES:
+                if (permissionGranted) {
+                    chooseKiteTransactionChargesFile();
+                } else {
+                    Toast.makeText(ZerodhaImportActivity.this, "Please provide Read permission to " +
+                            "read Zerodha Kite Transaction Charges", Toast.LENGTH_LONG).show();
+                }
+                break;
         }
     }
 
@@ -109,6 +120,10 @@ public class ZerodhaImportActivity extends Activity {
 
                 case CODE_FILE_CHOOSER_KITE_DIVIDENDS:
                     importKiteDividends(fileUri);
+                    break;
+
+                case CODE_FILE_CHOOSER_KITE_TRANSACTION_CHARGES:
+                    importKiteTransactionCharges(fileUri);
                     break;
 
                 default:
@@ -147,6 +162,14 @@ public class ZerodhaImportActivity extends Activity {
             @Override
             public void onClick(View v) {
                 checkKiteDividendsImportPermissions();
+            }
+        });
+
+        LinearLayout importKiteTransactionChargesLayout = (LinearLayout) findViewById(R.id.layout_import_kite_transaction_charges);
+        importKiteTransactionChargesLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkKiteTransactionChargesImportPermissions();
             }
         });
     }
@@ -203,6 +226,22 @@ public class ZerodhaImportActivity extends Activity {
         Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
         fileIntent.setType("*/*");
         startActivityForResult(fileIntent, CODE_FILE_CHOOSER_KITE_DIVIDENDS);
+    }
+
+    private void checkKiteTransactionChargesImportPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(ZerodhaImportActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    PERMISSION_KITE_TRANSACTION_CHARGES);
+        } else {
+            chooseKiteTransactionChargesFile();
+        }
+    }
+
+    private void chooseKiteTransactionChargesFile() {
+        Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        fileIntent.setType("*/*");
+        startActivityForResult(fileIntent, CODE_FILE_CHOOSER_KITE_TRANSACTION_CHARGES);
     }
 
     private void importZerodhaCoin(final Uri fileUri) {
@@ -305,6 +344,40 @@ public class ZerodhaImportActivity extends Activity {
                             showImportCompleteDialog(result, importManager.getAllTransactions().size(), "Kite Dividends");
                         } else {
                             showImportCompleteDialog(result, 0, "Kite Dividends");
+                        }
+                    }
+                });
+            }
+        });
+        importThread.start();
+    }
+
+    private void importKiteTransactionCharges(final Uri fileUri) {
+        IndefiniteWaitDialogBuilder restoreDialogBuilder = new IndefiniteWaitDialogBuilder(this);
+        restoreDialogBuilder.setTitle("Importing Data from Zerodha Kite Transaction Charges");
+        restoreDialogBuilder.setWaitText("This may take few seconds depending on the Size of your Data");
+        restoreDialogBuilder.setCancelable(false);
+        final AlertDialog restoreDialog = restoreDialogBuilder.show();
+
+        Thread importThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ImportZerodhaTransactionChargesManager importManager = new ImportZerodhaTransactionChargesManager(ZerodhaImportActivity.this, fileUri);
+                int result = importManager.getResult();
+                if (result == 0) {
+                    for (Transaction transaction : importManager.getAllTransactions()) {
+                        DatabaseManager.addTransaction(ZerodhaImportActivity.this, transaction, true);
+                    }
+                }
+                restoreDialog.dismiss();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (result == 0) {
+                            showImportCompleteDialog(result, importManager.getAllTransactions().size(), "Kite Transaction Charges");
+                        } else {
+                            showImportCompleteDialog(result, 0, "Kite Transaction Charges");
                         }
                     }
                 });
