@@ -20,10 +20,10 @@ import android.widget.Toast;
 
 import androidx.core.app.NavUtils;
 
-import com.nagabhushansn95.financetracker.datastructures.Date;
 import com.nagabhushansn95.financetracker.R;
 import com.nagabhushansn95.financetracker.database.DatabaseAdapter;
 import com.nagabhushansn95.financetracker.database.DatabaseManager;
+import com.nagabhushansn95.financetracker.datastructures.Date;
 import com.nagabhushansn95.financetracker.functions.Constants;
 import com.nagabhushansn95.financetracker.functions.Utilities;
 
@@ -76,15 +76,14 @@ public class StatisticsActivity extends Activity
 	
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch(item.getItemId())
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home)
 		{
-			case android.R.id.home:
-				NavUtils.navigateUpFromSameTask(StatisticsActivity.this);
-				return true;
-			
-			case R.id.action_filterStatistics:
-				displayFilterOptions();
-				return true;
+            NavUtils.navigateUpFromSameTask(StatisticsActivity.this);
+            return true;
+        } else if (itemId == R.id.action_filterStatistics) {
+            displayFilterOptions();
+            return true;
 		}
 		return true;
 	}

@@ -20,8 +20,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.nagabhushansn95.financetracker.customviews.InputDialog;
 import com.nagabhushansn95.financetracker.R;
+import com.nagabhushansn95.financetracker.customviews.InputDialog;
 import com.nagabhushansn95.financetracker.database.DatabaseAdapter;
 import com.nagabhushansn95.financetracker.datastructures.ExpenditureType;
 
@@ -63,24 +63,20 @@ public class EditExpTypesActivity extends Activity
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch (item.getItemId())
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_toggleDisplayDeletedExpTypes)
 		{
-			case R.id.action_toggleDisplayDeletedExpTypes:
-				showDeletedExpTypes = !showDeletedExpTypes;
-				if (showDeletedExpTypes)
-				{
-					item.setTitle("Hide Deleted items");
-					deletedExpTypesLayout.setVisibility(View.VISIBLE);
-				}
-				else
-				{
-					item.setTitle("Show Deleted items");
-					deletedExpTypesLayout.setVisibility(View.GONE);
-				}
-				return true;
-			
-			default:
-				return super.onOptionsItemSelected(item);
+            showDeletedExpTypes = !showDeletedExpTypes;
+            if (showDeletedExpTypes) {
+                item.setTitle("Hide Deleted items");
+                deletedExpTypesLayout.setVisibility(View.VISIBLE);
+            } else {
+                item.setTitle("Show Deleted items");
+                deletedExpTypesLayout.setVisibility(View.GONE);
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
 		}
 	}
 	
@@ -109,23 +105,17 @@ public class EditExpTypesActivity extends Activity
 		int expTypeId = getExpTypeIdFromMenuItem(item);
 		if (expTypeId != -1)
 		{
-			switch (item.getItemId())
+            int itemId = item.getItemId();
+            if (itemId == ID_EDIT_EXP_TYPE)
 			{
-				case ID_EDIT_EXP_TYPE:
-					editExpType(expTypeId);
-					rebuildLayout();
-					break;
-				
-				case ID_DELETE_EXP_TYPE:
-					deleteExpType(expTypeId);
-					break;
-				
-				case ID_RESTORE_EXP_TYPE:
-					restoreExpType(expTypeId);
-					break;
-				
-				default:
-					return super.onContextItemSelected(item);
+                editExpType(expTypeId);
+                rebuildLayout();
+            } else if (itemId == ID_DELETE_EXP_TYPE) {
+                deleteExpType(expTypeId);
+            } else if (itemId == ID_RESTORE_EXP_TYPE) {
+                restoreExpType(expTypeId);
+            } else {
+                return super.onContextItemSelected(item);
 			}
 		}
 		else

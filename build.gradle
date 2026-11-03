@@ -1,17 +1,7 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.2'
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
+// Top-level build file. Plugin versions are declared here and applied in app/build.gradle.
+// AGP 9 has built-in Kotlin support, so the org.jetbrains.kotlin.android plugin is not applied.
+plugins {
+    id 'com.android.application' version '9.5.0' apply false
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.2.10' apply false
+    id 'com.google.devtools.ksp' version '2.3.13' apply false
 }

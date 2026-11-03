@@ -78,24 +78,20 @@ public class EditWalletsActivity extends Activity
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch (item.getItemId())
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_toggleDisplayDeletedWallets)
 		{
-			case R.id.action_toggleDisplayDeletedWallets:
-				showDeletedWallets = !showDeletedWallets;
-				if (showDeletedWallets)
-				{
-					item.setTitle("Hide Deleted Wallets");
-					deletedWalletsLayout.setVisibility(View.VISIBLE);
-				}
-				else
-				{
-					item.setTitle("Show Deleted Wallets");
-					deletedWalletsLayout.setVisibility(View.GONE);
-				}
-				return true;
-			
-			default:
-				return super.onOptionsItemSelected(item);
+            showDeletedWallets = !showDeletedWallets;
+            if (showDeletedWallets) {
+                item.setTitle("Hide Deleted Wallets");
+                deletedWalletsLayout.setVisibility(View.VISIBLE);
+            } else {
+                item.setTitle("Show Deleted Wallets");
+                deletedWalletsLayout.setVisibility(View.GONE);
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
 		}
 	}
 	
@@ -122,23 +118,17 @@ public class EditWalletsActivity extends Activity
 		int walletId = getWalletIdFromMenuItem(item);
 		if (walletId != -1)
 		{
-			switch (item.getItemId())
+            int itemId = item.getItemId();
+            if (itemId == ID_EDIT_WALLET)
 			{
-				case ID_EDIT_WALLET:
-					editWallet(walletId);
-					rebuildLayout();
-					break;
-				
-				case ID_DELETE_WALLET:
-					deleteWallet(walletId);
-					break;
-				
-				case ID_RESTORE_WALLET:
-					restoreWallet(walletId);
-					break;
-				
-				default:
-					return super.onContextItemSelected(item);
+                editWallet(walletId);
+                rebuildLayout();
+            } else if (itemId == ID_DELETE_WALLET) {
+                deleteWallet(walletId);
+            } else if (itemId == ID_RESTORE_WALLET) {
+                restoreWallet(walletId);
+            } else {
+                return super.onContextItemSelected(item);
 			}
 		}
 		else

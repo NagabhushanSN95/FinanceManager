@@ -166,35 +166,29 @@ public class SummaryActivity extends Activity
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch(item.getItemId())
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_transactions)
 		{
-			case R.id.action_transactions:
-				startActivityForResult(transactionsIntent, Constants.REQUEST_CODE_TRANSACTIONS_ACTIVITY);
-				return true;
-			
-			case R.id.action_edit:
-				startActivityForResult(editIntent, Constants.REQUEST_CODE_EDIT_ACTIVITY);
-				return true;
-			
-			case R.id.action_statistics:
-				startActivity(statisticsIntent);
-				return true;
-			
-			case R.id.action_settings:
-				startActivityForResult(settingsIntent, Constants.REQUEST_CODE_SETTINGS_ACTIVITY);
-				return true;
-			
-			case R.id.action_help:
-				startHelpActivity();
-				return true;
-			
-			case R.id.action_extras:
-				startActivityForResult(extrasIntent, Constants.REQUEST_CODE_EXTRAS_ACTIVITY);
-				return true;
-
-			case R.id.action_toggle_investments_visibility:
-				toggleInvestmentsVisibility(item);
-				return true;
+            startActivityForResult(transactionsIntent, Constants.REQUEST_CODE_TRANSACTIONS_ACTIVITY);
+            return true;
+        } else if (itemId == R.id.action_edit) {
+            startActivityForResult(editIntent, Constants.REQUEST_CODE_EDIT_ACTIVITY);
+            return true;
+        } else if (itemId == R.id.action_statistics) {
+            startActivity(statisticsIntent);
+            return true;
+        } else if (itemId == R.id.action_settings) {
+            startActivityForResult(settingsIntent, Constants.REQUEST_CODE_SETTINGS_ACTIVITY);
+            return true;
+        } else if (itemId == R.id.action_help) {
+            startHelpActivity();
+            return true;
+        } else if (itemId == R.id.action_extras) {
+            startActivityForResult(extrasIntent, Constants.REQUEST_CODE_EXTRAS_ACTIVITY);
+            return true;
+        } else if (itemId == R.id.action_toggle_investments_visibility) {
+            toggleInvestmentsVisibility(item);
+            return true;
 		}
 		return true;
 	}

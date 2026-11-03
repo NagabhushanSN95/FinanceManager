@@ -24,8 +24,8 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.nagabhushansn95.financetracker.customviews.MyAutoCompleteTextView;
 import com.nagabhushansn95.financetracker.R;
+import com.nagabhushansn95.financetracker.customviews.MyAutoCompleteTextView;
 import com.nagabhushansn95.financetracker.database.DatabaseAdapter;
 import com.nagabhushansn95.financetracker.datastructures.Bank;
 
@@ -91,24 +91,20 @@ public class EditBanksActivity extends Activity
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch (item.getItemId())
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_toggleDisplayDeletedBanks)
 		{
-			case R.id.action_toggleDisplayDeletedBanks:
-				showDeletedBanks = !showDeletedBanks;
-				if (showDeletedBanks)
-				{
-					item.setTitle("Hide Deleted Banks");
-					deletedBanksLayout.setVisibility(View.VISIBLE);
-				}
-				else
-				{
-					item.setTitle("Show Deleted Banks");
-					deletedBanksLayout.setVisibility(View.GONE);
-				}
-				return true;
-			
-			default:
-				return super.onOptionsItemSelected(item);
+            showDeletedBanks = !showDeletedBanks;
+            if (showDeletedBanks) {
+                item.setTitle("Hide Deleted Banks");
+                deletedBanksLayout.setVisibility(View.VISIBLE);
+            } else {
+                item.setTitle("Show Deleted Banks");
+                deletedBanksLayout.setVisibility(View.GONE);
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
 		}
 	}
 	
@@ -135,23 +131,17 @@ public class EditBanksActivity extends Activity
 		int bankId = getBankIdFromMenuItem(item);
 		if (bankId != -1)
 		{
-			switch (item.getItemId())
+            int itemId = item.getItemId();
+            if (itemId == ID_EDIT_BANK)
 			{
-				case ID_EDIT_BANK:
-					editBank(bankId);
-					rebuildLayout();
-					break;
-				
-				case ID_DELETE_BANK:
-					deleteBank(bankId);
-					break;
-				
-				case ID_RESTORE_BANK:
-					restoreBank(bankId);
-					break;
-				
-				default:
-					return super.onContextItemSelected(item);
+                editBank(bankId);
+                rebuildLayout();
+            } else if (itemId == ID_DELETE_BANK) {
+                deleteBank(bankId);
+            } else if (itemId == ID_RESTORE_BANK) {
+                restoreBank(bankId);
+            } else {
+                return super.onContextItemSelected(item);
 			}
 		}
 		else

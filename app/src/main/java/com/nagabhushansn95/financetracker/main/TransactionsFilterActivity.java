@@ -22,10 +22,10 @@ import android.widget.TextView;
 
 import androidx.core.app.NavUtils;
 
-import com.nagabhushansn95.financetracker.customviews.ExpandCollapseItem;
-import com.nagabhushansn95.financetracker.datastructures.Date;
 import com.nagabhushansn95.financetracker.R;
+import com.nagabhushansn95.financetracker.customviews.ExpandCollapseItem;
 import com.nagabhushansn95.financetracker.database.DatabaseAdapter;
+import com.nagabhushansn95.financetracker.datastructures.Date;
 import com.nagabhushansn95.financetracker.functions.Constants;
 
 import java.text.DecimalFormat;
@@ -76,15 +76,14 @@ public class TransactionsFilterActivity extends Activity
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch (item.getItemId())
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home)
 		{
-			case android.R.id.home:
-				NavUtils.navigateUpFromSameTask(TransactionsFilterActivity.this);
-				return true;
-
-			case R.id.action_apply:
-				applyFilters();
-				return true;
+            NavUtils.navigateUpFromSameTask(TransactionsFilterActivity.this);
+            return true;
+        } else if (itemId == R.id.action_apply) {
+            applyFilters();
+            return true;
 		}
 		return true;
 	}

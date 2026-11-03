@@ -28,10 +28,10 @@ import android.widget.Toast;
 
 import androidx.core.app.NavUtils;
 
-import com.nagabhushansn95.financetracker.datastructures.Date;
 import com.nagabhushansn95.financetracker.R;
 import com.nagabhushansn95.financetracker.database.DatabaseAdapter;
 import com.nagabhushansn95.financetracker.database.DatabaseManager;
+import com.nagabhushansn95.financetracker.datastructures.Date;
 import com.nagabhushansn95.financetracker.datastructures.Transaction;
 import com.nagabhushansn95.financetracker.functions.Constants;
 import com.nagabhushansn95.financetracker.functions.Utilities;
@@ -194,46 +194,46 @@ public class TransactionsActivity extends Activity
 
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
-		switch (item.getItemId())
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home)
 		{
-			case android.R.id.home:
-				NavUtils.navigateUpFromSameTask(TransactionsActivity.this);
-				return true;
-
-			case R.id.action_templates:
-				Intent templatesIntent = new Intent(TransactionsActivity.this, TemplatesActivity
-						.class);
-				startActivity(templatesIntent);
-				return true;
-
-			case R.id.action_transactionsDisplayOptions:
+            NavUtils.navigateUpFromSameTask(TransactionsActivity.this);
+            return true;
+        } else if (itemId == R.id.action_templates) {
+            Intent templatesIntent = new Intent(TransactionsActivity.this, TemplatesActivity
+                    .class);
+            startActivity(templatesIntent);
+            return true;
+        } else if (itemId == R.id.action_transactionsDisplayOptions) {
 //				Toast.makeText(getApplicationContext(), "Coming Soon!!!", Toast.LENGTH_LONG).show();
-				displayFilterOptions();
+            displayFilterOptions();
 
-				return true;
+            return true;
 
-			// TODO: To be put as Quick Search Dialog
-			/*
-			case R.id.action_search:
-				if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)
+            // TODO: To be put as Quick Search Dialog
+		/*
+		}
+		else if (itemId == R.id.action_search)
+		{
+			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)
+			{
+				final InputDialog searchDialog = new InputDialog(this);
+				searchDialog.setTitle("Search Transactions");
+				searchDialog.setHint("Enter the word to be searched");
+				searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener()
 				{
-					final InputDialog searchDialog = new InputDialog(this);
-					searchDialog.setTitle("Search Transactions");
-					searchDialog.setHint("Enter the word to be searched");
-					searchDialog.setPositiveButton("Search", new DialogInterface.OnClickListener()
+					@Override
+					public void onClick(DialogInterface dialog, int which)
 					{
-						@Override
-						public void onClick(DialogInterface dialog, int which)
-						{
-							String query = searchDialog.getInput().trim();
-							startSearchTransaction(query);
-						}
-					});
-					searchDialog.setNegativeButton("Cancel", null);
-					searchDialog.show();
-				}
-				return true;
-			*/
+						String query = searchDialog.getInput().trim();
+						startSearchTransaction(query);
+					}
+				});
+				searchDialog.setNegativeButton("Cancel", null);
+				searchDialog.show();
+			}
+			return true;
+		*/
 		}
 		return true;
 	}
