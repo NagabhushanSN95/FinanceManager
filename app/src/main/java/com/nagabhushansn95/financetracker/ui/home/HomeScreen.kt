@@ -45,6 +45,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.ui.edit.EditDataScreen
 import com.nagabhushansn95.financetracker.ui.extras.ExtrasScreen
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentsScreen
+import com.nagabhushansn95.financetracker.ui.statistics.StatisticsScreen
 import com.nagabhushansn95.financetracker.ui.summary.SummaryScreen
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorScreen
 import com.nagabhushansn95.financetracker.ui.transactions.TransactionsScreen
@@ -148,6 +149,7 @@ fun HomeScreen() {
                 composable(Destination.EXTRAS.route) { ExtrasScreen(snackbarHostState) }
                 composable(Destination.EDIT.route) { EditDataScreen(snackbarHostState) }
                 composable(Destination.INVESTMENTS.route) { InvestmentsScreen() }
+                composable(Destination.STATISTICS.route) { StatisticsScreen() }
                 composable(
                     ROUTE_EDITOR,
                     arguments = listOf(
@@ -167,7 +169,7 @@ fun HomeScreen() {
                         onDone = { navController.popBackStack() })
                 }
                 Destination.entries
-                    .filter { it != Destination.SUMMARY && it != Destination.EXTRAS && it != Destination.TRANSACTIONS && it != Destination.EDIT && it != Destination.INVESTMENTS }
+                    .filter { it != Destination.SUMMARY && it != Destination.EXTRAS && it != Destination.TRANSACTIONS && it != Destination.EDIT && it != Destination.INVESTMENTS && it != Destination.STATISTICS }
                     .forEach { destination ->
                         composable(destination.route) { ComingSoon(destination.title) }
                     }

@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,16 +45,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nagabhushansn95.financetracker.ui.common.FilterSheet
+import com.nagabhushansn95.financetracker.ui.common.PeriodChips
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 private val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy")
 
 /**
- * Ledger grouped by day with sticky date headers. A single tap does nothing (stray touches while keeping the screen
- * awake must not open anything); press and hold a row for Edit / Delete.
+ * Ledger grouped by day with sticky date headers, period chips and a filter sheet. A single tap does nothing
+ * (stray touches while keeping the screen awake must not open anything); press and hold a row for Edit / Delete.
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TransactionsScreen(
     onEdit: (Long) -> Unit,
@@ -63,77 +68,54 @@ fun TransactionsScreen(
     val scope = rememberCoroutineScope()
     var menuFor by remember { mutableStateOf<LedgerRow?>(null) }
     var confirmDelete by remember { mutableStateOf<LedgerRow?>(null) }
-    val showScrollToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 8 } }
+    var showFilters by remember { mutableStateOf(false) }
 
-    if (state.loaded && state.days.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+        ) {
+            PeriodChips(
+                state.filter,
+                onChange = viewModel::setFilter,
+                modifier = Modifier.weight(1f)
+            )
+            BadgedBox(badge = { if (state.filter.activeCount > 0) Badge { Text("${state.filter.activeCount}") } }) {
+                TextButton(onClick = { showFilters = true }) { Text("Filters") }
+            }
+        }
+        if (state.loaded && state.shown != state.total) {
             Text(
-                "No transactions yet. Use + to add one.",
-                style = MaterialTheme.typography.bodyLarge
+                "%,d of %,d transactions".format(state.shown, state.total),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
-        return
+        if (state.loaded && state.days.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    if (state.total == 0) "No transactions yet. Use + to add one." else "Nothing matches these filters.",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        } else {
+            LedgerList(state, listState, onLongPress = { menuFor = it })
+        }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp)
-        ) {
-            state.days.forEach { day ->
-                stickyHeader(key = "h${day.date}") {
-                    Text(
-                        day.date.format(DAY_FORMAT),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    )
-                }
-                items(day.rows, key = { it.id }) { row ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .combinedClickable(onClick = {}, onLongClick = { menuFor = row })
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 12.dp)) {
-                            Text(
-                                row.particulars, style = MaterialTheme.typography.bodyLarge,
-                                color = if (row.hidden) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                row.description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Text(
-                            (if (row.outflow) "−" else "+") + row.amountText,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            color = if (row.outflow) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
-                        )
-                    }
-                    HorizontalDivider()
-                }
-            }
-        }
-        AnimatedVisibility(
-            visible = showScrollToTop, enter = fadeIn(), exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp),
-        ) {
-            SmallFloatingActionButton(onClick = { scope.launch { listState.animateScrollToItem(0) } }) {
-                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll to top")
-            }
-        }
+
+    if (showFilters) {
+        FilterSheet(
+            filter = state.filter,
+            accounts = state.accounts,
+            categories = state.categories,
+            showKinds = true,
+            showSearch = true,
+            onApply = { viewModel.setFilter(it); showFilters = false },
+            onDismiss = { showFilters = false },
+        )
     }
 
     menuFor?.let { row ->
@@ -189,5 +171,77 @@ fun TransactionsScreen(
             },
             dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text("Cancel") } },
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LedgerList(
+    state: TransactionsUiState,
+    listState: LazyListState,
+    onLongPress: (LedgerRow) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val showScrollToTop by remember { derivedStateOf { listState.firstVisibleItemIndex > 8 } }
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 80.dp)
+        ) {
+            state.days.forEach { day ->
+                stickyHeader(key = "h${day.date}") {
+                    Text(
+                        day.date.format(DAY_FORMAT),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                }
+                items(day.rows, key = { it.id }) { row ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(onClick = {}, onLongClick = { onLongPress(row) })
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp)) {
+                            Text(
+                                row.particulars, style = MaterialTheme.typography.bodyLarge,
+                                color = if (row.hidden) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                            )
+                            Text(
+                                row.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(
+                            (if (row.outflow) "−" else "+") + row.amountText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = if (row.outflow) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                    HorizontalDivider()
+                }
+            }
+        }
+        AnimatedVisibility(
+            visible = showScrollToTop, enter = fadeIn(), exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp),
+        ) {
+            SmallFloatingActionButton(onClick = { scope.launch { listState.animateScrollToItem(0) } }) {
+                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll to top")
+            }
+        }
     }
 }

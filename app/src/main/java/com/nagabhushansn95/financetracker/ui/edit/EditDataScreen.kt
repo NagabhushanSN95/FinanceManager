@@ -1,5 +1,7 @@
 package com.nagabhushansn95.financetracker.ui.edit
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,9 +43,10 @@ import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
 import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 
-private val TABS = listOf("Accounts", "Categories", "Instruments")
+private val TABS = listOf("Accounts", "Categories", "Instruments", "Templates")
 
 /** Manage: accounts, categories and instruments with add / edit / delete / restore and drag-handle reorder. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EditDataScreen(
     snackbarHostState: SnackbarHostState,
@@ -65,7 +68,8 @@ fun EditDataScreen(
         when (tab) {
             0 -> AccountsTab(viewModel)
             1 -> CategoriesTab(viewModel)
-            else -> InstrumentsTab(viewModel)
+            2 -> InstrumentsTab(viewModel)
+            else -> TemplatesTab(viewModel)
         }
     }
 }
@@ -339,6 +343,122 @@ private fun InstrumentsTab(viewModel: EditDataViewModel) {
             transactionCount = txCount,
             onSave = { viewModel.saveInstrument(it); editing = null; adding = false },
             onDismiss = { editing = null; adding = false },
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------- templates
+
+/** Saved templates grouped by kind. Press and hold for Hide / Unhide / Delete; templates are created from the editor. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun TemplatesTab(viewModel: EditDataViewModel) {
+    val templates by viewModel.templates.collectAsStateWithLifecycle()
+    val accounts by viewModel.accounts.collectAsStateWithLifecycle()
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val instruments by viewModel.instruments.collectAsStateWithLifecycle()
+    val lookups = remember(
+        accounts,
+        categories,
+        instruments
+    ) {
+        com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups(
+            accounts,
+            categories,
+            instruments
+        )
+    }
+    var menuFor by remember {
+        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.Template?>(
+            null
+        )
+    }
+    var confirmDelete by remember {
+        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.Template?>(
+            null
+        )
+    }
+
+    fun describe(t: com.nagabhushansn95.financetracker.data.db.entity.Template): String =
+        listOfNotNull(
+            t.fromAccountId?.let { "from " + lookups.accountName(it) },
+            t.toAccountId?.let { "to " + lookups.accountName(it) },
+            lookups.categoryPath(t.categoryId),
+            lookups.instrumentName(t.instrumentId),
+            t.amount?.let { MoneyFormat.amount(it) },
+        ).joinToString(" · ")
+
+    val sections =
+        com.nagabhushansn95.financetracker.data.db.entity.TransactionKind.entries.mapNotNull { kind ->
+            val ofKind = templates.filter { it.kind == kind }
+            if (ofKind.isEmpty()) null else Section(
+                kind.name,
+                kind.name.lowercase().replaceFirstChar { c -> c.uppercase() },
+                ofKind,
+                reorderable = false
+            )
+        }
+    if (templates.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                "No templates. Tick 'Save as template' when adding a transaction.",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(32.dp)
+            )
+        }
+        return
+    }
+    ReorderableSections(
+        sections = sections,
+        id = { it.id },
+        onReordered = { _, _ -> },
+        row = { template, _ ->
+            EditRow(
+                template.particulars + if (template.hidden) "  (hidden)" else "",
+                subtitle = describe(template).ifEmpty { null },
+                muted = template.hidden,
+                onLongPress = { menuFor = template },
+            ) {}
+        },
+    )
+
+    menuFor?.let { t ->
+        androidx.compose.material3.ModalBottomSheet(onDismissRequest = { menuFor = null }) {
+            Column(modifier = Modifier.padding(bottom = 24.dp)) {
+                Text(
+                    t.particulars,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                androidx.compose.material3.ListItem(
+                    headlineContent = { Text(if (t.hidden) "Unhide" else "Hide from suggestions") },
+                    modifier = Modifier.combinedClickable(onClick = {
+                        viewModel.setTemplateHidden(
+                            t,
+                            !t.hidden
+                        ); menuFor = null
+                    }),
+                )
+                androidx.compose.material3.ListItem(
+                    headlineContent = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                    modifier = Modifier.combinedClickable(onClick = {
+                        menuFor = null; confirmDelete = t
+                    }),
+                )
+            }
+        }
+    }
+    confirmDelete?.let { t ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { confirmDelete = null },
+            title = { Text("Delete this template?") },
+            text = { Text(t.particulars) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteTemplate(t); confirmDelete = null
+                }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text("Cancel") } },
         )
     }
 }

@@ -62,4 +62,7 @@ interface TransactionDao {
 
     @Query("SELECT * FROM templates ORDER BY particulars")
     suspend fun getAllTemplates(): List<Template>
+
+    @Query("SELECT * FROM templates ORDER BY kind, particulars")
+    fun observeTemplates(): Flow<List<Template>>
 }

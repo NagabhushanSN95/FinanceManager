@@ -9,6 +9,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.nagabhushansn95.financetracker.data.db.dao.AccountDao
 import com.nagabhushansn95.financetracker.data.db.dao.CategoryDao
 import com.nagabhushansn95.financetracker.data.db.dao.InstrumentDao
+import com.nagabhushansn95.financetracker.data.db.dao.StatisticsDao
 import com.nagabhushansn95.financetracker.data.db.dao.TransactionDao
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
@@ -45,6 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun instrumentDao(): InstrumentDao
     abstract fun transactionDao(): TransactionDao
+    abstract fun statisticsDao(): StatisticsDao
 
     companion object {
         const val DATABASE_NAME = "finance_tracker.db"

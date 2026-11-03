@@ -8,6 +8,7 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +26,8 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
     val categories: StateFlow<List<Category>> = db.categoryDao().observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val instruments: StateFlow<List<Instrument>> = db.instrumentDao().observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val templates: StateFlow<List<Template>> = db.transactionDao().observeTemplates()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _message = MutableStateFlow<String?>(null)
@@ -45,7 +48,6 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
     fun saveAccount(account: Account) = run {
         if (account.id == 0L) repository.addAccount(account) else repository.updateAccount(account)
     }
-
     fun deleteAccount(id: Long) = run { repository.deleteAccount(id) }
     fun restoreAccount(id: Long) = run { repository.restoreAccount(id) }
     fun reorderAccounts(ids: List<Long>) = run { repository.reorderAccounts(ids) }
@@ -56,7 +58,6 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
             category
         )
     }
-
     fun deleteCategory(id: Long) = run { repository.deleteCategory(id) }
     fun restoreCategory(id: Long) = run { repository.restoreCategory(id) }
     fun reorderCategories(ids: List<Long>) = run { repository.reorderCategories(ids) }
@@ -70,7 +71,10 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
 
     fun setInstrumentActive(id: Long, active: Boolean) =
         run { repository.setInstrumentActive(id, active) }
-
     fun reorderInstruments(ids: List<Long>) = run { repository.reorderInstruments(ids) }
     suspend fun instrumentTransactionCount(id: Long) = repository.instrumentTransactionCount(id)
+
+    fun deleteTemplate(template: Template) = run { db.transactionDao().deleteTemplate(template) }
+    fun setTemplateHidden(template: Template, hidden: Boolean) =
+        run { db.transactionDao().updateTemplate(template.copy(hidden = hidden)) }
 }
