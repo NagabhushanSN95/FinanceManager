@@ -41,7 +41,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -106,10 +106,6 @@ dependencies {
     // Bundled SQLite (same engine on every Android version, prepared statements reused across rows; the
     // framework-SQLite compatibility path re-prepares per row and was ~8x slower on bulk inserts).
     implementation 'androidx.sqlite:sqlite-bundled:2.6.2'
-
-    // Existing: PDF export and Excel read/write
-    implementation 'com.itextpdf:itextg:5.5.10'
-    implementation 'org.apache.poi:poi-ooxml:5.2.3'
 
     // Unit tests run on the JVM against copies of the real v4 database
     testImplementation 'junit:junit:4.13.2'

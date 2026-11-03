@@ -1,10 +1,5 @@
 package com.nagabhushansn95.financetracker.ui.home
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -29,9 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -44,7 +37,10 @@ import androidx.navigation.navArgument
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.ui.edit.EditDataScreen
 import com.nagabhushansn95.financetracker.ui.extras.ExtrasScreen
+import com.nagabhushansn95.financetracker.ui.help.AboutScreen
+import com.nagabhushansn95.financetracker.ui.help.HelpScreen
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentsScreen
+import com.nagabhushansn95.financetracker.ui.settings.SettingsScreen
 import com.nagabhushansn95.financetracker.ui.statistics.StatisticsScreen
 import com.nagabhushansn95.financetracker.ui.summary.SummaryScreen
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorScreen
@@ -150,6 +146,9 @@ fun HomeScreen() {
                 composable(Destination.EDIT.route) { EditDataScreen(snackbarHostState) }
                 composable(Destination.INVESTMENTS.route) { InvestmentsScreen() }
                 composable(Destination.STATISTICS.route) { StatisticsScreen() }
+                composable(Destination.SETTINGS.route) { SettingsScreen() }
+                composable(Destination.HELP.route) { HelpScreen() }
+                composable(Destination.ABOUT.route) { AboutScreen() }
                 composable(
                     ROUTE_EDITOR,
                     arguments = listOf(
@@ -168,30 +167,7 @@ fun HomeScreen() {
                         account,
                         onDone = { navController.popBackStack() })
                 }
-                Destination.entries
-                    .filter { it != Destination.SUMMARY && it != Destination.EXTRAS && it != Destination.TRANSACTIONS && it != Destination.EDIT && it != Destination.INVESTMENTS && it != Destination.STATISTICS }
-                    .forEach { destination ->
-                        composable(destination.route) { ComingSoon(destination.title) }
-                    }
             }
-        }
-    }
-}
-
-@Composable
-private fun ComingSoon(title: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "This screen is being rebuilt for 5.0.0.",
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-            )
         }
     }
 }
