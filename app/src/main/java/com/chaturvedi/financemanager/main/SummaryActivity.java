@@ -61,6 +61,8 @@ public class SummaryActivity extends Activity
 	private String currencySymbol = " ";
 	private String transactionsDisplayInterval = "Month";
 	private DisplayMetrics displayMetrics;
+	private boolean showInvestments = false;
+	private LinearLayout investmentsLayout = null;
 	private int screenWidth;
 	private int screenHeight;
 	private int MARGIN_TOP_PARENT_LAYOUT;
@@ -89,6 +91,7 @@ public class SummaryActivity extends Activity
 		calculateDimensions();
 		buildBodyLayout();
 		setData();
+		investmentsLayout.setVisibility(View.GONE);
 		doTransactionsActivityOperations();
 		
 		transactionsIntent=new Intent(this, TransactionsActivity.class);
@@ -187,6 +190,10 @@ public class SummaryActivity extends Activity
 			
 			case R.id.action_extras:
 				startActivityForResult(extrasIntent, Constants.REQUEST_CODE_EXTRAS_ACTIVITY);
+				return true;
+
+			case R.id.action_toggle_investments_visibility:
+				toggleInvestmentsVisibility(item);
 				return true;
 		}
 		return true;
@@ -325,6 +332,14 @@ public class SummaryActivity extends Activity
 			}
 			nameViews.get(numWallets+numBanks).setText("Amount Spent");
 			nameViews.get(numWallets+numBanks+1).setText("Income");
+
+			// Find the investments layout and initialize it
+			for (int i = 0; i < nameViews.size(); i++) {
+				if ("Investments".equals(nameViews.get(i).getText().toString())) {
+					investmentsLayout = layouts.get(i);
+					break;
+				}
+			}
 			
 			if(preferences.contains(KEY_TRANSACTIONS_DISPLAY_INTERVAL))
 			{
@@ -378,6 +393,21 @@ public class SummaryActivity extends Activity
 			Bundle animationBundle = ActivityOptions.makeCustomAnimation(getApplicationContext(), 
 					R.anim.new_activity_enter, R.anim.old_activity_leave).toBundle();
 			startActivity(helpIntent, animationBundle);
+		}
+	}
+
+	private void toggleInvestmentsVisibility(MenuItem item) {
+		if (investmentsLayout == null) {
+			Toast.makeText(this, "Investments Layout Not Found", Toast.LENGTH_LONG).show();
+			return;
+		}
+		showInvestments = !showInvestments;
+		if (showInvestments) {
+			item.setTitle("Hide Investments");
+			investmentsLayout.setVisibility(View.VISIBLE);
+		} else {
+			item.setTitle("Show Investments");
+			investmentsLayout.setVisibility(View.GONE);
 		}
 	}
 

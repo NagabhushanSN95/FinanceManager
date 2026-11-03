@@ -32,15 +32,17 @@ import com.chaturvedi.financemanager.R;
 import com.chaturvedi.financemanager.database.DatabaseAdapter;
 import com.chaturvedi.financemanager.database.DatabaseManager;
 import com.chaturvedi.financemanager.extras.export.ExportActivity;
+import com.chaturvedi.financemanager.extras.zerodha.ZerodhaImportActivity;
 import com.chaturvedi.financemanager.functions.Constants;
 import com.chaturvedi.financemanager.help.AboutActivity;
 
 public class ExtrasActivity extends Activity
 {
-	private static final int CODE_FILE_CHOOSER = 102;
+	private static final int CODE_FILE_CHOOSER_RESTORE = 102;
 	private static final int EXPORT_REQUEST_PERMISSION = 201;
 	private static final int BACKUP_REQUEST_PERMISSION = 202;
 	private static final int RESTORE_REQUEST_PERMISSION = 203;
+	private static final int BACKUP_DATABASE_REQUEST_PERMISSION = 204;
 
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -101,6 +103,15 @@ public class ExtrasActivity extends Activity
 				}
 				break;
 
+			case BACKUP_DATABASE_REQUEST_PERMISSION:
+				if (permissionGranted) {
+					backupDatabaseFile();
+				} else {
+					Toast.makeText(ExtrasActivity.this, "Please provide Write permission to " +
+							"backup database to SD card", Toast.LENGTH_LONG).show();
+				}
+				break;
+
 			case RESTORE_REQUEST_PERMISSION:
 				if (permissionGranted)
 				{
@@ -118,16 +129,21 @@ public class ExtrasActivity extends Activity
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent)
 	{
-		//noinspection SwitchStatementWithTooFewBranches
-		switch (requestCode)
-		{
-			case CODE_FILE_CHOOSER:
-				if(resultCode == RESULT_OK)
-				{
-					// Get the Uri of the selected file
-					Uri uri = intent.getData();
-					restoreData(uri);
-				}
+		super.onActivityResult(requestCode, resultCode, intent);
+
+		if (resultCode == RESULT_OK && intent != null && intent.getData() != null) {
+			Uri fileUri = intent.getData();
+
+			switch (requestCode) {
+				case CODE_FILE_CHOOSER_RESTORE:
+					restoreData(fileUri);
+					break;
+
+				default:
+					Log.e("onActivityResult", "Unknown request code: " + requestCode);
+			}
+		} else {
+			Log.e("onActivityResult", "No file selected or invalid result");
 		}
 	}
 
@@ -160,6 +176,14 @@ public class ExtrasActivity extends Activity
 			}
 		});
 
+		LinearLayout backupDatabaseLayout = (LinearLayout) findViewById(R.id.layout_backup_database);
+		backupDatabaseLayout.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				checkBackupDatabasePermissions();
+			}
+		});
+
 		LinearLayout restoreLayout = (LinearLayout) findViewById(R.id.layout_restore);
 		restoreLayout.setOnClickListener(new View.OnClickListener()
 		{
@@ -180,6 +204,14 @@ public class ExtrasActivity extends Activity
 			}
 		});
 
+		LinearLayout importZerodhaLayout = (LinearLayout) findViewById(R.id.layout_import_zerodha);
+		importZerodhaLayout.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startZerodhaImportActivity();
+			}
+		});
+
 		LinearLayout aboutDeveloperLayout = (LinearLayout) findViewById(R.id.layout_aboutUs);
 		aboutDeveloperLayout.setOnClickListener(new View.OnClickListener()
 		{
@@ -194,9 +226,17 @@ public class ExtrasActivity extends Activity
 
 	private void backupData()
 	{
+		runBackup("Backing Up Data to SD Card", false);
+	}
+
+	private void backupDatabaseFile() {
+		runBackup("Backing Up Database File to SD Card", true);
+	}
+
+	private void runBackup(String dialogTitle, final boolean databaseFile) {
 		IndefiniteWaitDialogBuilder backupDialogBuilder = new IndefiniteWaitDialogBuilder
 				(ExtrasActivity.this);
-		backupDialogBuilder.setTitle("Backing Up Data to SD Card");
+		backupDialogBuilder.setTitle(dialogTitle);
 		backupDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		backupDialogBuilder.setCancelable(false);
 		final AlertDialog backupDialog = backupDialogBuilder.show();
@@ -243,7 +283,8 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void run()
 			{
-				String[] result = new BackupManager(ExtrasActivity.this).manualBackup();    // Backs Up Data to Backups Folder
+				BackupManager backupManager = new BackupManager(ExtrasActivity.this);
+				String[] result = databaseFile ? backupManager.backupDatabaseFile() : backupManager.manualBackup();    // Backs Up to Backups Folder
 				backupDialog.dismiss();
 
 				if (result != null)
@@ -301,6 +342,16 @@ public class ExtrasActivity extends Activity
 		}
 	}
 
+	private void checkBackupDatabasePermissions() {
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(ExtrasActivity.this,
+					new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+					BACKUP_DATABASE_REQUEST_PERMISSION);
+		} else {
+			backupDatabaseFile();
+		}
+	}
+
 	private void checkRestorePermissions()
 	{
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
@@ -321,7 +372,7 @@ public class ExtrasActivity extends Activity
 	{
 		Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
 		fileIntent.setType("*/*");
-		startActivityForResult(fileIntent, CODE_FILE_CHOOSER);
+		startActivityForResult(fileIntent, CODE_FILE_CHOOSER_RESTORE);
 	}
 
 	private void restoreData(final Uri fileUri)
@@ -417,5 +468,10 @@ public class ExtrasActivity extends Activity
 		});
 		clearDialog.setNegativeButton("Cancel", null);
 		clearDialog.show();
+	}
+
+	private void startZerodhaImportActivity() {
+		Intent importZerodhaIntent = new Intent(ExtrasActivity.this, ZerodhaImportActivity.class);
+		startActivity(importZerodhaIntent);
 	}
 }

@@ -3,6 +3,8 @@ package com.chaturvedi.financemanager.extras;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
@@ -21,8 +23,11 @@ import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -38,8 +43,13 @@ public class BackupManager
 	public void autoBackup()
 	{
 		String backupFolderName = "Chaturvedi/Finance Manager/Auto Backups";
-		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if(!financeFolder.exists() && !financeFolder.mkdirs())
+		File financeFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			financeFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + backupFolderName);
+		} else {
+			financeFolder = new File(Environment.getExternalStorageDirectory() + "/" + backupFolderName);
+		}
+		if (!financeFolder.exists() && !financeFolder.mkdirs())
 			return;
 
 		String backupFileName = "Auto Data Backup.snb";
@@ -47,12 +57,15 @@ public class BackupManager
 		backupData(backupFile);
 	}
 	
-	public boolean dailyBackup()
-	{
+	public boolean dailyBackup() {
 		String backupFolderName = "Chaturvedi/Finance Manager/Daily Backups";
-		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if (!financeFolder.exists() && !financeFolder.mkdirs())
-		{
+		File financeFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			financeFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + backupFolderName);
+		} else {
+			financeFolder = new File(Environment.getExternalStorageDirectory() + "/" + backupFolderName);
+		}
+		if (!financeFolder.exists() && !financeFolder.mkdirs()) {
 			return false;
 		}
 
@@ -62,20 +75,68 @@ public class BackupManager
 		return true;
 	}
 	
-	public String[] manualBackup()
-	{
+	public String[] manualBackup() {
 		String backupFolderName = "Chaturvedi/Finance Manager/Backups";
-		File financeFolder = new File(Environment.getExternalStoragePublicDirectory("Android"), backupFolderName);
-		if (!financeFolder.exists() && !financeFolder.mkdirs())
-		{
+		File financeFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			financeFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + backupFolderName);
+		} else {
+			financeFolder = new File(Environment.getExternalStorageDirectory() + "/" + backupFolderName);
+		}
+		if (!financeFolder.exists() && !financeFolder.mkdirs()) {
 			return null;
 		}
 
 		String backupFileName = "Data Backup - " + (new Time(Calendar.getInstance())).getTimeForFileName() + ".snb";
 		File backupFile = new File(financeFolder, backupFileName);
 		backupData(backupFile);
-		
-		return new String[]{"Internal Storage/Android/" + backupFolderName, backupFileName};
+
+		return new String[]{"Internal Storage/Documents/" + backupFolderName, backupFileName};
+	}
+
+	/**
+	 * Copies the raw SQLite database file to the Backups folder. This is the hand-over format for
+	 * migrating to the next major version of the app.
+	 * @return {folder, filename} on success, null on failure
+	 */
+	public String[] backupDatabaseFile() {
+		String backupFolderName = "Chaturvedi/Finance Manager/Backups";
+		File financeFolder;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+			financeFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/" + backupFolderName);
+		} else {
+			financeFolder = new File(Environment.getExternalStorageDirectory() + "/" + backupFolderName);
+		}
+		if (!financeFolder.exists() && !financeFolder.mkdirs()) {
+			return null;
+		}
+
+		File databaseFile = context.getDatabasePath(DatabaseAdapter.DATABASE_NAME);
+		if (!databaseFile.exists()) {
+			return null;
+		}
+
+		// Flush any write-ahead log into the main database file so that a copy of the main file alone is complete
+		try {
+			SQLiteDatabase db = SQLiteDatabase.openDatabase(databaseFile.getPath(), null, SQLiteDatabase.OPEN_READWRITE);
+			db.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).close();
+			db.close();
+		} catch (Exception e) {
+			Log.e("BackupManager", "WAL checkpoint failed", e);
+			return null;
+		}
+
+		String backupFileName = "Database Backup - " + (new Time(Calendar.getInstance())).getTimeForFileName() + ".db";
+		File backupFile = new File(financeFolder, backupFileName);
+		try (FileChannel source = new FileInputStream(databaseFile).getChannel();
+			 FileChannel destination = new FileOutputStream(backupFile).getChannel()) {
+			destination.transferFrom(source, 0, source.size());
+		} catch (IOException e) {
+			Log.e("BackupManager", "Database file copy failed", e);
+			return null;
+		}
+
+		return new String[]{"Internal Storage/Documents/" + backupFolderName, backupFileName};
 	}
 
 	/**
