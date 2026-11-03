@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
+import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
+import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
 import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-/** One collapsible block on the Summary screen. */
+/** One collapsible block on the Home screen. */
 data class SummarySection(
     val type: AccountType,
     val title: String,
@@ -64,6 +66,10 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
                 loaded = true,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SummaryUiState())
+
+    /** The Investment Summary, for the Investments card. */
+    val investments: StateFlow<InvestmentSummary?> = InvestmentSummaryBuilder.observe(db)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun toggleSection(type: AccountType) {
         val now = !(collapsed.value[type] ?: false)

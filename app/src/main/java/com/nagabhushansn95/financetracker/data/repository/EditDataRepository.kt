@@ -7,6 +7,10 @@ import com.nagabhushansn95.financetracker.data.db.Converters
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.data.db.entity.Setting
+
 import java.time.LocalDateTime
 
 /**
@@ -106,6 +110,77 @@ class EditDataRepository(private val db: AppDatabase) {
     }
 
     suspend fun instrumentTransactionCount(id: Long) = db.instrumentDao().transactionCount(id)
+
+    // ------------------------------------------------------------------ investment categories
+
+    suspend fun addInvestmentCategory(category: InvestmentCategory): Long =
+        db.instrumentDao().insertCategory(
+            category.copy(
+                displayOrder = (db.instrumentDao().getAllCategories()
+                    .maxOfOrNull { it.displayOrder } ?: 0) + 1))
+
+    suspend fun updateInvestmentCategory(category: InvestmentCategory) =
+        db.instrumentDao().updateCategory(category)
+
+    suspend fun deleteInvestmentCategory(id: Long) {
+        require(
+            db.instrumentDao().childCategoryCount(id) == 0
+        ) { "Delete or move its sub-categories first" }
+        require(
+            db.instrumentDao().instrumentCountInCategory(id) == 0
+        ) { "Some instruments still use this category" }
+        db.instrumentDao().deleteCategory(id)
+    }
+
+    suspend fun reorderInvestmentCategories(orderedIds: List<Long>) = write {
+        val current = db.instrumentDao().getAllCategories().filter { it.id in orderedIds }
+        val base = current.minOfOrNull { it.displayOrder } ?: 1
+        orderedIds.forEachIndexed { i, id ->
+            db.instrumentDao().setCategoryDisplayOrder(id, base + i)
+        }
+    }
+
+    // ------------------------------------------------------------------ risk levels
+
+    suspend fun addRiskLevel(name: String): Long =
+        db.instrumentDao().insertRiskLevel(
+            RiskLevel(
+                name = name.trim(),
+                displayOrder = (db.instrumentDao().getAllRiskLevels()
+                    .maxOfOrNull { it.displayOrder } ?: 0) + 1))
+
+    suspend fun renameRiskLevel(level: RiskLevel, name: String) =
+        db.instrumentDao().updateRiskLevel(level.copy(name = name.trim()))
+
+    suspend fun deleteRiskLevel(id: Long) {
+        require(
+            db.instrumentDao().categoryCountWithRiskLevel(id) == 0
+        ) { "Some investment categories still use this risk level" }
+        db.instrumentDao().deleteRiskLevel(id)
+    }
+
+    suspend fun reorderRiskLevels(orderedIds: List<Long>) = write {
+        val current = db.instrumentDao().getAllRiskLevels().filter { it.id in orderedIds }
+        val base = current.minOfOrNull { it.displayOrder } ?: 1
+        orderedIds.forEachIndexed { i, id ->
+            db.instrumentDao().setRiskLevelDisplayOrder(id, base + i)
+        }
+    }
+
+    // ------------------------------------------------------------------ allocation targets
+
+    /** Writes the goal amount and the per-category goal / wealth / tolerance percentages in one transaction. */
+    suspend fun saveTargets(goalAmount: Double?, categories: List<InvestmentCategory>) = write {
+        if (goalAmount == null) db.settingsDao()
+            .remove(com.nagabhushansn95.financetracker.data.db.dao.Settings.GOAL_AMOUNT)
+        else db.settingsDao().set(
+            Setting(
+                com.nagabhushansn95.financetracker.data.db.dao.Settings.GOAL_AMOUNT,
+                goalAmount.toString()
+            )
+        )
+        categories.forEach { db.instrumentDao().updateCategory(it) }
+    }
 
     private fun stamp(now: LocalDateTime) = Converters().localDateTimeToString(now)!!
 

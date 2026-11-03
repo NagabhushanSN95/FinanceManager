@@ -41,6 +41,9 @@ import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorViewModel.Companion.plain
 import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
@@ -349,9 +352,21 @@ fun InstrumentSheet(
     existing: Instrument?,
     initialType: InstrumentType,
     transactionCount: Int?,
+    categories: List<InvestmentCategory> = emptyList(),
     onSave: (Instrument) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var categoryId by remember { mutableStateOf(existing?.categoryId) }
+    var categoryMenu by remember { mutableStateOf(false) }
+    val categoryById = categories.associateBy { it.id }
+    fun categoryLabel(id: Long?) = id?.let { categoryById[it] }?.let { c ->
+        c.parentId?.let { categoryById[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
+    }
+        ?: "By type (${
+            com.nagabhushansn95.financetracker.data.investments.InvestmentCategories.defaultCategoryName(
+                existing?.instrumentType ?: initialType
+            )
+        })"
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var shortName by remember { mutableStateOf(existing?.shortName ?: "") }
     var type by remember { mutableStateOf(existing?.instrumentType ?: initialType) }
@@ -393,6 +408,34 @@ fun InstrumentSheet(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
+        if (categories.isNotEmpty()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    "Category",
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.width(72.dp)
+                )
+                TextButton(onClick = { categoryMenu = true }) { Text(categoryLabel(categoryId)) }
+                DropdownMenu(expanded = categoryMenu, onDismissRequest = { categoryMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text("By type") },
+                        onClick = { categoryId = null; categoryMenu = false })
+                    categories.filter { it.parentId == null }.forEach { parent ->
+                        DropdownMenuItem(
+                            text = { Text(parent.name) },
+                            onClick = { categoryId = parent.id; categoryMenu = false })
+                        categories.filter { it.parentId == parent.id }.forEach { child ->
+                            DropdownMenuItem(
+                                text = { Text("    ${child.name}") },
+                                onClick = { categoryId = child.id; categoryMenu = false })
+                        }
+                    }
+                }
+            }
+        }
         if (tradable) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -491,6 +534,7 @@ fun InstrumentSheet(
                         exchange = exchange.trim().takeIf { it.isNotEmpty() && tradable },
                         currency = currency.trim(),
                         owner = owner.trim(),
+                        categoryId = categoryId,
                         active = active,
                         notes = notes.trim().takeIf { it.isNotEmpty() },
                     )
@@ -498,5 +542,128 @@ fun InstrumentSheet(
             },
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Save") }
+    }
+}
+
+/** Add or edit an investment category: name, parent, risk bucket and the Investment Summary targets. */
+@Composable
+fun InvestmentCategorySheet(
+    existing: InvestmentCategory?,
+    parents: List<InvestmentCategory>,
+    riskLevels: List<RiskLevel>,
+    onSave: (InvestmentCategory) -> Unit,
+    onDelete: (() -> Unit)?,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(existing?.name ?: "") }
+    var parentId by remember { mutableStateOf(existing?.parentId) }
+    var parentMenu by remember { mutableStateOf(false) }
+    var riskId by remember { mutableStateOf(existing?.riskLevelId) }
+    var notes by remember { mutableStateOf(existing?.rebalanceNotes ?: "") }
+    val candidates = parents.filter { it.id != existing?.id }
+
+    FormSheet(
+        title = if (existing == null) "New investment category" else "Edit investment category",
+        onDismiss = onDismiss
+    ) {
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Parent",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.width(72.dp)
+            )
+            TextButton(onClick = {
+                parentMenu = true
+            }) { Text(candidates.firstOrNull { it.id == parentId }?.name ?: "None (top level)") }
+            DropdownMenu(expanded = parentMenu, onDismissRequest = { parentMenu = false }) {
+                DropdownMenuItem(
+                    text = { Text("None (top level)") },
+                    onClick = { parentId = null; parentMenu = false })
+                candidates.forEach { c ->
+                    DropdownMenuItem(
+                        text = { Text(c.name) },
+                        onClick = { parentId = c.id; parentMenu = false })
+                }
+            }
+        }
+        Text("Risk level", style = MaterialTheme.typography.labelLarge)
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            riskLevels.forEach { r ->
+                FilterChip(
+                    selected = riskId == r.id,
+                    onClick = { riskId = if (riskId == r.id) null else r.id },
+                    label = { Text(r.name) })
+            }
+        }
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            label = { Text("Rebalance notes (optional)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Text(
+            "Goal, wealth and tolerance percentages are set on Investments › Allocation targets.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Button(
+            enabled = name.isNotBlank(),
+            onClick = {
+                onSave(
+                    (existing ?: InvestmentCategory(name = "", displayOrder = 0)).copy(
+                        name = name.trim(),
+                        parentId = parentId,
+                        riskLevelId = riskId,
+                        rebalanceNotes = notes.trim().takeIf { it.isNotEmpty() },
+                    )
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Save") }
+        if (onDelete != null && existing != null) DeleteRow(
+            "Delete category",
+            "Only possible when no instrument or sub-category uses it.",
+            onDelete
+        )
+    }
+}
+
+/** Add or rename a risk level. Levels are ordered least to most risky by dragging them in the list. */
+@Composable
+fun RiskLevelSheet(
+    existing: RiskLevel?,
+    onSave: (String) -> Unit,
+    onDelete: (() -> Unit)?,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf(existing?.name ?: "") }
+    FormSheet(
+        title = if (existing == null) "New risk level" else "Edit risk level",
+        onDismiss = onDismiss
+    ) {
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            enabled = name.isNotBlank(),
+            onClick = { onSave(name.trim()) },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Save") }
+        if (onDelete != null && existing != null) DeleteRow(
+            "Delete risk level",
+            "Only possible when no investment category uses it.",
+            onDelete
+        )
     }
 }

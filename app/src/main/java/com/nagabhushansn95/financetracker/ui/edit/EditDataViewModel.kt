@@ -8,6 +8,9 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +29,11 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
     val categories: StateFlow<List<Category>> = db.categoryDao().observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val instruments: StateFlow<List<Instrument>> = db.instrumentDao().observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val investmentCategories: StateFlow<List<InvestmentCategory>> =
+        db.instrumentDao().observeCategories()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val riskLevels: StateFlow<List<RiskLevel>> = db.instrumentDao().observeRiskLevels()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val templates: StateFlow<List<Template>> = db.transactionDao().observeTemplates()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -73,6 +81,23 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
         run { repository.setInstrumentActive(id, active) }
     fun reorderInstruments(ids: List<Long>) = run { repository.reorderInstruments(ids) }
     suspend fun instrumentTransactionCount(id: Long) = repository.instrumentTransactionCount(id)
+
+    fun saveInvestmentCategory(c: InvestmentCategory) = run {
+        if (c.id == 0L) repository.addInvestmentCategory(c) else repository.updateInvestmentCategory(
+            c
+        )
+    }
+
+    fun deleteInvestmentCategory(id: Long) = run { repository.deleteInvestmentCategory(id) }
+    fun reorderInvestmentCategories(ids: List<Long>) =
+        run { repository.reorderInvestmentCategories(ids) }
+
+    fun addRiskLevel(name: String) = run { repository.addRiskLevel(name) }
+    fun renameRiskLevel(level: RiskLevel, name: String) =
+        run { repository.renameRiskLevel(level, name) }
+
+    fun deleteRiskLevel(id: Long) = run { repository.deleteRiskLevel(id) }
+    fun reorderRiskLevels(ids: List<Long>) = run { repository.reorderRiskLevels(ids) }
 
     fun deleteTemplate(template: Template) = run { db.transactionDao().deleteTemplate(template) }
     fun setTemplateHidden(template: Template, hidden: Boolean) =

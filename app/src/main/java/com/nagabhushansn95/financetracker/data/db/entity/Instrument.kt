@@ -10,25 +10,49 @@ import java.time.LocalDateTime
 
 enum class InstrumentType { STOCK, MUTUAL_FUND, FIXED_DEPOSIT, INSURANCE, OTHER }
 
-enum class RiskBucket { NONE, LOW, MEDIUM, HIGH }
+/** A user-defined risk level ("No risk", "Low risk", ...); every investment category sits in one. Ordered least to most risky. */
+@Entity(tableName = "risk_levels", indices = [Index("display_order")])
+data class RiskLevel(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    @ColumnInfo(name = "display_order") val displayOrder: Int,
+)
 
-/** Equity, ETF, Gold ETF, REIT, Arbitrage, Flexi Cap, Life Insurance, ... with the targets from the sheet's Investment Summary. */
+/** Small key-value store for settings that belong in the database (and its backups), such as the goal amount. */
+@Entity(tableName = "settings")
+data class Setting(
+    @PrimaryKey val key: String,
+    val value: String,
+)
+
+/**
+ * Equity, ETF, Gold ETF, REIT, Arbitrage, Flexi Cap, Life Insurance, ... the rows of the sheet's Investment Summary.
+ * Targets: [targetGoalPct] and [targetWealthPct] are the category's share of the goal corpus and of the wealth corpus;
+ * the overall target is derived from the two and the current total (see InvestmentSummaryBuilder).
+ */
 @Entity(
     tableName = "investment_categories",
-    foreignKeys = [ForeignKey(
-        entity = InvestmentCategory::class,
-        parentColumns = ["id"],
-        childColumns = ["parent_id"],
-        onDelete = ForeignKey.RESTRICT
-    )],
-    indices = [Index("parent_id"), Index("display_order")]
+    foreignKeys = [
+        ForeignKey(
+            entity = InvestmentCategory::class,
+            parentColumns = ["id"],
+            childColumns = ["parent_id"],
+            onDelete = ForeignKey.RESTRICT
+        ),
+        ForeignKey(
+            entity = RiskLevel::class,
+            parentColumns = ["id"],
+            childColumns = ["risk_level_id"],
+            onDelete = ForeignKey.RESTRICT
+        ),
+    ],
+    indices = [Index("parent_id"), Index("risk_level_id"), Index("display_order")]
 )
 data class InvestmentCategory(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     @ColumnInfo(name = "parent_id") val parentId: Long? = null,
-    @ColumnInfo(name = "risk_bucket") val riskBucket: RiskBucket = RiskBucket.NONE,
-    @ColumnInfo(name = "target_pct") val targetPct: Double? = null,
+    @ColumnInfo(name = "risk_level_id") val riskLevelId: Long? = null,
     @ColumnInfo(name = "tolerance_pct") val tolerancePct: Double? = null,
     @ColumnInfo(name = "target_goal_pct") val targetGoalPct: Double? = null,
     @ColumnInfo(name = "target_wealth_pct") val targetWealthPct: Double? = null,

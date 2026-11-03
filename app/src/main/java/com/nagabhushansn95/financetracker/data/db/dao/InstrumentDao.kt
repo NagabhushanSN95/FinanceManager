@@ -12,6 +12,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -85,8 +86,57 @@ interface InstrumentDao {
     @Query("SELECT * FROM investment_categories ORDER BY display_order, id")
     suspend fun getAllCategories(): List<InvestmentCategory>
 
+    @Query("SELECT * FROM investment_categories ORDER BY display_order, id")
+    fun observeCategories(): Flow<List<InvestmentCategory>>
+
+    @Query("SELECT COUNT(*) FROM investment_categories")
+    suspend fun categoryCount(): Int
+
+    @Query("UPDATE investment_categories SET display_order = :order WHERE id = :id")
+    suspend fun setCategoryDisplayOrder(id: Long, order: Int)
+
+    @Query("SELECT COUNT(*) FROM instruments WHERE category_id = :categoryId")
+    suspend fun instrumentCountInCategory(categoryId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM investment_categories WHERE parent_id = :parentId")
+    suspend fun childCategoryCount(parentId: Long): Int
+
+    @Query("DELETE FROM investment_categories WHERE id = :id")
+    suspend fun deleteCategory(id: Long)
+
+    @Query("SELECT * FROM instrument_valuations WHERE instrument_id = :instrumentId ORDER BY date DESC, id DESC")
+    suspend fun valuationHistory(instrumentId: Long): List<InstrumentValuation>
+
+    @Query("SELECT * FROM instrument_valuations ORDER BY date DESC, id DESC")
+    fun observeValuations(): Flow<List<InstrumentValuation>>
+
     @Query("SELECT * FROM investment_categories WHERE name = :name LIMIT 1")
     suspend fun getCategoryByName(name: String): InvestmentCategory?
+
+    @Query("SELECT COUNT(*) FROM investment_categories WHERE risk_level_id = :riskLevelId")
+    suspend fun categoryCountWithRiskLevel(riskLevelId: Long): Int
+
+    // --- risk levels
+    @Insert
+    suspend fun insertRiskLevel(level: RiskLevel): Long
+
+    @Update
+    suspend fun updateRiskLevel(level: RiskLevel)
+
+    @Query("DELETE FROM risk_levels WHERE id = :id")
+    suspend fun deleteRiskLevel(id: Long)
+
+    @Query("SELECT * FROM risk_levels ORDER BY display_order, id")
+    suspend fun getAllRiskLevels(): List<RiskLevel>
+
+    @Query("SELECT * FROM risk_levels ORDER BY display_order, id")
+    fun observeRiskLevels(): Flow<List<RiskLevel>>
+
+    @Query("SELECT COUNT(*) FROM risk_levels")
+    suspend fun riskLevelCount(): Int
+
+    @Query("UPDATE risk_levels SET display_order = :order WHERE id = :id")
+    suspend fun setRiskLevelDisplayOrder(id: Long, order: Int)
 
     // --- valuations
     @Insert

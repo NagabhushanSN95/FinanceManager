@@ -9,6 +9,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.nagabhushansn95.financetracker.data.db.dao.AccountDao
 import com.nagabhushansn95.financetracker.data.db.dao.CategoryDao
 import com.nagabhushansn95.financetracker.data.db.dao.InstrumentDao
+import com.nagabhushansn95.financetracker.data.db.dao.SettingsDao
 import com.nagabhushansn95.financetracker.data.db.dao.StatisticsDao
 import com.nagabhushansn95.financetracker.data.db.dao.TransactionDao
 import com.nagabhushansn95.financetracker.data.db.entity.Account
@@ -19,6 +20,8 @@ import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.data.db.entity.Setting
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +31,7 @@ import java.io.File
     entities = [
         Account::class,
         Category::class,
+        RiskLevel::class,
         InvestmentCategory::class,
         Instrument::class,
         FixedDeposit::class,
@@ -36,8 +40,9 @@ import java.io.File
         FxRate::class,
         TransactionEntity::class,
         Template::class,
+        Setting::class,
     ],
-    version = 1, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
+    version = 2, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -47,12 +52,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun instrumentDao(): InstrumentDao
     abstract fun transactionDao(): TransactionDao
     abstract fun statisticsDao(): StatisticsDao
+    abstract fun settingsDao(): SettingsDao
 
     companion object {
         const val DATABASE_NAME = "finance_tracker.db"
 
         /** Same value as the @Database version; restore refuses files from a newer schema. */
-        const val SCHEMA_VERSION = 1
+        const val SCHEMA_VERSION = 2
 
         @Volatile
         private var instance: AppDatabase? = null
@@ -95,5 +101,6 @@ abstract class AppDatabase : RoomDatabase() {
          */
         private fun RoomDatabase.Builder<AppDatabase>.configure(): RoomDatabase.Builder<AppDatabase> =
             setDriver(BundledSQLiteDriver()).setQueryCoroutineContext(Dispatchers.IO)
+                .addMigrations(*Migrations.ALL)
     }
 }

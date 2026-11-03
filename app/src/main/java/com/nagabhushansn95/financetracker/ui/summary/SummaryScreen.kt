@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
@@ -27,15 +28,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.Account
+import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 
 /**
- * Account balances grouped by type, each group collapsible (state remembered across launches).
- * Milestone B adds the transaction buttons, net worth with instruments and the foreign-currency conversion.
+ * Home: account balances grouped by type, each group collapsible (state remembered across launches), and the
+ * investments by category with the provident-fund accounts.
  */
 @Composable
-fun SummaryScreen(onAccountClick: (Long) -> Unit = {}, viewModel: SummaryViewModel = viewModel()) {
+fun SummaryScreen(
+    onAccountClick: (Long) -> Unit = {},
+    onOpenInvestments: () -> Unit = {},
+    viewModel: SummaryViewModel = viewModel()
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val investments by viewModel.investments.collectAsStateWithLifecycle()
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -49,7 +56,20 @@ fun SummaryScreen(onAccountClick: (Long) -> Unit = {}, viewModel: SummaryViewMod
                 onAccountClick = onAccountClick
             )
         }
-        if (state.providentFunds.isNotEmpty()) item { InvestmentsCard(state, onAccountClick) }
+        val summary = investments
+        if (summary != null && summary.categories.isNotEmpty()) item {
+            InvestmentsCard(
+                summary,
+                onAccountClick,
+                onOpenInvestments
+            )
+        }
+        else if (state.providentFunds.isNotEmpty()) item {
+            ProvidentFundsCard(
+                state,
+                onAccountClick
+            )
+        }
     }
 }
 
@@ -66,9 +86,80 @@ private fun TotalsCard(state: SummaryUiState) {
     }
 }
 
-/** Provident-fund balances now; instrument values (invested vs current) join here in milestone C. */
+/** Investments by top-level category (current value), with the provident-fund accounts listed under theirs. */
 @Composable
-private fun InvestmentsCard(state: SummaryUiState, onAccountClick: (Long) -> Unit) {
+private fun InvestmentsCard(
+    summary: InvestmentSummary,
+    onAccountClick: (Long) -> Unit,
+    onOpen: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onOpen)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "Investments",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                MoneyFormat.amount(summary.total.current),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Open investments",
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+        HorizontalDivider()
+        summary.categories.forEach { line ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    line.name,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(MoneyFormat.amount(line.current), style = MaterialTheme.typography.bodyLarge)
+            }
+            line.children.filter { it.accountId != null }.forEach { pf ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onAccountClick(pf.accountId!!) }
+                        .padding(start = 32.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        pf.name,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        MoneyFormat.amount(pf.current),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Fallback while the investment summary is still loading: the provident-fund balances. */
+@Composable
+private fun ProvidentFundsCard(state: SummaryUiState, onAccountClick: (Long) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -88,19 +179,7 @@ private fun InvestmentsCard(state: SummaryUiState, onAccountClick: (Long) -> Uni
             )
         }
         HorizontalDivider()
-        Text(
-            "Provident funds",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-        )
         state.providentFunds.forEach { AccountRow(it, onClick = { onAccountClick(it.id) }) }
-        Text(
-            "Stocks, funds, deposits and insurance appear here once the Investments module is in.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        )
     }
 }
 

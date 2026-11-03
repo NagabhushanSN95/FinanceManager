@@ -56,7 +56,13 @@ class InstrumentMaintenanceTest {
             )
         )
 
-    private suspend fun tx(kind: TransactionKind, instrument: Long, qty: Double?, daysAgo: Long) =
+    private suspend fun tx(
+        kind: TransactionKind,
+        instrument: Long,
+        qty: Double?,
+        daysAgo: Long,
+        amount: Double = 100.0
+    ) =
         db.transactionDao().insert(
             TransactionEntity(
                 createdTime = now,
@@ -67,8 +73,7 @@ class InstrumentMaintenanceTest {
                 toAccountId = bank.takeIf { kind == TransactionKind.REDEEM || kind == TransactionKind.INCOME },
                 instrumentId = instrument,
                 particulars = "x",
-                quantity = qty,
-                amount = 100.0,
+                quantity = qty, amount = amount,
             )
         )
 
@@ -100,7 +105,8 @@ class InstrumentMaintenanceTest {
         TransactionKind.INCOME,
         bonusThenSold,
         5.0,
-        300
+        300,
+        amount = 0.0
     ); tx(TransactionKind.REDEEM, bonusThenSold, 15.0, 200)
         val noUnits = instrument("SIP-NO-UNITS", InstrumentType.MUTUAL_FUND)
         tx(TransactionKind.INVEST, noUnits, null, 400); tx(
@@ -113,10 +119,19 @@ class InstrumentMaintenanceTest {
         tx(TransactionKind.INVEST, fd, 1.0, 400); tx(TransactionKind.REDEEM, fd, 1.0, 200)
         val dividendOnly = instrument("DIV-ONLY")
         tx(TransactionKind.INCOME, dividendOnly, null, 200)
+        // Sold out, but a dividend row still carries the 4.x quantity of 1 with cash: that is not a bonus unit.
+        val soldWithDividend = instrument("SOLD-DIV")
+        tx(TransactionKind.INVEST, soldWithDividend, 10.0, 400); tx(
+        TransactionKind.INCOME,
+        soldWithDividend,
+        1.0,
+        300,
+        amount = 50.0
+    ); tx(TransactionKind.REDEEM, soldWithDividend, 10.0, 150)
 
         val retired = InstrumentMaintenance(db).retireIdleHoldings(today, now = now)
 
-        assertEquals(setOf("SOLD-OLD", "BONUS"), retired.map { it.name }.toSet())
+        assertEquals(setOf("SOLD-OLD", "BONUS", "SOLD-DIV"), retired.map { it.name }.toSet())
         val active = db.instrumentDao().getAll().filter { it.active }.map { it.name }.toSet()
         assertEquals(setOf("SOLD-RECENT", "HELD", "SIP-NO-UNITS", "FD", "DIV-ONLY"), active)
 

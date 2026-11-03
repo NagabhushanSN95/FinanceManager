@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,7 +42,8 @@ import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
 import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 
-private val TABS = listOf("Accounts", "Categories", "Instruments", "Templates")
+private val TABS =
+    listOf("Accounts", "Categories", "Instruments", "Investment categories", "Templates")
 
 /** Manage: accounts, categories and instruments with add / edit / delete / restore and drag-handle reorder. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -57,7 +57,7 @@ fun EditDataScreen(
     LaunchedEffect(message) { message?.let { snackbarHostState.showSnackbar(it); viewModel.messageShown() } }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = tab) {
+        androidx.compose.material3.ScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
             TABS.forEachIndexed { i, title ->
                 Tab(
                     selected = tab == i,
@@ -69,6 +69,7 @@ fun EditDataScreen(
             0 -> AccountsTab(viewModel)
             1 -> CategoriesTab(viewModel)
             2 -> InstrumentsTab(viewModel)
+            3 -> InvestmentCategoriesTab(viewModel)
             else -> TemplatesTab(viewModel)
         }
     }
@@ -272,6 +273,7 @@ private fun CategoriesTab(viewModel: EditDataViewModel) {
 @Composable
 private fun InstrumentsTab(viewModel: EditDataViewModel) {
     val all by viewModel.instruments.collectAsStateWithLifecycle()
+    val investmentCategories by viewModel.investmentCategories.collectAsStateWithLifecycle()
     var showInactive by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Instrument?>(null) }
     var adding by remember { mutableStateOf(false) }
@@ -341,6 +343,7 @@ private fun InstrumentsTab(viewModel: EditDataViewModel) {
             existing = editing,
             initialType = InstrumentType.STOCK,
             transactionCount = txCount,
+            categories = investmentCategories,
             onSave = { viewModel.saveInstrument(it); editing = null; adding = false },
             onDismiss = { editing = null; adding = false },
         )
@@ -459,6 +462,129 @@ private fun TemplatesTab(viewModel: EditDataViewModel) {
                 }) { Text("Delete") }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text("Cancel") } },
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------- investment categories
+
+/** The Investment Summary's category tree (groups and their members) and the risk levels, all reorderable. */
+@Composable
+private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
+    val all by viewModel.investmentCategories.collectAsStateWithLifecycle()
+    val riskLevels by viewModel.riskLevels.collectAsStateWithLifecycle()
+    var editing by remember {
+        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory?>(
+            null
+        )
+    }
+    var editingRisk by remember {
+        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.RiskLevel?>(
+            null
+        )
+    }
+    var adding by remember { mutableStateOf<String?>(null) }   // "category" or "risk"
+    var addMenu by remember { mutableStateOf(false) }
+    val parents = all.filter { it.parentId == null }
+    val riskName = riskLevels.associate { it.id to it.name }
+    val sections: List<Section<Any>> = listOf(
+        Section<Any>("risk", "Risk levels (least to most risky)", riskLevels),
+        Section<Any>("top", "Groups", parents)
+    ) +
+            parents.map { p ->
+                Section<Any>(
+                    "ic${p.id}",
+                    p.name,
+                    all.filter { it.parentId == p.id })
+            }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column {
+            Text(
+                "Press and hold a row to edit it. Targets are set on Investments › Allocation targets.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            ReorderableSections(
+                sections = sections,
+                id = {
+                    (it as? com.nagabhushansn95.financetracker.data.db.entity.RiskLevel)?.id
+                        ?: (it as com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory).id
+                },
+                onReordered = { key, ids ->
+                    if (key == "risk") viewModel.reorderRiskLevels(ids) else viewModel.reorderInvestmentCategories(
+                        ids
+                    )
+                },
+                row = { item, handle ->
+                    when (item) {
+                        is com.nagabhushansn95.financetracker.data.db.entity.RiskLevel -> EditRow(
+                            item.name,
+                            subtitle = null,
+                            onLongPress = { editingRisk = item },
+                            handle = handle
+                        )
+
+                        is com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory -> EditRow(
+                            item.name,
+                            subtitle = listOfNotNull(
+                                item.riskLevelId?.let { riskName[it] } ?: "no risk level",
+                                item.targetGoalPct?.let { "goal %.0f%%".format(it * 100) },
+                                item.targetWealthPct?.let { "wealth %.0f%%".format(it * 100) },
+                                item.tolerancePct?.let { "±%.0f%%".format(it * 100) },
+                            ).joinToString(" · "),
+                            onLongPress = { editing = item },
+                            handle = handle,
+                        )
+                    }
+                },
+            )
+        }
+        Box(modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(16.dp)) {
+            FloatingActionButton(onClick = { addMenu = true }) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = "Add"
+                )
+            }
+            androidx.compose.material3.DropdownMenu(
+                expanded = addMenu,
+                onDismissRequest = { addMenu = false }) {
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text("Investment category") },
+                    onClick = { adding = "category"; addMenu = false })
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text("Risk level") },
+                    onClick = { adding = "risk"; addMenu = false })
+            }
+        }
+    }
+    if (editing != null || adding == "category") {
+        InvestmentCategorySheet(
+            existing = editing, parents = parents, riskLevels = riskLevels,
+            onSave = { viewModel.saveInvestmentCategory(it); editing = null; adding = null },
+            onDelete = editing?.let { c ->
+                {
+                    viewModel.deleteInvestmentCategory(c.id); editing = null
+                }
+            },
+            onDismiss = { editing = null; adding = null },
+        )
+    }
+    if (editingRisk != null || adding == "risk") {
+        val level = editingRisk
+        RiskLevelSheet(
+            existing = level,
+            onSave = { name ->
+                if (level == null) viewModel.addRiskLevel(name) else viewModel.renameRiskLevel(
+                    level,
+                    name
+                ); editingRisk = null; adding = null
+            },
+            onDelete = level?.let { r -> { viewModel.deleteRiskLevel(r.id); editingRisk = null } },
+            onDismiss = { editingRisk = null; adding = null },
         )
     }
 }
