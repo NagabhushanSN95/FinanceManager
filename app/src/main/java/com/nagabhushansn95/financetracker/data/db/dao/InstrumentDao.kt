@@ -43,8 +43,20 @@ interface InstrumentDao {
     @Query("SELECT * FROM instruments WHERE instrument_type = :type ORDER BY display_order, id")
     suspend fun getByType(type: InstrumentType): List<Instrument>
 
+    @Query("SELECT * FROM instruments ORDER BY display_order, id")
+    fun observeAll(): Flow<List<Instrument>>
+
     @Query("SELECT COALESCE(MAX(display_order), 0) FROM instruments")
     suspend fun maxDisplayOrder(): Int
+
+    @Query("UPDATE instruments SET display_order = :order WHERE id = :id")
+    suspend fun setDisplayOrder(id: Long, order: Int)
+
+    @Query("UPDATE instruments SET active = :active, modified_time = :modifiedTime WHERE id = :id")
+    suspend fun setActive(id: Long, active: Boolean, modifiedTime: String)
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE instrument_id = :instrumentId")
+    suspend fun transactionCount(instrumentId: Long): Int
 
     // --- fixed deposits
     @Insert(onConflict = OnConflictStrategy.REPLACE)

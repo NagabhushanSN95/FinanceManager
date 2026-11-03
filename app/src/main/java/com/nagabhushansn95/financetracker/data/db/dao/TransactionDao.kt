@@ -38,6 +38,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE instrument_id = :instrumentId ORDER BY date, id")
     suspend fun getForInstrument(instrumentId: Long): List<TransactionEntity>
 
+    @Query("SELECT * FROM transactions WHERE instrument_id IS NOT NULL ORDER BY date, id")
+    suspend fun getAllWithInstrument(): List<TransactionEntity>
+
     @Query("SELECT * FROM transactions WHERE from_account_id = :accountId OR to_account_id = :accountId ORDER BY date DESC, id DESC")
     suspend fun getForAccount(accountId: Long): List<TransactionEntity>
 

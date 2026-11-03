@@ -113,7 +113,7 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             _data.value = EditorData(
                 accounts = db.accountDao().getVisible(),
                 categories = db.categoryDao().getVisible(),
-                instruments = db.instrumentDao().getAll().filter { it.active },
+                instruments = db.instrumentDao().getAll(),
                 templates = db.transactionDao().getVisibleTemplates(),
                 recentFrom = prefs.recentIds(RECENT_FROM),
                 recentTo = prefs.recentIds(RECENT_TO),

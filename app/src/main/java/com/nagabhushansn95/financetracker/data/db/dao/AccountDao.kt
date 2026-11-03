@@ -43,9 +43,15 @@ interface AccountDao {
     @Query("UPDATE accounts SET display_order = :order WHERE id = :id")
     suspend fun setDisplayOrder(id: Long, order: Int)
 
+    @Query("SELECT * FROM accounts ORDER BY display_order, id")
+    fun observeAll(): Flow<List<Account>>
+
     @Query("SELECT COALESCE(MAX(display_order), 0) FROM accounts")
     suspend fun maxDisplayOrder(): Int
 
     @Query("UPDATE accounts SET deleted = :deleted, modified_time = :modifiedTime WHERE id = :id")
     suspend fun setDeleted(id: Long, deleted: Boolean, modifiedTime: String)
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE from_account_id = :accountId OR to_account_id = :accountId")
+    suspend fun transactionCount(accountId: Long): Int
 }

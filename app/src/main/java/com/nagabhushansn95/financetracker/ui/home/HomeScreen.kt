@@ -42,18 +42,20 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.ui.edit.EditDataScreen
 import com.nagabhushansn95.financetracker.ui.extras.ExtrasScreen
+import com.nagabhushansn95.financetracker.ui.investments.InvestmentsScreen
 import com.nagabhushansn95.financetracker.ui.summary.SummaryScreen
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorScreen
 import com.nagabhushansn95.financetracker.ui.transactions.TransactionsScreen
 import kotlinx.coroutines.launch
 
-/** Top-level destinations, in drawer order (Investments sits between Transactions and Edit Data by design). */
+/** Top-level destinations, in drawer order (Investments sits between Transactions and Manage by design). */
 enum class Destination(val route: String, val title: String) {
     SUMMARY("summary", "Summary"),
     TRANSACTIONS("transactions", "Transactions"),
     INVESTMENTS("investments", "Investments"),
-    EDIT("edit", "Edit Data"),
+    EDIT("manage", "Manage"),
     STATISTICS("statistics", "Statistics"),
     EXTRAS("extras", "Extras"),
     SETTINGS("settings", "Settings"),
@@ -144,6 +146,8 @@ fun HomeScreen() {
                     )
                 }
                 composable(Destination.EXTRAS.route) { ExtrasScreen(snackbarHostState) }
+                composable(Destination.EDIT.route) { EditDataScreen(snackbarHostState) }
+                composable(Destination.INVESTMENTS.route) { InvestmentsScreen() }
                 composable(
                     ROUTE_EDITOR,
                     arguments = listOf(
@@ -163,7 +167,7 @@ fun HomeScreen() {
                         onDone = { navController.popBackStack() })
                 }
                 Destination.entries
-                    .filter { it != Destination.SUMMARY && it != Destination.EXTRAS && it != Destination.TRANSACTIONS }
+                    .filter { it != Destination.SUMMARY && it != Destination.EXTRAS && it != Destination.TRANSACTIONS && it != Destination.EDIT && it != Destination.INVESTMENTS }
                     .forEach { destination ->
                         composable(destination.route) { ComingSoon(destination.title) }
                     }

@@ -27,6 +27,7 @@ class TransactionRepository(private val db: AppDatabase) {
                 val stamped = transaction.copy(createdTime = now, modifiedTime = now)
                 val id = db.transactionDao().insert(stamped)
                 applyBalances(stamped, sign = +1, stamp = now)
+                reactivateIfNeeded(stamped, now)
                 if (saveAsTemplate) db.transactionDao().insertTemplate(stamped.toTemplate())
                 id
             }
@@ -54,6 +55,15 @@ class TransactionRepository(private val db: AppDatabase) {
                 db.transactionDao().delete(old)
             }
         }
+
+    /** An instrument retired automatically (sold out) comes back when something is bought or credited into it again. */
+    private suspend fun reactivateIfNeeded(t: TransactionEntity, now: LocalDateTime) {
+        val id = t.instrumentId ?: return
+        if (t.kind != TransactionKind.INVEST && t.kind != TransactionKind.INCOME) return
+        val instrument = db.instrumentDao().getById(id) ?: return
+        if (!instrument.active) db.instrumentDao()
+            .setActive(id, true, Converters().localDateTimeToString(now)!!)
+    }
 
     private fun validate(t: TransactionEntity) {
         require(t.amount >= 0) { "Amount cannot be negative" }

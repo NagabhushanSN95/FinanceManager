@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,7 +75,10 @@ private fun PickerSheet(
     }
         .filter { it.second.isNotEmpty() }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -216,12 +221,18 @@ fun InstrumentPickerSheet(
         i.id,
         i.name,
         subtitle = listOfNotNull(i.symbol, i.isin).joinToString(" · ").ifEmpty { null })
+    val active = instruments.filter { it.active }
+    val inactive = instruments.filter { !it.active }
     PickerSheet(
         title = "Instrument",
         sections = InstrumentType.entries.mapNotNull { type ->
-            val ofType = instruments.filter { it.instrumentType == type }
+            val ofType = active.filter { it.instrumentType == type }
             if (ofType.isEmpty()) null else typeTitle(type) to ofType.map(::row)
-        },
+        } + if (inactive.isEmpty()) emptyList() else listOf(
+            "Inactive (sold out or retired)" to inactive.map(
+                ::row
+            )
+        ),
         recent = recent.mapNotNull { byId[it] }.map(::row),
         onPick = { if (it == -1L) onPick(null) else onPick(it) },
         onDismiss = onDismiss,
@@ -248,11 +259,15 @@ fun NewInstrumentSheet(
     var name by remember { mutableStateOf("") }
     var symbol by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(InstrumentType.STOCK) }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ) {
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
+                .imePadding()
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {

@@ -30,6 +30,9 @@ interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY display_order, id")
     suspend fun getAll(): List<Category>
 
+    @Query("SELECT * FROM categories ORDER BY display_order, id")
+    fun observeAll(): Flow<List<Category>>
+
     @Query("SELECT COALESCE(MAX(display_order), 0) FROM categories")
     suspend fun maxDisplayOrder(): Int
 
@@ -38,4 +41,10 @@ interface CategoryDao {
 
     @Query("UPDATE categories SET deleted = :deleted WHERE id = :id")
     suspend fun setDeleted(id: Long, deleted: Boolean)
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE category_id = :categoryId")
+    suspend fun transactionCount(categoryId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM categories WHERE parent_id = :parentId AND deleted = 0")
+    suspend fun childCount(parentId: Long): Int
 }

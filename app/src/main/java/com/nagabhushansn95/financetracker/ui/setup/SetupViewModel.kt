@@ -65,7 +65,7 @@ class SetupViewModel(application: Application) : AndroidViewModel(application) {
                     "${choices.expenseCategories.size} expense categories, ${choices.incomeCategories.size} income categories" +
                             if (choices.sharedCategories.isNotEmpty()) ", ${choices.sharedCategories.size} for both" else ""
                 )
-                add("Demat and provident-fund accounts, and more of anything, can be added under Edit Data.")
+                add("Demat and provident-fund accounts, and more of anything, can be added under Manage.")
             }
             SetupState.Done("Set-up complete", lines)
         }
