@@ -24,6 +24,7 @@
     <string name="amount">Amount</string>
     <string name="autoBackupRestore">Auto Backup And Restore</string>
     <string name="backup">Back-up Data</string>
+    <string name="backupDatabase">Back-up Database File</string>
     <string name="bankBalance">Bank Balance</string>
     <string name="bank_credit">Bank Credit</string>
     <string name="bank_debit">Bank Withdrawal</string>

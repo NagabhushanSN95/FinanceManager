@@ -295,4 +295,11 @@ linkcolor = black
         \item Added support to import Zerodha Transaction Charges from a csv file.
         \item In all Zerodha import managers, the created time and modified time of imported transactions are now set to the current date and time (i.e., when the import is performed), instead of the transaction date.
     \end{itemize}
+
+    \section{v4.5.4 (144)}\label{sec:144}
+    \begin{itemize}
+        \item Fixed the scroll bar layout shows wallet and bank balances in SummaryActivity.
+        \item Zerodha Coin import: the trade date of SELL (redemption) orders is now parsed from the "Funds credited ... on DD MMM YYYY" remark.
+        \item Added "Back-up Database File" in Extras, which copies the raw SQLite database to the Backups folder. This is the hand-over format for migrating data to v5.0.0.
+    \end{itemize}
 \end{document}

@@ -9,3 +9,5 @@ app/build
 OpenCV/*
 app/src/main/jniLibs/**/*.so
 auxil/*
+.DS_Store
+**/.DS_Store
