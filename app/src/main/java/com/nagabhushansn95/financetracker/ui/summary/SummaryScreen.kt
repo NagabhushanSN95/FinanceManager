@@ -34,7 +34,7 @@ import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
  * Milestone B adds the transaction buttons, net worth with instruments and the foreign-currency conversion.
  */
 @Composable
-fun SummaryScreen(viewModel: SummaryViewModel = viewModel()) {
+fun SummaryScreen(onAccountClick: (Long) -> Unit = {}, viewModel: SummaryViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LazyColumn(
@@ -43,8 +43,13 @@ fun SummaryScreen(viewModel: SummaryViewModel = viewModel()) {
     ) {
         item { TotalsCard(state) }
         items(state.sections, key = { it.type }) { section ->
-            SectionCard(section, onToggle = { viewModel.toggleSection(section.type) })
+            SectionCard(
+                section,
+                onToggle = { viewModel.toggleSection(section.type) },
+                onAccountClick = onAccountClick
+            )
         }
+        if (state.providentFunds.isNotEmpty()) item { InvestmentsCard(state, onAccountClick) }
     }
 }
 
@@ -57,25 +62,54 @@ private fun TotalsCard(state: SummaryUiState) {
         ) {
             Text("Cash & bank", style = MaterialTheme.typography.labelLarge)
             Text(MoneyFormat.amount(state.cashInr), style = MaterialTheme.typography.headlineSmall)
-            if (state.providentFundsInr != 0.0) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "Provident funds",
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        MoneyFormat.amount(state.providentFundsInr),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
         }
     }
 }
 
+/** Provident-fund balances now; instrument values (invested vs current) join here in milestone C. */
 @Composable
-private fun SectionCard(section: SummarySection, onToggle: () -> Unit) {
+private fun InvestmentsCard(state: SummaryUiState, onAccountClick: (Long) -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "Investments",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                MoneyFormat.amount(state.providentFundsInr),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        HorizontalDivider()
+        Text(
+            "Provident funds",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+        )
+        state.providentFunds.forEach { AccountRow(it, onClick = { onAccountClick(it.id) }) }
+        Text(
+            "Stocks, funds, deposits and insurance appear here once the Investments module is in.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+    }
+}
+
+@Composable
+private fun SectionCard(
+    section: SummarySection,
+    onToggle: () -> Unit,
+    onAccountClick: (Long) -> Unit
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -103,17 +137,18 @@ private fun SectionCard(section: SummarySection, onToggle: () -> Unit) {
         AnimatedVisibility(visible = !section.collapsed) {
             Column {
                 HorizontalDivider()
-                section.accounts.forEach { AccountRow(it) }
+                section.accounts.forEach { AccountRow(it, onClick = { onAccountClick(it.id) }) }
             }
         }
     }
 }
 
 @Composable
-private fun AccountRow(account: Account) {
+private fun AccountRow(account: Account, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

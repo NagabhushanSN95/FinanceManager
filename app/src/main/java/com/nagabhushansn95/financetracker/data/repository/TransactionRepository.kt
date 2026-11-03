@@ -1,0 +1,103 @@
+package com.nagabhushansn95.financetracker.data.repository
+
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
+import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.Converters
+import com.nagabhushansn95.financetracker.data.db.entity.Template
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import java.time.LocalDateTime
+
+/**
+ * Writes to the ledger together with their effect on account balances (plan 3.3):
+ * INCOME adds to `to`; EXPENSE subtracts from `from`; TRANSFER both; INVEST subtracts from `from`; REDEEM adds to
+ * `to`. A NULL account side changes no balance. Every write runs in one database transaction.
+ */
+class TransactionRepository(private val db: AppDatabase) {
+
+    suspend fun add(
+        transaction: TransactionEntity,
+        saveAsTemplate: Boolean = false,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Long =
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                validate(transaction)
+                val stamped = transaction.copy(createdTime = now, modifiedTime = now)
+                val id = db.transactionDao().insert(stamped)
+                applyBalances(stamped, sign = +1, stamp = now)
+                if (saveAsTemplate) db.transactionDao().insertTemplate(stamped.toTemplate())
+                id
+            }
+        }
+
+    /** Reverses the stored row's balance effect, then applies the new one. */
+    suspend fun update(transaction: TransactionEntity, now: LocalDateTime = LocalDateTime.now()) =
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                validate(transaction)
+                val old = db.transactionDao().getById(transaction.id)
+                    ?: throw IllegalArgumentException("Transaction ${transaction.id} does not exist")
+                applyBalances(old, sign = -1, stamp = now)
+                val stamped = transaction.copy(createdTime = old.createdTime, modifiedTime = now)
+                db.transactionDao().update(stamped)
+                applyBalances(stamped, sign = +1, stamp = now)
+            }
+        }
+
+    suspend fun delete(id: Long, now: LocalDateTime = LocalDateTime.now()) =
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                val old = db.transactionDao().getById(id) ?: return@immediateTransaction
+                applyBalances(old, sign = -1, stamp = now)
+                db.transactionDao().delete(old)
+            }
+        }
+
+    private fun validate(t: TransactionEntity) {
+        require(t.amount >= 0) { "Amount cannot be negative" }
+        when (t.kind) {
+            TransactionKind.INCOME -> require(t.fromAccountId == null) { "Income has no source account" }
+            TransactionKind.EXPENSE -> {
+                require(t.toAccountId == null) { "Expense has no destination account" }
+                require(t.fromAccountId != null) { "Expense needs an account" }
+                require(t.categoryId != null) { "Expense needs a category" }
+            }
+
+            TransactionKind.TRANSFER -> {
+                require(t.fromAccountId != null && t.toAccountId != null) { "Transfer needs both accounts" }
+                require(t.fromAccountId != t.toAccountId) { "Transfer needs two different accounts" }
+            }
+
+            TransactionKind.INVEST -> {
+                require(t.instrumentId != null) { "Investment needs an instrument" }
+                require(t.toAccountId == null) { "Investment has no destination account" }
+            }
+
+            TransactionKind.REDEEM -> {
+                require(t.instrumentId != null) { "Redemption needs an instrument" }
+                require(t.fromAccountId == null) { "Redemption has no source account" }
+            }
+        }
+    }
+
+    private suspend fun applyBalances(t: TransactionEntity, sign: Int, stamp: LocalDateTime) {
+        val dao = db.accountDao()
+        val stampText = Converters().localDateTimeToString(stamp)!!
+        // Balances are kept in the account's own currency, so the native amount is used, not the INR equivalent.
+        val delta = t.amount * sign
+        t.fromAccountId?.let { dao.adjustBalance(it, -delta, stampText) }
+        t.toAccountId?.let { dao.adjustBalance(it, +delta, stampText) }
+    }
+
+    private fun TransactionEntity.toTemplate() = Template(
+        particulars = particulars,
+        kind = kind,
+        fromAccountId = fromAccountId,
+        toAccountId = toAccountId,
+        categoryId = categoryId,
+        instrumentId = instrumentId,
+        amount = amount,
+    )
+}

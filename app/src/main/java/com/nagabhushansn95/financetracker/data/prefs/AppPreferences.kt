@@ -31,7 +31,18 @@ class AppPreferences(context: Context) {
     fun setSummarySectionCollapsed(section: String, collapsed: Boolean) =
         prefs.edit().putBoolean(KEY_SUMMARY_COLLAPSED_PREFIX + section, collapsed).apply()
 
+    /** Most recently used ids for a picker (newest first), e.g. "account_from", "category", "instrument". */
+    fun recentIds(picker: String): List<Long> =
+        prefs.getString(KEY_RECENT_PREFIX + picker, null)?.split(',')
+            ?.mapNotNull { it.toLongOrNull() } ?: emptyList()
+
+    fun pushRecentId(picker: String, id: Long, keep: Int = 5) {
+        val updated = (listOf(id) + recentIds(picker).filter { it != id }).take(keep)
+        prefs.edit().putString(KEY_RECENT_PREFIX + picker, updated.joinToString(",")).apply()
+    }
+
     companion object {
+        private const val KEY_RECENT_PREFIX = "recent_"
         const val FILE_NAME = "finance_tracker_prefs"
         private const val KEY_SETUP_COMPLETE = "setup_complete"
         private const val KEY_LAST_IMPORT_SUMMARY = "last_import_summary"

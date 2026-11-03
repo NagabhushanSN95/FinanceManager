@@ -24,9 +24,12 @@ data class SummarySection(
 )
 
 data class SummaryUiState(
+    /** Wallets, Banks (with Demat), Credit Cards. */
     val sections: List<SummarySection> = emptyList(),
-    /** Cash accounts only (wallets, banks, credit cards, demat), INR. Provident funds are shown separately. */
+    /** Cash accounts only (wallets, banks, credit cards, demat), INR. */
     val cashInr: Double = 0.0,
+    /** Provident funds, shown under Investments (plan 4.1); instruments join them in milestone C. */
+    val providentFunds: List<Account> = emptyList(),
     val providentFundsInr: Double = 0.0,
     val loaded: Boolean = false,
 )
@@ -41,8 +44,8 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
 
     val state: StateFlow<SummaryUiState> =
         combine(db.accountDao().observeVisible(), collapsed) { accounts, collapsedMap ->
-            val sections = SECTION_ORDER.mapNotNull { type ->
-                val ofType = accounts.filter { it.accountType == type }
+            val sections = SUMMARY_SECTIONS.mapNotNull { (type, members) ->
+                val ofType = accounts.filter { it.accountType in members }
                 if (ofType.isEmpty()) null
                 else SummarySection(
                     type = type,
@@ -52,12 +55,12 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
                     collapsed = collapsedMap[type] ?: false,
                 )
             }
+            val pf = accounts.filter { it.accountType == AccountType.PROVIDENT_FUND }
             SummaryUiState(
                 sections = sections,
-                cashInr = sections.filter { it.type != AccountType.PROVIDENT_FUND }
-                    .sumOf { it.totalInr },
-                providentFundsInr = sections.filter { it.type == AccountType.PROVIDENT_FUND }
-                    .sumOf { it.totalInr },
+                cashInr = sections.sumOf { it.totalInr },
+                providentFunds = pf,
+                providentFundsInr = pf.filter { it.currency == "INR" }.sumOf { it.balance },
                 loaded = true,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SummaryUiState())
@@ -69,12 +72,20 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     companion object {
+        /** Picker sections, one per type. */
         val SECTION_ORDER = listOf(
             AccountType.WALLET,
             AccountType.BANK,
             AccountType.CREDIT_CARD,
             AccountType.DEMAT,
             AccountType.PROVIDENT_FUND,
+        )
+
+        /** Summary sections: Demat accounts are listed under Banks (plan 4.1); provident funds go to Investments. */
+        val SUMMARY_SECTIONS = listOf(
+            AccountType.WALLET to setOf(AccountType.WALLET),
+            AccountType.BANK to setOf(AccountType.BANK, AccountType.DEMAT),
+            AccountType.CREDIT_CARD to setOf(AccountType.CREDIT_CARD),
         )
 
         fun titleOf(type: AccountType): String = when (type) {
