@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Finance Manager</string>
+    <string name="app_name">Finance Tracker</string>
     <string name="krishna">Shree KRISHNAya Namaha</string>
     <string name="krishnarpanamastu">Sarvam Shree Krishnarpanamastu</string>
     <string name="aboutUs">About The Developer</string>

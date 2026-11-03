@@ -45,18 +45,18 @@
 			android:background="@drawable/border_gray"
 			android:orientation="vertical">
 
-			<com.chaturvedi.financemanager.main.IncomeLayout
+            <com.nagabhushansn95.financetracker.main.IncomeLayout
 				android:id="@+id/incomeLayout"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content" />
 
-			<com.chaturvedi.financemanager.main.ExpenseLayout
+            <com.nagabhushansn95.financetracker.main.ExpenseLayout
 				android:id="@+id/expenseLayout"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:visibility="gone" />
 
-			<com.chaturvedi.financemanager.main.TransferLayout
+            <com.nagabhushansn95.financetracker.main.TransferLayout
 				android:id="@+id/transferLayout"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"

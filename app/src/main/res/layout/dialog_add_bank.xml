@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-    
-    <com.chaturvedi.customviews.MyAutoCompleteTextView
+
+    <com.nagabhushansn95.financetracker.customviews.MyAutoCompleteTextView
         android:id="@+id/bankName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -28,8 +28,8 @@
         android:hint="@string/hint_bankBalance"
         android:inputType="numberDecimal"
         android:ems="10" />
-    
-    <com.chaturvedi.customviews.MyAutoCompleteTextView
+
+    <com.nagabhushansn95.financetracker.customviews.MyAutoCompleteTextView
         android:id="@+id/bankSmsName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

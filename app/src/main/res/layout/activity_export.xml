@@ -26,13 +26,12 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content">
 
-			<com.chaturvedi.customviews.IntervalSelector
+            <com.nagabhushansn95.financetracker.customviews.IntervalSelector
 				android:id="@+id/intervalSelector"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:layout_alignParentTop="true"
-				app:minYear="2015">
-			</com.chaturvedi.customviews.IntervalSelector>
+				app:minYear="2015"></com.nagabhushansn95.financetracker.customviews.IntervalSelector>
 
 			<CheckBox
 				android:id="@+id/checkBox_includeTransactionType"
