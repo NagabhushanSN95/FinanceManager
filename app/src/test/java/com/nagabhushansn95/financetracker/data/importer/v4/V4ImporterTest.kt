@@ -1,7 +1,6 @@
 package com.nagabhushansn95.financetracker.data.importer.v4
 
 import android.content.Context
-import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
@@ -26,8 +25,7 @@ class V4ImporterTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries()
-            .build()
+        db = AppDatabase.inMemory(context)
     }
 
     @After
@@ -147,9 +145,9 @@ class V4ImporterTest {
         assertEquals(12500.0, accounts.single { it.name == "PPF" }.balance, 1e-9)
         assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), accounts.map { it.displayOrder })
 
-        // categories keep v4 ids, plus Dividend and Interest
+        // categories keep v4 ids, plus one income category for interest and dividends
         val categories = db.categoryDao().getAll()
-        assertEquals(5, categories.size)
+        assertEquals(4, categories.size)
         assertEquals("Food", db.categoryDao().getById(2)!!.name)
 
         // instruments
@@ -203,7 +201,7 @@ class V4ImporterTest {
         }
         tx(interest).let {
             assertEquals(
-                "Interest",
+                "Interest & Dividends",
                 categories.single { c -> c.id == it.categoryId }.name
             )
         }
@@ -213,7 +211,7 @@ class V4ImporterTest {
             it.instrumentId
         )
             assertEquals(LocalDate.of(2026, 8, 14), it.exDate); assertEquals(
-            "Dividend",
+            "Interest & Dividends",
             categories.single { c -> c.id == it.categoryId }.name
         )
         }

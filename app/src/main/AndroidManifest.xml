@@ -3,7 +3,9 @@
 
 
 	<!--<uses-permission android:name="android.permission.RECEIVE_SMS"/>-->
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission
+		android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+		android:maxSdkVersion="28" />
 	<!--<uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>-->
 
 	<application
@@ -13,14 +15,18 @@
 		android:label="@string/app_name"
 		android:theme="@style/AppTheme">
 		<activity
-			android:name=".main.SplashActivity"
-			android:exported="true">
+			android:name=".ui.MainActivity"
+			android:exported="true"
+			android:theme="@style/Theme.FinanceTracker"
+			android:windowSoftInputMode="adjustResize">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
 
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
 		</activity>
+		<!-- Legacy 4.x screens, still compiled until the Compose rebuild (milestone B) replaces them. -->
+		<activity android:name=".main.SplashActivity" />
 		<activity android:name=".setup.StartupActivity"/>
 		<activity android:name=".setup.SetupActivity"/>
 		<activity android:name=".main.SummaryActivity">

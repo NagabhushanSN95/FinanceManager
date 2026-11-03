@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.nagabhushansn95.financetracker.data.db.dao.AccountDao
 import com.nagabhushansn95.financetracker.data.db.dao.CategoryDao
 import com.nagabhushansn95.financetracker.data.db.dao.InstrumentDao
@@ -19,6 +20,8 @@ import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import kotlinx.coroutines.Dispatchers
+import java.io.File
 
 @Database(
     entities = [
@@ -33,7 +36,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
         TransactionEntity::class,
         Template::class,
     ],
-    version = 1,
+    version = 1, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -46,18 +49,49 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         const val DATABASE_NAME = "finance_tracker.db"
 
+        /** Same value as the @Database version; restore refuses files from a newer schema. */
+        const val SCHEMA_VERSION = 1
+
         @Volatile
         private var instance: AppDatabase? = null
 
         fun getInstance(context: Context): AppDatabase =
             instance ?: synchronized(this) {
-                instance ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    DATABASE_NAME
-                )
-                    .build()
-                    .also { instance = it }
+                instance ?: create(context, DATABASE_NAME).also { instance = it }
             }
+
+        /**
+         * Closes the shared instance and swaps the database file for [source] (used by restore). Callers must make
+         * sure nothing is observing the old instance; the next [getInstance] opens the new file.
+         */
+        fun replaceDatabaseFile(context: Context, source: File) = synchronized(this) {
+            instance?.close()
+            instance = null
+            val target = context.applicationContext.getDatabasePath(DATABASE_NAME)
+            target.parentFile?.mkdirs()
+            File(target.path + "-wal").delete()
+            File(target.path + "-shm").delete()
+            File(target.path + "-journal").delete()
+            source.copyTo(target, overwrite = true)
+        }
+
+        /** A file-backed database with the production configuration (also used by tests that need a real file). */
+        fun create(context: Context, name: String): AppDatabase =
+            Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, name)
+                .configure().build()
+
+        /** An in-memory database with the production configuration, for tests. */
+        fun inMemory(context: Context): AppDatabase =
+            Room.inMemoryDatabaseBuilder(context.applicationContext, AppDatabase::class.java)
+                .configure().build()
+
+        /**
+         * Bundled SQLite instead of the framework's: the same engine on every Android version (VACUUM INTO, window
+         * functions), and prepared statements are reused across rows. The framework compatibility path re-prepares
+         * per row and measured ~8x slower on bulk inserts. With a driver configured, transactions must use
+         * [androidx.room.useWriterConnection], not the legacy `withTransaction`.
+         */
+        private fun RoomDatabase.Builder<AppDatabase>.configure(): RoomDatabase.Builder<AppDatabase> =
+            setDriver(BundledSQLiteDriver()).setQueryCoroutineContext(Dispatchers.IO)
     }
 }

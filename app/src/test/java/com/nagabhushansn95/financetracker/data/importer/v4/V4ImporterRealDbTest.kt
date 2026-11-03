@@ -1,7 +1,6 @@
 package com.nagabhushansn95.financetracker.data.importer.v4
 
 import android.content.Context
-import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -32,8 +31,7 @@ class V4ImporterRealDbTest {
     fun setUp() {
         assumeTrue("v4 database not found at $v4File", v4File.isFile)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries()
-            .build()
+        db = AppDatabase.inMemory(context)
     }
 
     @After

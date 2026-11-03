@@ -4,6 +4,27 @@ plugins {
     id 'com.google.devtools.ksp'
 }
 
+// The bundled SQLite driver's Android artifact only ships Android .so files. For JVM unit tests, the matching
+// native library for this machine is taken from the driver's JVM artifact and placed on java.library.path.
+configurations {
+    sqliteHostNatives { transitive = false }
+}
+def sqliteHostNativesDir = layout.buildDirectory.dir('sqlite-host-natives')
+def sqliteHostPlatform = {
+    def os = System.getProperty('os.name').toLowerCase()
+    def arch = System.getProperty('os.arch').toLowerCase()
+    def archName = (arch.contains('aarch64') || arch.contains('arm64')) ? 'arm64' : 'x64'
+    os.contains('mac') ? "osx_${archName}" : os.contains('win') ? 'windows_x64' : "linux_${archName}"
+}()
+tasks.register('extractSqliteHostNatives', Copy) {
+    from(zipTree(configurations.sqliteHostNatives.singleFile)) {
+        include "natives/${sqliteHostPlatform}/*"
+        eachFile { it.path = it.name }
+        includeEmptyDirs = false
+    }
+    into sqliteHostNativesDir
+}
+
 android {
     namespace 'com.nagabhushansn95.financetracker'
     compileSdk 37
@@ -38,9 +59,15 @@ android {
         unitTests {
             includeAndroidResources = true
             returnDefaultValues = true
+            all { test ->
+                // Robolectric tests run the bundled SQLite driver with the host build of its native library.
+                test.dependsOn('extractSqliteHostNatives')
+                test.systemProperty 'java.library.path', sqliteHostNativesDir.get().asFile.absolutePath
+            }
         }
     }
 }
+
 
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
@@ -64,6 +91,7 @@ dependencies {
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-tooling-preview'
     debugImplementation 'androidx.compose.ui:ui-tooling'
+    implementation 'androidx.compose.material:material-icons-core:1.7.8'
     implementation 'androidx.activity:activity-compose:1.13.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.11.0'
@@ -73,6 +101,9 @@ dependencies {
     implementation 'androidx.room:room-runtime:2.8.5'
     implementation 'androidx.room:room-ktx:2.8.5'
     ksp 'androidx.room:room-compiler:2.8.5'
+    // Bundled SQLite (same engine on every Android version, prepared statements reused across rows; the
+    // framework-SQLite compatibility path re-prepares per row and was ~8x slower on bulk inserts).
+    implementation 'androidx.sqlite:sqlite-bundled:2.6.2'
 
     // Existing: PDF export and Excel read/write
     implementation 'com.itextpdf:itextg:5.5.10'
@@ -84,4 +115,5 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:4.17'
     testImplementation 'androidx.test:core:1.7.0'
     testImplementation 'androidx.room:room-testing:2.8.5'
+    sqliteHostNatives 'androidx.sqlite:sqlite-bundled-jvm:2.6.2'
 }

@@ -1,6 +1,7 @@
 package com.nagabhushansn95.financetracker.data.importer.v4
 
-import androidx.room.withTransaction
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.Converters
 import com.nagabhushansn95.financetracker.data.db.entity.Account
@@ -63,13 +64,19 @@ data class V4ImportReport(
  * dropped and reported, since v5 computes realised P/L from the ledger.
  */
 class V4Importer(private val db: AppDatabase) {
+    companion object {
+        const val INVESTMENT_INCOME_CATEGORY = "Interest & Dividends"
+    }
+
 
     suspend fun import(source: V4Source, now: LocalDateTime = LocalDateTime.now()): V4ImportReport =
-        db.withTransaction {
-            require(db.transactionDao().count() == 0 && db.accountDao().getAll().isEmpty()) {
-                "The v5 database must be empty before importing v4 data"
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                require(db.transactionDao().count() == 0 && db.accountDao().getAll().isEmpty()) {
+                    "The v5 database must be empty before importing v4 data"
+                }
+                Session(source, now).run()
             }
-            Session(source, now).run()
         }
 
     private inner class Session(private val source: V4Source, private val now: LocalDateTime) {
@@ -80,8 +87,7 @@ class V4Importer(private val db: AppDatabase) {
         private var nextInstrumentOrder = 0
         private var epfId = 0L
         private var ppfId = 0L
-        private var dividendCategoryId = 0L
-        private var interestCategoryId = 0L
+        private var investmentIncomeCategoryId = 0L
         private val categoryIds = HashSet<Long>()
         private val dropped = ArrayList<DroppedRow>()
         private val realised = LinkedHashMap<String, Double>()
@@ -215,22 +221,15 @@ class V4Importer(private val db: AppDatabase) {
                 categoryIds += id
                 if (id > maxId) maxId = id
             }
-            dividendCategoryId = dao.insert(
+            // One income category covers both; the instrument on the row tells dividends from interest.
+            investmentIncomeCategoryId = dao.insert(
                 Category(
-                    name = "Dividend",
+                    name = INVESTMENT_INCOME_CATEGORY,
                     appliesTo = CategoryScope.INCOME,
                     displayOrder = (maxId + 1).toInt()
                 )
             )
-            interestCategoryId = dao.insert(
-                Category(
-                    name = "Interest",
-                    appliesTo = CategoryScope.INCOME,
-                    displayOrder = (maxId + 2).toInt()
-                )
-            )
-            categoryIds += dividendCategoryId
-            categoryIds += interestCategoryId
+            categoryIds += investmentIncomeCategoryId
         }
 
         private fun categoryId(expTypeId: Int, v4Id: Int): Long {
@@ -362,11 +361,11 @@ class V4Importer(private val db: AppDatabase) {
                     toAccountId = toId,
                     instrumentId = instrumentId(InstrumentKey.stock(d.symbol)),
                     exDate = d.exDate,
-                    categoryId = dividendCategoryId,
+                    categoryId = investmentIncomeCategoryId,
                 )
             }
             val category =
-                if (V4InvestmentClassifier.isInterest(t.particulars)) interestCategoryId else null
+                if (V4InvestmentClassifier.isInterest(t.particulars)) investmentIncomeCategoryId else null
             return base.copy(
                 kind = TransactionKind.INCOME,
                 toAccountId = toId,
@@ -460,7 +459,7 @@ class V4Importer(private val db: AppDatabase) {
                     base.copy(
                         kind = TransactionKind.INCOME,
                         instrumentId = instrumentId(ev.instrument),
-                        categoryId = interestCategoryId,
+                        categoryId = investmentIncomeCategoryId,
                         quantity = null,
                         rate = null
                     )
@@ -471,7 +470,7 @@ class V4Importer(private val db: AppDatabase) {
                         kind = TransactionKind.INCOME,
                         toAccountId = pfAccount(ev.fund),
                         contributor = ev.contributor,
-                        categoryId = if (ev.contributor == "Interest") interestCategoryId else null,
+                        categoryId = if (ev.contributor == "Interest") investmentIncomeCategoryId else null,
                         quantity = null,
                         rate = null,
                     )
@@ -553,7 +552,7 @@ class V4Importer(private val db: AppDatabase) {
                         is InvestmentEvent.ReinvestedIncome -> base.copy(
                             kind = TransactionKind.INCOME,
                             instrumentId = instr(ev.instrument),
-                            categoryId = interestCategoryId
+                            categoryId = investmentIncomeCategoryId
                         )
 
                         else -> null

@@ -1,7 +1,6 @@
 package com.nagabhushansn95.financetracker.data.db
 
 import android.content.Context
-import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
@@ -26,8 +25,7 @@ class AppDatabaseTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries()
-            .build()
+        db = AppDatabase.inMemory(context)
     }
 
     @After

@@ -16,7 +16,13 @@
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
-    
+
+    <!-- Theme for the Compose activity: no action bar, Material 3 day/night, brand status bar. -->
+    <style name="Theme.FinanceTracker" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
     <style name="dialog_animation" >
         <item name="android:windowEnterAnimation" >@anim/dialog_slide_up</item>
         <item name="android:windowExitAnimation" >@anim/dialog_slide_down</item>
