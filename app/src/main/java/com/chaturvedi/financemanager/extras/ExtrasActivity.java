@@ -42,6 +42,7 @@ public class ExtrasActivity extends Activity
 	private static final int EXPORT_REQUEST_PERMISSION = 201;
 	private static final int BACKUP_REQUEST_PERMISSION = 202;
 	private static final int RESTORE_REQUEST_PERMISSION = 203;
+	private static final int BACKUP_DATABASE_REQUEST_PERMISSION = 204;
 
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -99,6 +100,15 @@ public class ExtrasActivity extends Activity
 				{
 					Toast.makeText(ExtrasActivity.this, "Please provide Write permission to " +
 							"backup data to SD card", Toast.LENGTH_LONG).show();
+				}
+				break;
+
+			case BACKUP_DATABASE_REQUEST_PERMISSION:
+				if (permissionGranted) {
+					backupDatabaseFile();
+				} else {
+					Toast.makeText(ExtrasActivity.this, "Please provide Write permission to " +
+							"backup database to SD card", Toast.LENGTH_LONG).show();
 				}
 				break;
 
@@ -166,6 +176,14 @@ public class ExtrasActivity extends Activity
 			}
 		});
 
+		LinearLayout backupDatabaseLayout = (LinearLayout) findViewById(R.id.layout_backup_database);
+		backupDatabaseLayout.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				checkBackupDatabasePermissions();
+			}
+		});
+
 		LinearLayout restoreLayout = (LinearLayout) findViewById(R.id.layout_restore);
 		restoreLayout.setOnClickListener(new View.OnClickListener()
 		{
@@ -208,9 +226,17 @@ public class ExtrasActivity extends Activity
 
 	private void backupData()
 	{
+		runBackup("Backing Up Data to SD Card", false);
+	}
+
+	private void backupDatabaseFile() {
+		runBackup("Backing Up Database File to SD Card", true);
+	}
+
+	private void runBackup(String dialogTitle, final boolean databaseFile) {
 		IndefiniteWaitDialogBuilder backupDialogBuilder = new IndefiniteWaitDialogBuilder
 				(ExtrasActivity.this);
-		backupDialogBuilder.setTitle("Backing Up Data to SD Card");
+		backupDialogBuilder.setTitle(dialogTitle);
 		backupDialogBuilder.setWaitText("This may take few minutes depending on the Size of your Data");
 		backupDialogBuilder.setCancelable(false);
 		final AlertDialog backupDialog = backupDialogBuilder.show();
@@ -257,7 +283,8 @@ public class ExtrasActivity extends Activity
 			@Override
 			public void run()
 			{
-				String[] result = new BackupManager(ExtrasActivity.this).manualBackup();    // Backs Up Data to Backups Folder
+				BackupManager backupManager = new BackupManager(ExtrasActivity.this);
+				String[] result = databaseFile ? backupManager.backupDatabaseFile() : backupManager.manualBackup();    // Backs Up to Backups Folder
 				backupDialog.dismiss();
 
 				if (result != null)
@@ -312,6 +339,16 @@ public class ExtrasActivity extends Activity
 		{
 			// Permission Granted
 			backupData();
+		}
+	}
+
+	private void checkBackupDatabasePermissions() {
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+			ActivityCompat.requestPermissions(ExtrasActivity.this,
+					new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+					BACKUP_DATABASE_REQUEST_PERMISSION);
+		} else {
+			backupDatabaseFile();
 		}
 	}
 

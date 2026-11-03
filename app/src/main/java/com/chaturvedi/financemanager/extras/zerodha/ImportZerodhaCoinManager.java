@@ -68,6 +68,7 @@ public class ImportZerodhaCoinManager {
             boolean isHeader = true;
 
             SimpleDateFormat csvDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+            SimpleDateFormat sellRemarkDateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
             SimpleDateFormat dbDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.ENGLISH);
             SimpleDateFormat dbDateTimeFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm/ss/S", Locale.ENGLISH);
             String importTimeStr = dbDateTimeFormat.format(new java.util.Date());
@@ -114,7 +115,10 @@ public class ImportZerodhaCoinManager {
                 if ("SELL".equalsIgnoreCase(transactionMode) && remarks.contains("on")) {
                     String[] remarkParts = remarks.split("on");
                     if (remarkParts.length > 1) {
-                        tradeDateStr = remarkParts[1].trim().split(" ")[0];
+                        // Convert "Funds credited to 50100170230014 on 02 JUN 2026 08:51:03:155 with reference number as 1666683595" to "02/06/2026"
+                        String[] tradeDateParts = remarkParts[1].trim().split(" ");
+                        tradeDateStr = tradeDateParts[0] + " " + tradeDateParts[1] + " " + tradeDateParts[2];
+                        tradeDateStr = csvDateFormat.format(sellRemarkDateFormat.parse(tradeDateStr));
                     }
                 }
 
