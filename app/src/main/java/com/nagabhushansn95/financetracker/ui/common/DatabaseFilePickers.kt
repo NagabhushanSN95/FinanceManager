@@ -37,6 +37,25 @@ object DatabaseFilePickers {
                 .putExtra(DocumentsContract.EXTRA_INITIAL_URI, sharedFolderUri(initialFolder))
     }
 
+    /**
+     * ACTION_OPEN_DOCUMENT for any file (statements come as CSV with assorted MIME types).
+     *
+     * Opens where the previous file was picked when [lastPicked] returns its URI (the picker shows the folder
+     * that contains a file URI, for cloud providers as well), otherwise in [initialFolder].
+     */
+    class OpenAny(
+        private val initialFolder: String,
+        private val lastPicked: () -> Uri? = { null }
+    ) :
+        ActivityResultContracts.OpenDocument() {
+        override fun createIntent(context: Context, input: Array<String>): Intent =
+            super.createIntent(context, input)
+                .putExtra(
+                    DocumentsContract.EXTRA_INITIAL_URI,
+                    lastPicked() ?: sharedFolderUri(initialFolder)
+                )
+    }
+
     /** ACTION_CREATE_DOCUMENT for a database file, starting in [initialFolder]. */
     class Create(private val initialFolder: String) :
         ActivityResultContracts.CreateDocument(DatabaseBackup.MIME_TYPE) {

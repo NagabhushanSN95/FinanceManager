@@ -27,7 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.backup.DatabaseBackup
 import com.nagabhushansn95.financetracker.ui.common.DatabaseFilePickers
 
-/** Backup actions for the v5 database. Export, Zerodha import and restore return in later milestones. */
+/** Backup actions and the Zerodha statement import. Export returns in milestone E. */
 @Composable
 fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -39,6 +39,14 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
         }
     }
 
+    val pickStatement = rememberLauncherForActivityResult(
+        DatabaseFilePickers.OpenAny(
+            "Download",
+            viewModel::lastZerodhaStatementUri
+        )
+    ) { uri ->
+        if (uri != null) viewModel.previewZerodha(uri)
+    }
     val saveAs = rememberLauncherForActivityResult(
         DatabaseFilePickers.Create(DatabaseFilePickers.BACKUP_FOLDER)
     ) { uri -> if (uri != null) viewModel.backupTo(uri) }
@@ -77,6 +85,15 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
         state.lastBackup?.let {
             Text("Last backup: $it", style = MaterialTheme.typography.bodySmall)
         }
+        ActionCard(
+            title = "Import Zerodha statement",
+            description = "A Coin order history, Kite tradebook, dividends or transaction-charges CSV. Rows already recorded are skipped.",
+            enabled = !state.busy,
+            onClick = { pickStatement.launch(arrayOf("*/*")) },
+        )
+        state.lastZerodhaImport?.let {
+            Text("Last Zerodha import: $it", style = MaterialTheme.typography.bodySmall)
+        }
         state.lastImportSummary?.let {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
@@ -92,6 +109,16 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
                 }
             }
         }
+    }
+
+    state.zerodha?.let { preview ->
+        ZerodhaImportSheet(
+            preview = preview,
+            busy = state.busy,
+            onSettings = viewModel::updateZerodhaSettings,
+            onImport = viewModel::commitZerodha,
+            onDismiss = viewModel::dismissZerodha,
+        )
     }
 }
 

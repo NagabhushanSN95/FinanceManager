@@ -50,6 +50,9 @@ interface TransactionDao {
     @Query("SELECT EXISTS(SELECT 1 FROM transactions WHERE broker_ref = :brokerRef)")
     suspend fun existsByBrokerRef(brokerRef: String): Boolean
 
+    @Query("UPDATE transactions SET broker_ref = :brokerRef WHERE id = :id")
+    suspend fun setBrokerRef(id: Long, brokerRef: String)
+
     // --- templates
     @Insert
     suspend fun insertTemplate(template: Template): Long

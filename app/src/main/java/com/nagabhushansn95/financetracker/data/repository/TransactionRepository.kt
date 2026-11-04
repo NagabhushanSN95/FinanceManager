@@ -33,6 +33,34 @@ class TransactionRepository(private val db: AppDatabase) {
             }
         }
 
+    /** Several rows in one transaction (imports). */
+    suspend fun addAll(
+        transactions: List<TransactionEntity>,
+        now: LocalDateTime = LocalDateTime.now()
+    ): List<Long> =
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                addAllInTransaction(
+                    transactions,
+                    now
+                )
+            }
+        }
+
+    /** For callers that already hold a write transaction: inserts with balance effects, no transaction of its own. */
+    suspend fun addAllInTransaction(
+        transactions: List<TransactionEntity>,
+        now: LocalDateTime
+    ): List<Long> =
+        transactions.map { transaction ->
+            validate(transaction)
+            val stamped = transaction.copy(createdTime = now, modifiedTime = now)
+            val id = db.transactionDao().insert(stamped)
+            applyBalances(stamped, sign = +1, stamp = now)
+            reactivateIfNeeded(stamped, now)
+            id
+        }
+
     /** Reverses the stored row's balance effect, then applies the new one. */
     suspend fun update(transaction: TransactionEntity, now: LocalDateTime = LocalDateTime.now()) =
         db.useWriterConnection { transactor ->

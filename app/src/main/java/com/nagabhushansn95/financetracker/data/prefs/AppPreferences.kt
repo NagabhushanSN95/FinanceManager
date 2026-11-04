@@ -59,6 +59,24 @@ class AppPreferences(context: Context) {
         set(value) = prefs.edit().putString(KEY_LAST_AUTO_BACKUP, value).apply()
 
     /** Most recently used ids for a picker (newest first), e.g. "account_from", "category", "instrument". */
+    /** Report of the last Zerodha statement import, shown under Extras. */
+    var lastZerodhaImportSummary: String?
+        get() = prefs.getString(KEY_LAST_ZERODHA_IMPORT, null)
+        set(value) = prefs.edit().putString(KEY_LAST_ZERODHA_IMPORT, value).apply()
+
+    /** Accounts chosen for the last Zerodha import; -1 = none chosen yet. */
+    var zerodhaDematAccountId: Long
+        get() = prefs.getLong(KEY_ZERODHA_DEMAT, -1L)
+        set(value) = prefs.edit().putLong(KEY_ZERODHA_DEMAT, value).apply()
+    var zerodhaBankAccountId: Long
+        get() = prefs.getLong(KEY_ZERODHA_BANK, -1L)
+        set(value) = prefs.edit().putLong(KEY_ZERODHA_BANK, value).apply()
+
+    /** URI of the last Zerodha statement picked, so the file picker opens in the same folder next time. */
+    var lastZerodhaStatementUri: String?
+        get() = prefs.getString(KEY_ZERODHA_STATEMENT_URI, null)
+        set(value) = prefs.edit().putString(KEY_ZERODHA_STATEMENT_URI, value).apply()
+
     fun recentIds(picker: String): List<Long> =
         prefs.getString(KEY_RECENT_PREFIX + picker, null)?.split(',')
             ?.mapNotNull { it.toLongOrNull() } ?: emptyList()
@@ -70,6 +88,10 @@ class AppPreferences(context: Context) {
 
     companion object {
         private const val KEY_RECENT_PREFIX = "recent_"
+        private const val KEY_LAST_ZERODHA_IMPORT = "last_zerodha_import"
+        private const val KEY_ZERODHA_DEMAT = "zerodha_demat_account"
+        private const val KEY_ZERODHA_BANK = "zerodha_bank_account"
+        private const val KEY_ZERODHA_STATEMENT_URI = "zerodha_statement_uri"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_DAILY_BACKUP = "daily_backup_enabled"
         private const val KEY_LAST_AUTO_BACKUP = "last_auto_backup_date"
