@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -73,6 +74,7 @@ data class InstrumentDetailState(
     val rows: List<TransactionEntity> = emptyList(),
     val lookups: LedgerLookups? = null,
     val categories: List<InvestmentCategory> = emptyList(),
+    val allInstruments: List<Instrument> = emptyList(),
     val categoryPath: String? = null,
     val xirr: Double? = null,
     val currentValue: Double = 0.0,
@@ -109,6 +111,7 @@ class InstrumentDetailViewModel(application: Application, private val instrument
             rows = rows.sortedWith(compareByDescending<TransactionEntity> { it.date }.thenByDescending { it.id }),
             lookups = LedgerLookups(accounts, db.categoryDao().getAll(), instruments),
             categories = categories,
+            allInstruments = instruments,
             categoryPath = instrument.categoryId?.let { byId[it] }?.let { c ->
                 c.parentId?.let { byId[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
             },
@@ -136,6 +139,53 @@ class InstrumentDetailViewModel(application: Application, private val instrument
     fun save(instrument: Instrument) {
         viewModelScope.launch { EditDataRepository(db).updateInstrument(instrument) }
     }
+
+    fun mergeInto(targetId: Long) {
+        viewModelScope.launch {
+            runCatching {
+                EditDataRepository(db).mergeInstruments(
+                    instrumentId,
+                    targetId
+                )
+            }
+        }
+    }
+
+    fun addBonusUnits(extraUnits: Double, date: LocalDate, particulars: String) {
+        viewModelScope.launch {
+            runCatching {
+                EditDataRepository(db).addBonusUnits(
+                    instrumentId,
+                    extraUnits,
+                    date,
+                    particulars
+                )
+            }
+        }
+    }
+
+    /** Stores the scheme code and ISIN on the fund and today's NAV from the list. */
+    fun linkScheme(scheme: com.nagabhushansn95.financetracker.data.prices.AmfiScheme) {
+        viewModelScope.launch {
+            val instrument = db.instrumentDao().getById(instrumentId) ?: return@launch
+            EditDataRepository(db).updateInstrument(
+                instrument.copy(
+                    symbol = scheme.code,
+                    exchange = com.nagabhushansn95.financetracker.data.prices.AmfiNav.EXCHANGE,
+                    isin = scheme.isinGrowth ?: scheme.isinReinvestment ?: instrument.isin,
+                )
+            )
+            db.instrumentDao().insertValuation(
+                InstrumentValuation(
+                    instrumentId = instrumentId,
+                    date = scheme.date,
+                    unitPrice = scheme.nav,
+                    source = ValuationSource.AMFI,
+                    fetchedAt = LocalDateTime.now()
+                )
+            )
+        }
+    }
 }
 
 private val DATE = DateTimeFormatter.ofPattern("d MMM yyyy")
@@ -159,6 +209,11 @@ fun InstrumentDetailScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf(false) }
     var pricing by remember { mutableStateOf(false) }
+    var linking by remember { mutableStateOf(false) }
+    var menu by remember { mutableStateOf(false) }
+    var merging by remember { mutableStateOf(false) }
+    var mergeInto by remember { mutableStateOf<Instrument?>(null) }
+    var bonus by remember { mutableStateOf(false) }
     val instrument = state.instrument
     val position = state.position
 
@@ -180,6 +235,19 @@ fun InstrumentDetailScreen(
                             Icons.Filled.Edit,
                             contentDescription = "Edit instrument"
                         )
+                    }
+                    if (instrument != null) IconButton(onClick = { menu = true }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "More")
+                    }
+                    androidx.compose.material3.DropdownMenu(
+                        expanded = menu,
+                        onDismissRequest = { menu = false }) {
+                        if (position?.hasUnits == true) androidx.compose.material3.DropdownMenuItem(
+                            text = { Text("Record bonus shares or split…") },
+                            onClick = { menu = false; bonus = true })
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text("Merge into another instrument…") },
+                            onClick = { menu = false; merging = true })
                     }
                 },
             )
@@ -253,7 +321,10 @@ fun InstrumentDetailScreen(
                             Stat("Income", MoneyFormat.amount(position.income)); Stat(
                             "XIRR",
                             pct(state.xirr)
-                        ); Stat("Price as of", state.valuation?.date?.format(DATE) ?: "—")
+                        ); Stat(
+                            "Price as of",
+                            state.valuation?.let { "${it.date.format(DATE)} · ${it.source.name.lowercase()}" }
+                                ?: "—")
                         }
                         Text(
                             "Total put in ${MoneyFormat.amount(position.totalInvested)}, taken out ${
@@ -268,6 +339,12 @@ fun InstrumentDetailScreen(
                             onClick = { pricing = true },
                             modifier = Modifier.fillMaxWidth()
                         ) { Text(if (position.hasUnits) "Update current price" else "Update current value") }
+                        if (instrument.instrumentType == com.nagabhushansn95.financetracker.data.db.entity.InstrumentType.MUTUAL_FUND) {
+                            OutlinedButton(
+                                onClick = { linking = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) { Text(if (instrument.exchange == com.nagabhushansn95.financetracker.data.prices.AmfiNav.EXCHANGE) "Change AMFI scheme (${instrument.symbol})" else "Link AMFI scheme for NAVs") }
+                        }
                     }
                 }
                 Text(
@@ -312,6 +389,56 @@ fun InstrumentDetailScreen(
             categories = state.categories,
             onSave = { viewModel.save(it); editing = false },
             onDismiss = { editing = false })
+    }
+    if (merging && instrument != null) {
+        com.nagabhushansn95.financetracker.ui.transaction.InstrumentPickerSheet(
+            instruments = state.allInstruments.filter { it.instrumentType == instrument.instrumentType && it.id != instrument.id },
+            recent = emptyList(),
+            optional = false,
+            onPick = { id ->
+                mergeInto = state.allInstruments.firstOrNull { it.id == id }; merging = false
+            },
+            onNew = { merging = false },
+            onDismiss = { merging = false },
+        )
+    }
+    mergeInto?.let { target ->
+        if (instrument != null) AlertDialog(
+            onDismissRequest = { mergeInto = null },
+            title = { Text("Merge ${instrument.name} into ${target.name}?") },
+            text = {
+                Text(
+                    "All ${state.rows.size} transactions of ${instrument.name} move to ${target.name}, and ${instrument.name} is deleted. " +
+                            "Use this when a stock was renamed (ZOMATO → ETERNAL): the purchases under the old name then belong to the new one. This cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.mergeInto(target.id); mergeInto = null; onBack()
+                }) { Text("Merge") }
+            },
+            dismissButton = { TextButton(onClick = { mergeInto = null }) { Text("Cancel") } },
+        )
+    }
+    if (bonus && instrument != null && position != null) {
+        BonusOrSplitDialog(
+            instrument = instrument,
+            unitsHeld = position.units,
+            onRecord = { extra, date, particulars ->
+                viewModel.addBonusUnits(
+                    extra,
+                    date,
+                    particulars
+                ); bonus = false
+            },
+            onDismiss = { bonus = false },
+        )
+    }
+    if (linking && instrument != null) {
+        AmfiSchemeSheet(
+            initialQuery = instrument.name,
+            onPick = { viewModel.linkScheme(it); linking = false },
+            onDismiss = { linking = false })
     }
     if (pricing && position != null) {
         var text by remember { mutableStateOf("") }
@@ -364,4 +491,93 @@ private fun Stat(label: String, value: String, signed: Double? = null) {
             }
         )
     }
+}
+
+
+/** Bonus a:b (a new for every b held) or split old:new; the extra units are an income row at zero cost. */
+@Composable
+private fun BonusOrSplitDialog(
+    instrument: Instrument,
+    unitsHeld: Double,
+    onRecord: (Double, LocalDate, String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var split by remember { mutableStateOf(false) }
+    var a by remember { mutableStateOf("1") }
+    var b by remember { mutableStateOf("1") }
+    var date by remember { mutableStateOf<LocalDate?>(LocalDate.now()) }
+    val av = a.toDoubleOrNull()
+    val bv = b.toDoubleOrNull()
+    val extra = when {
+        av == null || bv == null || av <= 0 || bv <= 0 -> null
+        split -> unitsHeld * bv / av - unitsHeld                       // old:new, e.g. 1:5 turns 100 into 500
+        else -> unitsHeld * av / bv                                     // bonus a:b, e.g. 1:1 doubles
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (split) "Stock split" else "Bonus shares") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.FilterChip(
+                        selected = !split,
+                        onClick = { split = false },
+                        label = { Text("Bonus") })
+                    androidx.compose.material3.FilterChip(
+                        selected = split,
+                        onClick = { split = true },
+                        label = { Text("Split") })
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = a,
+                        onValueChange = { a = it },
+                        label = { Text(if (split) "Old" else "Bonus") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = b,
+                        onValueChange = { b = it },
+                        label = { Text(if (split) "New" else "For every") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                com.nagabhushansn95.financetracker.ui.common.DateField(
+                    "Record date",
+                    date,
+                    { date = it },
+                    Modifier.fillMaxWidth()
+                )
+                Text(
+                    "Held ${
+                        com.nagabhushansn95.financetracker.data.investments.FdMath.plain(
+                            unitsHeld
+                        )
+                    } units" +
+                            (extra?.let {
+                                " → +${
+                                    com.nagabhushansn95.financetracker.data.investments.FdMath.plain(
+                                        it
+                                    )
+                                } units at no cost; the average cost falls, the invested amount stays."
+                            } ?: ""),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = extra != null && extra > 0 && date != null, onClick = {
+                onRecord(
+                    extra!!,
+                    date!!,
+                    if (split) "Stock split ${a.trim()}:${b.trim()} - ${instrument.name}" else "Bonus Shares ${a.trim()}:${b.trim()} - ${instrument.name}"
+                )
+            }) { Text("Record") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }

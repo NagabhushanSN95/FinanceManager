@@ -36,6 +36,7 @@ data class ExtrasUiState(
     val lastBackup: String? = null,
     val lastImportSummary: String? = null,
     val lastZerodhaImport: String? = null,
+    val lastExport: String? = null,
     val zerodha: ZerodhaPreview? = null,
     /** One-off message for a snackbar; cleared with [ExtrasViewModel.messageShown]. */
     val message: String? = null,
@@ -46,21 +47,45 @@ class ExtrasViewModel(application: Application) : AndroidViewModel(application) 
     private val db = AppDatabase.getInstance(application)
     private val backup = DatabaseBackup(application, db)
     private val importer = ZerodhaImporter(db)
+    private val workbook = com.nagabhushansn95.financetracker.data.export.SummaryWorkbook(db)
 
     private val _state = MutableStateFlow(
         ExtrasUiState(
             lastBackup = prefs.lastBackupDescription,
             lastImportSummary = prefs.lastImportSummary,
             lastZerodhaImport = prefs.lastZerodhaImportSummary,
+            lastExport = prefs.lastExportDescription,
         )
     )
     val state: StateFlow<ExtrasUiState> = _state
 
-    fun suggestedBackupFileName(): String = backup.suggestedFileName()
+
+    /** Writes the summary workbook to Documents/Finance Tracker/Exports. */
+    fun exportToDocuments() = export {
+        com.nagabhushansn95.financetracker.data.export.SharedDocuments.write(
+            getApplication(),
+            com.nagabhushansn95.financetracker.data.export.SharedDocuments.EXPORT_FOLDER,
+            workbook.suggestedFileName(),
+            com.nagabhushansn95.financetracker.data.export.SharedDocuments.XLSX_MIME,
+        ) { workbook.write(it) }
+    }
+
+    private fun export(action: suspend () -> String) {
+        if (_state.value.busy) return
+        _state.value = _state.value.copy(busy = true)
+        viewModelScope.launch {
+            val result = runCatching { withContext(Dispatchers.IO) { action() } }
+            result.onSuccess { prefs.lastExportDescription = it }
+            _state.value = _state.value.copy(
+                busy = false,
+                lastExport = prefs.lastExportDescription,
+                message = result.fold({ "Exported to $it" }, { "Export failed: ${it.message}" }),
+            )
+        }
+    }
 
     fun backupToDocuments() = run("Backed up to ") { backup.saveToDocuments() }
 
-    fun backupTo(uri: Uri) = run("Saved to ") { backup.saveTo(uri) }
 
     private fun run(successPrefix: String, action: suspend () -> DatabaseBackup.Result) {
         if (_state.value.busy) return

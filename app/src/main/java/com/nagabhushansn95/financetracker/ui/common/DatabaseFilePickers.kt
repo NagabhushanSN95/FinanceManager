@@ -55,12 +55,4 @@ object DatabaseFilePickers {
                     lastPicked() ?: sharedFolderUri(initialFolder)
                 )
     }
-
-    /** ACTION_CREATE_DOCUMENT for a database file, starting in [initialFolder]. */
-    class Create(private val initialFolder: String) :
-        ActivityResultContracts.CreateDocument(DatabaseBackup.MIME_TYPE) {
-        override fun createIntent(context: Context, input: String): Intent =
-            super.createIntent(context, input)
-                .putExtra(DocumentsContract.EXTRA_INITIAL_URI, sharedFolderUri(initialFolder))
-    }
 }

@@ -47,9 +47,6 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
     ) { uri ->
         if (uri != null) viewModel.previewZerodha(uri)
     }
-    val saveAs = rememberLauncherForActivityResult(
-        DatabaseFilePickers.Create(DatabaseFilePickers.BACKUP_FOLDER)
-    ) { uri -> if (uri != null) viewModel.backupTo(uri) }
 
     // Android 9 and below need the legacy storage permission for the Documents folder.
     val storagePermission =
@@ -72,18 +69,21 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
 
         ActionCard(
             title = "Back up database file",
-            description = "Copies the whole database to Documents/${DatabaseBackup.BACKUP_FOLDER}.",
+            description = "Copies the whole database to Documents/${DatabaseBackup.BACKUP_FOLDER}. Restore it from the welcome screen of a fresh install.",
             enabled = !state.busy,
             onClick = backupToDocuments,
         )
-        ActionCard(
-            title = "Save database file to…",
-            description = "Pick a folder or a cloud drive (Google Drive, OneDrive…) with the system file picker.",
-            enabled = !state.busy,
-            onClick = { saveAs.launch(viewModel.suggestedBackupFileName()) },
-        )
         state.lastBackup?.let {
             Text("Last backup: $it", style = MaterialTheme.typography.bodySmall)
+        }
+        ActionCard(
+            title = "Export summary workbook",
+            description = "An Excel file with the sheets of the old 'My Savings' workbook, computed from the ledger: savings by year and month, investment summary, deposits, provident funds, insurance, funds, stocks, others and prices. Saved to Documents/${com.nagabhushansn95.financetracker.data.export.SharedDocuments.EXPORT_FOLDER}.",
+            enabled = !state.busy,
+            onClick = viewModel::exportToDocuments,
+        )
+        state.lastExport?.let {
+            Text("Last export: $it", style = MaterialTheme.typography.bodySmall)
         }
         ActionCard(
             title = "Import Zerodha statement",

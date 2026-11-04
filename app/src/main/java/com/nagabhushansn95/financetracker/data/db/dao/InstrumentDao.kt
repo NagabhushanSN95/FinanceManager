@@ -59,6 +59,15 @@ interface InstrumentDao {
     @Query("SELECT COUNT(*) FROM transactions WHERE instrument_id = :instrumentId")
     suspend fun transactionCount(instrumentId: Long): Int
 
+    @Query("DELETE FROM instruments WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("UPDATE fixed_deposits SET previous_fd_id = :into WHERE previous_fd_id = :from")
+    suspend fun reassignPreviousFd(from: Long, into: Long)
+
+    @Query("UPDATE fixed_deposits SET next_fd_id = :into WHERE next_fd_id = :from")
+    suspend fun reassignNextFd(from: Long, into: Long)
+
     // --- fixed deposits
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertFixedDeposit(fd: FixedDeposit)
@@ -167,4 +176,13 @@ interface InstrumentDao {
 
     @Query("SELECT * FROM fx_rates WHERE base = :base AND quote = :quote ORDER BY date DESC LIMIT 1")
     suspend fun latestFxRate(base: String, quote: String): FxRate?
+
+    @Query("SELECT * FROM fx_rates ORDER BY date")
+    fun observeFxRates(): Flow<List<FxRate>>
+
+    @Query("SELECT * FROM fx_rates ORDER BY date")
+    suspend fun getAllFxRates(): List<FxRate>
+
+    @Query("SELECT * FROM instrument_valuations ORDER BY date DESC, id DESC")
+    suspend fun getAllValuationsLatestFirst(): List<InstrumentValuation>
 }

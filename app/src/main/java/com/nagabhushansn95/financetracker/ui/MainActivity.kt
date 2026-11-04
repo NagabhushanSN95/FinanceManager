@@ -51,11 +51,15 @@ private fun FinanceTrackerApp() {
     LaunchedEffect(setupComplete) {
         // Daily automatic backup: a preference read on most launches, one snapshot on the first launch of a day.
         if (setupComplete) withContext(Dispatchers.IO) {
-            AutoBackup(
+            val backedUp = AutoBackup(
                 context,
                 AppDatabase.getInstance(context),
                 prefs
             ).runIfDue()
+            // The same snapshot goes to Google Drive when the user turned that on (waits for a network).
+            if (backedUp && prefs.driveUploadEnabled) com.nagabhushansn95.financetracker.data.drive.DriveUploadWorker.enqueue(
+                context
+            )
         }
     }
     if (setupComplete) HomeScreen() else WelcomeScreen(onFinished = { setupComplete = true })

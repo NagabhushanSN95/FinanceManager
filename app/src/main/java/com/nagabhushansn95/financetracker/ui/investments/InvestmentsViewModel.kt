@@ -7,13 +7,23 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.investments.InvestmentCategories
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
+import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
+import com.nagabhushansn95.financetracker.data.prices.AmfiNav
+import com.nagabhushansn95.financetracker.data.prices.PriceRefresher
+import com.nagabhushansn95.financetracker.data.prices.UrlHttpClient
+import com.nagabhushansn95.financetracker.data.prices.YahooQuotes
 import com.nagabhushansn95.financetracker.data.repository.InstrumentMaintenance
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/** Whether a price refresh is running and what the last one did. */
+data class PriceStatus(val refreshing: Boolean = false, val message: String? = null)
 
 data class InvestmentsUiState(val summary: InvestmentSummary? = null, val loaded: Boolean = false)
 
@@ -28,11 +38,34 @@ open class InvestmentSummaryViewModel(application: Application) : AndroidViewMod
 
 /** The Investments hub: the summary plus the housekeeping that belongs to opening it. */
 class InvestmentsViewModel(application: Application) : InvestmentSummaryViewModel(application) {
+    private val prefs = AppPreferences(application)
+    private val _prices = MutableStateFlow(PriceStatus(message = prefs.lastPriceRefreshSummary))
+    val prices: StateFlow<PriceStatus> = _prices
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             // The category tree and risk levels on first open; retired holdings after 90 idle days.
             InvestmentCategories.seedIfEmpty(db)
             InstrumentMaintenance(db).retireIdleHoldings()
+            // Live prices at most once a day (or hour), when the setting allows it.
+            if (prefs.autoPrices && System.currentTimeMillis() - prefs.lastPriceRefreshMillis > prefs.priceRefreshIntervalMillis) refreshPrices()
+        }
+    }
+
+    /** Fetches stock prices, fund NAVs and the USD/INR rate now; the hub's "Update prices" button. */
+    fun refreshPrices() {
+        if (_prices.value.refreshing) return
+        _prices.value = _prices.value.copy(refreshing = true)
+        viewModelScope.launch {
+            val message = withContext(Dispatchers.IO) {
+                runCatching {
+                    val http = UrlHttpClient()
+                    PriceRefresher(db, YahooQuotes(http), AmfiNav(http)).refresh().summary()
+                }.getOrElse { "Price update failed: ${it.message ?: "no connection"}" }
+            }
+            prefs.lastPriceRefreshMillis = System.currentTimeMillis()
+            prefs.lastPriceRefreshSummary = message
+            _prices.value = PriceStatus(refreshing = false, message = message)
         }
     }
 }

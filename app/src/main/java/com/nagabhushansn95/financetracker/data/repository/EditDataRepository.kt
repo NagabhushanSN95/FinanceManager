@@ -111,6 +111,65 @@ class EditDataRepository(private val db: AppDatabase) {
 
     suspend fun instrumentTransactionCount(id: Long) = db.instrumentDao().transactionCount(id)
 
+    /**
+     * Moves every transaction and template of [fromId] onto [intoId] and deletes [fromId] (its price history and
+     * deposit/policy details go with it). For a renamed stock: merge the old symbol into the new one, so the
+     * position carries over and the sale of the new symbol closes the purchase of the old. Same type required.
+     */
+    suspend fun mergeInstruments(
+        fromId: Long,
+        intoId: Long,
+        now: LocalDateTime = LocalDateTime.now()
+    ) = write {
+        require(fromId != intoId) { "Pick a different instrument" }
+        val from = requireNotNull(db.instrumentDao().getById(fromId)) { "Instrument not found" }
+        val into = requireNotNull(db.instrumentDao().getById(intoId)) { "Instrument not found" }
+        require(from.instrumentType == into.instrumentType) { "Both must be the same type" }
+        val stamp = stamp(now)
+        db.transactionDao().reassignInstrument(fromId, intoId, stamp)
+        db.transactionDao().reassignTemplateInstrument(fromId, intoId)
+        db.instrumentDao().reassignPreviousFd(fromId, intoId)
+        db.instrumentDao().reassignNextFd(fromId, intoId)
+        db.instrumentDao().delete(fromId)
+        val note = "Merged from ${from.name}" + (from.symbol?.let { " ($it)" } ?: "")
+        db.instrumentDao().update(
+            into.copy(
+                isin = into.isin ?: from.isin,
+                categoryId = into.categoryId ?: from.categoryId,
+                active = true,
+                notes = listOfNotNull(into.notes, note).joinToString("\n"),
+                modifiedTime = now,
+            )
+        )
+    }
+
+    /**
+     * Bonus shares or a split: [extraUnits] more units at no cost, as an INCOME row tagged with the stock and no
+     * account. The average cost falls accordingly; nothing else changes.
+     */
+    suspend fun addBonusUnits(
+        instrumentId: Long,
+        extraUnits: Double,
+        date: java.time.LocalDate,
+        particulars: String,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Long {
+        require(extraUnits > 0) { "Units must be positive" }
+        return TransactionRepository(db).add(
+            com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity(
+                createdTime = now,
+                modifiedTime = now,
+                date = date,
+                kind = com.nagabhushansn95.financetracker.data.db.entity.TransactionKind.INCOME,
+                instrumentId = instrumentId,
+                particulars = particulars,
+                quantity = extraUnits,
+                amount = 0.0,
+            ),
+            now = now,
+        )
+    }
+
     /** Adds or updates an insurance policy with its instrument in one write; returns the instrument id. */
     suspend fun saveInsurancePolicy(
         instrument: Instrument,

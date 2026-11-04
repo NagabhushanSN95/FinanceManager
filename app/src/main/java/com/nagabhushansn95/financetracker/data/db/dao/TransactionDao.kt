@@ -29,6 +29,9 @@ interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions")
     suspend fun count(): Int
 
+    @Query("SELECT * FROM transactions ORDER BY date, id")
+    suspend fun getAll(): List<TransactionEntity>
+
     @Query("SELECT * FROM transactions ORDER BY date DESC, id DESC")
     fun observeAll(): Flow<List<TransactionEntity>>
 
@@ -52,6 +55,12 @@ interface TransactionDao {
 
     @Query("UPDATE transactions SET broker_ref = :brokerRef WHERE id = :id")
     suspend fun setBrokerRef(id: Long, brokerRef: String)
+
+    @Query("UPDATE transactions SET instrument_id = :into, modified_time = :modifiedTime WHERE instrument_id = :from")
+    suspend fun reassignInstrument(from: Long, into: Long, modifiedTime: String)
+
+    @Query("UPDATE templates SET instrument_id = :into WHERE instrument_id = :from")
+    suspend fun reassignTemplateInstrument(from: Long, into: Long)
 
     // --- templates
     @Insert

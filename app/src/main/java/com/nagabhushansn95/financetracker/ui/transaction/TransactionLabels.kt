@@ -25,8 +25,13 @@ class LedgerLookups(
         return if (parent != null) "${parent.name} › ${c.name}" else c.name
     }
 
+    /** Short name, else the ticker (not an AMFI scheme code, which says nothing), else the name. */
     fun instrumentName(id: Long?) =
-        id?.let { instruments[it]?.let { i -> i.shortName ?: i.symbol ?: i.name } }
+        id?.let {
+            instruments[it]?.let { i ->
+                i.shortName ?: i.symbol?.takeIf { s -> !s.all(Char::isDigit) } ?: i.name
+            }
+        }
 
     /** Secondary line for a ledger row, derived from kind and endpoints (plan 3.3). */
     fun describe(t: TransactionEntity): String = when (t.kind) {

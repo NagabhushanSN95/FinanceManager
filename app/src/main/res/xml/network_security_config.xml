@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  AMFI's NAV portal chains to the Sectigo Public Server Authentication Root R46 (2021), which older Android
+  system stores lack, so that public root is trusted for amfiindia.com only. Everything else uses the system store.
+-->
+<network-security-config>
+    <domain-config>
+        <domain includeSubdomains="true">amfiindia.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/sectigo_root_r46" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

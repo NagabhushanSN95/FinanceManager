@@ -5,6 +5,7 @@ import com.nagabhushansn95.financetracker.data.db.dao.Settings
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
+import com.nagabhushansn95.financetracker.data.db.entity.FxRate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
@@ -109,12 +110,16 @@ object InvestmentSummaryBuilder {
             db.accountDao().observeAll(),
             db.instrumentDao().observeRiskLevels(),
             db.settingsDao().observe(Settings.GOAL_AMOUNT),
-            db.instrumentDao().observeFixedDeposits(),
-        ) { a, r, g, f -> Quad(a, r, g, f) }
+            combine(
+                db.instrumentDao().observeFixedDeposits(),
+                db.instrumentDao().observeFxRates()
+            ) { f, x -> f to x },
+        ) { a, r, g, fx -> Quad(a, r, g, fx) }
         return combine(
             data,
             more
-        ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal, fixedDeposits) ->
+        ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal, fdAndFx) ->
+            val (fixedDeposits, fxRates) = fdAndFx
             build(
                 instruments,
                 categories,
@@ -126,11 +131,17 @@ object InvestmentSummaryBuilder {
                 goal?.toDoubleOrNull(),
                 asOf(),
                 fixedDeposits,
+                latestFx(fxRates),
             )
         }.flowOn(Dispatchers.Default)
     }
 
     private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+
+    /** Latest rate per base currency into INR, e.g. USD -> 84.2. */
+    fun latestFx(rates: List<FxRate>): Map<String, Double> =
+        rates.filter { it.quote == "INR" }.groupBy { it.base }
+            .mapValues { (_, r) -> r.maxWith(compareBy({ it.date }, { it.id })).rate }
 
     /**
      * Rolls the ledger up into the Investment Summary. Family-owned instruments are excluded from the totals. Provident
@@ -147,6 +158,7 @@ object InvestmentSummaryBuilder {
         goalAmount: Double? = null,
         asOf: LocalDate = LocalDate.now(),
         fixedDeposits: List<FixedDeposit> = emptyList(),
+        fxToInr: Map<String, Double> = emptyMap(),
     ): InvestmentSummary {
         val fdTerms = fixedDeposits.associateBy { it.instrumentId }
         val unitBasedIds =
@@ -173,6 +185,9 @@ object InvestmentSummaryBuilder {
             val formula =
                 if (fd != null && depositDate != null && position.costHeld > Position.UNIT_EPSILON)
                     FdMath.estimate(fd, position.costHeld, depositDate, asOf) else null
+            // Prices and manual values are in the instrument's currency; costs are already INR.
+            val fx = if (instrument.currency == "INR") 1.0 else fxToInr[instrument.currency] ?: 1.0
+            val priced = valuation?.unitPrice != null || valuation?.totalValue != null
             val current = when {
                 formula != null && (valuation?.totalValue == null || valuation.date.isBefore(
                     asOf.minusDays(
@@ -180,7 +195,10 @@ object InvestmentSummaryBuilder {
                     )
                 )) -> formula
 
-                else -> position.currentValue(valuation?.unitPrice, valuation?.totalValue)
+                else -> position.currentValue(
+                    valuation?.unitPrice,
+                    valuation?.totalValue
+                ) * (if (priced) fx else 1.0)
             }
             HoldingRow(
                 instrument = instrument,

@@ -1,6 +1,9 @@
 package com.nagabhushansn95.financetracker.ui.home
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
@@ -127,6 +130,8 @@ fun HomeScreen() {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
+                // Scrolls: with the Investments sub-screens the list is taller than small phones.
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
                     "Finance Tracker",
                     modifier = Modifier.padding(horizontal = 28.dp, vertical = 20.dp),
@@ -159,6 +164,7 @@ fun HomeScreen() {
                                 .padding(start = 24.dp),
                         )
                     }
+                }
                 }
             }
         },

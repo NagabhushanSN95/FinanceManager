@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,11 +74,12 @@ fun InvestmentsScreen(onNavigate: (String) -> Unit, viewModel: InvestmentsViewMo
     }
     var view by rememberSaveable { mutableStateOf(MetricView.VALUE) }
     var expanded by rememberSaveable { mutableStateOf(setOf<String>()) }
+    val prices by viewModel.prices.collectAsStateWithLifecycle()
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item { TotalsCard(summary) }
+        item { TotalsCard(summary, prices, viewModel::refreshPrices) }
         item { Tiles(summary, onNavigate) }
         item {
             Card(modifier = Modifier.fillMaxWidth()) {
@@ -131,7 +135,7 @@ fun InvestmentsScreen(onNavigate: (String) -> Unit, viewModel: InvestmentsViewMo
 }
 
 @Composable
-private fun TotalsCard(s: InvestmentSummary) {
+private fun TotalsCard(s: InvestmentSummary, prices: PriceStatus, onRefresh: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -154,6 +158,20 @@ private fun TotalsCard(s: InvestmentSummary) {
                 "Income",
                 MoneyFormat.compact(s.total.income)
             ); Stat("Prices as of", s.latestPriceDate?.format(DATE) ?: "no prices yet")
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (prices.refreshing) "Updating prices…" else prices.message
+                        ?: "Stock prices from Yahoo Finance, fund NAVs from AMFI.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                if (prices.refreshing) CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+                else TextButton(onClick = onRefresh) { Text("Update prices") }
             }
         }
     }
