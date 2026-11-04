@@ -35,7 +35,8 @@ enum class MetricView(val label: String, val columns: List<String>) {
     ALLOCATION("Allocation", listOf("% inv", "% cur", "Target")),
 }
 
-fun pct(value: Double?): String = value?.let { "%.1f%%".format(it * 100) } ?: "—"
+fun pct(value: Double?): String =
+    value?.let { "%.1f%%".format(if (kotlin.math.abs(it) < 0.00005) 0.0 else it * 100) } ?: "—"
 private fun short(value: Double) = MoneyFormat.compact(value)
 
 @Composable

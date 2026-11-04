@@ -69,12 +69,21 @@ interface InstrumentDao {
     @Query("SELECT * FROM fixed_deposits")
     suspend fun getAllFixedDeposits(): List<FixedDeposit>
 
+    @Query("SELECT * FROM fixed_deposits")
+    fun observeFixedDeposits(): Flow<List<FixedDeposit>>
+
     // --- insurance
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertInsurancePolicy(policy: InsurancePolicy)
 
     @Query("SELECT * FROM insurance_policies WHERE instrument_id = :instrumentId")
     suspend fun getInsurancePolicy(instrumentId: Long): InsurancePolicy?
+
+    @Query("SELECT * FROM insurance_policies")
+    suspend fun getAllInsurancePolicies(): List<InsurancePolicy>
+
+    @Query("SELECT * FROM insurance_policies")
+    fun observeInsurancePolicies(): Flow<List<InsurancePolicy>>
 
     // --- categories
     @Insert

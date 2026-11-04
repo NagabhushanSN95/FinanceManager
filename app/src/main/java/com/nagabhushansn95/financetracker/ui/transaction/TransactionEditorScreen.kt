@@ -69,9 +69,17 @@ fun TransactionEditorScreen(
     initialKind: TransactionKind?,
     initialAccountId: Long?,
     onDone: () -> Unit,
+    initialInstrumentId: Long? = null,
     viewModel: TransactionEditorViewModel = viewModel(),
 ) {
-    LaunchedEffect(Unit) { viewModel.start(transactionId, initialKind, initialAccountId) }
+    LaunchedEffect(Unit) {
+        viewModel.start(
+            transactionId,
+            initialKind,
+            initialAccountId,
+            initialInstrumentId
+        )
+    }
     val form by viewModel.form.collectAsStateWithLifecycle()
     val data by viewModel.data.collectAsStateWithLifecycle()
     val event by viewModel.event.collectAsStateWithLifecycle()

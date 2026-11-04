@@ -40,12 +40,18 @@ import com.nagabhushansn95.financetracker.ui.edit.EditDataScreen
 import com.nagabhushansn95.financetracker.ui.extras.ExtrasScreen
 import com.nagabhushansn95.financetracker.ui.help.AboutScreen
 import com.nagabhushansn95.financetracker.ui.help.HelpScreen
+import com.nagabhushansn95.financetracker.ui.investments.FixedDepositDetailScreen
+import com.nagabhushansn95.financetracker.ui.investments.FixedDepositsScreen
 import com.nagabhushansn95.financetracker.ui.investments.HoldingsScreen
 import com.nagabhushansn95.financetracker.ui.investments.InstrumentDetailScreen
 import com.nagabhushansn95.financetracker.ui.investments.InstrumentListScreen
+import com.nagabhushansn95.financetracker.ui.investments.InsurancePolicyScreen
+import com.nagabhushansn95.financetracker.ui.investments.InsuranceScreen
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentRoutes
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentsScreen
+import com.nagabhushansn95.financetracker.ui.investments.ProvidentFundAccountScreen
 import com.nagabhushansn95.financetracker.ui.investments.ProvidentFundsScreen
+import com.nagabhushansn95.financetracker.ui.investments.SavingsScreen
 import com.nagabhushansn95.financetracker.ui.investments.TargetsScreen
 import com.nagabhushansn95.financetracker.ui.settings.SettingsScreen
 import com.nagabhushansn95.financetracker.ui.statistics.StatisticsScreen
@@ -68,20 +74,28 @@ enum class Destination(val route: String, val title: String) {
 }
 
 /** Non-drawer routes. */
-private const val ROUTE_EDITOR = "transaction?id={id}&kind={kind}&account={account}"
+private const val ROUTE_EDITOR =
+    "transaction?id={id}&kind={kind}&account={account}&instrument={instrument}"
 private const val ROUTE_INSTRUMENT = "instrument/{id}"
 
 /** Drawer entries under Investments, each opening one of its screens. */
 private val INVESTMENT_SCREENS = listOf(
     "Stocks & funds" to InvestmentRoutes.HOLDINGS,
-    "Fixed deposits" to InvestmentRoutes.type(InstrumentType.FIXED_DEPOSIT),
+    "Fixed deposits" to InvestmentRoutes.FIXED_DEPOSITS,
     "Provident funds" to InvestmentRoutes.PROVIDENT_FUNDS,
-    "Insurance" to InvestmentRoutes.type(InstrumentType.INSURANCE),
+    "Insurance" to InvestmentRoutes.INSURANCE,
+    "Others" to InvestmentRoutes.type(InstrumentType.OTHER),
     "Allocation targets" to InvestmentRoutes.TARGETS,
+    "Savings" to InvestmentRoutes.SAVINGS,
 )
 
-private fun editorRoute(id: Long? = null, kind: TransactionKind? = null, accountId: Long? = null) =
-    "transaction?id=${id ?: -1}&kind=${kind?.name ?: ""}&account=${accountId ?: -1}"
+private fun editorRoute(
+    id: Long? = null,
+    kind: TransactionKind? = null,
+    accountId: Long? = null,
+    instrumentId: Long? = null
+) =
+    "transaction?id=${id ?: -1}&kind=${kind?.name ?: ""}&account=${accountId ?: -1}&instrument=${instrumentId ?: -1}"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -213,8 +227,60 @@ fun HomeScreen() {
                 composable(InvestmentRoutes.PROVIDENT_FUNDS) {
                     ProvidentFundsScreen(
                         onBack = { navController.popBackStack() },
-                        onAddToAccount = { navController.navigate(editorRoute(accountId = it)) })
+                        onAddToAccount = { navController.navigate(editorRoute(accountId = it)) },
+                        onOpenAccount = { navController.navigate(InvestmentRoutes.pfAccount(it)) })
                 }
+                composable(
+                    InvestmentRoutes.PF_ACCOUNT,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { entry ->
+                    ProvidentFundAccountScreen(
+                        accountId = entry.arguments!!.getLong("id"),
+                        onBack = { navController.popBackStack() },
+                        onAdd = { navController.navigate(editorRoute(accountId = it)) },
+                        onEditTransaction = { navController.navigate(editorRoute(id = it)) },
+                    )
+                }
+                composable(InvestmentRoutes.FIXED_DEPOSITS) {
+                    FixedDepositsScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenDeposit = { navController.navigate(InvestmentRoutes.fixedDeposit(it)) })
+                }
+                composable(
+                    InvestmentRoutes.FIXED_DEPOSIT,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { entry ->
+                    FixedDepositDetailScreen(
+                        instrumentId = entry.arguments!!.getLong("id"),
+                        onBack = { navController.popBackStack() },
+                        onOpenDeposit = { navController.navigate(InvestmentRoutes.fixedDeposit(it)) },
+                        onEditTransaction = { navController.navigate(editorRoute(id = it)) },
+                    )
+                }
+                composable(InvestmentRoutes.INSURANCE) {
+                    InsuranceScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenPolicy = { navController.navigate(InvestmentRoutes.policy(it)) })
+                }
+                composable(
+                    InvestmentRoutes.POLICY,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { entry ->
+                    InsurancePolicyScreen(
+                        instrumentId = entry.arguments!!.getLong("id"),
+                        onBack = { navController.popBackStack() },
+                        onPayPremium = { instrument, kind ->
+                            navController.navigate(
+                                editorRoute(
+                                    kind = kind,
+                                    instrumentId = instrument
+                                )
+                            )
+                        },
+                        onEditTransaction = { navController.navigate(editorRoute(id = it)) },
+                    )
+                }
+                composable(InvestmentRoutes.SAVINGS) { SavingsScreen(onBack = { navController.popBackStack() }) }
                 composable(InvestmentRoutes.TARGETS) { TargetsScreen(onBack = { navController.popBackStack() }) }
                 composable(
                     ROUTE_INSTRUMENT,
@@ -236,17 +302,21 @@ fun HomeScreen() {
                         navArgument("id") { type = NavType.LongType; defaultValue = -1L },
                         navArgument("kind") { type = NavType.StringType; defaultValue = "" },
                         navArgument("account") { type = NavType.LongType; defaultValue = -1L },
+                        navArgument("instrument") { type = NavType.LongType; defaultValue = -1L },
                     ),
                 ) { entry ->
                     val id = entry.arguments?.getLong("id")?.takeIf { it > 0 }
                     val kind = entry.arguments?.getString("kind")?.takeIf { it.isNotEmpty() }
                         ?.let { TransactionKind.valueOf(it) }
                     val account = entry.arguments?.getLong("account")?.takeIf { it > 0 }
+                    val instrument = entry.arguments?.getLong("instrument")?.takeIf { it > 0 }
                     TransactionEditorScreen(
                         id,
                         kind,
                         account,
-                        onDone = { navController.popBackStack() })
+                        onDone = { navController.popBackStack() },
+                        initialInstrumentId = instrument
+                    )
                 }
             }
         }

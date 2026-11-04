@@ -106,7 +106,12 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     private var initialised = false
 
     /** Loads lookups and either the transaction to edit or a new form with defaults. Safe to call again. */
-    fun start(transactionId: Long?, kind: TransactionKind?, accountId: Long?) {
+    fun start(
+        transactionId: Long?,
+        kind: TransactionKind?,
+        accountId: Long?,
+        instrumentId: Long? = null
+    ) {
         if (initialised) return
         initialised = true
         viewModelScope.launch {
@@ -152,6 +157,7 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                     ?: data.recentFrom.firstOrNull { id -> data.accountsById.containsKey(id) },
                 toAccountId = accountId.takeIf { k == TransactionKind.INCOME || k == TransactionKind.REDEEM }
                     ?: data.recentTo.firstOrNull { id -> data.accountsById.containsKey(id) },
+                instrumentId = instrumentId,
             )
         }
     }

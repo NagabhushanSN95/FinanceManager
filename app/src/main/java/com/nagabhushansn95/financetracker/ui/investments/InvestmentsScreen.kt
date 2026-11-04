@@ -37,7 +37,20 @@ object InvestmentRoutes {
     const val PROVIDENT_FUNDS = "investments/pf"
     const val TARGETS = "investments/targets"
     const val TYPE = "investments/type/{type}"
-    fun type(type: InstrumentType) = "investments/type/${type.name}"
+    const val FIXED_DEPOSITS = "investments/fd"
+    const val FIXED_DEPOSIT = "investments/fd/{id}"
+    const val INSURANCE = "investments/insurance"
+    const val POLICY = "investments/insurance/{id}"
+    const val PF_ACCOUNT = "investments/pf/{id}"
+    const val SAVINGS = "investments/savings"
+    fun fixedDeposit(id: Long) = "investments/fd/$id"
+    fun policy(id: Long) = "investments/insurance/$id"
+    fun pfAccount(id: Long) = "investments/pf/$id"
+    fun type(type: InstrumentType) = when (type) {
+        InstrumentType.FIXED_DEPOSIT -> FIXED_DEPOSITS
+        InstrumentType.INSURANCE -> INSURANCE
+        else -> "investments/type/${type.name}"
+    }
     fun isInvestmentRoute(route: String?) = route?.startsWith("investments/") == true
 }
 
@@ -167,7 +180,7 @@ private fun androidx.compose.foundation.layout.RowScope.Stat(
     }
 }
 
-/** Two tiles per row, each opening a screen: stocks & funds, deposits, PF, insurance, others, targets. */
+/** Two tiles per row, each opening a screen: stocks & funds, deposits, PF, insurance, others, targets, savings. */
 @Composable
 private fun Tiles(s: InvestmentSummary, onNavigate: (String) -> Unit) {
     val stocksAndFunds = (s.byType[InstrumentType.STOCK]?.current
@@ -198,6 +211,7 @@ private fun Tiles(s: InvestmentSummary, onNavigate: (String) -> Unit) {
             "Allocation targets",
             s.goalAmount?.let { "goal " + MoneyFormat.compact(it) } ?: "not set",
             InvestmentRoutes.TARGETS),
+        Triple("Savings", "monthly · yearly", InvestmentRoutes.SAVINGS),
     )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         tiles.chunked(2).forEach { pair ->

@@ -111,6 +111,25 @@ class EditDataRepository(private val db: AppDatabase) {
 
     suspend fun instrumentTransactionCount(id: Long) = db.instrumentDao().transactionCount(id)
 
+    /** Adds or updates an insurance policy with its instrument in one write; returns the instrument id. */
+    suspend fun saveInsurancePolicy(
+        instrument: Instrument,
+        policy: com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy,
+        now: LocalDateTime = LocalDateTime.now()
+    ): Long = write {
+        val id = if (instrument.id == 0L) db.instrumentDao().insert(
+            instrument.copy(
+                displayOrder = db.instrumentDao().maxDisplayOrder() + 1,
+                createdTime = now,
+                modifiedTime = now
+            )
+        ) else {
+            db.instrumentDao().update(instrument.copy(modifiedTime = now)); instrument.id
+        }
+        db.instrumentDao().upsertInsurancePolicy(policy.copy(instrumentId = id))
+        id
+    }
+
     // ------------------------------------------------------------------ investment categories
 
     suspend fun addInvestmentCategory(category: InvestmentCategory): Long =

@@ -138,7 +138,11 @@ fun InstrumentListScreen(
 
 /** EPF and PPF: contributions, interest, balance and XIRR per account. */
 @Composable
-fun ProvidentFundsScreen(onBack: () -> Unit, onAddToAccount: (Long) -> Unit) {
+fun ProvidentFundsScreen(
+    onBack: () -> Unit,
+    onAddToAccount: (Long) -> Unit,
+    onOpenAccount: (Long) -> Unit = {}
+) {
     InvestmentScaffold("Provident funds", onBack) { s ->
         val pf = s.providentFunds
         LazyColumn(
@@ -151,7 +155,8 @@ fun ProvidentFundsScreen(onBack: () -> Unit, onAddToAccount: (Long) -> Unit) {
                 items(pf.children, key = { it.name }) { line ->
                     ProvidentFundCard(
                         line,
-                        onAddToAccount
+                        onAddToAccount,
+                        onOpenAccount,
                     )
                 }
                 item {
@@ -168,8 +173,10 @@ fun ProvidentFundsScreen(onBack: () -> Unit, onAddToAccount: (Long) -> Unit) {
 }
 
 @Composable
-private fun ProvidentFundCard(line: SummaryLine, onAdd: (Long) -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun ProvidentFundCard(line: SummaryLine, onAdd: (Long) -> Unit, onOpen: (Long) -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+            .let { m -> line.accountId?.let { id -> m.clickable { onOpen(id) } } ?: m }) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -197,6 +204,11 @@ private fun ProvidentFundCard(line: SummaryLine, onAdd: (Long) -> Unit) {
                     onClick = { onAdd(id) },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Add a contribution") }
+                Text(
+                    "Tap for the contributor breakdown, financial years and the ledger.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

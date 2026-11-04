@@ -4,6 +4,7 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.dao.Settings
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
+import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
@@ -107,12 +108,13 @@ object InvestmentSummaryBuilder {
         val more = combine(
             db.accountDao().observeAll(),
             db.instrumentDao().observeRiskLevels(),
-            db.settingsDao().observe(Settings.GOAL_AMOUNT)
-        ) { a, r, g -> Triple(a, r, g) }
+            db.settingsDao().observe(Settings.GOAL_AMOUNT),
+            db.instrumentDao().observeFixedDeposits(),
+        ) { a, r, g, f -> Quad(a, r, g, f) }
         return combine(
             data,
             more
-        ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal) ->
+        ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal, fixedDeposits) ->
             build(
                 instruments,
                 categories,
@@ -122,7 +124,8 @@ object InvestmentSummaryBuilder {
                 transactions,
                 riskLevels,
                 goal?.toDoubleOrNull(),
-                asOf()
+                asOf(),
+                fixedDeposits,
             )
         }.flowOn(Dispatchers.Default)
     }
@@ -143,7 +146,9 @@ object InvestmentSummaryBuilder {
         riskLevels: List<RiskLevel> = emptyList(),
         goalAmount: Double? = null,
         asOf: LocalDate = LocalDate.now(),
+        fixedDeposits: List<FixedDeposit> = emptyList(),
     ): InvestmentSummary {
+        val fdTerms = fixedDeposits.associateBy { it.instrumentId }
         val unitBasedIds =
             instruments.filter { it.instrumentType == InstrumentType.STOCK || it.instrumentType == InstrumentType.MUTUAL_FUND }
                 .map { it.id }.toSet()
@@ -162,7 +167,21 @@ object InvestmentSummaryBuilder {
                 c.parentId?.let { byId[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
             }
                 ?: InvestmentCategories.defaultCategoryName(instrument.instrumentType)
-            val current = position.currentValue(valuation?.unitPrice, valuation?.totalValue)
+            // Deposits with terms accrue by the bank formula unless a manual value is fresher than a week.
+            val fd = fdTerms[instrument.id]
+            val depositDate = position.firstDate
+            val formula =
+                if (fd != null && depositDate != null && position.costHeld > Position.UNIT_EPSILON)
+                    FdMath.estimate(fd, position.costHeld, depositDate, asOf) else null
+            val current = when {
+                formula != null && (valuation?.totalValue == null || valuation.date.isBefore(
+                    asOf.minusDays(
+                        7
+                    )
+                )) -> formula
+
+                else -> position.currentValue(valuation?.unitPrice, valuation?.totalValue)
+            }
             HoldingRow(
                 instrument = instrument,
                 position = position,
