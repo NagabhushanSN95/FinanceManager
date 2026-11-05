@@ -44,5 +44,86 @@ object Migrations {
         }
     }
 
-    val ALL = arrayOf<Migration>(MIGRATION_1_2)
+    /**
+     * 2 → 3: templates carry a rate and a quantity instead of an amount. The old amount was in practice the rate
+     * (Finance Manager templates were rate × 1), so it moves into `rate`; the quantity starts empty.
+     */
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL(
+                "CREATE TABLE `templates_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `particulars` TEXT NOT NULL, `kind` TEXT NOT NULL, " +
+                        "`from_account_id` INTEGER, `to_account_id` INTEGER, `category_id` INTEGER, `instrument_id` INTEGER, `rate` REAL, `quantity` REAL, `hidden` INTEGER NOT NULL, " +
+                        "FOREIGN KEY(`from_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                        "FOREIGN KEY(`to_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                        "FOREIGN KEY(`category_id`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                        "FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+            )
+            connection.execSQL(
+                "INSERT INTO `templates_new` (`id`, `particulars`, `kind`, `from_account_id`, `to_account_id`, `category_id`, `instrument_id`, `rate`, `quantity`, `hidden`) " +
+                        "SELECT `id`, `particulars`, `kind`, `from_account_id`, `to_account_id`, `category_id`, `instrument_id`, `amount`, NULL, `hidden` FROM `templates`"
+            )
+            connection.execSQL("DROP TABLE `templates`")
+            connection.execSQL("ALTER TABLE `templates_new` RENAME TO `templates`")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_templates_from_account_id` ON `templates` (`from_account_id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_templates_to_account_id` ON `templates` (`to_account_id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_templates_category_id` ON `templates` (`category_id`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_templates_instrument_id` ON `templates` (`instrument_id`)")
+        }
+    }
+
+    /** Fixed deposit templates: named presets for "New fixed deposit". */
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `fd_templates` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                        "`bank_name` TEXT, `branch` TEXT, `holder_name` TEXT, `cust_id` TEXT, `period_months` INTEGER, `period_days` INTEGER, " +
+                        "`rate` REAL, `compounding_months` INTEGER, `tds_rate` REAL, `owner` TEXT NOT NULL, `display_order` INTEGER NOT NULL)"
+            )
+        }
+    }
+
+    /**
+     * Deposits learn whether TDS is taken yearly; templates may carry the amount, the paying account and notes and
+     * lose the TDS rate (owner becomes optional); the fd_events table records interest credited and TDS deducted.
+     */
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE `fixed_deposits` ADD COLUMN `tds_yearly` INTEGER")
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `fd_templates_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                        "`bank_name` TEXT, `branch` TEXT, `holder_name` TEXT, `cust_id` TEXT, `amount` REAL, `from_account_id` INTEGER, " +
+                        "`period_months` INTEGER, `period_days` INTEGER, `rate` REAL, `compounding_months` INTEGER, `owner` TEXT, `notes` TEXT, " +
+                        "`display_order` INTEGER NOT NULL)"
+            )
+            connection.execSQL(
+                "INSERT INTO `fd_templates_new` (`id`, `name`, `bank_name`, `branch`, `holder_name`, `cust_id`, `period_months`, `period_days`, " +
+                        "`rate`, `compounding_months`, `owner`, `display_order`) SELECT `id`, `name`, `bank_name`, `branch`, `holder_name`, `cust_id`, " +
+                        "`period_months`, `period_days`, `rate`, `compounding_months`, `owner`, `display_order` FROM `fd_templates`"
+            )
+            connection.execSQL("DROP TABLE `fd_templates`")
+            connection.execSQL("ALTER TABLE `fd_templates_new` RENAME TO `fd_templates`")
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `fd_events` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, " +
+                        "`date` TEXT NOT NULL, `kind` TEXT NOT NULL, `amount` REAL NOT NULL, `notes` TEXT, " +
+                        "FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
+            )
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_fd_events_instrument_id_date` ON `fd_events` (`instrument_id`, `date`)")
+        }
+    }
+
+    /** 5 -> 6: deposit type (regular or sweep-in) and the sweep-in date. */
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE `fixed_deposits` ADD COLUMN `deposit_type` TEXT NOT NULL DEFAULT 'REGULAR'")
+            connection.execSQL("ALTER TABLE `fixed_deposits` ADD COLUMN `sweep_in_date` TEXT")
+        }
+    }
+
+    val ALL = arrayOf<Migration>(
+        MIGRATION_1_2,
+        MIGRATION_2_3,
+        MIGRATION_3_4,
+        MIGRATION_4_5,
+        MIGRATION_5_6
+    )
 }

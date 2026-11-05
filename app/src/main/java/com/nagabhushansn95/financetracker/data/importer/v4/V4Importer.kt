@@ -535,7 +535,7 @@ class V4Importer(private val db: AppDatabase) {
             val base = Template(
                 particulars = tpl.particulars,
                 kind = TransactionKind.INCOME,
-                amount = tpl.amount.takeIf { it != 0.0 && it != 1.0 },
+                rate = tpl.amount.takeIf { it != 0.0 && it != 1.0 },
                 hidden = tpl.hidden
             )
 

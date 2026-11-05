@@ -192,7 +192,7 @@ private fun Choices(
         )
         OptionCard(
             title = "Restore a backup",
-            description = "Pick a 'Finance Tracker Database - ….db' file saved from Extras on another phone or an earlier install.",
+            description = "Pick a 'Finance Tracker Database - ….db' file saved with Extras › Back up data on another phone or an earlier install. The settings inside it come back too.",
             onClick = onRestore,
         )
         OptionCard(

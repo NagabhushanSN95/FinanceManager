@@ -52,14 +52,7 @@ private fun InvestmentScaffold(
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(title) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            })
+            navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) })
     }) { padding ->
         androidx.compose.foundation.layout.Box(modifier = Modifier
             .fillMaxSize()

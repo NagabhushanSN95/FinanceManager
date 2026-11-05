@@ -7,6 +7,7 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.dao.PeriodTotals
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
+import com.nagabhushansn95.financetracker.data.investments.FixedDeposits
 import com.nagabhushansn95.financetracker.ui.common.LedgerFilter
 import com.nagabhushansn95.financetracker.ui.common.Period
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,7 +75,7 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
         val dao = db.statisticsDao()
         val accountIds = s.filter.accountIds.toList()
         val categoryIds = s.filter.categoryIds.toList()
-        val rows = dao.periodTotals(
+        val queried = dao.periodTotals(
             from.toString(),
             to.toString(),
             s.grouping.periodLength,
@@ -83,6 +84,19 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
             categoryIds.isNotEmpty(),
             categoryIds
         )
+        // Interest a regular deposit paid out inside its payout counts as income on that day, as a sweep-in
+        // deposit's own interest credits already do through the query.
+        val interest = if (categoryIds.isNotEmpty()) emptyList() else FixedDeposits.depositInterest(
+            db.transactionDao().getAllWithInstrument(), db.instrumentDao().getAll()
+        ).filter { it.date in from..to && (accountIds.isEmpty() || it.toAccountId in accountIds) }
+        val interestByPeriod = interest.groupBy { it.date.toString().take(s.grouping.periodLength) }
+            .mapValues { (_, v) -> v.sumOf { it.amount } }
+        val rows = (queried.map { r ->
+            interestByPeriod[r.period]?.let { r.copy(income = r.income + it) } ?: r
+        } +
+                interestByPeriod.filterKeys { k -> queried.none { it.period == k } }
+                    .map { (k, v) -> PeriodTotals(k, 0.0, v, 0.0, 0.0) })
+            .sortedBy { it.period }
         val total = PeriodTotals(
             "Total",
             rows.sumOf { it.expense },
@@ -122,9 +136,24 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
                 )
             }.sortedByDescending { it.total }
         }
+        val depositInterest = interest.sumOf { it.amount }
+        var incomeByCategory = breakdown("INCOME")
+        if (depositInterest > 0.005) {
+            val grand = incomeByCategory.sumOf { it.total } + depositInterest
+            fun reshare(line: CategoryLine): CategoryLine =
+                line.copy(share = line.total / grand, children = line.children.map { reshare(it) })
+            incomeByCategory = (incomeByCategory.map { reshare(it) } +
+                    CategoryLine(
+                        "Fixed deposit interest",
+                        depositInterest,
+                        interest.size,
+                        depositInterest / grand
+                    ))
+                .sortedByDescending { it.total }
+        }
         _state.value = s.copy(
             rows = rows, total = total,
-            expenseByCategory = breakdown("EXPENSE"), incomeByCategory = breakdown("INCOME"),
+            expenseByCategory = breakdown("EXPENSE"), incomeByCategory = incomeByCategory,
             loaded = true,
         )
     }

@@ -14,6 +14,8 @@ import com.nagabhushansn95.financetracker.data.db.dao.StatisticsDao
 import com.nagabhushansn95.financetracker.data.db.dao.TransactionDao
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
+import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
+import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
@@ -35,6 +37,8 @@ import java.io.File
         InvestmentCategory::class,
         Instrument::class,
         FixedDeposit::class,
+        FdTemplate::class,
+        FdEvent::class,
         InsurancePolicy::class,
         InstrumentValuation::class,
         FxRate::class,
@@ -42,7 +46,7 @@ import java.io.File
         Template::class,
         Setting::class,
     ],
-    version = 2, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
+    version = 6, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -58,14 +62,20 @@ abstract class AppDatabase : RoomDatabase() {
         const val DATABASE_NAME = "finance_tracker.db"
 
         /** Same value as the @Database version; restore refuses files from a newer schema. */
-        const val SCHEMA_VERSION = 2
+        const val SCHEMA_VERSION = 6
 
         @Volatile
         private var instance: AppDatabase? = null
 
         fun getInstance(context: Context): AppDatabase =
             instance ?: synchronized(this) {
-                instance ?: create(context, DATABASE_NAME).also { instance = it }
+                instance ?: run {
+                    // A restore chosen under Extras while the app was running is swapped in here, on the next start.
+                    com.nagabhushansn95.financetracker.data.backup.DatabaseRestore.applyPending(
+                        context
+                    )
+                    create(context, DATABASE_NAME)
+                }.also { instance = it }
             }
 
         /**

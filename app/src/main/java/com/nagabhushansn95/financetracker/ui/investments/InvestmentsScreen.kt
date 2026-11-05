@@ -101,7 +101,7 @@ fun InvestmentsScreen(onNavigate: (String) -> Unit, viewModel: InvestmentsViewMo
                         footer = summary.total,
                     )
                     if (view == MetricView.ALLOCATION) Text(
-                        if (summary.goalAmount == null) "No goal amount set: targets follow the wealth shares. Set it under Allocation targets."
+                        if (summary.goalAmount == null) "No goal amount set: targets follow the wealth shares. Set it under Categories & targets."
                         else "Targets: goal ${MoneyFormat.compact(summary.goalAmount)} by the goal shares, the rest by the wealth shares. \"!\" marks a drift beyond the tolerance.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -198,36 +198,45 @@ private fun androidx.compose.foundation.layout.RowScope.Stat(
     }
 }
 
-/** Two tiles per row, each opening a screen: stocks & funds, deposits, PF, insurance, others, targets, savings. */
+/** Two tiles per row, each opening a screen: deposits, PF, insurance, stocks & funds, others, categories, savings. */
 @Composable
 private fun Tiles(s: InvestmentSummary, onNavigate: (String) -> Unit) {
     val stocksAndFunds = (s.byType[InstrumentType.STOCK]?.current
         ?: 0.0) + (s.byType[InstrumentType.MUTUAL_FUND]?.current ?: 0.0)
-    val tiles = listOf(
-        Triple("Stocks & funds", MoneyFormat.compact(stocksAndFunds), InvestmentRoutes.HOLDINGS),
-        Triple(
+    val byGroup = mapOf(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.FIXED_DEPOSITS to Triple(
             "Fixed deposits",
             MoneyFormat.compact(s.byType[InstrumentType.FIXED_DEPOSIT]?.current ?: 0.0),
             InvestmentRoutes.type(InstrumentType.FIXED_DEPOSIT)
         ),
-        Triple(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.PROVIDENT_FUNDS to Triple(
             "Provident funds",
             MoneyFormat.compact(s.providentFunds?.current ?: 0.0),
             InvestmentRoutes.PROVIDENT_FUNDS
         ),
-        Triple(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.INSURANCE to Triple(
             "Insurance",
             MoneyFormat.compact(s.byType[InstrumentType.INSURANCE]?.current ?: 0.0),
             InvestmentRoutes.type(InstrumentType.INSURANCE)
         ),
-        Triple(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.STOCKS_AND_FUNDS to Triple(
+            "Stocks & funds",
+            MoneyFormat.compact(stocksAndFunds),
+            InvestmentRoutes.HOLDINGS
+        ),
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.OTHERS to Triple(
             "Others",
             MoneyFormat.compact(s.byType[InstrumentType.OTHER]?.current ?: 0.0),
             InvestmentRoutes.type(InstrumentType.OTHER)
         ),
+    )
+    // Same order as the categories under Manage › Investment categories (the summary lists them in that order).
+    val tiles =
+        com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.groups(s.categories.map { it.name })
+            .map { byGroup.getValue(it) } + listOf(
         Triple(
-            "Allocation targets",
-            s.goalAmount?.let { "goal " + MoneyFormat.compact(it) } ?: "not set",
+            "Categories & targets",
+            s.goalAmount?.let { "goal " + MoneyFormat.compact(it) } ?: "goal not set",
             InvestmentRoutes.TARGETS),
         Triple("Savings", "monthly · yearly", InvestmentRoutes.SAVINGS),
     )

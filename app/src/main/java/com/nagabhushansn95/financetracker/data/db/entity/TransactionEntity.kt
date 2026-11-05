@@ -122,6 +122,8 @@ data class Template(
     @ColumnInfo(name = "to_account_id") val toAccountId: Long? = null,
     @ColumnInfo(name = "category_id") val categoryId: Long? = null,
     @ColumnInfo(name = "instrument_id") val instrumentId: Long? = null,
-    val amount: Double? = null,
+    /** What the editor fills in when the template is picked: the rate and, when it is not one, the quantity. */
+    val rate: Double? = null,
+    val quantity: Double? = null,
     val hidden: Boolean = false,
 )

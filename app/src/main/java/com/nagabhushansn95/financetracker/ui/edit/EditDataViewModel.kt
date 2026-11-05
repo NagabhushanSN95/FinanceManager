@@ -11,8 +11,13 @@ import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
 
+import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.Template
+import com.nagabhushansn95.financetracker.ui.investments.FdSuggestions
+import kotlinx.coroutines.flow.combine
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
+import com.nagabhushansn95.financetracker.data.repository.FixedDepositRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +42,18 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val templates: StateFlow<List<Template>> = db.transactionDao().observeTemplates()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val fdTemplates: StateFlow<List<FdTemplate>> = db.instrumentDao().observeFdTemplates()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Bank details already used by the deposits, for the template form's autocomplete. */
+    val fdSuggestions: StateFlow<FdSuggestions> =
+        combine(db.instrumentDao().observeFixedDeposits(), instruments) { terms, all ->
+            FdSuggestions.of(
+                terms.sortedByDescending { it.instrumentId },
+                all.filter { it.instrumentType == InstrumentType.FIXED_DEPOSIT }
+                    .sortedByDescending { it.id }.map { it.owner },
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FdSuggestions())
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
@@ -100,6 +117,16 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
     fun reorderRiskLevels(ids: List<Long>) = run { repository.reorderRiskLevels(ids) }
 
     fun deleteTemplate(template: Template) = run { db.transactionDao().deleteTemplate(template) }
+    fun saveTemplate(template: Template) = run {
+        if (template.id == 0L) db.transactionDao().insertTemplate(template) else db.transactionDao()
+            .updateTemplate(template)
+    }
+
+    fun saveFdTemplate(template: FdTemplate) =
+        run { FixedDepositRepository(db).saveTemplate(template) }
+
+    fun deleteFdTemplate(id: Long) = run { db.instrumentDao().deleteFdTemplate(id) }
+
     fun setTemplateHidden(template: Template, hidden: Boolean) =
         run { db.transactionDao().updateTemplate(template.copy(hidden = hidden)) }
 }

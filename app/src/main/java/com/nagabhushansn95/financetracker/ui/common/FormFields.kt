@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -22,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.nagabhushansn95.financetracker.data.db.entity.Account
@@ -59,26 +62,32 @@ fun DateField(
         ),
         modifier = modifier.clickable { open = true },
     )
-    if (open) {
-        val state = rememberDatePickerState(
-            initialSelectedDateMillis = (value ?: LocalDate.now()).atStartOfDay()
-                .toInstant(ZoneOffset.UTC).toEpochMilli()
-        )
-        DatePickerDialog(
-            onDismissRequest = { open = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let {
-                        onChange(
-                            Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
-                        )
-                    }
-                    open = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton(onClick = { open = false }) { Text("Cancel") } },
-        ) { DatePicker(state = state) }
-    }
+    if (open) PickDateDialog(
+        value ?: LocalDate.now(),
+        onDismiss = { open = false }) { onChange(it); open = false }
+}
+
+/** The Material date picker on its own; [onPick] gets the chosen date, [onDismiss] runs on Cancel or tapping outside. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PickDateDialog(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit) {
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = initial.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                state.selectedDateMillis?.let {
+                    onPick(
+                        Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
+                    )
+                }
+                    ?: onDismiss()
+            }) { Text("OK") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    ) { DatePicker(state = state) }
 }
 
 @Composable
@@ -176,5 +185,127 @@ fun androidx.compose.foundation.layout.RowScope.StatCell(
                 else -> MaterialTheme.colorScheme.tertiary
             },
         )
+    }
+}
+
+/**
+ * A text field that suggests earlier values as you type: [suggestions] filtered by what has been typed, shown under
+ * the field while it has focus. Picking one replaces the text; typing something new is fine too.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AutocompleteField(
+    value: String,
+    label: String,
+    suggestions: List<String>,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var focused by remember { mutableStateOf(false) }
+    val matches = remember(value, suggestions) {
+        val typed = value.trim()
+        suggestions.filter {
+            typed.isEmpty() || (it.contains(
+                typed,
+                ignoreCase = true
+            ) && it != typed)
+        }
+    }
+    androidx.compose.material3.ExposedDropdownMenuBox(
+        expanded = focused && matches.isNotEmpty(),
+        onExpandedChange = {},
+        modifier = modifier,
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onChange,
+            label = { Text(label) },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { focused = it.isFocused }
+                .menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryEditable),
+        )
+        ExposedDropdownMenu(
+            expanded = focused && matches.isNotEmpty(),
+            onDismissRequest = {},
+        ) {
+            matches.forEach { s ->
+                DropdownMenuItem(text = { Text(s) }, onClick = { onChange(s) })
+            }
+        }
+    }
+}
+
+/** A full-width field that looks like the text fields around it and opens a dropdown of accounts; [none] picks null. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AccountField(
+    label: String,
+    accounts: List<Account>,
+    selected: Long?,
+    onPick: (Long?) -> Unit,
+    modifier: Modifier = Modifier,
+    none: String? = null,
+) {
+    var open by remember { mutableStateOf(false) }
+    androidx.compose.material3.ExposedDropdownMenuBox(
+        expanded = open,
+        onExpandedChange = { open = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = accounts.firstOrNull { it.id == selected }?.name
+                ?: (if (selected == null && none != null) none else ""),
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(label) },
+            trailingIcon = {
+                androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = open
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            none?.let {
+                DropdownMenuItem(text = { Text(it) }, onClick = { onPick(null); open = false })
+            }
+            accounts.forEach { a ->
+                DropdownMenuItem(text = { Text(a.name) }, onClick = { onPick(a.id); open = false })
+            }
+        }
+    }
+}
+
+/**
+ * A value that is shown rather than typed: a small label over the text, with a pencil on the right when it can be
+ * changed. Used for a deposit's name and its computed maturity date.
+ */
+@Composable
+fun LabelRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    onEdit: (() -> Unit)? = null
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
+        androidx.compose.foundation.layout.Column(modifier = Modifier.weight(1f)) {
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(value, style = MaterialTheme.typography.bodyLarge)
+        }
+        if (onEdit != null) androidx.compose.material3.IconButton(onClick = onEdit) {
+            androidx.compose.material3.Icon(
+                Icons.Filled.Edit,
+                contentDescription = "Edit $label"
+            )
+        }
     }
 }

@@ -80,6 +80,7 @@ data class EditorData(
     val recentTo: List<Long> = emptyList(),
     val recentCategories: List<Long> = emptyList(),
     val recentInstruments: List<Long> = emptyList(),
+    val instrumentTypeOrder: List<InstrumentType> = com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.DEFAULT_TYPES,
     val loaded: Boolean = false,
 ) {
     val accountsById by lazy { accounts.associateBy { it.id } }
@@ -124,6 +125,11 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                 recentTo = prefs.recentIds(RECENT_TO),
                 recentCategories = prefs.recentIds(RECENT_CATEGORY),
                 recentInstruments = prefs.recentIds(RECENT_INSTRUMENT),
+                instrumentTypeOrder = com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.types(
+                    com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.names(
+                        db.instrumentDao().getAllCategories()
+                    )
+                ),
                 loaded = true,
             )
             if (transactionId != null) {
@@ -184,20 +190,52 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     fun setSaveAsTemplate(b: Boolean) = _form.update { it.copy(saveAsTemplate = b) }
     fun setHidden(b: Boolean) = _form.update { it.copy(hidden = b) }
     fun setIncludeInStatistics(b: Boolean) = _form.update { it.copy(includeInStatistics = b) }
-    fun setAmount(text: String) = _form.update { it.copy(amount = text) }
 
-    /** Quantity × rate fills the amount when both are numbers. */
-    fun setQuantity(text: String) = _form.update { it.copy(quantity = text).recomputeAmount() }
-    fun setRate(text: String) = _form.update { it.copy(rate = text).recomputeAmount() }
-
-    private fun EditorForm.recomputeAmount(): EditorForm {
-        val q = quantityValue
-        val r = rateValue
-        return if (q != null && r != null) copy(amount = plain(q * r)) else this
+    /**
+     * The three money fields fill each other in, as Finance Manager did: typing a rate with no quantity means one
+     * unit; rate × quantity gives the amount; an amount with a quantity gives the rate; an amount alone is one
+     * unit at that rate.
+     */
+    fun setAmount(text: String) = _form.update { f ->
+        val amount = text.trim().toDoubleOrNull()
+        val q = f.quantityValue
+        when {
+            amount == null -> f.copy(amount = text)
+            q != null && q > 0 && q != 1.0 -> f.copy(amount = text, rate = plain(amount / q))
+            else -> f.copy(amount = text, quantity = "1", rate = text.trim())
+        }
     }
 
-    /** Copies a saved template into the form (particulars, endpoints, amount). */
+    fun setQuantity(text: String) = _form.update { f ->
+        val q = text.trim().toDoubleOrNull()
+        val r = f.rateValue
+        val a = f.amountValue
+        when {
+            q == null -> f.copy(quantity = text)
+            r != null -> f.copy(quantity = text, amount = plain(q * r))
+            a != null && q > 0 -> f.copy(quantity = text, rate = plain(a / q))
+            else -> f.copy(quantity = text)
+        }
+    }
+
+    fun setRate(text: String) = _form.update { f ->
+        val r = text.trim().toDoubleOrNull()
+        if (r == null) return@update f.copy(rate = text)
+        val quantity = if (f.quantity.isBlank()) "1" else f.quantity
+        val q = quantity.trim().toDoubleOrNull()
+        f.copy(rate = text, quantity = quantity, amount = if (q != null) plain(q * r) else f.amount)
+    }
+
+    /**
+     * Copies a saved template into the form: particulars, endpoints, and exactly the money fields it holds. A rate
+     * alone fills only the rate (the quantity is typed, or defaults to one when the row is added); rate and
+     * quantity together give the amount.
+     */
     fun applyTemplate(t: Template) = _form.update { f ->
+        val rate = t.rate?.let { plain(it) } ?: f.rate
+        val quantity = t.quantity?.let { plain(it) } ?: f.quantity
+        val r = rate.trim().toDoubleOrNull()
+        val q = quantity.trim().toDoubleOrNull()
         f.copy(
             kind = t.kind,
             particulars = t.particulars,
@@ -205,7 +243,9 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             toAccountId = t.toAccountId,
             categoryId = t.categoryId,
             instrumentId = t.instrumentId,
-            amount = t.amount?.let { plain(it) } ?: f.amount,
+            rate = rate,
+            quantity = quantity,
+            amount = if (t.rate != null && r != null && q != null) plain(r * q) else f.amount,
         )
     }
 
@@ -239,6 +279,16 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun save() {
+        // A rate with no amount means one unit (or the typed quantity) at that rate.
+        _form.update { f ->
+            val r = f.rateValue
+            if (f.amount.isNotBlank() || r == null) f
+            else {
+                val quantity = if (f.quantity.isBlank()) "1" else f.quantity
+                val q = quantity.trim().toDoubleOrNull() ?: return@update f
+                f.copy(quantity = quantity, amount = plain(q * r))
+            }
+        }
         val f = _form.value
         val data = _data.value
         f.problem(data.accountsById)?.let { _event.value = EditorEvent.Error(it); return }
@@ -253,8 +303,8 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             categoryId = f.categoryId.takeIf { f.showsCategory },
             instrumentId = f.instrumentId.takeIf { f.showsInstrument },
             particulars = f.particulars.trim(),
-            quantity = f.quantityValue.takeIf { f.showsInstrument && f.instrumentId != null },
-            rate = f.rateValue.takeIf { f.showsInstrument && f.instrumentId != null },
+            quantity = f.quantityValue,
+            rate = f.rateValue,
             amount = f.amountValue!!,
             currency = accountCurrency(entityAccountFor(f), data),
             contributor = f.contributor.takeIf { f.kind == TransactionKind.INCOME },

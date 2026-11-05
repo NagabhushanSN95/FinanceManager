@@ -29,6 +29,7 @@ data class HoldingRow(
     val currentValue: Double,
     val xirr: Double?,
 ) {
+    val isDeposit: Boolean get() = instrument.instrumentType == InstrumentType.FIXED_DEPOSIT
     val heldProfit get() = currentValue - position.costHeld
 }
 
@@ -238,8 +239,9 @@ object InvestmentSummaryBuilder {
                 name = name,
                 invested = rows.sumOf { it.position.costHeld },
                 current = current,
-                realised = rows.sumOf { it.position.realised },
-                income = rows.sumOf { it.position.income },
+                // A deposit's interest is realised whether it came inside the payout or as its own credit rows.
+                realised = rows.sumOf { it.position.realised + if (it.isDeposit) it.position.income else 0.0 },
+                income = rows.sumOf { if (it.isDeposit) 0.0 else it.position.income },
                 xirr = Holdings.xirr(flows, current, asOf),
                 goalPct = cat?.targetGoalPct,
                 wealthPct = cat?.targetWealthPct,

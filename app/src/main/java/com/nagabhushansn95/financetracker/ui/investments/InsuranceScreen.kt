@@ -62,6 +62,7 @@ import com.nagabhushansn95.financetracker.data.investments.InvestmentCategories
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
 import com.nagabhushansn95.financetracker.ui.common.DateField
+import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
@@ -175,14 +176,7 @@ fun InsuranceScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Insurance") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
+                navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) },
             )
         },
         floatingActionButton = {
@@ -545,160 +539,147 @@ fun PolicySheet(
         listOf(provider.trim(), policyName.trim()).filter { it.isNotEmpty() }.joinToString(" - ")
     val frequencies = listOf(1, 3, 6, 12)
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    FormSheet(
+        title = if (existing == null) "New policy" else "Edit policy",
+        onDismiss = onDismiss
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
-                .imePadding()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                if (existing == null) "New policy" else "Edit policy",
-                style = MaterialTheme.typography.titleLarge
-            )
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                InsuranceType.entries.forEach { t ->
-                    FilterChip(
-                        selected = type == t,
-                        onClick = {
-                            type = t; if (!countsTouched) counts = t == InsuranceType.LIFE
-                        },
-                        label = { Text(insuranceTypeTitle(t)) })
-                }
+            InsuranceType.entries.forEach { t ->
+                FilterChip(
+                    selected = type == t,
+                    onClick = {
+                        type = t; if (!countsTouched) counts = t == InsuranceType.LIFE
+                    },
+                    label = { Text(insuranceTypeTitle(t)) })
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = provider,
-                    onValueChange = { provider = it },
-                    label = { Text("Provider") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = policyName,
-                    onValueChange = { policyName = it },
-                    label = { Text("Plan name") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(
-                value = number,
-                onValueChange = { number = it },
-                label = { Text("Policy number") },
+                value = provider,
+                onValueChange = { provider = it },
+                label = { Text("Provider") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.weight(1f)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                NumberField(premium, "Premium", { premium = it }, Modifier.weight(1f))
-                NumberField(sumAssured, "Sum assured", { sumAssured = it }, Modifier.weight(1f))
-            }
-            ChoiceDropdown(
-                "Paid",
-                frequencies,
-                frequency,
-                { premiumFrequencyLabel(it) }) { frequency = it }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                DateField("Start", start, { start = it }, Modifier.weight(1f), clearable = true)
-                DateField(
-                    "Maturity",
-                    maturity,
-                    { maturity = it },
-                    Modifier.weight(1f),
-                    clearable = true
-                )
-            }
+            OutlinedTextField(
+                value = policyName,
+                onValueChange = { policyName = it },
+                label = { Text("Plan name") },
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        OutlinedTextField(
+            value = number,
+            onValueChange = { number = it },
+            label = { Text("Policy number") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NumberField(premium, "Premium", { premium = it }, Modifier.weight(1f))
+            NumberField(sumAssured, "Sum assured", { sumAssured = it }, Modifier.weight(1f))
+        }
+        ChoiceDropdown(
+            "Paid",
+            frequencies,
+            frequency,
+            { premiumFrequencyLabel(it) }) { frequency = it }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DateField("Start", start, { start = it }, Modifier.weight(1f), clearable = true)
             DateField(
-                "Next premium due",
-                nextDue,
-                { nextDue = it },
-                Modifier.fillMaxWidth(),
+                "Maturity",
+                maturity,
+                { maturity = it },
+                Modifier.weight(1f),
                 clearable = true
             )
-            Text(
-                "Leave the due date empty to take the last premium plus the payment interval.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = counts, onCheckedChange = { counts = it; countsTouched = true })
-                Text("Counts as an investment (premiums are savings, not expenses)")
-            }
-            if (categories.isNotEmpty()) {
-                val choices =
-                    listOf<InvestmentCategory?>(null) + categories.filter { it.parentId == null }
-                        .flatMap { c -> listOf(c) + categories.filter { it.parentId == c.id } }
-                val byId = categories.associateBy { it.id }
-                ChoiceDropdown(
-                    "Category",
-                    choices,
-                    choices.firstOrNull { it?.id == categoryId },
-                    { c ->
-                        c?.let { x ->
-                            x.parentId?.let { byId[it]?.name }?.let { "$it › ${x.name}" } ?: x.name
-                        } ?: "By type (${InvestmentCategories.LIFE_INSURANCE})"
-                    }) { categoryId = it?.id }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = owner,
-                    onValueChange = { owner = it },
-                    label = { Text("Owner") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            if (existing != null) Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = active, onCheckedChange = { active = it })
-                Text("Active (untick when matured or lapsed)")
-            }
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Notes") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Button(enabled = name.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = {
-                val now = java.time.LocalDateTime.now()
-                val instrument = (existing?.instrument ?: Instrument(
-                    name = name,
-                    instrumentType = InstrumentType.INSURANCE,
-                    displayOrder = 0,
-                    createdTime = now,
-                    modifiedTime = now
-                ))
-                    .copy(
-                        name = name,
-                        owner = owner.trim().ifBlank { Instrument.OWNER_SELF },
-                        categoryId = categoryId,
-                        active = active,
-                        notes = notes.ifBlank { null })
-                onSave(
-                    instrument,
-                    InsurancePolicy(
-                        instrumentId = instrument.id,
-                        insuranceType = type,
-                        provider = provider.trim().ifBlank { null },
-                        policyName = policyName.trim().ifBlank { null },
-                        policyNumber = number.trim().ifBlank { null },
-                        sumAssured = sumAssured.toDoubleOrNull(),
-                        premiumAmount = premium.toDoubleOrNull(),
-                        premiumFrequencyMonths = frequency,
-                        startDate = start,
-                        maturityDate = maturity,
-                        nextDueDate = nextDue,
-                        countsAsInvestment = counts,
-                    ),
-                )
-            }) { Text("Save") }
         }
+        DateField(
+            "Next premium due",
+            nextDue,
+            { nextDue = it },
+            Modifier.fillMaxWidth(),
+            clearable = true
+        )
+        Text(
+            "Leave the due date empty to take the last premium plus the payment interval.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = counts, onCheckedChange = { counts = it; countsTouched = true })
+            Text("Counts as an investment (premiums are savings, not expenses)")
+        }
+        if (categories.isNotEmpty()) {
+            val choices =
+                listOf<InvestmentCategory?>(null) + categories.filter { it.parentId == null }
+                    .flatMap { c -> listOf(c) + categories.filter { it.parentId == c.id } }
+            val byId = categories.associateBy { it.id }
+            ChoiceDropdown(
+                "Category",
+                choices,
+                choices.firstOrNull { it?.id == categoryId },
+                { c ->
+                    c?.let { x ->
+                        x.parentId?.let { byId[it]?.name }?.let { "$it › ${x.name}" } ?: x.name
+                    } ?: "By type (${InvestmentCategories.LIFE_INSURANCE})"
+                }) { categoryId = it?.id }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(
+                value = owner,
+                onValueChange = { owner = it },
+                label = { Text("Owner") },
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        if (existing != null) Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = active, onCheckedChange = { active = it })
+            Text("Active (untick when matured or lapsed)")
+        }
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            label = { Text("Notes") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(enabled = name.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = {
+            val now = java.time.LocalDateTime.now()
+            val instrument = (existing?.instrument ?: Instrument(
+                name = name,
+                instrumentType = InstrumentType.INSURANCE,
+                displayOrder = 0,
+                createdTime = now,
+                modifiedTime = now
+            ))
+                .copy(
+                    name = name,
+                    owner = owner.trim().ifBlank { Instrument.OWNER_SELF },
+                    categoryId = categoryId,
+                    active = active,
+                    notes = notes.ifBlank { null })
+            onSave(
+                instrument,
+                InsurancePolicy(
+                    instrumentId = instrument.id,
+                    insuranceType = type,
+                    provider = provider.trim().ifBlank { null },
+                    policyName = policyName.trim().ifBlank { null },
+                    policyNumber = number.trim().ifBlank { null },
+                    sumAssured = sumAssured.toDoubleOrNull(),
+                    premiumAmount = premium.toDoubleOrNull(),
+                    premiumFrequencyMonths = frequency,
+                    startDate = start,
+                    maturityDate = maturity,
+                    nextDueDate = nextDue,
+                    countsAsInvestment = counts,
+                ),
+            )
+        }) { Text("Save") }
     }
 }

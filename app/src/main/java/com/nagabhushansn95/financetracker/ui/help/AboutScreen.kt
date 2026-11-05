@@ -97,5 +97,11 @@ fun AboutScreen() {
                 )
             }
         }) { Text("Source on GitHub") }
+        Spacer(Modifier.height(24.dp))
+        Text(
+            "Made in India \uD83C\uDDEE\uD83C\uDDF3",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

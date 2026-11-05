@@ -3,7 +3,9 @@ package com.nagabhushansn95.financetracker.data.repository
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
 import com.nagabhushansn95.financetracker.data.db.entity.FdStatus
+import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
@@ -126,6 +128,7 @@ class FixedDepositRepository(private val db: AppDatabase) {
         remainderToAccountId: Long?,
         newName: String,
         newTerms: FixedDeposit,
+        tdsReported: Double? = null,
         now: LocalDateTime = LocalDateTime.now(),
     ): Long = write {
         require(renewedAmount > 0) { "Renewed amount must be positive" }
@@ -170,10 +173,73 @@ class FixedDepositRepository(private val db: AppDatabase) {
             particulars = "Renewed from ${old.name} · " + openedParticulars(terms).removePrefix("Fixed deposit opened · "),
         )
         transactions.addAllInTransaction(rows, now)
-        db.instrumentDao()
-            .upsertFixedDeposit(oldTerms.copy(status = FdStatus.RENEWED, nextFdId = newId))
+        db.instrumentDao().upsertFixedDeposit(
+            oldTerms.copy(
+                status = FdStatus.RENEWED,
+                nextFdId = newId,
+                tdsReported = tdsReported ?: oldTerms.tdsReported
+            )
+        )
         db.instrumentDao().update(old.copy(active = false, modifiedTime = now))
         newId
+    }
+
+    /** Records interest credited into the deposit or TDS deducted from it; neither moves cash of ours. */
+    suspend fun saveEvent(event: FdEvent): Long = write {
+        require(event.amount > 0) { "Amount must be positive" }
+        if (event.id == 0L) db.instrumentDao().insertFdEvent(event) else {
+            db.instrumentDao().updateFdEvent(event); event.id
+        }
+    }
+
+    suspend fun deleteEvent(id: Long) = write { db.instrumentDao().deleteFdEvent(id) }
+
+    /**
+     * Removes a deposit opened by mistake: the instrument, its terms, ledger entries and every transaction tagged to
+     * it, with the account balances put back. A deposit that came from a renewal reopens the one it was renewed
+     * from, whose payout rows go too. One that was itself renewed into a later deposit stays until that one is gone.
+     */
+    suspend fun delete(instrumentId: Long, now: LocalDateTime = LocalDateTime.now()) = write {
+        val instrument =
+            requireNotNull(db.instrumentDao().getById(instrumentId)) { "Deposit not found" }
+        val terms = db.instrumentDao().getFixedDeposit(instrumentId)
+        terms?.nextFdId?.let { nextId ->
+            val next = db.instrumentDao().getById(nextId)?.name ?: "the deposit it was renewed into"
+            throw IllegalStateException("${instrument.name} was renewed into $next. Delete $next first.")
+        }
+        transactions.deleteAllInTransaction(db.transactionDao().getForInstrument(instrumentId), now)
+        terms?.previousFdId?.let { prevId ->
+            val prev = db.instrumentDao().getById(prevId) ?: return@let
+            val prevTerms = db.instrumentDao().getFixedDeposit(prevId) ?: return@let
+            transactions.deleteAllInTransaction(
+                db.transactionDao().getForInstrument(prevId)
+                    .filter { it.kind == TransactionKind.REDEEM }, now
+            )
+            db.instrumentDao().upsertFixedDeposit(
+                prevTerms.copy(status = FdStatus.ACTIVE, nextFdId = null, tdsReported = null)
+            )
+            db.instrumentDao().update(prev.copy(active = true, modifiedTime = now))
+        }
+        db.instrumentDao().delete(instrumentId)
+    }
+
+    /** Inserts or updates a template. Names are unique, ignoring case and surrounding spaces. */
+    suspend fun saveTemplate(template: FdTemplate): Long = write {
+        val name = template.name.trim()
+        require(name.isNotEmpty()) { "The template needs a name" }
+        val clash = db.instrumentDao().getAllFdTemplates()
+            .firstOrNull { it.id != template.id && it.name.trim().equals(name, ignoreCase = true) }
+        require(clash == null) { "A template named \"${clash!!.name}\" already exists" }
+        val dao = db.instrumentDao()
+        if (template.id == 0L) dao.insertFdTemplate(
+            template.copy(
+                name = name,
+                displayOrder = dao.maxFdTemplateOrder() + 1
+            )
+        )
+        else {
+            dao.updateFdTemplate(template.copy(name = name)); template.id
+        }
     }
 
     private suspend fun insertInstrument(

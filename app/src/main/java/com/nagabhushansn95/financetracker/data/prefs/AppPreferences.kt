@@ -6,6 +6,17 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
+/** Filter and sort state of the Fixed deposits list; enum names as strings so a renamed entry just falls back. */
+data class FdListPrefs(
+    val filter: String = "",
+    val sort: String = "",
+    val descending: Boolean = false,
+    val banks: Set<String> = emptySet(),
+    val holders: Set<String> = emptySet(),
+    val branches: Set<String> = emptySet(),
+    val owners: Set<String> = emptySet(),
+)
+
 /**
  * The v5 app's own preferences file. Nothing here is shared with the 4.x app's "AllPreferences" file.
  */
@@ -112,6 +123,63 @@ class AppPreferences(context: Context) {
         get() = prefs.getString(KEY_LAST_PRICE_SUMMARY, null)
         set(value) = prefs.edit().putString(KEY_LAST_PRICE_SUMMARY, value).apply()
 
+    /**
+     * Every preference as a type-tagged string ("b:true", "s:…", "l:…", "i:…"), for the settings table of a backup.
+     * [setupComplete] is left out: a restored phone is set up by definition.
+     */
+    fun export(): Map<String, String> = prefs.all.filterKeys { it != KEY_SETUP_COMPLETE }
+        .mapNotNull { (key, value) ->
+            when (value) {
+                is Boolean -> key to "b:$value"
+                is String -> key to "s:$value"
+                is Long -> key to "l:$value"
+                is Int -> key to "i:$value"
+                is Float -> key to "f:$value"
+                else -> null
+            }
+        }.toMap()
+
+    /** Writes the values of [export] back; unknown tags are skipped. Keys not in [values] are left as they are. */
+    fun import(values: Map<String, String>) {
+        val editor = prefs.edit()
+        values.forEach { (key, tagged) ->
+            val body = tagged.drop(2)
+            when (tagged.take(2)) {
+                "b:" -> editor.putBoolean(key, body.toBoolean())
+                "s:" -> editor.putString(key, body)
+                "l:" -> body.toLongOrNull()?.let { editor.putLong(key, it) }
+                "i:" -> body.toIntOrNull()?.let { editor.putInt(key, it) }
+                "f:" -> body.toFloatOrNull()?.let { editor.putFloat(key, it) }
+            }
+        }
+        editor.apply()
+    }
+
+    /** How the Fixed deposits list was last filtered and sorted; restored whenever the screen opens. */
+    var fdList: FdListPrefs
+        get() = FdListPrefs(
+            filter = prefs.getString(KEY_FD_FILTER, "") ?: "",
+            sort = prefs.getString(KEY_FD_SORT, "") ?: "",
+            descending = prefs.getBoolean(KEY_FD_SORT_DESC, false),
+            banks = set(KEY_FD_BANKS),
+            holders = set(KEY_FD_HOLDERS),
+            branches = set(KEY_FD_BRANCHES),
+            owners = set(KEY_FD_OWNERS),
+        )
+        set(value) = prefs.edit()
+            .putString(KEY_FD_FILTER, value.filter)
+            .putString(KEY_FD_SORT, value.sort)
+            .putBoolean(KEY_FD_SORT_DESC, value.descending)
+            .putString(KEY_FD_BANKS, value.banks.joinToString(SET_SEPARATOR))
+            .putString(KEY_FD_HOLDERS, value.holders.joinToString(SET_SEPARATOR))
+            .putString(KEY_FD_BRANCHES, value.branches.joinToString(SET_SEPARATOR))
+            .putString(KEY_FD_OWNERS, value.owners.joinToString(SET_SEPARATOR))
+            .apply()
+
+    private fun set(key: String): Set<String> =
+        prefs.getString(key, null)?.split(SET_SEPARATOR)?.filter { it.isNotEmpty() }?.toSet()
+            ?: emptySet()
+
     fun recentIds(picker: String): List<Long> =
         prefs.getString(KEY_RECENT_PREFIX + picker, null)?.split(',')
             ?.mapNotNull { it.toLongOrNull() } ?: emptyList()
@@ -122,6 +190,16 @@ class AppPreferences(context: Context) {
     }
 
     companion object {
+        private const val KEY_FD_FILTER = "fd_filter"
+        private const val KEY_FD_SORT = "fd_sort"
+        private const val KEY_FD_SORT_DESC = "fd_sort_desc"
+        private const val KEY_FD_BANKS = "fd_banks"
+        private const val KEY_FD_HOLDERS = "fd_holders"
+        private const val KEY_FD_BRANCHES = "fd_branches"
+        private const val KEY_FD_OWNERS = "fd_owners"
+
+        /** Sets are stored joined by a character no bank or holder name contains, so [export] keeps them as strings. */
+        private const val SET_SEPARATOR = "\u001F"
         private const val KEY_RECENT_PREFIX = "recent_"
         private const val KEY_LAST_ZERODHA_IMPORT = "last_zerodha_import"
         private const val KEY_ZERODHA_DEMAT = "zerodha_demat_account"

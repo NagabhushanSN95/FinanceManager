@@ -36,7 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.dao.PeriodTotals
 import com.nagabhushansn95.financetracker.ui.common.FilterSheet
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
-import com.nagabhushansn95.financetracker.ui.common.PeriodChips
+import com.nagabhushansn95.financetracker.ui.common.PeriodMenu
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
@@ -55,15 +55,11 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = viewModel()) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        PeriodChips(
-            state.filter,
-            onChange = viewModel::setFilter,
-            modifier = Modifier.fillMaxWidth()
-        )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            PeriodMenu(state.filter, onChange = viewModel::setFilter)
             Grouping.entries.forEach { g ->
                 FilterChip(
                     selected = state.grouping == g,
@@ -107,7 +103,6 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = viewModel()) {
             accounts = state.accounts,
             categories = state.categories,
             showKinds = false,
-            showSearch = false,
             onApply = { viewModel.setFilter(it); showFilters = false },
             onDismiss = { showFilters = false },
         )

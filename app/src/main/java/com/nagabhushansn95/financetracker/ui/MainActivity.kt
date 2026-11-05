@@ -1,7 +1,6 @@
 package com.nagabhushansn95.financetracker.ui
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -13,18 +12,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nagabhushansn95.financetracker.data.backup.AutoBackup
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
+import com.nagabhushansn95.financetracker.ui.common.InvestmentsLock
 import com.nagabhushansn95.financetracker.ui.home.HomeScreen
 import com.nagabhushansn95.financetracker.ui.setup.WelcomeScreen
 import com.nagabhushansn95.financetracker.ui.theme.FinanceTrackerTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Single Compose activity hosting the whole v5 UI. */
-class MainActivity : ComponentActivity() {
+/** Single Compose activity hosting the whole v5 UI. A FragmentActivity because the biometric prompt needs one. */
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -40,6 +41,16 @@ class MainActivity : ComponentActivity() {
                 Surface { FinanceTrackerApp() }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        InvestmentsLock.onForeground()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        InvestmentsLock.onBackground()
     }
 }
 

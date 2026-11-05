@@ -22,6 +22,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -48,6 +52,9 @@ fun <T> ReorderableSections(
     onReordered: (sectionKey: String, orderedIds: List<Long>) -> Unit,
     row: @Composable (item: T, dragHandle: @Composable () -> Unit) -> Unit,
     footer: (@Composable () -> Unit)? = null,
+    /** Keys of the sections folded away; with [onToggleSection] set, tapping a header folds or unfolds it. */
+    collapsed: Set<String> = emptySet(),
+    onToggleSection: ((String) -> Unit)? = null,
 ) {
     // Local, mutable copy so the list follows the finger before the database catches up.
     var local by remember { mutableStateOf(sections) }
@@ -77,19 +84,33 @@ fun <T> ReorderableSections(
         contentPadding = PaddingValues(bottom = 96.dp)
     ) {
         local.forEach { section ->
+            val folded = section.key in collapsed
             stickyHeader(key = "header:${section.key}") {
-                Text(
-                    section.title,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                androidx.compose.foundation.layout.Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
+                        .let { m ->
+                            onToggleSection?.let { t -> m.clickable { t(section.key) } } ?: m
+                        }
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                )
+                ) {
+                    Text(
+                        if (onToggleSection != null) "${section.title} (${section.items.size})" else section.title,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (onToggleSection != null) androidx.compose.material3.Icon(
+                        if (folded) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
+                        contentDescription = if (folded) "Expand ${section.title}" else "Collapse ${section.title}",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 HorizontalDivider()
             }
-            items(section.items, key = { "${section.key}/${id(it)}" }) { item ->
+            if (!folded) items(section.items, key = { "${section.key}/${id(it)}" }) { item ->
                 ReorderableItem(reorderState, key = "${section.key}/${id(item)}") { isDragging ->
                     Box(
                         modifier = Modifier

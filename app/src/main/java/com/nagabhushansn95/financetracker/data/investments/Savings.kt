@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.data.investments
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -22,10 +23,14 @@ data class SavingsPeriod(val key: String, val lines: List<SavingsLine>) {
 /**
  * The sheet's Savings Monthly / Yearly tables from the ledger: every INVEST row is a credit to its instrument's
  * top-level category and every REDEEM row a debit (renewals count on both sides, as in the sheet); provident-fund
- * contributions, interest and transfers in are credits to "Provident Funds", transfers out are debits.
- * Family-owned instruments are left out. Amounts are in INR.
+ * contributions and transfers in are credits to "Provident Funds", transfers out are debits. Interest credited to a
+ * provident fund is growth, not saving, and is left out (as in the sheet). Family-owned instruments are left out.
+ * Amounts are in INR.
  */
 object Savings {
+    /** Contributor tag of provident-fund interest rows (see the PF account screen). */
+    const val PF_INTEREST = "Interest"
+
     fun build(
         transactions: List<TransactionEntity>,
         instruments: List<Instrument>,
@@ -63,11 +68,19 @@ object Savings {
                     else debits.merge(cell, t.amountInr, Double::plus)
                 }
 
-                TransactionKind.INCOME -> if (t.toAccountId in pfIds) credits.merge(
-                    key to InvestmentCategories.PROVIDENT_FUNDS,
-                    t.amountInr,
-                    Double::plus
-                )
+                TransactionKind.INCOME -> {
+                    if (t.toAccountId in pfIds && t.contributor != PF_INTEREST) credits.merge(
+                        key to InvestmentCategories.PROVIDENT_FUNDS,
+                        t.amountInr,
+                        Double::plus
+                    )
+                    // Deposit interest credited to a cash account as its own row (sweep-in deposits) is money
+                    // leaving savings, like the interest inside a regular deposit's payout.
+                    val deposit = t.instrumentId?.let { instrumentById[it] }
+                        ?.takeIf { it.instrumentType == InstrumentType.FIXED_DEPOSIT && it.owner == Instrument.OWNER_SELF }
+                    if (deposit != null && t.toAccountId != null && t.toAccountId !in pfIds)
+                        debits.merge(key to columnOf(deposit), t.amountInr, Double::plus)
+                }
 
                 TransactionKind.TRANSFER -> {
                     if (t.toAccountId in pfIds) credits.merge(
@@ -82,7 +95,14 @@ object Savings {
                     )
                 }
 
-                TransactionKind.EXPENSE -> Unit
+                TransactionKind.EXPENSE -> {
+                    // TDS charged to a deposit from a cash account: a regular payout is net of it, so it comes off
+                    // the debit here too.
+                    val deposit = t.instrumentId?.let { instrumentById[it] }
+                        ?.takeIf { it.instrumentType == InstrumentType.FIXED_DEPOSIT && it.owner == Instrument.OWNER_SELF }
+                    if (deposit != null && t.fromAccountId != null)
+                        debits.merge(key to columnOf(deposit), -t.amountInr, Double::plus)
+                }
             }
         }
         // Plain list sorting: SortedSet.reversed() resolves to the Java 21 method, which Android lacks.

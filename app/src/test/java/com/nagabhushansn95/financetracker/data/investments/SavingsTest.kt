@@ -170,4 +170,44 @@ class SavingsTest {
         assertEquals(165500.0, yearly[0].total, 0.001)
         assertEquals(175500.0, yearly[0].credits, 0.001)
     }
+
+    @Test
+    fun sweepInInterestCreditsAreDebitsAndTdsComesOffThem() {
+        val rows = listOf(
+            t("2026-03-01", TransactionKind.INVEST, 100000.0, instrument = 21, from = 10),
+            t("2026-04-01", TransactionKind.REDEEM, 19128.0, instrument = 21, to = 10),
+            t(
+                "2026-04-01",
+                TransactionKind.INCOME,
+                9.0,
+                instrument = 21,
+                to = 10
+            ),      // interest credited on its own
+            t(
+                "2026-04-01",
+                TransactionKind.EXPENSE,
+                0.9,
+                instrument = 21,
+                from = 10
+            ),   // TDS on it
+            t(
+                "2026-04-02",
+                TransactionKind.INCOME,
+                300.0,
+                instrument = 20,
+                to = 10
+            ),    // a dividend: not savings
+        )
+        val monthly = Savings.build(
+            rows,
+            listOf(embassy, fd),
+            listOf(stocks, reit, fds),
+            listOf(bank, epf),
+            monthly = true
+        )
+        val april = monthly.single { it.key == "2026-04" }
+        val line = april.lines.single { it.name == InvestmentCategories.FIXED_DEPOSITS }
+        assertEquals(19128.0 + 9.0 - 0.9, line.debits, 0.001)
+        assertEquals(0.0, line.credits, 0.001)
+    }
 }

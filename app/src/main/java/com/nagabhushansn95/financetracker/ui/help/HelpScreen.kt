@@ -17,7 +17,9 @@ private val SECTIONS = listOf(
     "Five kinds of transaction" to """
         Income adds to an account; Expense takes from one and needs a category; Transfer moves money between two accounts.
         Invest pays from an account into an instrument (stock, fund, deposit, policy); Redeem brings money back from one.
-        The + button on Summary or Transactions opens the editor; tapping an account on Summary starts with it chosen.
+        The + button on Home or Transactions opens the editor for the cash kinds; press and hold an account on Home to start with it chosen.
+        Invest and Redeem are recorded on the instrument's own screen under Investments (Buy / Sell, Renew, Pay premium, Add a contribution),
+        and an investment row in the ledger opens that screen when pressed and held.
     """,
     "Accounts and instruments" to """
         Accounts hold cash: wallets, banks, credit cards (negative balance = outstanding), demat and provident funds.
@@ -26,7 +28,7 @@ private val SECTIONS = listOf(
     """,
     "Provident funds" to """
         Record employee and employer contributions as Income into EPF with the contributor chip; PPF deposits as a Transfer from your bank;
-        interest as Income with contributor "Interest". None of these count as income in Statistics; they count as savings.
+        interest as Income with contributor "Interest". None of these count as income in Statistics; contributions count as savings, interest as growth.
     """,
     "Editing and deleting" to """
         A single tap on a list row does nothing, so stray touches are harmless. Press and hold a transaction, account, category,
@@ -34,12 +36,18 @@ private val SECTIONS = listOf(
     """,
     "Statistics" to """
         Expenses, income, savings and withdrawals per month or year, straight from the ledger, plus a breakdown by category.
-        Untick "Include in statistics" on a transaction to leave it out of the totals.
+        Tick "Exclude from statistics" on a transaction to leave it out of the totals.
     """,
     "Backups and your data" to """
-        Everything is stored on this phone only. Extras writes a complete database file to Documents/Finance Tracker/Backups, or to any folder
-        or cloud drive you pick; Settings can do this automatically once a day. The file opens in any SQLite tool and restores on a fresh install.
+        Everything is stored on this phone only. Extras › Back up data writes one database file, with the settings inside, to
+        Documents/Finance Tracker/Backups; Settings can do this automatically once a day and upload it to Google Drive. The file opens in any
+        SQLite tool. Extras › Restore data brings a backup back (the current data is backed up first); the welcome screen of a fresh install can too.
         Clearing the app's storage or uninstalling deletes the live database, so keep backups.
+    """,
+    "Investments stay hidden" to """
+        Nothing about investments shows until you press and hold the "Cash & bank" card on Home and pass the phone's own unlock
+        (fingerprint, pattern or PIN). The Investments card and the menu entry then appear, and stay while the app is in use and for five
+        minutes after it goes to the background. Press and hold the card again to hide them.
     """,
     "Disclaimer" to """
         The app does not connect to any bank or broker. Your data is yours; anyone with access to the phone can see it, so protect the phone.

@@ -51,6 +51,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.db.entity.ValuationSource
 import com.nagabhushansn95.financetracker.data.investments.Holdings
 import com.nagabhushansn95.financetracker.data.investments.Position
@@ -190,13 +191,17 @@ class InstrumentDetailViewModel(application: Application, private val instrument
 
 private val DATE = DateTimeFormatter.ofPattern("d MMM yyyy")
 
-/** One instrument: position, price, and its ledger. Press and hold a row to edit the transaction. */
+/**
+ * One instrument: position, price, and its ledger. Investments and redemptions are recorded here (Buy / Sell, or
+ * Invest / Redeem for things without units); press and hold a ledger row to edit the transaction.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun InstrumentDetailScreen(
     instrumentId: Long,
     onBack: () -> Unit,
-    onEditTransaction: (Long) -> Unit
+    onEditTransaction: (Long) -> Unit,
+    onAddTransaction: (TransactionKind) -> Unit = {},
 ) {
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as Application
     val viewModel: InstrumentDetailViewModel = viewModel(
@@ -335,6 +340,16 @@ fun InstrumentDetailScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            androidx.compose.material3.Button(
+                                onClick = { onAddTransaction(TransactionKind.INVEST) },
+                                modifier = Modifier.weight(1f)
+                            ) { Text(if (position.hasUnits) "Buy" else "Invest") }
+                            OutlinedButton(
+                                onClick = { onAddTransaction(TransactionKind.REDEEM) },
+                                modifier = Modifier.weight(1f)
+                            ) { Text(if (position.hasUnits) "Sell" else "Redeem") }
+                        }
                         OutlinedButton(
                             onClick = { pricing = true },
                             modifier = Modifier.fillMaxWidth()

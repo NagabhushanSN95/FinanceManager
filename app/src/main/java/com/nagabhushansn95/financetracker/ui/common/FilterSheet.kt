@@ -1,6 +1,5 @@
 package com.nagabhushansn95.financetracker.ui.common
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -12,6 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
@@ -19,7 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
@@ -39,31 +40,40 @@ import com.nagabhushansn95.financetracker.ui.transaction.label
 import java.time.Instant
 import java.time.ZoneOffset
 
-/** Period chips shown above a list; "Custom" opens a date-range dialog. */
+/** One button showing the current period; it opens a menu with the periods, "Custom" a date-range dialog. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PeriodChips(
+fun PeriodMenu(
     filter: LedgerFilter,
     onChange: (LedgerFilter) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showRange by remember { mutableStateOf(false) }
-    Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Period.entries.forEach { p ->
-            FilterChip(
-                selected = filter.period == p,
-                onClick = {
-                    if (p == Period.CUSTOM) showRange = true else onChange(
-                        filter.copy(
-                            period = p
-                        )
-                    )
-                },
-                label = { Text(if (p == Period.CUSTOM && filter.period == Period.CUSTOM) filter.rangeLabel() else p.label) },
-            )
+    var open by remember { mutableStateOf(false) }
+    androidx.compose.foundation.layout.Box(modifier = modifier) {
+        androidx.compose.material3.AssistChip(
+            onClick = { open = true },
+            label = { Text(filter.rangeLabel()) },
+            trailingIcon = {
+                androidx.compose.material3.Icon(
+                    Icons.Filled.ArrowDropDown,
+                    contentDescription = "Change period"
+                )
+            },
+        )
+        androidx.compose.material3.DropdownMenu(
+            expanded = open,
+            onDismissRequest = { open = false }) {
+            Period.entries.forEach { p ->
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(if (p == filter.period) "✓ ${p.label}" else p.label) },
+                    onClick = {
+                        open = false
+                        if (p == Period.CUSTOM) showRange =
+                            true else onChange(filter.copy(period = p))
+                    },
+                )
+            }
         }
     }
     if (showRange) {
@@ -99,7 +109,10 @@ fun PeriodChips(
     }
 }
 
-/** Kinds, accounts, categories and a text search. Changes apply on "Apply". */
+/**
+ * Kinds, accounts and categories. Changes apply on "Apply". The sheet does not drag: pulling the chip list down
+ * used to close it by accident, so it closes with the X, the back button or a tap outside.
+ */
 @OptIn(
     ExperimentalMaterial3Api::class,
     androidx.compose.foundation.layout.ExperimentalLayoutApi::class
@@ -110,23 +123,29 @@ fun FilterSheet(
     accounts: List<Account>,
     categories: List<Category>,
     showKinds: Boolean,
-    showSearch: Boolean,
     onApply: (LedgerFilter) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var draft by remember { mutableStateOf(filter) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetGesturesEnabled = false,
+        dragHandle = null,
     ) {
         // Header and Apply stay put; only the chips scroll, so Apply is always reachable however many accounts there are.
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(horizontal = 16.dp)
+                .padding(start = 16.dp, end = 4.dp)
                 .padding(bottom = 24.dp)
         ) {
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
                 Text(
                     "Filters",
                     style = MaterialTheme.typography.titleLarge,
@@ -136,9 +155,16 @@ fun FilterSheet(
                     draft = LedgerFilter(
                         period = draft.period,
                         customFrom = draft.customFrom,
-                        customTo = draft.customTo
+                        customTo = draft.customTo,
+                        query = draft.query,
                     )
                 }) { Text("Clear") }
+                androidx.compose.material3.IconButton(onClick = onDismiss) {
+                    androidx.compose.material3.Icon(
+                        Icons.Filled.Close,
+                        contentDescription = "Close"
+                    )
+                }
             }
             Column(
                 modifier = Modifier
@@ -146,15 +172,6 @@ fun FilterSheet(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                if (showSearch) {
-                    OutlinedTextField(
-                        value = draft.query,
-                        onValueChange = { draft = draft.copy(query = it) },
-                        label = { Text("Particulars contain") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
                 if (showKinds) {
                     Text("Kind", style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

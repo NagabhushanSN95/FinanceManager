@@ -20,10 +20,22 @@ interface SettingsDao {
 
     @Query("DELETE FROM settings WHERE `key` = :key")
     suspend fun remove(key: String)
+
+    @Upsert
+    suspend fun setAll(settings: List<Setting>)
+
+    @Query("SELECT * FROM settings WHERE `key` LIKE :prefix || '%'")
+    suspend fun getWithPrefix(prefix: String): List<Setting>
+
+    @Query("DELETE FROM settings WHERE `key` LIKE :prefix || '%'")
+    suspend fun removeWithPrefix(prefix: String)
 }
 
 /** The keys of the settings table. */
 object Settings {
     /** The corpus to keep for the goal (the sheet's "Amount needed for Goal"), in INR. */
     const val GOAL_AMOUNT = "investments.goal_amount"
+
+    /** The app's preferences, mirrored into the database just before each backup so a restore brings them back. */
+    const val PREFS_PREFIX = "prefs."
 }

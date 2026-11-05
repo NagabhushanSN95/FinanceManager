@@ -1,6 +1,8 @@
 package com.nagabhushansn95.financetracker.ui.extras
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,15 +13,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,10 +35,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.backup.DatabaseBackup
 import com.nagabhushansn95.financetracker.ui.common.DatabaseFilePickers
 
-/** Backup actions and the Zerodha statement import. Export returns in milestone E. */
+/** Backup and restore, the summary workbook export and the Zerodha statement import. */
 @Composable
 fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var confirmRestore by remember { mutableStateOf<Uri?>(null) }
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -38,6 +48,20 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
             viewModel.messageShown()
         }
     }
+    // The staged restore is swapped in when the process starts again: relaunch the app from scratch.
+    LaunchedEffect(state.restartForRestore) {
+        if (state.restartForRestore) {
+            val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            if (launch != null) context.startActivity(launch)
+            Runtime.getRuntime().exit(0)
+        }
+    }
+
+    val pickRestore =
+        rememberLauncherForActivityResult(DatabaseFilePickers.Open(DatabaseFilePickers.BACKUP_FOLDER)) { uri ->
+            if (uri != null) confirmRestore = uri
+        }
 
     val pickStatement = rememberLauncherForActivityResult(
         DatabaseFilePickers.OpenAny(
@@ -68,14 +92,20 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
         if (state.busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
         ActionCard(
-            title = "Back up database file",
-            description = "Copies the whole database to Documents/${DatabaseBackup.BACKUP_FOLDER}. Restore it from the welcome screen of a fresh install.",
+            title = "Back up data",
+            description = "Copies the whole database, with the app's settings inside it, to Documents/${DatabaseBackup.BACKUP_FOLDER} as one file.",
             enabled = !state.busy,
             onClick = backupToDocuments,
         )
         state.lastBackup?.let {
             Text("Last backup: $it", style = MaterialTheme.typography.bodySmall)
         }
+        ActionCard(
+            title = "Restore data",
+            description = "Replaces everything with a backup file. The current data is backed up first, then the app restarts with the restored data and settings.",
+            enabled = !state.busy,
+            onClick = { pickRestore.launch(DatabaseFilePickers.DATABASE_MIME_TYPES) },
+        )
         ActionCard(
             title = "Export summary workbook",
             description = "An Excel file with the sheets of the old 'My Savings' workbook, computed from the ledger: savings by year and month, investment summary, deposits, provident funds, insurance, funds, stocks, others and prices. Saved to Documents/${com.nagabhushansn95.financetracker.data.export.SharedDocuments.EXPORT_FOLDER}.",
@@ -109,6 +139,25 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
                 }
             }
         }
+    }
+
+    confirmRestore?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { confirmRestore = null },
+            title = { Text("Restore this backup?") },
+            text = {
+                Text(
+                    "Everything in the app is replaced by the backup: accounts, transactions, instruments and settings. " +
+                            "The current data is backed up to Documents/${DatabaseBackup.BACKUP_FOLDER} first. The app then restarts; open it again if it does not come back by itself."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRestore = null; viewModel.restoreFrom(uri)
+                }) { Text("Restore") }
+            },
+            dismissButton = { TextButton(onClick = { confirmRestore = null }) { Text("Cancel") } },
+        )
     }
 
     state.zerodha?.let { preview ->

@@ -177,7 +177,9 @@ class TransactionRepositoryTest {
         assertEquals(TransactionKind.EXPENSE, template.kind)
         assertEquals(wallet, template.fromAccountId)
         assertEquals(food, template.categoryId)
-        assertEquals(60.0, template.amount)
+        // The template keeps the rate (the amount of a 1 × 60 row) and no quantity, since one is the default.
+        assertEquals(60.0, template.rate)
+        assertEquals(null, template.quantity)
     }
 
     @Test

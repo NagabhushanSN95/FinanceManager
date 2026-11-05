@@ -186,7 +186,7 @@ class SummaryWorkbook(private val db: AppDatabase) {
                     t?.maturityAmountPrinted,
                     t?.tdsReported,
                     d.position.totalRedeemed.takeIf { it > 0 },
-                    if (!d.isOpen) d.position.realised else null,
+                    if (!d.isOpen) d.interestEarned else null,
                     d.status.name,
                     d.instrument.owner,
                     t?.previousFdId?.let { instrumentById[it]?.name },

@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +52,8 @@ import kotlinx.coroutines.launch
 
 class TargetsViewModel(application: Application) : InvestmentSummaryViewModel(application) {
     val categories: StateFlow<List<InvestmentCategory>> = db.instrumentDao().observeCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val riskLevels: StateFlow<List<RiskLevel>> = db.instrumentDao().observeRiskLevels()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
@@ -67,8 +70,13 @@ class TargetsViewModel(application: Application) : InvestmentSummaryViewModel(ap
     }
 }
 
-/** What the user types for one category: percentages as entered (e.g. "12.5"). */
-private data class Entry(val goal: String, val wealth: String, val tolerance: String) {
+/** What the user sets for one category: its risk level and the percentages as typed (e.g. "12.5"). */
+private data class Entry(
+    val goal: String,
+    val wealth: String,
+    val tolerance: String,
+    val riskLevelId: Long? = null
+) {
     val valid
         get() = listOf(goal, wealth, tolerance).all {
             it.isBlank() || it.trim().toDoubleOrNull() != null
@@ -81,6 +89,7 @@ private fun entryOf(c: InvestmentCategory) = Entry(
     goal = c.targetGoalPct?.let { fmt(it) } ?: "",
     wealth = c.targetWealthPct?.let { fmt(it) } ?: "",
     tolerance = c.tolerancePct?.let { fmt(it) } ?: "",
+    riskLevelId = c.riskLevelId,
 )
 
 private fun fmt(share: Double) = (share * 100).let {
@@ -89,14 +98,16 @@ private fun fmt(share: Double) = (share * 100).let {
 }
 
 /**
- * Allocation targets: the goal amount, and for each category its share of the goal corpus and of the wealth corpus
- * (the rest), plus a tolerance. Shares are entered on the leaves and roll up; each set should add up to 100%.
+ * Categories & targets: the one place for what each investment category is: its risk level, and its share of the
+ * goal corpus and of the wealth corpus (the rest) with a tolerance. Shares are entered on the leaves and roll up;
+ * each set should add up to 100%. The categories themselves (names, groups, order) are kept under Manage.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val riskLevels by viewModel.riskLevels.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(message) { message?.let { snackbar.showSnackbar(it); viewModel.messageShown() } }
@@ -140,15 +151,8 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Allocation targets") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                })
+                title = { Text("Categories & targets") },
+                navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) })
         },
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
@@ -164,7 +168,8 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                             val next = c.copy(
                                 targetGoalPct = e.pct(e.goal),
                                 targetWealthPct = e.pct(e.wealth),
-                                tolerancePct = e.pct(e.tolerance)
+                                tolerancePct = e.pct(e.tolerance),
+                                riskLevelId = e.riskLevelId,
                             )
                             if (next == c) null else next
                         }
@@ -199,12 +204,14 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Text(
-                            "The goal corpus follows the goal shares; everything above it (${
+                            "Each category has a risk level (for the \"By risk\" table) and two target shares. " +
+                                    "The goal corpus follows the goal shares; everything above it (${
                                 MoneyFormat.compact(
                                     (totalCurrent - (goalValue ?: 0.0)).coerceAtLeast(0.0)
                                 )
                             } of the current " +
-                                    "${MoneyFormat.compact(totalCurrent)}) follows the wealth shares. The overall target of each category is the blend.",
+                                    "${MoneyFormat.compact(totalCurrent)}) follows the wealth shares. The overall target of each category is the blend. " +
+                                    "Add, rename, group or reorder categories under Manage › Investment categories.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -222,13 +229,11 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                             target = target(share(parent) { it.goal }, share(parent) { it.wealth }),
                             summaryShare = currentShareOf(state, parent.name)
                         )
-                        if (kids.isEmpty()) EntryFields(
-                            edits[parent.id] ?: Entry(
-                                "",
-                                "",
-                                ""
-                            )
-                        ) { entries = edits + (parent.id to it) }
+                        val parentEntry = edits[parent.id] ?: Entry("", "", "")
+                        RiskRow(parentEntry, riskLevels) { entries = edits + (parent.id to it) }
+                        if (kids.isEmpty()) EntryFields(parentEntry) {
+                            entries = edits + (parent.id to it)
+                        }
                         else Text(
                             "goal ${pct(share(parent) { it.goal })} · wealth ${pct(share(parent) { it.wealth })} from the sub-categories",
                             style = MaterialTheme.typography.bodySmall,
@@ -247,9 +252,9 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                                     leafShare(child.id) { it.wealth }),
                                 summaryShare = currentShareOf(state, parent.name, child.name)
                             )
-                            EntryFields(edits[child.id] ?: Entry("", "", "")) {
-                                entries = edits + (child.id to it)
-                            }
+                            val childEntry = edits[child.id] ?: Entry("", "", "")
+                            RiskRow(childEntry, riskLevels) { entries = edits + (child.id to it) }
+                            EntryFields(childEntry) { entries = edits + (child.id to it) }
                         }
                     }
                 }
@@ -289,6 +294,34 @@ private fun CategoryHeader(name: String, bold: Boolean, target: Double?, summary
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/** The category's risk level as a small dropdown; "no risk level" leaves it out of the By-risk table. */
+@Composable
+private fun RiskRow(entry: Entry, riskLevels: List<RiskLevel>, onChange: (Entry) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            "Risk",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        androidx.compose.material3.TextButton(onClick = { open = true }) {
+            Text(riskLevels.firstOrNull { it.id == entry.riskLevelId }?.name ?: "no risk level")
+        }
+        androidx.compose.material3.DropdownMenu(
+            expanded = open,
+            onDismissRequest = { open = false }) {
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text("No risk level") },
+                onClick = { onChange(entry.copy(riskLevelId = null)); open = false })
+            riskLevels.forEach { r ->
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { Text(r.name) },
+                    onClick = { onChange(entry.copy(riskLevelId = r.id)); open = false })
+            }
+        }
     }
 }
 

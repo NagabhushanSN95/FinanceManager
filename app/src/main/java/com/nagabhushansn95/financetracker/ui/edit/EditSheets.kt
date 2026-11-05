@@ -7,25 +7,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,33 +38,15 @@ import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.ui.common.FormSheet
 
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorViewModel.Companion.plain
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.investments.InvestmentOrder
+import com.nagabhushansn95.financetracker.ui.transaction.label
 import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 import java.time.LocalDateTime
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FormSheet(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    // Fully expanded, so the Save button stays reachable with the keyboard open.
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
-                .imePadding()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
-            content()
-        }
-    }
-}
 
 @Composable
 private fun NumberField(
@@ -387,7 +364,9 @@ fun InstrumentSheet(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            InstrumentType.entries.forEach { t ->
+            // A new deposit or policy needs its terms: those are opened from their own Investments screens.
+            InvestmentOrder.types(InvestmentOrder.names(categories))
+                .filter { existing != null || it in InvestmentOrder.CREATABLE_HERE }.forEach { t ->
                 FilterChip(
                     selected = type == t,
                     onClick = { type = t },
@@ -609,7 +588,7 @@ fun InvestmentCategorySheet(
             modifier = Modifier.fillMaxWidth()
         )
         Text(
-            "Goal, wealth and tolerance percentages are set on Investments › Allocation targets.",
+            "The risk level and the goal, wealth and tolerance percentages can also be set on Investments › Categories & targets.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -665,5 +644,138 @@ fun RiskLevelSheet(
             "Only possible when no investment category uses it.",
             onDelete
         )
+    }
+}
+
+/**
+ * Add or edit a template: what the editor fills in when the template is picked. Every field but the particulars
+ * and kind is optional. A template carries a rate and a quantity, never an amount: a rate alone fills only the
+ * rate, rate and quantity together fill the amount as well.
+ */
+@Composable
+fun TemplateSheet(
+    existing: com.nagabhushansn95.financetracker.data.db.entity.Template?,
+    accounts: List<Account>,
+    categories: List<Category>,
+    instruments: List<Instrument>,
+    onSave: (com.nagabhushansn95.financetracker.data.db.entity.Template) -> Unit,
+    onDelete: (() -> Unit)?,
+    onDismiss: () -> Unit,
+) {
+    var particulars by remember { mutableStateOf(existing?.particulars ?: "") }
+    var kind by remember { mutableStateOf(existing?.kind ?: TransactionKind.EXPENSE) }
+    var fromId by remember { mutableStateOf(existing?.fromAccountId) }
+    var toId by remember { mutableStateOf(existing?.toAccountId) }
+    var categoryId by remember { mutableStateOf(existing?.categoryId) }
+    var instrumentId by remember { mutableStateOf(existing?.instrumentId) }
+    var rate by remember { mutableStateOf(existing?.rate?.let { plain(it) } ?: "") }
+    var quantity by remember { mutableStateOf(existing?.quantity?.let { plain(it) } ?: "") }
+    var hidden by remember { mutableStateOf(existing?.hidden ?: false) }
+    val showsFrom =
+        kind == TransactionKind.EXPENSE || kind == TransactionKind.TRANSFER || kind == TransactionKind.INVEST
+    val showsTo =
+        kind == TransactionKind.INCOME || kind == TransactionKind.TRANSFER || kind == TransactionKind.REDEEM
+    val showsCategory = kind == TransactionKind.EXPENSE || kind == TransactionKind.INCOME
+    val showsInstrument = kind != TransactionKind.TRANSFER
+    val scope =
+        if (kind == TransactionKind.INCOME) CategoryScope.INCOME else CategoryScope.EXPENSE
+    val applicable =
+        categories.filter { it.appliesTo == scope || it.appliesTo == CategoryScope.BOTH }
+    val categoryById = applicable.associateBy { it.id }
+    fun categoryPath(id: Long?): String? = id?.let { categoryById[it] }?.let { c ->
+        c.parentId?.let { categoryById[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
+    }
+
+    val categoryChoices: List<Long?> =
+        listOf<Long?>(null) + applicable.filter { it.parentId == null }
+            .flatMap { p -> listOf(p.id) + applicable.filter { it.parentId == p.id }.map { it.id } }
+    val instrumentChoices: List<Long?> = listOf<Long?>(null) + instruments.map { it.id }
+    val rateValue = rate.trim().toDoubleOrNull()
+    val quantityValue = quantity.trim().toDoubleOrNull()
+    val valid =
+        particulars.isNotBlank() && (rate.isBlank() || rateValue != null && rateValue >= 0) &&
+                (quantity.isBlank() || quantityValue != null && quantityValue > 0)
+
+    FormSheet(
+        title = if (existing == null) "New template" else "Edit template",
+        onDismiss = onDismiss
+    ) {
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TransactionKind.entries.forEach { k ->
+                FilterChip(
+                    selected = kind == k,
+                    onClick = { kind = k },
+                    label = { Text(k.label) })
+            }
+        }
+        OutlinedTextField(
+            value = particulars,
+            onValueChange = { particulars = it },
+            label = { Text("Particulars") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        if (showsFrom) com.nagabhushansn95.financetracker.ui.common.AccountDropdown(
+            if (kind == TransactionKind.INVEST) "Paid from" else "From",
+            accounts, fromId, { fromId = it }, none = "Not set"
+        )
+        if (showsTo) com.nagabhushansn95.financetracker.ui.common.AccountDropdown(
+            if (kind == TransactionKind.REDEEM) "Credited to" else "To",
+            accounts, toId, { toId = it }, none = "Not set"
+        )
+        if (showsCategory) com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown(
+            "Category",
+            categoryChoices,
+            categoryId.takeIf { it in categoryById },
+            { categoryPath(it) ?: "Not set" }) { categoryId = it }
+        if (showsInstrument) com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown(
+            "Instrument",
+            instrumentChoices,
+            instrumentId.takeIf { id -> instruments.any { it.id == id } },
+            { id -> instruments.firstOrNull { it.id == id }?.name ?: "Not set" }) {
+            instrumentId = it
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NumberField(rate, "Rate (optional)", { rate = it }, Modifier.weight(1f))
+            NumberField(quantity, "Quantity (optional)", { quantity = it }, Modifier.weight(1f))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                "Hidden from suggestions",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Switch(checked = hidden, onCheckedChange = { hidden = it })
+        }
+        Text(
+            "Picking the template in the editor fills these in; fields left \"Not set\" or empty keep what is already typed. " +
+                    "With only a rate the quantity is yours to type (one if left empty); with both, the amount is filled too.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(
+            enabled = valid,
+            onClick = {
+                onSave(
+                    com.nagabhushansn95.financetracker.data.db.entity.Template(
+                        id = existing?.id ?: 0,
+                        particulars = particulars.trim(),
+                        kind = kind,
+                        fromAccountId = fromId.takeIf { showsFrom },
+                        toAccountId = toId.takeIf { showsTo },
+                        categoryId = categoryId.takeIf { showsCategory && it in categoryById },
+                        instrumentId = instrumentId.takeIf { showsInstrument },
+                        rate = rateValue,
+                        quantity = quantityValue,
+                        hidden = hidden,
+                    )
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("Save") }
+        if (onDelete != null && existing != null) DeleteRow("Delete template", null, onDelete)
     }
 }

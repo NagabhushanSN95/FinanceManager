@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.nagabhushansn95.financetracker.data.backup.DatabaseBackup
+import com.nagabhushansn95.financetracker.data.backup.DatabaseRestore
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.importer.zerodha.ImportPlan
@@ -40,6 +41,8 @@ data class ExtrasUiState(
     val zerodha: ZerodhaPreview? = null,
     /** One-off message for a snackbar; cleared with [ExtrasViewModel.messageShown]. */
     val message: String? = null,
+    /** A restore is staged: the screen restarts the app so it is swapped in. */
+    val restartForRestore: Boolean = false,
 )
 
 class ExtrasViewModel(application: Application) : AndroidViewModel(application) {
@@ -85,6 +88,31 @@ class ExtrasViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun backupToDocuments() = run("Backed up to ") { backup.saveToDocuments() }
+
+    /**
+     * Restores a backup picked by the user: the current data is backed up to Documents first, the picked file is
+     * checked and staged, its settings applied, and the app restarts to swap the database in.
+     */
+    fun restoreFrom(uri: Uri) {
+        if (_state.value.busy) return
+        _state.value = _state.value.copy(busy = true)
+        viewModelScope.launch {
+            val result = runCatching {
+                withContext(Dispatchers.IO) {
+                    val safety = backup.saveToDocuments()
+                    prefs.lastBackupDescription = safety.description
+                    DatabaseRestore(getApplication()).stage(uri)
+                }
+            }
+            result.onSuccess {
+                _state.value = _state.value.copy(busy = false, restartForRestore = true)
+            }.onFailure { e ->
+                Log.e("ExtrasViewModel", "Restore failed", e)
+                _state.value =
+                    _state.value.copy(busy = false, message = "Restore failed: ${e.message}")
+            }
+        }
+    }
 
 
     private fun run(successPrefix: String, action: suspend () -> DatabaseBackup.Result) {

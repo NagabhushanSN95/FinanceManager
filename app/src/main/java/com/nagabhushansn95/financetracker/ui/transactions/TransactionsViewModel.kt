@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.repository.TransactionRepository
@@ -31,7 +32,13 @@ data class LedgerRow(
     /** Money leaving cash (expense, invest) is shown differently from money arriving. */
     val outflow: Boolean,
     val hidden: Boolean,
-)
+    val instrumentId: Long? = null,
+    val instrumentType: InstrumentType? = null,
+) {
+    /** Investments and redemptions are edited from the instrument's own screen, not from the ledger. */
+    val editedUnderInvestments: Boolean
+        get() = (kind == TransactionKind.INVEST || kind == TransactionKind.REDEEM) && instrumentId != null && instrumentType != null
+}
 
 data class LedgerDay(val date: LocalDate, val rows: List<LedgerRow>)
 
@@ -93,5 +100,7 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
         amountText = MoneyFormat.amount(amount, currency),
         outflow = kind == TransactionKind.EXPENSE || kind == TransactionKind.INVEST,
         hidden = hidden,
+        instrumentId = instrumentId,
+        instrumentType = instrumentId?.let { lookups.instruments[it]?.instrumentType },
     )
 }

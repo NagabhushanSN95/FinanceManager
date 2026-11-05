@@ -40,7 +40,7 @@ class MigrationsTest {
                 val e = entities.getJSONObject(i)
                 val table = e.getString("tableName")
                 c.execSQL(e.getString("createSql").replace("\${TABLE_NAME}", table))
-                val indices = e.getJSONArray("indices")
+                val indices = e.optJSONArray("indices") ?: org.json.JSONArray()
                 for (j in 0 until indices.length()) c.execSQL(
                     indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}", table)
                 )
@@ -117,6 +117,117 @@ class MigrationsTest {
                 1,
                 db.instrumentDao().getAllCategories()
                     .count { it.name == InvestmentCategories.PROVIDENT_FUNDS })
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun migrates2To3MovingTheTemplateAmountIntoTheRate() = runTest {
+        createOldDatabase("migrate-2-3.db", 2) { c ->
+            c.execSQL("INSERT INTO accounts (id, name, account_type, currency, balance, display_order, deleted, created_time, modified_time) VALUES (1, 'Wallet', 'WALLET', 'INR', 0, 1, 0, '2026-01-01T00:00:00.000', '2026-01-01T00:00:00.000')")
+            c.execSQL("INSERT INTO templates (id, particulars, kind, from_account_id, amount, hidden) VALUES (1, 'Milk', 'EXPENSE', 1, 30.0, 0)")
+            c.execSQL("INSERT INTO templates (id, particulars, kind, from_account_id, amount, hidden) VALUES (2, 'Bus', 'EXPENSE', 1, NULL, 1)")
+        }
+        val db = AppDatabase.create(context, "migrate-2-3.db")
+        try {
+            val templates = db.transactionDao().getAllTemplates().sortedBy { it.id }
+            assertEquals(listOf("Milk", "Bus"), templates.map { it.particulars })
+            assertEquals(30.0, templates[0].rate!!, 1e-9)
+            assertNull(templates[0].quantity)
+            assertNull(templates[1].rate)
+            assertEquals(true, templates[1].hidden)
+            assertEquals(1L, templates[0].fromAccountId)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun migrates3To4AddingTheDepositTemplates() = runTest {
+        createOldDatabase("migrate-3-4.db", 3) { c ->
+            c.execSQL("INSERT INTO templates (id, particulars, kind, rate, hidden) VALUES (1, 'Milk', 'EXPENSE', 30.0, 0)")
+        }
+        val db = AppDatabase.create(context, "migrate-3-4.db")
+        try {
+            assertEquals(
+                listOf("Milk"),
+                db.transactionDao().getAllTemplates().map { it.particulars })
+            val id = db.instrumentDao().insertFdTemplate(
+                com.nagabhushansn95.financetracker.data.db.entity.FdTemplate(
+                    name = "SBI 1y",
+                    bankName = "SBI",
+                    periodMonths = 12,
+                    rate = 7.0
+                )
+            )
+            val saved = db.instrumentDao().getAllFdTemplates().single()
+            assertEquals(id, saved.id)
+            assertEquals("SBI", saved.bankName)
+            assertEquals(7.0, saved.rate!!, 1e-9)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun migrates4To5KeepingTemplatesAndAddingEvents() = runTest {
+        createOldDatabase("migrate-4-5.db", 4) { c ->
+            c.execSQL("INSERT INTO fd_templates (id, name, bank_name, period_months, rate, tds_rate, owner, display_order) VALUES (1, 'SBI 1y', 'SBI', 12, 7.0, 0.1, 'Self', 1)")
+            c.execSQL("INSERT INTO instruments (id, name, instrument_type, currency, owner, active, display_order, created_time, modified_time) VALUES (5, 'FD #1', 'FIXED_DEPOSIT', 'INR', 'Self', 1, 1, '2026-01-01T00:00:00', '2026-01-01T00:00:00')")
+            c.execSQL("INSERT INTO fixed_deposits (instrument_id, bank_name, status) VALUES (5, 'SBI', 'ACTIVE')")
+        }
+        val db = AppDatabase.create(context, "migrate-4-5.db")
+        try {
+            val template = db.instrumentDao().getAllFdTemplates().single()
+            assertEquals("SBI 1y", template.name)
+            assertEquals(12, template.periodMonths)
+            assertEquals("Self", template.owner)
+            assertEquals(null, template.amount)
+            val terms = db.instrumentDao().getFixedDeposit(5)!!
+            assertEquals(null, terms.tdsYearly)
+            db.instrumentDao().upsertFixedDeposit(terms.copy(tdsYearly = true))
+            assertEquals(true, db.instrumentDao().getFixedDeposit(5)!!.tdsYearly)
+            val id = db.instrumentDao().insertFdEvent(
+                com.nagabhushansn95.financetracker.data.db.entity.FdEvent(
+                    instrumentId = 5,
+                    date = java.time.LocalDate.of(2026, 3, 31),
+                    kind = com.nagabhushansn95.financetracker.data.db.entity.FdEventKind.TDS,
+                    amount = 640.0,
+                )
+            )
+            assertEquals(id, db.instrumentDao().getAllFdEvents().single().id)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun migrates5To6AddingTheDepositType() = runTest {
+        createOldDatabase("migrate-5-6.db", 5) { c ->
+            c.execSQL("INSERT INTO instruments (id, name, instrument_type, currency, owner, active, display_order, created_time, modified_time) VALUES (5, 'FD #1', 'FIXED_DEPOSIT', 'INR', 'Self', 1, 1, '2026-01-01T00:00:00', '2026-01-01T00:00:00')")
+            c.execSQL("INSERT INTO fixed_deposits (instrument_id, bank_name, status) VALUES (5, 'HDFC', 'ACTIVE')")
+        }
+        val db = AppDatabase.create(context, "migrate-5-6.db")
+        try {
+            val terms = db.instrumentDao().getFixedDeposit(5)!!
+            assertEquals(
+                com.nagabhushansn95.financetracker.data.db.entity.FdType.REGULAR,
+                terms.depositType
+            )
+            assertEquals(null, terms.sweepInDate)
+            db.instrumentDao().upsertFixedDeposit(
+                terms.copy(
+                    depositType = com.nagabhushansn95.financetracker.data.db.entity.FdType.SWEEP_IN,
+                    sweepInDate = java.time.LocalDate.of(2024, 12, 1)
+                )
+            )
+            val again = db.instrumentDao().getFixedDeposit(5)!!
+            assertEquals(
+                com.nagabhushansn95.financetracker.data.db.entity.FdType.SWEEP_IN,
+                again.depositType
+            )
+            assertEquals(java.time.LocalDate.of(2024, 12, 1), again.sweepInDate)
         } finally {
             db.close()
         }

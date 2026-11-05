@@ -5,6 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
+import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
@@ -80,6 +82,41 @@ interface InstrumentDao {
 
     @Query("SELECT * FROM fixed_deposits")
     fun observeFixedDeposits(): Flow<List<FixedDeposit>>
+
+    // --- fixed deposit templates
+    @Insert
+    suspend fun insertFdTemplate(template: FdTemplate): Long
+
+    @Update
+    suspend fun updateFdTemplate(template: FdTemplate)
+
+    @Query("DELETE FROM fd_templates WHERE id = :id")
+    suspend fun deleteFdTemplate(id: Long)
+
+    @Query("SELECT * FROM fd_templates ORDER BY display_order, name")
+    suspend fun getAllFdTemplates(): List<FdTemplate>
+
+    @Query("SELECT * FROM fd_templates ORDER BY display_order, name")
+    fun observeFdTemplates(): Flow<List<FdTemplate>>
+
+    @Query("SELECT COALESCE(MAX(display_order), 0) FROM fd_templates")
+    suspend fun maxFdTemplateOrder(): Int
+
+    // --- fixed deposit events (interest credited, TDS deducted)
+    @Insert
+    suspend fun insertFdEvent(event: FdEvent): Long
+
+    @Update
+    suspend fun updateFdEvent(event: FdEvent)
+
+    @Query("DELETE FROM fd_events WHERE id = :id")
+    suspend fun deleteFdEvent(id: Long)
+
+    @Query("SELECT * FROM fd_events ORDER BY date, id")
+    suspend fun getAllFdEvents(): List<FdEvent>
+
+    @Query("SELECT * FROM fd_events ORDER BY date, id")
+    fun observeFdEvents(): Flow<List<FdEvent>>
 
     // --- insurance
     @Insert(onConflict = OnConflictStrategy.REPLACE)

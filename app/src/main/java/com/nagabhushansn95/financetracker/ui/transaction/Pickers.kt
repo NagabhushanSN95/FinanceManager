@@ -215,6 +215,7 @@ fun InstrumentPickerSheet(
     onPick: (Long?) -> Unit,
     onNew: () -> Unit,
     onDismiss: () -> Unit,
+    typeOrder: List<InstrumentType> = com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.DEFAULT_TYPES,
 ) {
     val byId = instruments.associateBy { it.id }
     fun row(i: Instrument) = PickRow(
@@ -225,7 +226,7 @@ fun InstrumentPickerSheet(
     val inactive = instruments.filter { !it.active }
     PickerSheet(
         title = "Instrument",
-        sections = InstrumentType.entries.mapNotNull { type ->
+        sections = typeOrder.mapNotNull { type ->
             val ofType = active.filter { it.instrumentType == type }
             if (ofType.isEmpty()) null else typeTitle(type) to ofType.map(::row)
         } + if (inactive.isEmpty()) emptyList() else listOf(
@@ -249,7 +250,10 @@ fun typeTitle(type: InstrumentType): String = when (type) {
     InstrumentType.OTHER -> "Others"
 }
 
-/** Minimal new-instrument sheet: name, type, optional symbol. */
+/**
+ * Minimal new-instrument sheet: name, type, optional symbol. Fixed deposits and insurance policies are not offered:
+ * they need their terms, so they are opened from their own screens under Investments.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewInstrumentSheet(
@@ -276,7 +280,8 @@ fun NewInstrumentSheet(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                InstrumentType.entries.forEach { t ->
+                com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.DEFAULT_TYPES.filter { it in com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.CREATABLE_HERE }
+                    .forEach { t ->
                     FilterChip(
                         selected = type == t,
                         onClick = { type = t },
@@ -298,7 +303,7 @@ fun NewInstrumentSheet(
                 )
             }
             Text(
-                "ISIN, category and the rest can be filled in under Investments.",
+                "ISIN, category and the rest can be filled in under Investments. Fixed deposits and insurance policies are opened from their own screens there.",
                 style = MaterialTheme.typography.bodySmall
             )
             Button(

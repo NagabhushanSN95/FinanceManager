@@ -61,6 +61,14 @@ class TransactionRepository(private val db: AppDatabase) {
             id
         }
 
+    /** For callers that already hold a write transaction: deletes with balance effects, no transaction of its own. */
+    suspend fun deleteAllInTransaction(transactions: List<TransactionEntity>, now: LocalDateTime) {
+        transactions.forEach {
+            applyBalances(it, sign = -1, stamp = now)
+            db.transactionDao().delete(it)
+        }
+    }
+
     /** Reverses the stored row's balance effect, then applies the new one. */
     suspend fun update(transaction: TransactionEntity, now: LocalDateTime = LocalDateTime.now()) =
         db.useWriterConnection { transactor ->
@@ -136,6 +144,7 @@ class TransactionRepository(private val db: AppDatabase) {
         toAccountId = toAccountId,
         categoryId = categoryId,
         instrumentId = instrumentId,
-        amount = amount,
+        rate = rate ?: amount,
+        quantity = quantity?.takeIf { it != 1.0 },
     )
 }

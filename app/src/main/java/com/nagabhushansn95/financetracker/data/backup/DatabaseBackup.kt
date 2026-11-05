@@ -8,6 +8,9 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.room.useWriterConnection
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.dao.Settings
+import com.nagabhushansn95.financetracker.data.db.entity.Setting
+import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
 import java.io.File
 import java.io.IOException
 import java.io.OutputStream
@@ -16,7 +19,8 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Copies the whole v5 database as the hand-over / backup format: one self-contained SQLite file that opens in any
- * SQLite tool.
+ * SQLite tool. The app's preferences (theme, backup and price options, Drive folder, recents) are mirrored into the
+ * `settings` table first, so the one file carries the settings too and a restore brings them back.
  *
  * The copy is produced with `VACUUM INTO`, which writes a consistent snapshot regardless of the write-ahead log or
  * concurrent readers. The snapshot's header is then marked as an ordinary rollback-journal database, because a file
@@ -30,8 +34,9 @@ class DatabaseBackup(private val context: Context, private val db: AppDatabase) 
     fun suggestedFileName(now: LocalDateTime = LocalDateTime.now()): String =
         "Finance Tracker Database - ${now.format(FILE_NAME_FORMAT)}.db"
 
-    /** Writes a snapshot of the database into [output]. The caller owns the stream. */
+    /** Writes a snapshot of the database, with the preferences mirrored in, into [output]. The caller owns the stream. */
     suspend fun writeTo(output: OutputStream) {
+        mirrorPreferences()
         val snapshot = File.createTempFile("backup", ".db", context.cacheDir)
         try {
             snapshot.delete() // VACUUM INTO refuses to overwrite an existing file
@@ -51,6 +56,15 @@ class DatabaseBackup(private val context: Context, private val db: AppDatabase) 
         } finally {
             snapshot.delete()
         }
+    }
+
+    /** Replaces the mirrored preferences in the settings table with the current ones. */
+    private suspend fun mirrorPreferences() {
+        val dao = db.settingsDao()
+        dao.removeWithPrefix(Settings.PREFS_PREFIX)
+        dao.setAll(
+            AppPreferences(context).export()
+                .map { (k, v) -> Setting(Settings.PREFS_PREFIX + k, v) })
     }
 
     /** Writes the database to a document the user picked with ACTION_CREATE_DOCUMENT. */

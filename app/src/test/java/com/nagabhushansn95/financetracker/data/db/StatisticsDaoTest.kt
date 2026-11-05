@@ -246,4 +246,42 @@ class StatisticsDaoTest {
         assertEquals(listOf(salary), income.map { it.categoryId })  // PF credit excluded
         assertEquals("2026-10-05", db.statisticsDao().earliestDate())
     }
+
+    @Test
+    fun depositInterestCreditedAsItsOwnRowIsIncomeAndAWithdrawal() = runTest {
+        val deposit = db.instrumentDao().insert(
+            Instrument(
+                name = "FD #1",
+                instrumentType = InstrumentType.FIXED_DEPOSIT,
+                displayOrder = 2,
+                createdTime = now,
+                modifiedTime = now
+            )
+        )
+
+        fun row(
+            date: String,
+            kind: TransactionKind,
+            amount: Double,
+            from: Long? = null,
+            to: Long? = null
+        ) = TransactionEntity(
+            createdTime = now,
+            modifiedTime = now,
+            date = LocalDate.parse(date),
+            kind = kind,
+            fromAccountId = from,
+            toAccountId = to,
+            instrumentId = deposit,
+            particulars = "x",
+            amount = amount,
+        )
+        db.transactionDao().insert(row("2027-01-05", TransactionKind.INCOME, 9.0, to = bank))
+        db.transactionDao().insert(row("2027-01-05", TransactionKind.REDEEM, 19128.0, to = bank))
+        val january = db.statisticsDao()
+            .periodTotals("2027-01-01", "2027-01-31", 7, false, emptyList(), false, emptyList())
+            .single()
+        assertEquals(9.0, january.income, 0.001)
+        assertEquals(19137.0, january.withdrawals, 0.001)
+    }
 }

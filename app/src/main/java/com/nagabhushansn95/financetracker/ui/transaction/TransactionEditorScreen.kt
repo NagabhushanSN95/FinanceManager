@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import java.time.Instant
 import java.time.ZoneOffset
@@ -105,6 +106,12 @@ fun TransactionEditorScreen(
     val lookups = data.lookups
     val toIsPf =
         form.toAccountId?.let { data.accountsById[it]?.accountType } == AccountType.PROVIDENT_FUND
+    // Invest and Redeem are recorded from the instrument's screen under Investments; the + button on Home and
+    // Transactions only offers the cash kinds. Opened for an instrument, or on an investment row, all five show.
+    val investmentKinds = setOf(TransactionKind.INVEST, TransactionKind.REDEEM)
+    val kinds =
+        if (initialInstrumentId != null || initialKind in investmentKinds || form.kind in investmentKinds) TransactionKind.entries
+        else TransactionKind.entries.filter { it !in investmentKinds }
 
     Scaffold(
         topBar = {
@@ -143,7 +150,7 @@ fun TransactionEditorScreen(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TransactionKind.entries.forEach { kind ->
+                kinds.forEach { kind ->
                     FilterChip(
                         selected = form.kind == kind,
                         onClick = { viewModel.setKind(kind) },
@@ -201,25 +208,25 @@ fun TransactionEditorScreen(
                 onPickTemplate = viewModel::applyTemplate,
             )
 
-            if (form.showsInstrument && form.instrumentId != null) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = form.quantity,
-                        onValueChange = viewModel::setQuantity,
-                        label = { Text("Quantity") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f),
-                    )
-                    OutlinedTextField(
-                        value = form.rate,
-                        onValueChange = viewModel::setRate,
-                        label = { Text("Rate") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+            // Rate, quantity and amount fill each other in as Finance Manager did: a rate alone means one unit;
+            // rate × quantity gives the amount; amount ÷ quantity gives the rate.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = form.rate,
+                    onValueChange = viewModel::setRate,
+                    label = { Text("Rate") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = form.quantity,
+                    onValueChange = viewModel::setQuantity,
+                    label = { Text("Quantity") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.weight(1f),
+                )
             }
             OutlinedTextField(
                 value = form.amount,
@@ -236,10 +243,9 @@ fun TransactionEditorScreen(
                 viewModel::setSaveAsTemplate
             )
             CheckRow(
-                "Include in statistics",
-                form.includeInStatistics,
-                viewModel::setIncludeInStatistics
-            )
+                "Exclude from statistics",
+                !form.includeInStatistics,
+            ) { viewModel.setIncludeInStatistics(!it) }
             CheckRow("Hidden", form.hidden, viewModel::setHidden)
 
             Button(
@@ -275,13 +281,18 @@ fun TransactionEditorScreen(
             onPick = { viewModel.setCategory(it); sheet = null }, onDismiss = { sheet = null },
         )
 
+        // Deposits are opened, renewed and closed from their own screens; the picker offers them only when the
+        // transaction already belongs to one (editing a deposit's row, or opened from the deposit itself).
         Sheet.INSTRUMENT -> InstrumentPickerSheet(
-            instruments = data.instruments,
+            instruments = data.instruments.filter {
+                it.instrumentType != InstrumentType.FIXED_DEPOSIT || it.id == form.instrumentId || it.id == initialInstrumentId
+            },
             recent = data.recentInstruments,
             optional = !form.instrumentRequired,
             onPick = { viewModel.setInstrument(it); sheet = null },
             onNew = { sheet = Sheet.NEW_INSTRUMENT },
             onDismiss = { sheet = null },
+            typeOrder = data.instrumentTypeOrder,
         )
 
         Sheet.NEW_INSTRUMENT -> NewInstrumentSheet(

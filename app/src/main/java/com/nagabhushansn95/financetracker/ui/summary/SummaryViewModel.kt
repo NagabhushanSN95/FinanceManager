@@ -44,6 +44,17 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         AccountType.entries.associateWith { prefs.isSummarySectionCollapsed(it.name) }
     )
 
+    /** The Investments card folds like the account sections; remembered across launches under its own key. */
+    private val _investmentsCollapsed =
+        MutableStateFlow(prefs.isSummarySectionCollapsed(INVESTMENTS_SECTION))
+    val investmentsCollapsed: StateFlow<Boolean> = _investmentsCollapsed
+
+    fun toggleInvestments() {
+        val now = !_investmentsCollapsed.value
+        prefs.setSummarySectionCollapsed(INVESTMENTS_SECTION, now)
+        _investmentsCollapsed.value = now
+    }
+
     val state: StateFlow<SummaryUiState> =
         combine(db.accountDao().observeVisible(), collapsed) { accounts, collapsedMap ->
             val sections = SUMMARY_SECTIONS.mapNotNull { (type, members) ->
@@ -78,6 +89,8 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     }
 
     companion object {
+        private const val INVESTMENTS_SECTION = "INVESTMENTS"
+
         /** Picker sections, one per type. */
         val SECTION_ORDER = listOf(
             AccountType.WALLET,
