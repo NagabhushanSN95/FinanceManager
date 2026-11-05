@@ -30,11 +30,20 @@ object DatabaseFilePickers {
             "primary:$relativePath"
         )
 
-    /** ACTION_OPEN_DOCUMENT limited to database-like files, starting in [initialFolder]. */
-    class Open(private val initialFolder: String) : ActivityResultContracts.OpenDocument() {
+    /**
+     * ACTION_OPEN_DOCUMENT limited to database-like files. Opens where the previous file was picked when
+     * [lastPicked] returns its URI, otherwise in [initialFolder].
+     */
+    class Open(
+        private val initialFolder: String,
+        private val lastPicked: () -> Uri? = { null }
+    ) : ActivityResultContracts.OpenDocument() {
         override fun createIntent(context: Context, input: Array<String>): Intent =
             super.createIntent(context, DATABASE_MIME_TYPES)
-                .putExtra(DocumentsContract.EXTRA_INITIAL_URI, sharedFolderUri(initialFolder))
+                .putExtra(
+                    DocumentsContract.EXTRA_INITIAL_URI,
+                    lastPicked() ?: sharedFolderUri(initialFolder)
+                )
     }
 
     /**

@@ -93,6 +93,13 @@ class ExtrasViewModel(application: Application) : AndroidViewModel(application) 
      * Restores a backup picked by the user: the current data is backed up to Documents first, the picked file is
      * checked and staged, its settings applied, and the app restarts to swap the database in.
      */
+    fun lastRestoreUri(): Uri? = prefs.lastRestoreUri?.let(Uri::parse)
+
+    /** Remembers the file picked for a restore, so the picker opens in its folder next time (even if not confirmed). */
+    fun rememberRestorePick(uri: Uri) {
+        prefs.lastRestoreUri = uri.toString()
+    }
+
     fun restoreFrom(uri: Uri) {
         if (_state.value.busy) return
         _state.value = _state.value.copy(busy = true)
@@ -102,6 +109,8 @@ class ExtrasViewModel(application: Application) : AndroidViewModel(application) 
                     val safety = backup.saveToDocuments()
                     prefs.lastBackupDescription = safety.description
                     DatabaseRestore(getApplication()).stage(uri)
+                    // Staging imports the backup's own preferences, which may carry an older pick: set it again.
+                    prefs.lastRestoreUri = uri.toString()
                 }
             }
             result.onSuccess {

@@ -108,6 +108,16 @@ anyway.
 
 ## What the script decides for you
 
+- **Income categories.** The 4.x import creates one income category, "Interest & Dividends". The
+  script adds Salary, Cashback, Refunds and Reimbursements (scope Income), Loans & Lends (scope
+  Both)
+  and lets the existing Family, Friends and Relatives and Others categories take income as well as
+  expenses (scope Both), so money paid back by them can be filed under the same name. Keyword rules
+  (`INCOME_RULES`, first match wins; money lent to us and paid back to us both under Loans & Lends,
+  Family = Appa and Amma only, the wider family under Friends and Relatives, everything else under
+  Others) file the income rows that have no category: the report always shows the preview table;
+  `--assign-income` writes the assignments. The step runs after the deposits, so a 4.x maturity
+  booked as income is already a redemption by then.
 - **Deposits are named `FD #1` … in the sheet's order**, with any deposits from the extra file
   slotted
   in by date (see `--extra`); the app's next deposit continues the numbering.

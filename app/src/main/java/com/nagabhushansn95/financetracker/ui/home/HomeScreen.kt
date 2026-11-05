@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,8 +50,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.fragment.app.FragmentActivity
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -63,12 +68,9 @@ import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.investments.InvestmentGroup
 import com.nagabhushansn95.financetracker.data.investments.InvestmentOrder
 import com.nagabhushansn95.financetracker.ui.common.InvestmentsLock
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.ui.common.LocalOpenDrawer
 import com.nagabhushansn95.financetracker.ui.edit.EditDataScreen
 import com.nagabhushansn95.financetracker.ui.edit.MANAGE_TABS
-import androidx.compose.runtime.CompositionLocalProvider
 import com.nagabhushansn95.financetracker.ui.extras.ExtrasScreen
 import com.nagabhushansn95.financetracker.ui.help.AboutScreen
 import com.nagabhushansn95.financetracker.ui.help.HelpScreen
@@ -90,7 +92,6 @@ import com.nagabhushansn95.financetracker.ui.statistics.StatisticsScreen
 import com.nagabhushansn95.financetracker.ui.summary.SummaryScreen
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorScreen
 import com.nagabhushansn95.financetracker.ui.transactions.TransactionsScreen
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -211,10 +212,13 @@ fun HomeScreen() {
         )
     }
 
-    /** Press and hold on Home's "Cash & bank" card: shows the investments after the phone's unlock, or hides them. */
-    fun toggleInvestments() {
+    /**
+     * Press and hold on Home's "Cash & bank" card or on the drawer's title: shows the investments after the phone's
+     * unlock, or hides them. [onUnlocked] runs once they are shown.
+     */
+    fun toggleInvestments(onUnlocked: () -> Unit = {}) {
         if (investmentsUnlocked) InvestmentsLock.lock()
-        else activity?.let { a -> InvestmentsLock.unlock(a) }
+        else activity?.let { a -> InvestmentsLock.unlock(a, onUnlocked) }
     }
 
     fun openInvestments(subRoute: String? = null) = withInvestments {
@@ -251,9 +255,19 @@ fun HomeScreen() {
                             .fillMaxWidth()
                             .padding(start = 28.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
                     ) {
+                        // Press and hold reveals (or hides) the investments from any screen, not only from Home.
                         Text(
                             "Finance Tracker",
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .combinedClickable(
+                                    onClick = {},
+                                    onLongClick = {
+                                        toggleInvestments {
+                                            investmentsExpanded = true
+                                        }
+                                    },
+                                ),
                             style = MaterialTheme.typography.titleLarge,
                         )
                         IconButton(onClick = { scope.launch { drawerState.close() } }) {
@@ -361,7 +375,7 @@ fun HomeScreen() {
                     SummaryScreen(
                         onAccountLongPress = { navController.navigate(editorRoute(accountId = it)) },
                         investmentsUnlocked = investmentsUnlocked,
-                        onToggleInvestments = ::toggleInvestments,
+                        onToggleInvestments = { toggleInvestments() },
                     )
                 }
                 composable(Destination.TRANSACTIONS.route) {

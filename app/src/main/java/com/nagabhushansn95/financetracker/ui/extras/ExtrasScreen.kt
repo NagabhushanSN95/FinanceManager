@@ -59,8 +59,12 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
     }
 
     val pickRestore =
-        rememberLauncherForActivityResult(DatabaseFilePickers.Open(DatabaseFilePickers.BACKUP_FOLDER)) { uri ->
-            if (uri != null) confirmRestore = uri
+        rememberLauncherForActivityResult(
+            DatabaseFilePickers.Open(DatabaseFilePickers.BACKUP_FOLDER, viewModel::lastRestoreUri)
+        ) { uri ->
+            if (uri != null) {
+                viewModel.rememberRestorePick(uri); confirmRestore = uri
+            }
         }
 
     val pickStatement = rememberLauncherForActivityResult(

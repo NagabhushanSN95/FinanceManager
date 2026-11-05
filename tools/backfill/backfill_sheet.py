@@ -10,6 +10,9 @@ The input database is never modified: it is copied to --out first. Needs Python 
 > Microsoft Excel from Google Sheets does.
 
 What it does (details in README.md):
+  0. Adds the income categories (Salary, Cashback, Refunds, Reimbursements), Loans & Lends for both kinds, and lets
+     Family, Friends and Relatives and Others take income too; the 4.x import creates "Interest & Dividends" only.
+     With --assign-income the income rows without a category are filed by keyword rules (preview in the report).
   1. Seeds the investment category tree if the app has not yet (same tree as the app), adds sub-categories
      for fund types the sheet uses that the tree lacks, and writes the targets, tolerance bands and rebalance
      notes from the Investment Summary sheet plus the goal amount.
@@ -493,6 +496,112 @@ class Db:
 
 
 # ---------------------------------------------------------------------------------------------- categories
+
+# Income categories the 4.x import does not create (it has only "Interest & Dividends"): added top-level, scope INCOME.
+INCOME_CATEGORIES = ("Salary", "Cashback", "Refunds", "Reimbursements", "Others")
+# Categories for both kinds: existing expense ones that take income too (money paid back by the people they cover)
+# are widened to BOTH, the rest are added with scope BOTH.
+SHARED_CATEGORIES = ("Family", "Friends and Relatives", "Loans & Lends")
+
+
+def seed_income_categories(db, report):
+    """Adds the income categories and widens the shared ones; idempotent, names matched ignoring case."""
+    existing = {r["name"].strip().lower(): r for r in db.q("SELECT id, name, applies_to, deleted FROM categories")}
+    order = (db.one("SELECT COALESCE(MAX(display_order), 0) FROM categories")[0] or 0) + 1
+    added, widened = [], []
+    for name in INCOME_CATEGORIES:
+        row = existing.get(name.lower())
+        if row is None:
+            db.x("INSERT INTO categories (name, parent_id, applies_to, icon, color, display_order, deleted) VALUES (?, NULL, 'INCOME', NULL, NULL, ?, 0)",
+                 name, order)
+            order += 1
+            added.append(name)
+        elif row["applies_to"] == "EXPENSE":
+            db.x("UPDATE categories SET applies_to = 'BOTH', deleted = 0 WHERE id = ?", row["id"])
+            widened.append(row["name"])
+    for name in SHARED_CATEGORIES:
+        row = existing.get(name.lower())
+        if row is None:
+            db.x("INSERT INTO categories (name, parent_id, applies_to, icon, color, display_order, deleted) VALUES (?, NULL, 'BOTH', NULL, NULL, ?, 0)",
+                 name, order)
+            order += 1
+            added.append(name)
+        elif row["applies_to"] != "BOTH":
+            db.x("UPDATE categories SET applies_to = 'BOTH' WHERE id = ?", row["id"])
+            widened.append(row["name"])
+    if added:
+        report.add(f"- Categories added: {', '.join(added)}.")
+    if widened:
+        report.add(f"- Categories now applying to income and expenses alike: {', '.join(widened)}.")
+    if not added and not widened:
+        report.add("- Income categories already present; kept.")
+
+
+# Keyword rules filing the 4.x income rows that have no category (first match wins; particulars matched ignoring case).
+# Money lent to us and money paid back to us both go to Loans & Lends; Family is the parents only (Appa, Amma), the
+# wider family (Doddamma, Atya, Mama, ...) counts as Friends and Relatives. Whatever no rule matches goes to Others
+# (EPF contributions among them, to be sorted out later), so no income row is left without a category.
+INCOME_RULES = (
+    ("Reimbursements", r"reimburs|iisc gave|cisco paid"),
+    ("Refunds", r"refund|returned"),
+    ("Cashback", r"cash ?back|reward points|promo|offer"),
+    ("Salary", r"salary|stipend|scholarship|bonus|arrears"),
+    ("Loans & Lends", r"lent( to)? me|\(lent\)|have to return|loan|borrow|paid( me)? back|(gave|sent|have) back|contributed|\bpaid\b"),
+    ("Family", r"\b(appa|amma)\b"),
+    ("Friends and Relatives", r"\b(doddamma|atya|mama|kakka|ajji|dada)\b|gave|to me|sent|gift"),
+    ("Others", r""),
+)
+
+
+def assign_income_categories(db, report, apply):
+    """Previews (and with [apply] writes) the INCOME_RULES on the uncategorised income rows; the report gets the table."""
+    import re
+    cats = {r["name"].lower(): r["id"] for r in db.q("SELECT id, name FROM categories WHERE deleted = 0")}
+    rows = db.q("SELECT id, particulars, amount FROM transactions WHERE kind = 'INCOME' AND category_id IS NULL")
+    rules = [(name, re.compile(pat, re.IGNORECASE)) for name, pat in INCOME_RULES]
+    by_rule = {name: [] for name, _ in INCOME_RULES}
+    unmatched = []
+    for r in rows:
+        text = r["particulars"] or ""
+        for name, rx in rules:
+            if rx.search(text):
+                by_rule[name].append(r)
+                break
+        else:
+            unmatched.append(r)
+    lines = ["", f"### Income categories by keyword ({'applied' if apply else 'preview only'})", "",
+             "| Category | Rule | Rows | Total | Most frequent particulars |", "|---|---|---:|---:|---|"]
+    for name, pat in INCOME_RULES:
+        hits = by_rule[name]
+        if not hits:
+            continue
+        freq = {}
+        for r in hits:
+            freq[r["particulars"]] = freq.get(r["particulars"], 0) + 1
+        top = ", ".join(f"{k} ({v})" for k, v in sorted(freq.items(), key=lambda kv: -kv[1])[:6])
+        lines.append(f"| {name} | {'(everything else)' if not pat else '`' + pat + '`'} | {len(hits)} | {sum(r['amount'] for r in hits):,.0f} | {top} |")
+    lines.append(f"| (no rule) | | {len(unmatched)} | {sum(r['amount'] for r in unmatched):,.0f} | |")
+    if unmatched:
+        freq = {}
+        for r in unmatched:
+            k = r["particulars"]
+            n, total = freq.get(k, (0, 0.0))
+            freq[k] = (n + 1, total + r["amount"])
+        lines += ["", "Left without a category:", ""]
+        lines += [f"- {k} × {n}, {total:,.0f}" for k, (n, total) in sorted(freq.items(), key=lambda kv: -kv[1][0])]
+    report.extra_sections.append("\n".join(lines))
+    if apply:
+        missing = [name for name, _ in INCOME_RULES if name.lower() not in cats and by_rule[name]]
+        if missing:
+            report.problem(f"Income rules name categories that do not exist: {', '.join(missing)}")
+            return
+        for name, hits in by_rule.items():
+            for r in hits:
+                db.x("UPDATE transactions SET category_id = ? WHERE id = ?", cats[name.lower()], r["id"])
+        report.add(f"- Income rows filed by keyword: {sum(len(h) for h in by_rule.values())} of {len(rows)} ({len(unmatched)} left without a category).")
+    else:
+        report.add(f"- Income rows the keyword rules would file: {sum(len(h) for h in by_rule.values())} of {len(rows)} (preview; pass --assign-income to apply).")
+
 
 def seed_categories(db, report):
     if db.one("SELECT COUNT(*) FROM risk_levels")[0] == 0:
@@ -1197,6 +1306,8 @@ def main():
     ap.add_argument("--carry-from", metavar="DB",
                     help="a 5.0.0 database in use now: its deposit templates, category and instrument order, active flags, "
                          "price links and preferences are carried over (matched by name)")
+    ap.add_argument("--assign-income", action="store_true",
+                    help="file the uncategorised income rows by the keyword rules (without it the report only previews them)")
     ap.add_argument("--force", action="store_true", help="write the output even when a check fails")
     args = ap.parse_args()
     out = args.out or re.sub(r"\.db$", "", args.db) + ".backfilled.db"
@@ -1234,6 +1345,7 @@ def main():
         before = db.account_fingerprint()
         sheet = Sheet(args.sheet)
         risk = seed_categories(db, report)
+        seed_income_categories(db, report)
         apply_targets(db, sheet, report)
         extras = extra_fixed_deposits(args.extra) if args.extra else []
         sweep_plan = sweep_in_plan(args.sweep_in) if args.sweep_in else None
@@ -1241,6 +1353,8 @@ def main():
         merge_instruments(db, args.merge, report)
         assign_instrument_categories(db, sheet, risk, report)
         backfill_insurance(db, sheet, report)
+        # After the deposits: a 4.x maturity booked as income has become a redemption by now.
+        assign_income_categories(db, report, apply=args.assign_income)
         if args.carry_from:
             carry_over(db, args.carry_from, report)
         after = db.account_fingerprint()

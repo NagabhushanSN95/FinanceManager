@@ -5,25 +5,18 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +30,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
 
@@ -49,9 +43,9 @@ private data class PickRow(
 )
 
 /**
- * Generic bottom sheet: search box, "Recent" section, then named sections. Rows are tapped to pick.
+ * Generic bottom sheet: search box, "Recent" section, then named sections. Rows are tapped to pick. A [FormSheet],
+ * so a scroll up the list does not close it.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PickerSheet(
     title: String,
@@ -75,44 +69,36 @@ private fun PickerSheet(
     }
         .filter { it.second.isNotEmpty() }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
-                )
-                if (clearable) TextButton(onClick = { onPick(-1) }) { Text("None") }
-                extraAction?.let { (label, action) -> TextButton(onClick = action) { Text(label) } }
-            }
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                label = { Text("Search") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+    FormSheet(title = null, onDismiss = onDismiss, scrollable = false) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.height(8.dp))
-            LazyColumn(modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp)) {
-                if (q.isEmpty() && recent.isNotEmpty()) {
-                    item { SectionHeader("Recent") }
-                    items(
-                        recent,
-                        key = { "r${it.id}" }) { row -> PickRowView(row) { onPick(row.id) } }
-                }
-                filtered.forEach { (name, rows) ->
-                    item { SectionHeader(name) }
-                    items(rows, key = { it.id }) { row -> PickRowView(row) { onPick(row.id) } }
-                }
+            if (clearable) TextButton(onClick = { onPick(-1) }) { Text("None") }
+            extraAction?.let { (label, action) -> TextButton(onClick = action) { Text(label) } }
+        }
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            label = { Text("Search") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            if (q.isEmpty() && recent.isNotEmpty()) {
+                item { SectionHeader("Recent") }
+                items(
+                    recent,
+                    key = { "r${it.id}" }) { row -> PickRowView(row) { onPick(row.id) } }
+            }
+            filtered.forEach { (name, rows) ->
+                item { SectionHeader(name) }
+                items(rows, key = { it.id }) { row -> PickRowView(row) { onPick(row.id) } }
             }
         }
     }
@@ -254,7 +240,6 @@ fun typeTitle(type: InstrumentType): String = when (type) {
  * Minimal new-instrument sheet: name, type, optional symbol. Fixed deposits and insurance policies are not offered:
  * they need their terms, so they are opened from their own screens under Investments.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewInstrumentSheet(
     onCreate: (name: String, type: InstrumentType, symbol: String?) -> Unit,
@@ -263,19 +248,7 @@ fun NewInstrumentSheet(
     var name by remember { mutableStateOf("") }
     var symbol by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(InstrumentType.STOCK) }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
-                .imePadding()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text("New instrument", style = MaterialTheme.typography.titleLarge)
+    FormSheet(title = "New instrument", onDismiss = onDismiss) {
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -311,6 +284,5 @@ fun NewInstrumentSheet(
                 onClick = { onCreate(name, type, symbol) },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Create") }
-        }
     }
 }

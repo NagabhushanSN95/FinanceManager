@@ -88,6 +88,11 @@ class AppPreferences(context: Context) {
         get() = prefs.getString(KEY_ZERODHA_STATEMENT_URI, null)
         set(value) = prefs.edit().putString(KEY_ZERODHA_STATEMENT_URI, value).apply()
 
+    /** URI of the last backup file picked for a restore, so Extras › Restore data opens in that folder next time. */
+    var lastRestoreUri: String?
+        get() = prefs.getString(KEY_RESTORE_URI, null)
+        set(value) = prefs.edit().putString(KEY_RESTORE_URI, value).apply()
+
     /** Upload the daily backup to Google Drive. */
     var driveUploadEnabled: Boolean
         get() = prefs.getBoolean(KEY_DRIVE_UPLOAD, false)
@@ -205,6 +210,7 @@ class AppPreferences(context: Context) {
         private const val KEY_ZERODHA_DEMAT = "zerodha_demat_account"
         private const val KEY_ZERODHA_BANK = "zerodha_bank_account"
         private const val KEY_ZERODHA_STATEMENT_URI = "zerodha_statement_uri"
+        private const val KEY_RESTORE_URI = "restore_uri"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_AUTO_PRICES = "auto_prices"
         private const val KEY_PRICE_INTERVAL = "price_refresh_interval"
