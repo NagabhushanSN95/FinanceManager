@@ -509,7 +509,10 @@ private fun Stat(label: String, value: String, signed: Double? = null) {
 }
 
 
-/** Bonus a:b (a new for every b held) or split old:new; the extra units are an income row at zero cost. */
+/**
+ * Bonus a:b (a new for every b held) or split old:new; the extra units are an income row at zero cost. The holding
+ * maths tells them apart by the particulars: a bonus is a lot of its own, a split re-spreads the open lots.
+ */
 @Composable
 private fun BonusOrSplitDialog(
     instrument: Instrument,
@@ -589,7 +592,7 @@ private fun BonusOrSplitDialog(
                 onRecord(
                     extra!!,
                     date!!,
-                    if (split) "Stock split ${a.trim()}:${b.trim()} - ${instrument.name}" else "Bonus Shares ${a.trim()}:${b.trim()} - ${instrument.name}"
+                    if (split) "${com.nagabhushansn95.financetracker.data.investments.Holdings.SPLIT_PREFIX} ${a.trim()}:${b.trim()} - ${instrument.name}" else "Bonus Shares ${a.trim()}:${b.trim()} - ${instrument.name}"
                 )
             }) { Text("Record") }
         },

@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import java.time.Instant
 import java.time.LocalDate
@@ -179,6 +180,14 @@ fun androidx.compose.foundation.layout.RowScope.StatCell(
         )
         Text(
             value, style = MaterialTheme.typography.bodyMedium, maxLines = 1,
+            softWrap = false,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Clip,
+            // Full amounts with paise ("₹1,58,23,456.78") shrink a little in a narrow cell instead of being cut.
+            autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(
+                minFontSize = 10.sp,
+                maxFontSize = 14.sp,
+                stepSize = 0.5.sp
+            ),
             color = when {
                 signed == null -> MaterialTheme.colorScheme.onSurface
                 signed < 0 -> MaterialTheme.colorScheme.error

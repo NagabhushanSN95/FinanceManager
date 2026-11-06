@@ -197,22 +197,22 @@ fun ProvidentFundAccountScreen(
                             style = MaterialTheme.typography.headlineSmall
                         )
                         Row {
-                            StatCell("Contributed", MoneyFormat.compact(state.contributed))
+                            StatCell("Contributed", MoneyFormat.amount(state.contributed))
                             StatCell(
                                 "Interest",
-                                MoneyFormat.compact(state.interest),
+                                MoneyFormat.amount(state.interest),
                                 state.interest
                             )
                             if (state.withdrawn > 0) StatCell(
                                 "Withdrawn",
-                                MoneyFormat.compact(state.withdrawn)
+                                MoneyFormat.amount(state.withdrawn)
                             )
                             StatCell("XIRR", pct(state.xirr))
                         }
                         Row {
                             state.contributors.filter { it.name != "Withdrawn" && it.name != "Interest" }
                                 .take(4)
-                                .forEach { StatCell(it.name, MoneyFormat.compact(it.amount)) }
+                                .forEach { StatCell(it.name, MoneyFormat.amount(it.amount)) }
                         }
                         account.accountNumber?.let {
                             Text(

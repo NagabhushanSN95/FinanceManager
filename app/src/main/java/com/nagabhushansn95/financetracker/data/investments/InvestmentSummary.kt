@@ -82,7 +82,7 @@ data class InvestmentSummary(
     val holdings: List<HoldingRow>,
     /** Every instrument with a position, own and family, for the per-type screens. */
     val rows: List<HoldingRow>,
-    /** Own instruments rolled up by type (deposits, policies, ...). */
+    /** Own instruments rolled up by type (deposits, policies, ...), type OTHER included although it is not in [total]. */
     val byType: Map<InstrumentType, SummaryLine>,
     val providentFunds: SummaryLine?,
     val goalAmount: Double?,
@@ -145,8 +145,10 @@ object InvestmentSummaryBuilder {
             .mapValues { (_, r) -> r.maxWith(compareBy({ it.date }, { it.id })).rate }
 
     /**
-     * Rolls the ledger up into the Investment Summary. Family-owned instruments are excluded from the totals. Provident
-     * funds come from the accounts: invested = contributions in minus transfers out, current = balance.
+     * Rolls the ledger up into the Investment Summary. Family-owned instruments and instruments of type OTHER (money
+     * parked elsewhere, loans: savings rather than investments) are excluded from the totals; the latter still appear
+     * in [InvestmentSummary.byType] for their own screen. Provident funds come from the accounts: invested =
+     * contributions in minus transfers out, current = balance.
      */
     fun build(
         instruments: List<Instrument>,
@@ -212,6 +214,9 @@ object InvestmentSummaryBuilder {
             )
         }
         val own = rows.filter { it.instrument.owner == Instrument.OWNER_SELF }
+        // Money parked elsewhere and loans (type OTHER) are savings, not investments: they have their own screen and
+        // count in the Savings tables, but stay out of the totals, the categories and the risk table.
+        val counted = own.filter { it.instrument.instrumentType != InstrumentType.OTHER }
 
         // Which top-level category each holding belongs to, and which child (if any).
         fun topOf(h: HoldingRow): InvestmentCategory? {
@@ -332,7 +337,7 @@ object InvestmentSummaryBuilder {
             if (top.id == pfCategory?.id) {
                 pfLine?.let { categoryLines += it }; continue
             }
-            val rows = own.filter { topOf(it)?.id == top.id }
+            val rows = counted.filter { topOf(it)?.id == top.id }
             val childLines = categories.filter { it.parentId == top.id }.map { child ->
                 lineFor(child.id, child.name, rows.filter { childOf(it)?.id == child.id }, child)
             }
@@ -352,7 +357,7 @@ object InvestmentSummaryBuilder {
         }
         if (pfLine != null && pfCategory == null) categoryLines += pfLine
         // Instruments whose category tree is missing entirely (no seed): one line per type.
-        val orphanRows = own.filter { topOf(it) == null }
+        val orphanRows = counted.filter { topOf(it) == null }
         orphanRows.groupBy { it.instrument.instrumentType }.forEach { (type, rows) ->
             categoryLines += lineFor(
                 null,
@@ -385,14 +390,14 @@ object InvestmentSummaryBuilder {
                 lineFor(
                     null,
                     level.name,
-                    own.filter { riskOf(it) == level.id },
+                    counted.filter { riskOf(it) == level.id },
                     null
                 )
             ) +
                     listOfNotNull(pfLine?.takeIf { pfCategory?.riskLevelId == level.id })
             riskLines += group(level.name, lines)
         }
-        val unrated = own.filter { riskOf(it) == null }
+        val unrated = counted.filter { riskOf(it) == null }
         val pfUnrated = pfLine?.takeIf { pfCategory?.riskLevelId == null }
         if (unrated.isNotEmpty() || pfUnrated != null) {
             riskLines += group(
@@ -404,10 +409,10 @@ object InvestmentSummaryBuilder {
         val zerodha = lineFor(
             null,
             "In Zerodha",
-            own.filter { it.instrument.instrumentType == InstrumentType.STOCK || it.instrument.instrumentType == InstrumentType.MUTUAL_FUND },
+            counted.filter { it.instrument.instrumentType == InstrumentType.STOCK || it.instrument.instrumentType == InstrumentType.MUTUAL_FUND },
             null
         )
-        val liquid = lineFor(null, "Liquid (deposits, funds, stocks)", own.filter {
+        val liquid = lineFor(null, "Liquid (deposits, funds, stocks)", counted.filter {
             it.instrument.instrumentType == InstrumentType.STOCK || it.instrument.instrumentType == InstrumentType.MUTUAL_FUND || it.instrument.instrumentType == InstrumentType.FIXED_DEPOSIT
         }, null)
         val byType = InstrumentType.entries.associateWith { type ->

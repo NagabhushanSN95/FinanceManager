@@ -11,12 +11,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -31,12 +29,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -210,11 +206,11 @@ fun InsuranceScreen(
                         Row {
                             StatCell(
                                 "Sum assured",
-                                MoneyFormat.compact(active.sumOf { it.policy?.sumAssured ?: 0.0 })
+                                MoneyFormat.amount(active.sumOf { it.policy?.sumAssured ?: 0.0 })
                             )
                             StatCell(
                                 "Per year",
-                                MoneyFormat.compact(active.sumOf { v ->
+                                MoneyFormat.amount(active.sumOf { v ->
                                     v.policy?.let { p ->
                                         (p.premiumAmount ?: 0.0) * 12.0 / (p.premiumFrequencyMonths
                                             ?: 12).coerceAtLeast(1)
@@ -303,7 +299,7 @@ private fun PolicyRow(v: PolicyView, onClick: () -> Unit) {
         Text(
             listOfNotNull(
                 v.policy?.premiumAmount?.let { "${MoneyFormat.amount(it)} ${premiumFrequencyLabel(v.policy.premiumFrequencyMonths)}" },
-                v.policy?.sumAssured?.let { "assured ${MoneyFormat.compact(it)}" },
+                v.policy?.sumAssured?.let { "assured ${MoneyFormat.amount(it)}" },
                 if (v.countsAsInvestment) "investment" else "not an investment",
                 v.instrument.owner.takeIf { it != Instrument.OWNER_SELF }?.let { "owner $it" },
             ).joinToString(" · "),

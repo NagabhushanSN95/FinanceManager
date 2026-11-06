@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
+import com.nagabhushansn95.financetracker.ui.common.StatCell
 import java.time.format.DateTimeFormatter
 
 private val DATE = DateTimeFormatter.ofPattern("d MMM yyyy")
@@ -147,16 +148,16 @@ private fun TotalsCard(s: InvestmentSummary, prices: PriceStatus, onRefresh: () 
                 style = MaterialTheme.typography.headlineSmall
             )
             Row {
-                Stat("Invested", MoneyFormat.compact(s.total.invested)); Stat(
+                Stat("Invested", MoneyFormat.amount(s.total.invested)); Stat(
                 "Held P/L",
-                MoneyFormat.compact(s.total.held),
+                MoneyFormat.amount(s.total.held),
                 s.total.held
-            ); Stat("Realised", MoneyFormat.compact(s.total.realised), s.total.realised)
+            ); Stat("Realised", MoneyFormat.amount(s.total.realised), s.total.realised)
             }
             Row {
                 Stat("XIRR", pct(s.total.xirr)); Stat(
                 "Income",
-                MoneyFormat.compact(s.total.income)
+                MoneyFormat.amount(s.total.income)
             ); Stat("Prices as of", s.latestPriceDate?.format(DATE) ?: "no prices yet")
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -183,78 +184,85 @@ private fun androidx.compose.foundation.layout.RowScope.Stat(
     value: String,
     signed: Double? = null
 ) {
-    Column(modifier = Modifier.weight(1f)) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            value, style = MaterialTheme.typography.bodyMedium, maxLines = 1,
-            color = when {
-                signed == null -> MaterialTheme.colorScheme.onSurface; signed < 0 -> MaterialTheme.colorScheme.error; else -> MaterialTheme.colorScheme.tertiary
-            },
-        )
-    }
+    StatCell(label, value, signed)
 }
 
-/** Two tiles per row, each opening a screen: deposits, PF, insurance, stocks & funds, others, categories, savings. */
+private data class Tile(
+    val title: String,
+    val value: String,
+    val route: String,
+    val note: String? = null
+)
+
+/**
+ * Two tiles per row, each opening a screen: deposits, PF, insurance, stocks & funds, categories, savings, and last
+ * the "Others" (money parked elsewhere, loans), which are savings rather than investments and sit outside the total.
+ */
 @Composable
 private fun Tiles(s: InvestmentSummary, onNavigate: (String) -> Unit) {
     val stocksAndFunds = (s.byType[InstrumentType.STOCK]?.current
         ?: 0.0) + (s.byType[InstrumentType.MUTUAL_FUND]?.current ?: 0.0)
     val byGroup = mapOf(
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.FIXED_DEPOSITS to Triple(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.FIXED_DEPOSITS to Tile(
             "Fixed deposits",
             MoneyFormat.compact(s.byType[InstrumentType.FIXED_DEPOSIT]?.current ?: 0.0),
             InvestmentRoutes.type(InstrumentType.FIXED_DEPOSIT)
         ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.PROVIDENT_FUNDS to Triple(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.PROVIDENT_FUNDS to Tile(
             "Provident funds",
             MoneyFormat.compact(s.providentFunds?.current ?: 0.0),
             InvestmentRoutes.PROVIDENT_FUNDS
         ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.INSURANCE to Triple(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.INSURANCE to Tile(
             "Insurance",
             MoneyFormat.compact(s.byType[InstrumentType.INSURANCE]?.current ?: 0.0),
             InvestmentRoutes.type(InstrumentType.INSURANCE)
         ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.STOCKS_AND_FUNDS to Triple(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.STOCKS_AND_FUNDS to Tile(
             "Stocks & funds",
             MoneyFormat.compact(stocksAndFunds),
             InvestmentRoutes.HOLDINGS
-        ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.OTHERS to Triple(
-            "Others",
-            MoneyFormat.compact(s.byType[InstrumentType.OTHER]?.current ?: 0.0),
-            InvestmentRoutes.type(InstrumentType.OTHER)
         ),
     )
     // Same order as the categories under Manage › Investment categories (the summary lists them in that order).
     val tiles =
         com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.groups(s.categories.map { it.name })
-            .map { byGroup.getValue(it) } + listOf(
-        Triple(
-            "Categories & targets",
-            s.goalAmount?.let { "goal " + MoneyFormat.compact(it) } ?: "goal not set",
-            InvestmentRoutes.TARGETS),
-        Triple("Savings", "monthly · yearly", InvestmentRoutes.SAVINGS),
-    )
+            .mapNotNull { byGroup[it] } + listOf(
+            Tile(
+                "Categories & targets",
+                s.goalAmount?.let { "goal " + MoneyFormat.compact(it) } ?: "goal not set",
+                InvestmentRoutes.TARGETS
+            ),
+            Tile("Savings", "monthly · yearly", InvestmentRoutes.SAVINGS),
+            Tile(
+                "Others",
+                MoneyFormat.compact(s.byType[InstrumentType.OTHER]?.current ?: 0.0),
+                InvestmentRoutes.type(InstrumentType.OTHER),
+                note = "Savings, not investments: outside the total above",
+            ),
+        )
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         tiles.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                pair.forEach { (title, value, route) ->
+                pair.forEach { tile ->
                     Card(modifier = Modifier
                         .weight(1f)
-                        .clickable { onNavigate(route) }) {
+                        .clickable { onNavigate(tile.route) }) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(title, style = MaterialTheme.typography.labelLarge)
+                            Text(tile.title, style = MaterialTheme.typography.labelLarge)
                             Text(
-                                value,
+                                tile.value,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 maxLines = 1
                             )
+                            tile.note?.let {
+                                Text(
+                                    it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

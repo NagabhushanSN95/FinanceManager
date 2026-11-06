@@ -12,13 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -38,6 +34,7 @@ import com.nagabhushansn95.financetracker.data.investments.HoldingRow
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.SummaryLine
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
+import com.nagabhushansn95.financetracker.ui.common.StatCell
 import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,6 +110,14 @@ fun InstrumentListScreen(
         ).filter { it.second.isNotEmpty() }
         LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
             item { TypeHeader(listOfNotNull(s.byType[type])) }
+            if (type == InstrumentType.OTHER) item {
+                Text(
+                    "Money parked elsewhere and loans: savings rather than investments. These count in the Savings tables but not under Total investments.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
             if (sections.isEmpty()) item {
                 Text(
                     "Nothing here yet.",
@@ -187,9 +192,9 @@ private fun ProvidentFundCard(line: SummaryLine, onAdd: (Long) -> Unit, onOpen: 
                 )
             }
             Row {
-                Stat("Contributions", MoneyFormat.compact(line.invested)); Stat(
+                Stat("Contributions", MoneyFormat.amount(line.invested)); Stat(
                 "Interest",
-                MoneyFormat.compact(line.income)
+                MoneyFormat.amount(line.income)
             ); Stat("XIRR", pct(line.xirr))
             }
             line.accountId?.let { id ->
@@ -222,11 +227,11 @@ private fun TypeHeader(lines: List<SummaryLine>) {
         ) {
             Text(MoneyFormat.amount(current), style = MaterialTheme.typography.headlineSmall)
             Row {
-                Stat("Invested", MoneyFormat.compact(invested)); Stat(
+                Stat("Invested", MoneyFormat.amount(invested)); Stat(
                 "Held P/L",
-                MoneyFormat.compact(current - invested),
+                MoneyFormat.amount(current - invested),
                 current - invested
-            ); Stat("Realised", MoneyFormat.compact(realised), realised)
+            ); Stat("Realised", MoneyFormat.amount(realised), realised)
             }
         }
     }
@@ -238,19 +243,7 @@ private fun androidx.compose.foundation.layout.RowScope.Stat(
     value: String,
     signed: Double? = null
 ) {
-    Column(modifier = Modifier.weight(1f)) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            value, style = MaterialTheme.typography.bodyMedium, maxLines = 1,
-            color = when {
-                signed == null -> MaterialTheme.colorScheme.onSurface; signed < 0 -> MaterialTheme.colorScheme.error; else -> MaterialTheme.colorScheme.tertiary
-            },
-        )
-    }
+    StatCell(label, value, signed)
 }
 
 @Composable
@@ -293,7 +286,7 @@ private fun HoldingRowView(h: HoldingRow, onClick: () -> Unit) {
             },
             h.position.averageCost?.let { "avg %.2f".format(it) },
             h.unitPrice?.let { "price %.2f".format(it) } ?: if (units != null) "no price" else null,
-            "invested ${MoneyFormat.compact(h.position.costHeld)}",
+            "invested ${MoneyFormat.amount(h.position.costHeld)}",
         ).joinToString(" · ")
         Text(
             line,
@@ -327,7 +320,7 @@ private fun AmountRowView(h: HoldingRow, onClick: () -> Unit) {
         }
         Text(
             listOfNotNull(
-                "invested ${MoneyFormat.compact(h.position.costHeld)}",
+                "invested ${MoneyFormat.amount(h.position.costHeld)}",
                 h.position.firstDate?.let { "since $it" },
                 h.instrument.owner.takeIf { it != Instrument.OWNER_SELF }
                     ?.let { "owner $it" }).joinToString(" · "),
@@ -344,13 +337,13 @@ private fun ProfitLine(h: HoldingRow) {
     Row {
         val held = h.heldProfit
         Text(
-            "Held ${MoneyFormat.compact(held)}",
+            "Held ${MoneyFormat.amount(held)}",
             style = MaterialTheme.typography.bodySmall,
             color = if (held < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
         )
         Spacer(Modifier.width(12.dp))
         Text(
-            "Realised ${MoneyFormat.compact(h.position.realised)}",
+            "Realised ${MoneyFormat.amount(h.position.realised)}",
             style = MaterialTheme.typography.bodySmall,
             color = if (h.position.realised < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
         )

@@ -2,10 +2,10 @@ package com.nagabhushansn95.financetracker.ui.investments
 
 import android.app.Application
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -31,20 +29,20 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,30 +54,30 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
+import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
 import com.nagabhushansn95.financetracker.data.db.entity.FdStatus
-import com.nagabhushansn95.financetracker.data.db.entity.FdType
 import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
+import com.nagabhushansn95.financetracker.data.db.entity.FdType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.investments.FdMath
 import com.nagabhushansn95.financetracker.data.investments.FdView
 import com.nagabhushansn95.financetracker.data.investments.FixedDeposits
+import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
+import com.nagabhushansn95.financetracker.data.prefs.FdListPrefs
 import com.nagabhushansn95.financetracker.data.repository.FixedDepositRepository
 import com.nagabhushansn95.financetracker.data.repository.NewFixedDeposit
 import com.nagabhushansn95.financetracker.ui.common.AccountField
-import com.nagabhushansn95.financetracker.ui.common.LabelRow
-import com.nagabhushansn95.financetracker.ui.common.NaturalOrder
-import com.nagabhushansn95.financetracker.ui.common.PickDateDialog
-import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
-import com.nagabhushansn95.financetracker.data.prefs.FdListPrefs
-import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
 import com.nagabhushansn95.financetracker.ui.common.AutocompleteField
-import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
 import com.nagabhushansn95.financetracker.ui.common.DateField
+import com.nagabhushansn95.financetracker.ui.common.FormSheet
+import com.nagabhushansn95.financetracker.ui.common.LabelRow
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
+import com.nagabhushansn95.financetracker.ui.common.NaturalOrder
 import com.nagabhushansn95.financetracker.ui.common.NumberField
+import com.nagabhushansn95.financetracker.ui.common.PickDateDialog
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
 import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
@@ -561,10 +559,10 @@ private fun FdTotals(open: List<FdView>) {
         ) {
             Text(MoneyFormat.amount(estimated), style = MaterialTheme.typography.headlineSmall)
             Row {
-                StatCell("Deposited", MoneyFormat.compact(principal))
+                StatCell("Deposited", MoneyFormat.amount(principal))
                 StatCell(
                     "Accrued",
-                    MoneyFormat.compact(estimated - principal),
+                    MoneyFormat.amount(estimated - principal),
                     estimated - principal
                 )
                 StatCell("Open", "${open.size}")

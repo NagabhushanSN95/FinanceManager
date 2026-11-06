@@ -13,7 +13,10 @@ data class CashFlow(val date: LocalDate, val amount: Double)
 /**
  * What the ledger says about one instrument, in INR.
  *
- * Unit-based instruments (rows carry quantities) use average cost: a sale realises `amount − avgCost × units`.
+ * Unit-based instruments (rows carry quantities) match every sale against the oldest units still held, first in
+ * first out, as Zerodha's P&L and the income-tax rules do: a sale realises `amount − cost of those lots`. Bonus units
+ * form a lot of their own at zero cost; a split spreads the existing lots over the new unit count. [averageCost] is
+ * the average of the lots still held.
  * Amount-only instruments (deposits, policies, SIPs recorded without units) treat redemptions as returning cost
  * first; anything beyond the cost ever put in is realised profit.
  */
@@ -49,6 +52,15 @@ data class Position(
 }
 
 object Holdings {
+    /** Units bought together and the cost still attached to them. */
+    private class Lot(var units: Double, var cost: Double)
+
+    /** Prefix the bonus-or-split dialog writes for a split (see InstrumentDetailScreen). */
+    const val SPLIT_PREFIX = "Stock split"
+
+    /** Zero-cost units from a split rather than a bonus: the dialog writes "Stock split old:new - name". */
+    fun isSplit(particulars: String): Boolean =
+        particulars.trimStart().startsWith(SPLIT_PREFIX, ignoreCase = true)
 
     /**
      * Positions for every instrument that appears in [transactions] (which may be the whole ledger). [unitBased] says
@@ -83,6 +95,8 @@ object Holdings {
         val flows = ArrayList<CashFlow>()
         val hasUnits =
             unitBased && rows.any { it.quantity != null && (it.kind == TransactionKind.INVEST || it.kind == TransactionKind.REDEEM) }
+        // Open lots, oldest first; a sale consumes them in that order (FIFO).
+        val lots = ArrayDeque<Lot>()
 
         for (t in rows) {
             val amount = t.amountInr
@@ -90,7 +104,12 @@ object Holdings {
                 TransactionKind.INVEST -> {
                     invested += amount
                     cost += amount
-                    if (hasUnits) units += t.quantity ?: 0.0
+                    if (hasUnits) {
+                        val q = t.quantity ?: 0.0
+                        units += q
+                        // A purchase recorded without units keeps its cost in the holding; nothing can sell it.
+                        if (q > Position.UNIT_EPSILON) lots.addLast(Lot(q, amount))
+                    }
                     if (amount != 0.0) flows += CashFlow(t.date, -amount)
                 }
 
@@ -98,8 +117,19 @@ object Holdings {
                     redeemed += amount
                     if (hasUnits) {
                         val q = t.quantity ?: 0.0
-                        val avg = if (units > Position.UNIT_EPSILON) cost / units else 0.0
-                        val costOut = (avg * q).coerceAtMost(cost)
+                        var need = q
+                        var costOut = 0.0
+                        while (need > Position.UNIT_EPSILON && lots.isNotEmpty()) {
+                            val lot = lots.first()
+                            val take = minOf(lot.units, need)
+                            val share = lot.cost * take / lot.units
+                            costOut += share
+                            lot.units -= take
+                            lot.cost -= share
+                            need -= take
+                            if (lot.units <= Position.UNIT_EPSILON) lots.removeFirst()
+                        }
+                        costOut = costOut.coerceAtMost(cost)
                         realised += amount - costOut
                         cost -= costOut
                         units -= q
@@ -113,8 +143,14 @@ object Holdings {
 
                 TransactionKind.INCOME -> {
                     // Bonus units carry a quantity and no cash; dividends and interest carry cash.
-                    if (hasUnits && t.quantity != null && amount == 0.0) units += t.quantity
-                    else {
+                    if (hasUnits && t.quantity != null && amount == 0.0) {
+                        if (isSplit(t.particulars) && units > Position.UNIT_EPSILON) {
+                            // A split: the same cost now covers more units in every open lot.
+                            val factor = (units + t.quantity) / units
+                            lots.forEach { it.units *= factor }
+                        } else lots.addLast(Lot(t.quantity, 0.0))
+                        units += t.quantity
+                    } else {
                         income += amount
                         if (amount != 0.0) flows += CashFlow(t.date, amount)
                     }

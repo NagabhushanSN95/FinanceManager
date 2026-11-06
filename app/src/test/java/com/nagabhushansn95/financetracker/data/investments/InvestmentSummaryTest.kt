@@ -102,6 +102,15 @@ class InvestmentSummaryTest {
                 modifiedTime = now
             )
         )
+        val loan = db.instrumentDao().insert(
+            Instrument(
+                name = "Loan to a cousin",
+                instrumentType = InstrumentType.OTHER,
+                displayOrder = 5,
+                createdTime = now,
+                modifiedTime = now
+            )
+        )
 
         suspend fun tx(
             date: String,
@@ -151,6 +160,13 @@ class InvestmentSummaryTest {
             50000.0,
             family
         )                           // owner Amma: excluded
+        tx(
+            "2025-01-01",
+            TransactionKind.INVEST,
+            20000.0,
+            loan,
+            from = bank
+        )   // type OTHER: savings, not counted
         tx("2025-02-01", TransactionKind.INCOME, 1000.0, to = epf, contributor = "Employee")
         tx("2025-02-01", TransactionKind.INCOME, 1000.0, to = epf, contributor = "Employer")
         tx(
@@ -219,6 +235,10 @@ class InvestmentSummaryTest {
             ), summary.categories.map { it.name })
         assertEquals(115000.0 + 2000.0, summary.total.invested, 1e-9)
         assertEquals(17000.0 + 100000.0 + 3300.0, summary.total.current, 1e-9)
+        // The loan (type OTHER) has its screen and its Savings column, but no place in the totals or the tables.
+        assertEquals(20000.0, summary.byType.getValue(InstrumentType.OTHER).invested, 1e-9)
+        assertTrue(summary.categories.none { it.name == InvestmentCategories.OTHERS })
+        assertEquals(1, summary.rows.count { it.instrument.id == loan })
         assertEquals(15000.0, summary.zerodha.invested, 1e-9)
         assertEquals(115000.0, summary.liquid.invested, 1e-9)
         assertEquals(2, summary.holdings.size)   // stocks and funds only

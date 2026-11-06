@@ -145,7 +145,7 @@ class EditDataRepository(private val db: AppDatabase) {
 
     /**
      * Bonus shares or a split: [extraUnits] more units at no cost, as an INCOME row tagged with the stock and no
-     * account. The average cost falls accordingly; nothing else changes.
+     * account. Bonus units form a zero-cost lot; a split (particulars starting "Stock split") spreads the open lots.
      */
     suspend fun addBonusUnits(
         instrumentId: Long,
