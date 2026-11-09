@@ -43,13 +43,16 @@ object DefaultData {
         "Shopping",
         "Bills & Utilities",
         "Health",
+        "Insurance",
+        "Vehicle",
         "Entertainment",
         "Travel",
         "Education",
         "Gifts",
         "Others",
     )
-    val incomeCategories = listOf("Salary", "Interest & Dividends", "Refund", "Others")
+    val incomeCategories =
+        listOf("Salary", "Interest & Dividends", "Provident Fund", "Refund", "Others")
 
     /** Apply to income and expenses alike: money moving between the user and other people. */
     val sharedCategories = listOf("Friends & Family", "Loans & Repayments")

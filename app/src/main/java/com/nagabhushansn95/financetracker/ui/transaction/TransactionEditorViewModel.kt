@@ -64,9 +64,6 @@ data class EditorForm(
         instrumentRequired && instrumentId == null -> "Choose the instrument"
         quantity.isNotBlank() && quantityValue == null -> "Quantity is not a number"
         rate.isNotBlank() && rateValue == null -> "Rate is not a number"
-        toAccountId?.let { accounts[it]?.accountType } == AccountType.PROVIDENT_FUND && kind == TransactionKind.INCOME && contributor == null ->
-            "Say who contributed"
-
         else -> null
     }
 }
@@ -117,9 +114,13 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         initialised = true
         viewModelScope.launch {
             _data.value = EditorData(
-                accounts = db.accountDao().getVisible(),
+                // Provident-fund rows are recorded on the account's screen under Investments and insurance rows on
+                // the policy's screen, never here.
+                accounts = db.accountDao().getVisible()
+                    .filter { it.accountType != AccountType.PROVIDENT_FUND },
                 categories = db.categoryDao().getVisible(),
-                instruments = db.instrumentDao().getAll(),
+                instruments = db.instrumentDao().getAll()
+                    .filter { it.instrumentType != com.nagabhushansn95.financetracker.data.db.entity.InstrumentType.INSURANCE },
                 templates = db.transactionDao().getVisibleTemplates(),
                 recentFrom = prefs.recentIds(RECENT_FROM),
                 recentTo = prefs.recentIds(RECENT_TO),
@@ -271,7 +272,8 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             )
             _data.update {
                 it.copy(
-                    instruments = db.instrumentDao().getAll().filter { i -> i.active })
+                    instruments = db.instrumentDao().getAll()
+                        .filter { i -> i.active && i.instrumentType != com.nagabhushansn95.financetracker.data.db.entity.InstrumentType.INSURANCE })
             }
             setInstrument(id)
             onCreated(id)
@@ -358,7 +360,6 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         const val RECENT_TO = "account_to"
         const val RECENT_CATEGORY = "category"
         const val RECENT_INSTRUMENT = "instrument"
-        val PF_CONTRIBUTORS = listOf("Employee", "Employer", "Self", "Interest")
 
         /** Numbers as the user would type them: no exponent, no trailing zeros. */
         fun plain(value: Double): String =

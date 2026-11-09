@@ -21,7 +21,10 @@ What it does (details in README.md):
      terms from the Fixed Deposits sheet, renewal chains (deposit and maturity rows that never touched a bank
      account), the sweep-in deposits merged into the existing sweep-in instrument, and the 4.x "interest
      credited" rows (which duplicate the interest already inside the matured amount) removed.
-  4. Fills in policy numbers, premium amounts, frequencies and due dates for the life insurance policies.
+  4. Fills in policy numbers, premium amounts, frequencies and due dates for the life insurance policies; turns the
+     sheet's health insurance rows into a health policy (an expense policy, out of the investment totals) with one
+     cover period per premium; with --insurance, makes a vehicle of each one listed there and links its insurance,
+     service and emission-test expenses to it.
   4b. --merge OLD=NEW (repeatable) merges a renamed instrument into its new name the way the app's
      "Merge into another instrument" does (rows and templates move, the old one is deleted), e.g. --merge ZOMATO=ETERNAL.
   5. Writes a report of what was done and of the totals compared with the sheet, and aborts without writing
@@ -41,13 +44,15 @@ try:
 except ImportError:  # pragma: no cover
     sys.exit("openpyxl is required: pip install openpyxl")
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 8
 # Room's identity hashes (room_master_table), written after this script applies the app's own migrations.
 SCHEMA_V2_IDENTITY_HASH = "cfac96437eb4bd5056257688ca832fea"
 SCHEMA_V3_IDENTITY_HASH = "860e0b3e05274df33b4d89e1d1380939"
 SCHEMA_V4_IDENTITY_HASH = "0711ddf2bc34586547a6551698ce0b80"
 SCHEMA_V5_IDENTITY_HASH = "50066662eb25daa0fd2869d49fed834d"
 SCHEMA_V6_IDENTITY_HASH = "bff783913534b7a34ea6dc5cedde0ffa"
+SCHEMA_V7_IDENTITY_HASH = "afd4d13b5813c801722c693f0e319fac"
+SCHEMA_V8_IDENTITY_HASH = "f549d763e40f6240e309b39296845270"
 GOAL_AMOUNT_KEY = "investments.goal_amount"
 BACKFILL_KEY = "backfill.sheet"
 UNMAPPED_FD_NAME = "Fixed Deposits (unmapped)"
@@ -464,6 +469,37 @@ class Db:
         self.x("ALTER TABLE `fixed_deposits` ADD COLUMN `sweep_in_date` TEXT")
         self.x("UPDATE room_master_table SET identity_hash = ?", SCHEMA_V6_IDENTITY_HASH)
         self.x("PRAGMA user_version = 6")
+
+    def migrate_6_to_7(self, report):
+        """The app's Migrations.MIGRATION_6_7: insurance types by what they cover, due day and month, validity periods."""
+        report.add("- Input was schema version 6: applied the app's 6 -> 7 migration (insurance due day and month, vehicle number, validity periods).")
+        self.x("CREATE TABLE IF NOT EXISTS `insurance_policies_new` (`instrument_id` INTEGER NOT NULL, `insurance_type` TEXT NOT NULL, "
+               "`provider` TEXT, `policy_name` TEXT, `policy_number` TEXT, `vehicle_number` TEXT, `sum_assured` REAL, `premium_amount` REAL, "
+               "`premium_frequency_months` INTEGER, `due_day` INTEGER, `due_month` INTEGER, `start_date` TEXT, `maturity_date` TEXT, "
+               "PRIMARY KEY(`instrument_id`), FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+        self.x("INSERT INTO `insurance_policies_new` (`instrument_id`, `insurance_type`, `provider`, `policy_name`, `policy_number`, `vehicle_number`, "
+               "`sum_assured`, `premium_amount`, `premium_frequency_months`, `due_day`, `due_month`, `start_date`, `maturity_date`) "
+               "SELECT `instrument_id`, CASE `insurance_type` WHEN 'OTHER' THEN 'TERM' ELSE `insurance_type` END, `provider`, `policy_name`, "
+               "`policy_number`, NULL, `sum_assured`, `premium_amount`, `premium_frequency_months`, "
+               "CAST(substr(`next_due_date`, 9, 2) AS INTEGER), CAST(substr(`next_due_date`, 6, 2) AS INTEGER), `start_date`, `maturity_date` "
+               "FROM `insurance_policies`")
+        self.x("DROP TABLE `insurance_policies`")
+        self.x("ALTER TABLE `insurance_policies_new` RENAME TO `insurance_policies`")
+        self.x("CREATE TABLE IF NOT EXISTS `validity_periods` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, "
+               "`kind` TEXT NOT NULL, `start_date` TEXT, `end_date` TEXT NOT NULL, `transaction_id` INTEGER, `provider` TEXT, `reference` TEXT, "
+               "FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , "
+               "FOREIGN KEY(`transaction_id`) REFERENCES `transactions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+        self.x("CREATE INDEX IF NOT EXISTS `index_validity_periods_instrument_id_kind` ON `validity_periods` (`instrument_id`, `kind`)")
+        self.x("CREATE INDEX IF NOT EXISTS `index_validity_periods_transaction_id` ON `validity_periods` (`transaction_id`)")
+        self.x("UPDATE room_master_table SET identity_hash = ?", SCHEMA_V7_IDENTITY_HASH)
+        self.x("PRAGMA user_version = 7")
+
+    def migrate_7_to_8(self, report):
+        """The app's Migrations.MIGRATION_7_8: a validity period carries the sum insured a health premium bought."""
+        report.add("- Input was schema version 7: applied the app's 7 -> 8 migration (sum insured on validity periods).")
+        self.x("ALTER TABLE `validity_periods` ADD COLUMN `sum_insured` REAL")
+        self.x("UPDATE room_master_table SET identity_hash = ?", SCHEMA_V8_IDENTITY_HASH)
+        self.x("PRAGMA user_version = 8")
 
     # --- balance fingerprint: the backfill must not move money in or out of any account
     def account_fingerprint(self):
@@ -1125,13 +1161,429 @@ def backfill_insurance(db, sheet, report):
             d = as_date(last["Date"])
             month = d.month - 1 + freq
             next_due = dt.date(d.year + month // 12, month % 12 + 1, min(d.day, 28))
+        # The app keeps the due day (and, unless monthly, the anchor month) and works the next due date out from the last premium.
         db.x("""UPDATE insurance_policies SET policy_number = COALESCE(policy_number, ?), premium_amount = ?, premium_frequency_months = ?,
-                    start_date = COALESCE(start_date, ?), next_due_date = ? WHERE instrument_id = ?""",
+                    start_date = COALESCE(start_date, ?), due_day = ?, due_month = ? WHERE instrument_id = ?""",
              number, as_float(last["Amount"]) if last else None, freq, start.isoformat() if start else None,
-             next_due.isoformat() if next_due else None, inst["id"])
+             next_due.day if next_due else None, next_due.month if next_due and freq and freq > 1 else None, inst["id"])
         updated += 1
-    report.add(f"- Insurance: policy number, premium, frequency, start and next due date written for {updated} policies "
-               "(health insurance premiums are expenses, not an instrument, and stay as they are).")
+    report.add(f"- Insurance: policy number, premium, frequency, start and due day written for {updated} life policies.")
+
+
+# ------------------------------------------------------------------------------------------ health and vehicles
+
+# The app's expense categories for the policies that are protection, not investment (Insurance.kt).
+INSURANCE_CATEGORY = "Insurance"   # term, health and motor premiums
+VEHICLE_CATEGORY = "Vehicle"       # a vehicle's services and emission tests
+# Insurers that may be named in a motor premium's particulars; the extras file can always say instead.
+INSURERS = ("ICICI Lombard", "HDFC Ergo", "Bajaj Allianz", "New India", "Tata AIG", "Acko", "Go Digit", "Digit", "United India",
+            "National Insurance", "Oriental", "Reliance General", "SBI General", "Royal Sundaram", "Chola MS", "Kotak General",
+            "Zuno", "Liberty", "Magma", "IFFCO Tokio", "Future Generali", "Shriram", "Universal Sompo", "Navi")
+PERIOD_KINDS = {"cover": "COVER", "third_party": "THIRD_PARTY", "own_damage": "OWN_DAMAGE", "service": "SERVICE", "emission": "EMISSION_TEST"}
+
+
+def insurance_extras(path):
+    """
+    What the sheet does not say about the protection policies, from a JSON file kept next to the sheet export, never in
+    this repository: {"health": [...], "vehicles": [...]}.
+
+    A health entry is matched to a sheet policy by "key" ("Provider - Name", as the sheet spells them) and may give
+    insurer (the company on the policy and its cover periods, when the sheet's provider names the broker too),
+    sum_insured, policy_number, owner, notes, cover_months (default 12), ids (ledger rows of premiums the sheet never
+    listed; with provider and name instead of key it describes a policy known only from the ledger) and premiums, the
+    policy schedules' own terms for the premiums: {paid, start, end, policy_number, sum_insured}, matched to a premium by
+    the date it was paid (within five days) and taking the place of the computed cover period and the sheet's policy
+    number; the sum insured goes on that premium's cover period, since a renewal may change it, and the policy row
+    shows the latest one.
+
+    A vehicle has a name (the instrument's name), vehicle_number, owner (default Self), active (default true), notes,
+    purchased (date), match (words of the particulars that name it; default the name), skip (ledger ids to leave alone),
+    service_months (default 12) and emission_months (default 6: a new vehicle's first certificate lasts a year, the
+    later ones six months), periods (validity set by hand, for cover no ledger row paid for: kind third_party /
+    own_damage / service / emission, start, end, provider, reference) and entries ({ledger id: {...}} overriding what the
+    particulars say about one row: kind premium / service / emission / skip, months, third_party_months,
+    own_damage_months, third_party_until, own_damage_until, provider, reference).
+    """
+    with open(path) as f:
+        data = json.load(f)
+    health = list(data.get("health") or [])
+    vehicles = list(data.get("vehicles") or [])
+    for v in vehicles:
+        if not str(v.get("name") or "").strip():
+            sys.exit(f"{path}: every vehicle needs a name")
+    for h in health:
+        if not h.get("key") and not (h.get("provider") and h.get("name")):
+            sys.exit(f"{path}: every health entry needs a key (\"Provider - Name\") or a provider and a name")
+    return health, vehicles
+
+
+def add_months(d, months):
+    import calendar
+    m = d.month - 1 + months
+    y, m = d.year + m // 12, m % 12 + 1
+    return dt.date(y, m, min(d.day, calendar.monthrange(y, m)[1]))
+
+
+def ensure_expense_category(db, name, report):
+    r = db.one("SELECT id FROM categories WHERE deleted = 0 AND applies_to != 'INCOME' AND lower(trim(name)) = lower(?)", name)
+    if r:
+        return r["id"]
+    order = (db.one("SELECT COALESCE(MAX(display_order), 0) FROM categories")[0] or 0) + 1
+    cur = db.x("INSERT INTO categories (name, parent_id, applies_to, icon, color, display_order, deleted) VALUES (?, NULL, 'EXPENSE', NULL, NULL, ?, 0)",
+               name, order)
+    report.add(f"- Added the '{name}' expense category.")
+    return cur.lastrowid
+
+
+def insert_policy(db, name, policy, owner="Self", active=True, notes=None, now=None):
+    """An INSURANCE instrument with its policy row; no investment category, so it stays out of the Investment Summary."""
+    iid = db.insert_instrument(name, "INSURANCE", None, active=active, notes=notes, owner=owner or "Self", now=now)
+    cols = ["insurance_type", "provider", "policy_name", "policy_number", "vehicle_number", "sum_assured", "premium_amount",
+            "premium_frequency_months", "due_day", "due_month", "start_date", "maturity_date"]
+    db.x(f"INSERT INTO insurance_policies (instrument_id, {', '.join(cols)}) VALUES (?, {', '.join('?' * len(cols))})",
+         iid, *[policy.get(c) for c in cols])
+    return iid
+
+
+def insert_period(db, iid, kind, start, end, transaction_id=None, provider=None, reference=None, sum_insured=None):
+    db.x("INSERT INTO validity_periods (instrument_id, kind, start_date, end_date, transaction_id, provider, reference, sum_insured) "
+         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+         iid, kind, start.isoformat() if start else None, end.isoformat(), transaction_id, provider or None, reference or None, sum_insured)
+
+
+def link_row(db, row_id, iid, category_id, now):
+    """Puts a ledger row on an instrument and under a category; the accounts and the amount stay as they are."""
+    db.x("UPDATE transactions SET instrument_id = ?, category_id = ?, modified_time = ? WHERE id = ?", iid, category_id, now, row_id)
+
+
+def usable_policy_number(v):
+    """The sheet export turns a long policy number into a rounded float; such a value is not a policy number any more."""
+    if v is None or v == "":
+        return None
+    if isinstance(v, float) and v != int(v):
+        return None
+    if isinstance(v, (int, float)) and abs(v) >= 1e15:
+        return None
+    return str(int(v)) if isinstance(v, float) else str(v).strip()
+
+
+def backfill_health(db, sheet, extras, report):
+    """
+    The sheet's Health Insurance rows become one HEALTH policy per provider and plan: an expense policy, whose premiums
+    the app files under the Insurance category and leaves out of the Investment Summary. Each premium is found in the
+    ledger by amount and date (within five days) and gets a cover period: to the policy's anniversary when it was paid
+    within 45 days of one (the anniversary is the first premium's date), else twelve months from the payment, unless the
+    extras file gives the schedule's own dates for that premium. The extras file adds what the sheet lacks (sum insured,
+    policy number, owner, the insurer behind a broker); the sheet's own policy numbers are used only when the export
+    kept their digits, as the number of the policy and as the reference of the premium's cover period.
+    """
+    now = now_iso()
+    by_key = collections.OrderedDict()
+    for r in sheet.insurances():
+        if not str(r.get("Insurance Type") or "").lower().startswith("health"):
+            continue
+        key = f"{str(r.get('Insurance Provider') or '').strip()} - {str(r.get('Insurance Name') or '').strip()}"
+        by_key.setdefault(key, []).append(r)
+    extra_by_key = {}
+    for e in extras:
+        key = e.get("key") or f"{e['provider']} - {e['name']}"
+        extra_by_key[key] = e
+        by_key.setdefault(key, [])
+    if not by_key:
+        report.add("- Health insurance: nothing in the sheet or the extras file.")
+        return
+    insurance_cat = ensure_expense_category(db, INSURANCE_CATEGORY, report)
+    for key, rows in by_key.items():
+        e = extra_by_key.get(key, {})
+        provider, _, plan = key.partition(" - ")
+        existing = db.one("SELECT id FROM instruments WHERE name = ? AND instrument_type = 'INSURANCE'", key)
+        if existing:
+            update_health_terms(db, existing["id"], key, e, report)
+            continue
+        premiums = []   # (date, amount, ledger row or None, sheet policy number)
+        unmatched = []
+        for r in sorted(rows, key=lambda r: as_date(r["Date"])):
+            if not str(r.get("Transaction Type") or "premium").lower().startswith("premium"):
+                continue
+            d, amount = as_date(r["Date"]), as_float(r["Amount"])
+            hit = db.one("""SELECT id, date, amount, particulars FROM transactions WHERE kind = 'EXPENSE' AND instrument_id IS NULL
+                            AND ABS(amount - ?) < 0.01 AND date BETWEEN ? AND ? ORDER BY ABS(julianday(date) - julianday(?)) LIMIT 1""",
+                         amount, (d - dt.timedelta(days=5)).isoformat(), (d + dt.timedelta(days=5)).isoformat(), d.isoformat())
+            if hit is None:
+                unmatched.append(f"{d} {plain(amount)}")
+            premiums.append((d, amount, hit, usable_policy_number(r.get("Policy Number"))))
+        for tid in e.get("ids") or []:
+            hit = db.one("SELECT id, date, amount, particulars FROM transactions WHERE id = ? AND kind = 'EXPENSE' AND instrument_id IS NULL", tid)
+            if hit is None:
+                report.problem(f"Health policy '{key}': ledger row {tid} is not an unlinked expense.")
+                continue
+            premiums.append((as_date(hit["date"]), hit["amount"], hit, None))
+        premiums.sort(key=lambda x: x[0])
+        if not premiums:
+            report.add(f"- Health policy '{key}': no premiums; skipped.")
+            continue
+        anchor = premiums[0][0]
+        last_paid = max((x for x in premiums if x[2] is not None), key=lambda x: x[0], default=premiums[-1])
+        schedules = sorted((dict(o, paid=as_date(o["paid"])) for o in e.get("premiums") or []), key=lambda o: o["paid"])
+
+        def schedule_for(d):
+            return next((o for o in schedules if abs((o["paid"] - d).days) <= 5), None)
+
+        def reference_of(x):
+            o = schedule_for(x[0])
+            return (o and o.get("policy_number")) or x[3]
+
+        insurer = e.get("insurer") or provider or None
+        number = e.get("policy_number") or next((reference_of(x) for x in reversed(premiums) if reference_of(x)), None)
+        # The policy row shows the sum insured in force: the extras' own figure, else the latest schedule's.
+        sum_insured = e.get("sum_insured") or next((o["sum_insured"] for o in reversed(schedules) if o.get("sum_insured")), None)
+        iid = insert_policy(db, key, {
+            "insurance_type": "HEALTH", "provider": insurer, "policy_name": plan or None, "policy_number": number,
+            "sum_assured": sum_insured, "premium_amount": last_paid[1], "premium_frequency_months": 12,
+            "due_day": anchor.day, "due_month": anchor.month, "start_date": anchor.isoformat(),
+        }, owner=e.get("owner", "Self"), active=e.get("active", True), notes=e.get("notes"), now=now)
+        months = int(e.get("cover_months") or 12)
+        cover_end = None
+        linked = 0
+        from_schedule = 0
+        for k, (d, amount, hit, sheet_number) in enumerate(premiums):
+            if hit is None:
+                continue
+            anniversary = add_months(anchor, 12 * k)
+            start, end = d, add_months(anniversary if abs((d - anniversary).days) <= 45 else d, months)
+            o = schedule_for(d)
+            if o is not None:
+                start = as_date(o["start"]) if o.get("start") else start
+                end = as_date(o["end"]) if o.get("end") else end
+                from_schedule += 1
+            link_row(db, hit["id"], iid, insurance_cat, now)
+            insert_period(db, iid, "COVER", start, end, hit["id"], provider=insurer, reference=reference_of((d, amount, hit, sheet_number)),
+                          sum_insured=(o or {}).get("sum_insured"))
+            cover_end = max(cover_end or end, end)
+            linked += 1
+        text = f"- Health policy '{key}': {linked} premiums linked (last {plain(last_paid[1])} on {last_paid[0]}), cover to {cover_end}"
+        if from_schedule:
+            text += f"; {from_schedule} cover periods dated from the policy schedules"
+            sums = [o["sum_insured"] for o in schedules if o.get("sum_insured")]
+            if sums:
+                text += f" (sum insured {' → '.join(plain(v) for v in dict.fromkeys(sums))})"
+        unused = [o for o in schedules if not any(abs((o["paid"] - x[0]).days) <= 5 for x in premiums if x[2] is not None)]
+        for o in unused:
+            report.problem(f"Health policy '{key}': the extras file dates a premium paid {o['paid']} that is not among the linked premiums.")
+        if unmatched:
+            text += f"; not in the ledger: {', '.join(unmatched)}"
+        if not number and any(r.get("Policy Number") for r in rows):
+            text += "; the sheet's policy number lost its digits in the export, enter it in the app"
+        if sum_insured is None:
+            text += "; sum insured not known, enter it in the app"
+        report.add(text + ".")
+
+
+def update_health_terms(db, iid, key, extras, report):
+    """
+    A health policy the database already has (an earlier run made it) takes the policy schedules' terms from the extras
+    file: each premium's cover period gets the schedule's dates, policy number and sum insured, and the policy row the
+    latest ones. Nothing else about it changes.
+    """
+    schedules = [dict(o, paid=as_date(o["paid"])) for o in extras.get("premiums") or []]
+    insurer = extras.get("insurer")
+    periods = db.q("""SELECT v.id, v.start_date, v.end_date, v.provider, v.reference, v.sum_insured, t.date
+                      FROM validity_periods v JOIN transactions t ON t.id = v.transaction_id
+                      WHERE v.instrument_id = ? AND v.kind = 'COVER' ORDER BY t.date""", iid)
+    updated = 0
+    for o in schedules:
+        v = next((v for v in periods if abs((as_date(v["date"]) - o["paid"]).days) <= 5), None)
+        if v is None:
+            report.problem(f"Health policy '{key}': the extras file dates a premium paid {o['paid']} that has no cover period.")
+            continue
+        new = {
+            "start_date": o.get("start") or v["start_date"], "end_date": o.get("end") or v["end_date"],
+            "provider": insurer or v["provider"], "reference": o.get("policy_number") or v["reference"],
+            "sum_insured": o.get("sum_insured") if o.get("sum_insured") is not None else v["sum_insured"],
+        }
+        if any(str(new[c]) != str(v[c]) for c in new):
+            db.x("UPDATE validity_periods SET start_date = ?, end_date = ?, provider = ?, reference = ?, sum_insured = ? WHERE id = ?",
+                 new["start_date"], new["end_date"], new["provider"], new["reference"], new["sum_insured"], v["id"])
+            updated += 1
+    latest = db.one("SELECT reference, sum_insured, provider FROM validity_periods WHERE instrument_id = ? AND kind = 'COVER' ORDER BY end_date DESC, id DESC LIMIT 1", iid)
+    if latest:
+        db.x("""UPDATE insurance_policies SET policy_number = COALESCE(?, policy_number), sum_assured = COALESCE(?, sum_assured),
+                provider = COALESCE(?, provider) WHERE instrument_id = ?""",
+             extras.get("policy_number") or latest["reference"], extras.get("sum_insured") or latest["sum_insured"], insurer or latest["provider"], iid)
+    report.add(f"- Health policy '{key}' already exists; {updated} cover periods took the schedules' terms" + (", the policy row the latest." if updated else "."))
+
+
+def classify_vehicle_row(particulars):
+    p = particulars.lower()
+    if any(w in p for w in ("duplicate", "reversed", "reversal", "refund")):
+        return "skip"
+    if "insur" in p:
+        return "premium"
+    if any(w in p for w in ("emission", "pollution", "puc")):
+        return "emission"
+    if "servic" in p:
+        return "service"
+    return None
+
+
+def premium_terms(particulars):
+    """(third party?, own damage?, months, named?) from a motor premium's particulars; unnamed cover is taken as both."""
+    p = particulars.lower()
+    tp = any(w in p for w in ("third party", "third-party", "liability", "comprehensive"))
+    od = any(w in p for w in ("first party", "first-party", "own damage", "own-damage", "comprehensive", "standalone od", " od "))
+    named = tp or od
+    if not named:
+        tp = od = True
+    m = re.search(r"(\d+)\s*(?:year|yr)", p)
+    months = 12 * int(m.group(1)) if m else None
+    if months is None:
+        m = re.search(r"(\d+)\s*month", p)
+        months = int(m.group(1)) if m else 12
+    return tp, od, months, named
+
+
+def vehicle_particulars(name, kind):
+    """The app's default wording for a vehicle row: the insurer, cover and place are recorded beside it, not in it."""
+    return {"premium": f"Motor Insurance Premium - {name}", "service": f"Vehicle Service - {name}",
+            "emission": f"Vehicle Emission Test - {name}"}[kind]
+
+
+def reword_vehicle_row(db, row_id, name, kind, overrides, now, report_lines):
+    """
+    A linked row reads in the house style: the file's `particulars` for the row when given, else the default unless
+    the row already starts with it (anything added after it, an AMC bought say, stays).
+    """
+    old = db.one("SELECT particulars FROM transactions WHERE id = ?", row_id)[0]
+    wanted = (overrides.get("particulars") or "").strip() or None
+    if wanted is None:
+        default = vehicle_particulars(name, kind)
+        wanted = None if old.startswith(default) else default
+    if wanted and wanted != old:
+        db.x("UPDATE transactions SET particulars = ?, modified_time = ? WHERE id = ?", wanted, now, row_id)
+        report_lines.append(f"row {row_id}: '{old}' → '{wanted}'")
+
+
+def touch_existing_vehicle(db, iid, name, v, places, report):
+    """
+    A vehicle already in the database (an earlier run made it, the app is in use): its service and emission-test
+    rows that say nowhere get the file's `service_at` / `emission_test_at` (a place typed in the app stays), and its
+    rows are reworded as reword_vehicle_row says, by the validity each one bought.
+    """
+    done = []
+    for kind_name, place in places.items():
+        if not place:
+            continue
+        n = db.x("UPDATE validity_periods SET provider = ? WHERE instrument_id = ? AND kind = ? AND transaction_id IS NOT NULL AND provider IS NULL",
+                 place, iid, kind_name).rowcount
+        if n:
+            done.append(f"{n} {'service' if kind_name == 'SERVICE' else 'emission-test'} row(s) now at {place}")
+    overrides = {int(k): o for k, o in (v.get("entries") or {}).items()}
+    now = now_iso()
+    reworded = []
+    kind_of = {"THIRD_PARTY": "premium", "OWN_DAMAGE": "premium", "SERVICE": "service", "EMISSION_TEST": "emission"}
+    for r in db.q("SELECT DISTINCT transaction_id AS id, kind FROM validity_periods WHERE instrument_id = ? AND transaction_id IS NOT NULL ORDER BY transaction_id", iid):
+        reword_vehicle_row(db, r["id"], name, kind_of[r["kind"]], overrides.get(r["id"], {}), now, reworded)
+    done.extend(reworded)
+    report.add(f"- Vehicle '{name}' already exists; " + ("; ".join(done) if done else "left as is") + ".")
+
+
+def backfill_vehicles(db, vehicles, report):
+    """
+    Each vehicle in the extras file becomes a MOTOR policy (a vehicle, in the app's words). The ledger's expense rows
+    that name it are read by their particulars: an insurance premium (third-party, own-damage or comprehensive cover,
+    for the years it says, else one), an emission test, a service; everything else that mentions the vehicle (petrol,
+    the purchase) is left alone and counted. Premiums go under the Insurance category, services and tests under
+    Vehicle, each with the validity it bought, and the file's hand-set periods cover what no ledger row paid for (the
+    five-year third-party cover that came with a new vehicle).
+    """
+    if not vehicles:
+        return
+    now = now_iso()
+    insurance_cat = ensure_expense_category(db, INSURANCE_CATEGORY, report)
+    vehicle_cat = ensure_expense_category(db, VEHICLE_CATEGORY, report)
+    for v in vehicles:
+        name = v["name"].strip()
+        places = {"SERVICE": (v.get("service_at") or "").strip() or None, "EMISSION_TEST": (v.get("emission_test_at") or "").strip() or None}
+        existing = db.one("SELECT id FROM instruments WHERE name = ? AND instrument_type = 'INSURANCE'", name)
+        if existing:
+            touch_existing_vehicle(db, existing[0], name, v, places, report)
+            continue
+        words = [w.lower() for w in (v.get("match") or [name])]
+        skip = {int(x) for x in v.get("skip") or []}
+        overrides = {int(k): o for k, o in (v.get("entries") or {}).items()}
+        rows = [r for r in db.q("SELECT id, date, amount, particulars FROM transactions WHERE kind = 'EXPENSE' AND instrument_id IS NULL ORDER BY date, id")
+                if any(w in r["particulars"].lower() for w in words)]
+        purchased = as_date(v["purchased"]) if v.get("purchased") else None
+        iid = insert_policy(db, name, {"insurance_type": "MOTOR", "vehicle_number": v.get("vehicle_number"),
+                                       "start_date": purchased.isoformat() if purchased else None},
+                            owner=v.get("owner", "Self"), active=v.get("active", True), notes=v.get("notes"), now=now)
+        lines, left, skipped, guessed, reworded = [], [], [], [], []
+        service_months, emission_months = int(v.get("service_months") or 12), int(v.get("emission_months") or 6)
+        for r in rows:
+            o = overrides.get(r["id"], {})
+            kind = o.get("kind") or classify_vehicle_row(r["particulars"])
+            if r["id"] in skip or kind == "skip":
+                skipped.append(f"{r['date']} {plain(r['amount'])} {r['particulars']}")
+                continue
+            if kind is None:
+                left.append(r)
+                continue
+            d = as_date(r["date"])
+            if kind == "premium":
+                tp, od, months, named = premium_terms(r["particulars"])
+                provider = o.get("provider") or next((i for i in INSURERS if i.lower() in r["particulars"].lower()), None)
+                ends = {}
+                for key, kind_name, on in (("third_party", "THIRD_PARTY", tp), ("own_damage", "OWN_DAMAGE", od)):
+                    until = o.get(f"{key}_until")
+                    own_months = o.get(f"{key}_months")
+                    if until:
+                        ends[kind_name] = as_date(until)
+                    elif own_months:
+                        ends[kind_name] = add_months(d, int(own_months))
+                    elif on:
+                        ends[kind_name] = add_months(d, months)
+                if not ends:
+                    report.problem(f"Vehicle '{name}': premium row {r['id']} buys no cover; give it third_party_months or own_damage_months.")
+                    continue
+                link_row(db, r["id"], iid, insurance_cat, now)
+                reword_vehicle_row(db, r["id"], name, "premium", o, now, reworded)
+                for kind_name, end in ends.items():
+                    insert_period(db, iid, kind_name, d, end, r["id"], provider, o.get("reference"))
+                what = " and ".join(("third-party" if k == "THIRD_PARTY" else "own-damage") + f" cover to {e}" for k, e in ends.items())
+                lines.append(f"{d} {plain(r['amount'])} premium" + (f" ({provider})" if provider else "") + f": {what}")
+                if not named and not (o.get("third_party_until") or o.get("own_damage_until") or o.get("third_party_months") or o.get("own_damage_months")):
+                    guessed.append(str(r["id"]))
+            else:
+                months = int(o.get("months") or (service_months if kind == "service" else emission_months))
+                end = add_months(d, months)
+                link_row(db, r["id"], iid, vehicle_cat, now)
+                reword_vehicle_row(db, r["id"], name, kind, o, now, reworded)
+                kind_name = "SERVICE" if kind == "service" else "EMISSION_TEST"
+                insert_period(db, iid, kind_name, d, end, r["id"], o.get("provider") or places[kind_name])
+                lines.append(f"{d} {plain(r['amount'])} {'service' if kind == 'service' else 'emission test'}, next by {end}"
+                             + (f" ({o.get('provider') or places[kind_name]})" if o.get("provider") or places[kind_name] else ""))
+        for pr in v.get("periods") or []:
+            kind_name = PERIOD_KINDS.get(str(pr.get("kind", "")).lower())
+            if kind_name is None or not pr.get("end"):
+                report.problem(f"Vehicle '{name}': hand-set period needs a kind ({', '.join(PERIOD_KINDS)}) and an end date.")
+                continue
+            insert_period(db, iid, kind_name, as_date(pr["start"]) if pr.get("start") else None, as_date(pr["end"]), None,
+                          pr.get("provider"), pr.get("reference"))
+            lines.append(f"set by hand: {kind_name.lower().replace('_', ' ')} to {pr['end']}" + (f" ({pr['provider']})" if pr.get("provider") else ""))
+        report.add(f"- Vehicle '{name}'" + (f" ({v['vehicle_number']})" if v.get("vehicle_number") else " (no registration number given)") + ":")
+        for line in lines:
+            report.add(f"    - {line}")
+        if reworded:
+            report.add(f"    - reworded in the house style: {'; '.join(reworded)}")
+        if skipped:
+            report.add(f"    - skipped: {'; '.join(skipped)}")
+        if guessed:
+            report.add(f"    - premium rows {', '.join(guessed)} named neither third-party nor own-damage cover; both were assumed.")
+        if left:
+            sample = "; ".join(r["particulars"][:50] for r in left[:3])
+            report.add(f"    - {len(left)} other rows mention it and were left alone (petrol and the like): {sample}{'; …' if len(left) > 3 else ''}")
+        if not lines:
+            report.add("    - no insurance, service or emission-test rows found in the ledger.")
 
 
 # --------------------------------------------------------------------------------------------------- merges
@@ -1301,6 +1753,11 @@ def main():
                     help="merge a renamed instrument into its new name (by name or symbol), e.g. ZOMATO=ETERNAL; repeatable")
     ap.add_argument("--extra", help="JSON file of deposits the sheet does not have (kept next to the sheet, never in the repository)")
     ap.add_argument("--sweep-in", help="JSON file assigning the ledger's partial liquidations to the sheet's sweep-in deposits (kept next to the sheet)")
+    ap.add_argument("--insurance", metavar="JSON",
+                    help="JSON file with the vehicles and what the sheet lacks about the health policies (kept next to the sheet)")
+    ap.add_argument("--add-insurance", action="store_true",
+                    help="on a database the app is using now (already backfilled): only add the health policy and the vehicles, "
+                         "leaving everything else as it is")
     ap.add_argument("--keep-sheet-ids", action="store_true",
                     help="name deposits after the sheet's ID column instead of numbering every deposit by its date")
     ap.add_argument("--carry-from", metavar="DB",
@@ -1328,8 +1785,10 @@ def main():
     report.add("## Steps")
     report.add("")
     try:
-        if db.one("SELECT value FROM settings WHERE key = ?", BACKFILL_KEY) if db.version() >= 2 else None:
-            sys.exit("This database was already backfilled (settings.backfill.sheet is set). Start from a fresh backup.")
+        backfilled = db.one("SELECT value FROM settings WHERE key = ?", BACKFILL_KEY) if db.version() >= 2 else None
+        if backfilled and not args.add_insurance:
+            sys.exit("This database was already backfilled (settings.backfill.sheet is set). Start from a fresh backup, "
+                     "or pass --add-insurance to add only the health policy and the vehicles to it.")
         if db.version() == 1:
             db.migrate_1_to_2(report)
         if db.version() == 2:
@@ -1340,23 +1799,38 @@ def main():
             db.migrate_4_to_5(report)
         if db.version() == 5:
             db.migrate_5_to_6(report)
+        if db.version() == 6:
+            db.migrate_6_to_7(report)
+        if db.version() == 7:
+            db.migrate_7_to_8(report)
         if db.version() != SCHEMA_VERSION:
             sys.exit(f"Unexpected schema version {db.version()} (expected {SCHEMA_VERSION}); update this script first.")
         before = db.account_fingerprint()
         sheet = Sheet(args.sheet)
-        risk = seed_categories(db, report)
-        seed_income_categories(db, report)
-        apply_targets(db, sheet, report)
-        extras = extra_fixed_deposits(args.extra) if args.extra else []
-        sweep_plan = sweep_in_plan(args.sweep_in) if args.sweep_in else None
-        backfill_fixed_deposits(db, sheet, report, extras, chronological=not args.keep_sheet_ids, sweep_plan=sweep_plan)
-        merge_instruments(db, args.merge, report)
-        assign_instrument_categories(db, sheet, risk, report)
-        backfill_insurance(db, sheet, report)
-        # After the deposits: a 4.x maturity booked as income has become a redemption by now.
-        assign_income_categories(db, report, apply=args.assign_income)
-        if args.carry_from:
-            carry_over(db, args.carry_from, report)
+        health_extras, vehicles = insurance_extras(args.insurance) if args.insurance else ([], [])
+        if args.add_insurance:
+            # The database is in use: nothing is renumbered or re-filed, only the protection policies are added.
+            report.add("- --add-insurance: only the health policy and the vehicles are added; deposits, categories and income rows are left as they are.")
+            backfill_health(db, sheet, health_extras, report)
+            backfill_vehicles(db, vehicles, report)
+            key = BACKFILL_KEY + ".insurance"
+        else:
+            risk = seed_categories(db, report)
+            seed_income_categories(db, report)
+            apply_targets(db, sheet, report)
+            extras = extra_fixed_deposits(args.extra) if args.extra else []
+            sweep_plan = sweep_in_plan(args.sweep_in) if args.sweep_in else None
+            backfill_fixed_deposits(db, sheet, report, extras, chronological=not args.keep_sheet_ids, sweep_plan=sweep_plan)
+            merge_instruments(db, args.merge, report)
+            assign_instrument_categories(db, sheet, risk, report)
+            backfill_insurance(db, sheet, report)
+            backfill_health(db, sheet, health_extras, report)
+            backfill_vehicles(db, vehicles, report)
+            # After the deposits: a 4.x maturity booked as income has become a redemption by now.
+            assign_income_categories(db, report, apply=args.assign_income)
+            if args.carry_from:
+                carry_over(db, args.carry_from, report)
+            key = BACKFILL_KEY
         after = db.account_fingerprint()
         changed = [(before[k][0], before[k][1], after[k][1]) for k in before if before[k][1] != after.get(k, (None, None))[1]]
         if changed:
@@ -1364,8 +1838,9 @@ def main():
                 report.problem(f"Account '{name}' net cash flow changed from {plain(b)} to {plain(a)}.")
         else:
             report.add("- Every account's net cash flow is unchanged (no money moved in or out of any account).")
-        reconcile(db, sheet, report)
-        db.x("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", BACKFILL_KEY, args.sheet.rsplit("/", 1)[-1])
+        if not args.add_insurance:
+            reconcile(db, sheet, report)
+        db.x("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", key, args.sheet.rsplit("/", 1)[-1])
         if report.problems and not args.force:
             db.c.rollback()
             report.add("")

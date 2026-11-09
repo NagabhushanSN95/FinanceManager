@@ -110,6 +110,41 @@ class AppPreferences(context: Context) {
         get() = prefs.getString(KEY_LAST_EXPORT, null)
         set(value) = prefs.edit().putString(KEY_LAST_EXPORT, value).apply()
 
+    /** How many days before a due date Home's Alerts card starts listing it, by how often the thing recurs. */
+    var alertThresholds: com.nagabhushansn95.financetracker.data.investments.AlertThresholds
+        get() = com.nagabhushansn95.financetracker.data.investments.AlertThresholds(
+            monthly = prefs.getInt(
+                KEY_ALERT_MONTHLY,
+                com.nagabhushansn95.financetracker.data.investments.AlertThresholds.DEFAULT_MONTHLY
+            ),
+            withinYear = prefs.getInt(
+                KEY_ALERT_WITHIN_YEAR,
+                com.nagabhushansn95.financetracker.data.investments.AlertThresholds.DEFAULT_WITHIN_YEAR
+            ),
+            beyondYear = prefs.getInt(
+                KEY_ALERT_BEYOND_YEAR,
+                com.nagabhushansn95.financetracker.data.investments.AlertThresholds.DEFAULT_BEYOND_YEAR
+            ),
+        )
+        set(value) = prefs.edit()
+            .putInt(KEY_ALERT_MONTHLY, value.monthly)
+            .putInt(KEY_ALERT_WITHIN_YEAR, value.withinYear)
+            .putInt(KEY_ALERT_BEYOND_YEAR, value.beyondYear)
+            .apply()
+
+    /** Emits the alert thresholds now and whenever they change. */
+    val alertThresholdsFlow: Flow<com.nagabhushansn95.financetracker.data.investments.AlertThresholds> =
+        callbackFlow {
+            val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == KEY_ALERT_MONTHLY || key == KEY_ALERT_WITHIN_YEAR || key == KEY_ALERT_BEYOND_YEAR) trySend(
+                    alertThresholds
+                )
+            }
+            prefs.registerOnSharedPreferenceChangeListener(listener)
+            trySend(alertThresholds)
+            awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+        }
+
     /** Fetch prices when Investments opens, at most every [priceRefreshInterval]. */
     var autoPrices: Boolean
         get() = prefs.getBoolean(KEY_AUTO_PRICES, true)
@@ -213,6 +248,9 @@ class AppPreferences(context: Context) {
         private const val KEY_RESTORE_URI = "restore_uri"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_AUTO_PRICES = "auto_prices"
+        private const val KEY_ALERT_MONTHLY = "alert_days_monthly"
+        private const val KEY_ALERT_WITHIN_YEAR = "alert_days_within_year"
+        private const val KEY_ALERT_BEYOND_YEAR = "alert_days_beyond_year"
         private const val KEY_PRICE_INTERVAL = "price_refresh_interval"
         const val PRICES_HOURLY = "HOURLY"
         const val PRICES_DAILY = "DAILY"

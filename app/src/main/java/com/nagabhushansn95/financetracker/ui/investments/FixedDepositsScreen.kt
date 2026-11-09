@@ -14,10 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -29,6 +28,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -46,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
@@ -273,9 +274,19 @@ enum class FdSort(val title: String, val defaultDescending: Boolean = false) {
     ),
     BANK("Bank"), NAME("Name"), DAYS_LEFT("Days left");
 
-    /** Ascending order; the screen reverses it when asked. Names and banks compare naturally (FD #9 before FD #10). */
+    /** [MATURITY] reads as the date it sorts by under the current filter: closed deposits sort by their closing date. */
+    fun titleFor(filter: FdFilter): String = if (this != MATURITY) title else when (filter) {
+        FdFilter.ACTIVE -> "Maturity date"
+        FdFilter.CLOSED -> "Closing date"
+        FdFilter.ALL -> "Maturity / closing date"
+    }
+
+    /**
+     * Ascending order; the screen reverses it when asked. Names and banks compare naturally (FD #9 before FD #10).
+     * [MATURITY] orders open deposits by when they mature and closed ones by when they were paid out.
+     */
     fun comparator(): Comparator<FdView> = when (this) {
-        MATURITY -> compareBy<FdView, LocalDate?>(nullsLast()) { it.maturityDate }.thenBy { it.instrument.id }
+        MATURITY -> compareBy<FdView, LocalDate?>(nullsLast()) { if (it.isOpen) it.maturityDate else it.closedOn }.thenBy { it.instrument.id }
         DEPOSIT -> compareBy<FdView, LocalDate?>(nullsLast()) { it.depositDate }.thenBy { it.instrument.id }
         AMOUNT -> compareBy<FdView> {
             it.principal.takeIf { p -> p > 0 } ?: it.position.totalInvested
@@ -393,15 +404,25 @@ fun FixedDepositsScreen(
                         ) { v -> viewModel.updateList { it.copy(owners = v) } }
                         SortChip(
                             sort,
-                            descending
-                        ) { s, desc ->
-                            viewModel.updateList {
-                                it.copy(
-                                    sort = s.name,
-                                    descending = desc
-                                )
-                            }
-                        }
+                            descending,
+                            filter,
+                            onPick = { s ->
+                                if (s != sort) viewModel.updateList {
+                                    it.copy(
+                                        sort = s.name,
+                                        descending = s.defaultDescending
+                                    )
+                                }
+                            },
+                            onFlip = {
+                                viewModel.updateList {
+                                    it.copy(
+                                        sort = sort.name,
+                                        descending = !descending
+                                    )
+                                }
+                            },
+                        )
                     }
                 }
                 if (shown.isEmpty()) item {
@@ -459,42 +480,47 @@ private fun PickChip(
 }
 
 /**
- * "Sort: Maturity date" with an arrow for the direction. The menu lists the keys; picking the current one again, or
- * "Reverse order", flips the direction. A new key starts in its own natural direction.
+ * "Sort: Maturity date" with the keys in a menu, and beside it an arrow button that flips the direction (up:
+ * ascending, down: descending). A new key starts in its own natural direction.
  */
 @Composable
-private fun SortChip(sort: FdSort, descending: Boolean, onChange: (FdSort, Boolean) -> Unit) {
+private fun SortChip(
+    sort: FdSort,
+    descending: Boolean,
+    filter: FdFilter,
+    onPick: (FdSort) -> Unit,
+    onFlip: () -> Unit,
+) {
     var open by remember { mutableStateOf(false) }
-    Box {
-        FilterChip(
-            selected = false,
-            onClick = { open = true },
-            label = { Text("Sort: ${sort.title}") },
-            leadingIcon = {
-                Icon(
-                    if (descending) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
-                    contentDescription = if (descending) "Descending" else "Ascending",
-                )
-            },
-            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
-        )
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            FdSort.entries.forEach { s ->
-                DropdownMenuItem(
-                    text = { Text(if (s == sort) "✓ ${s.title}" else s.title) },
-                    onClick = {
-                        if (s == sort) onChange(s, !descending) else onChange(
-                            s,
-                            s.defaultDescending
-                        )
-                        open = false
-                    },
-                )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box {
+            FilterChip(
+                selected = false,
+                onClick = { open = true },
+                label = { Text("Sort: ${sort.titleFor(filter)}") },
+                trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+            )
+            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                FdSort.entries.forEach { s ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                if (s == sort) "✓ ${s.titleFor(filter)}" else s.titleFor(
+                                    filter
+                                )
+                            )
+                        },
+                        onClick = { onPick(s); open = false },
+                    )
+                }
             }
-            HorizontalDivider()
-            DropdownMenuItem(
-                text = { Text(if (descending) "Reverse order (ascending)" else "Reverse order (descending)") },
-                onClick = { onChange(sort, !descending); open = false },
+        }
+        IconButton(onClick = onFlip) {
+            // A real arrow (not a chevron, which reads as fold/unfold): the back arrow turned up or down.
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = if (descending) "Descending; tap for ascending" else "Ascending; tap for descending",
+                modifier = Modifier.rotate(if (descending) -90f else 90f),
             )
         }
     }
@@ -631,7 +657,7 @@ fun FdRow(d: FdView, onClick: () -> Unit) {
 @Composable
 fun fdStatusText(d: FdView): String = when {
     d.status == FdStatus.RENEWED -> "Renewed"
-    d.status == FdStatus.CLOSED_AT_MATURITY -> "Closed"
+    d.status == FdStatus.CLOSED_AT_MATURITY -> "Closed at maturity"
     d.status == FdStatus.CLOSED_PREMATURELY -> "Closed early"
     d.matured -> "Matured, not closed"
     d.daysLeft != null -> "${d.daysLeft} days left"

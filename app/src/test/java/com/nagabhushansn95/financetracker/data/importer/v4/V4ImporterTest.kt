@@ -168,7 +168,10 @@ class V4ImporterTest {
             .getInsurancePolicy(instruments.single { it.instrumentType == InstrumentType.INSURANCE }.id)!!
         assertEquals("HDFC Life", policy.provider)
         assertEquals("Guaranteed Wealth Plus", policy.policyName)
-        assertTrue(policy.countsAsInvestment)
+        assertEquals(
+            com.nagabhushansn95.financetracker.data.db.entity.InsuranceType.LIFE,
+            policy.insuranceType
+        )
         assertNotNull(
             db.instrumentDao()
                 .getFixedDeposit(instruments.single { it.instrumentType == InstrumentType.FIXED_DEPOSIT }.id)

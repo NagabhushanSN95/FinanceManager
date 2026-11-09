@@ -29,18 +29,31 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.Account
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.investments.Alert
+import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
+import com.nagabhushansn95.financetracker.data.investments.InvestmentCategories
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
+import com.nagabhushansn95.financetracker.ui.investments.InvestmentRoutes
 
 /**
- * Home: account balances grouped by type, each group collapsible (state remembered across launches), and the
- * investments by category with the provident-fund accounts. A single tap on an account does nothing; press and
- * hold one to add a transaction to it. The investments leave no trace until the "Cash & bank" card is pressed and
- * held and the phone's unlock passed; holding it again hides them.
+ * Home: alerts (deposits past maturity, premiums and cover falling due), account balances grouped by type, each
+ * group collapsible (state remembered across launches), and the investments by category with the provident-fund
+ * accounts. A single tap on an account does nothing; press and hold one to add a transaction to it. The investments
+ * leave no trace until the "Cash & bank" card is pressed and held and the phone's unlock passed; holding it again
+ * hides them. The alerts show names and dates only, so they stay visible while locked, but open nothing until the
+ * investments are unlocked.
  */
 @Composable
 fun SummaryScreen(
     onAccountLongPress: (Long) -> Unit = {},
+    /** Press-and-hold on a provident-fund row opens its screen under Investments: its entries are recorded there. */
+    onOpenPfAccount: (Long) -> Unit = {},
+    /** Press-and-hold on a category row opens its screen under Investments (null: the Investments hub itself). */
+    onOpenInvestments: (String?) -> Unit = {},
+    /** A tap on an alert opens the deposit, policy or vehicle it is about (only while the investments are unlocked). */
+    onOpenAlert: (InstrumentType, Long) -> Unit = { _, _ -> },
     investmentsUnlocked: Boolean = true,
     onToggleInvestments: () -> Unit = {},
     viewModel: SummaryViewModel = viewModel()
@@ -48,12 +61,14 @@ fun SummaryScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val investments by viewModel.investments.collectAsStateWithLifecycle()
     val investmentsCollapsed by viewModel.investmentsCollapsed.collectAsStateWithLifecycle()
+    val alerts by viewModel.alerts.collectAsStateWithLifecycle()
 
     LazyColumn(
         // Room at the bottom so the last card can scroll clear of the + button.
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (alerts.isNotEmpty()) item { AlertsCard(alerts, investmentsUnlocked, onOpenAlert) }
         item { TotalsCard(state, onLongPress = onToggleInvestments) }
         items(state.sections, key = { it.type }) { section ->
             SectionCard(
@@ -69,14 +84,56 @@ fun SummaryScreen(
                 summary,
                 collapsed = investmentsCollapsed,
                 onToggle = viewModel::toggleInvestments,
-                onAccountLongPress = onAccountLongPress,
+                onAccountLongPress = onOpenPfAccount,
+                onOpenInvestments = onOpenInvestments,
             )
         }
         else if (state.providentFunds.isNotEmpty()) item {
             ProvidentFundsCard(
                 state,
-                onAccountLongPress
+                onOpenPfAccount
             )
+        }
+    }
+}
+
+/** What needs doing, soonest first; overdue lines in the error colour. */
+@Composable
+private fun AlertsCard(
+    alerts: List<Alert>,
+    unlocked: Boolean,
+    onOpen: (InstrumentType, Long) -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Text(
+                "Alerts",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+            alerts.forEach { a ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = unlocked) { onOpen(a.instrumentType, a.instrumentId) }
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(a.title, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            a.detail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (a.daysLeft <= 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Text(
+                        a.date.format(SHORT_DATE),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (a.daysLeft <= 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     }
 }
@@ -100,7 +157,8 @@ private fun TotalsCard(state: SummaryUiState, onLongPress: () -> Unit) {
 
 /**
  * Investments by top-level category (current value), with the provident-fund accounts listed under theirs. The
- * header folds the list like the account sections; the Investments screens are opened from the drawer.
+ * header folds the list like the account sections; press-and-hold on the header opens the Investments hub, on a
+ * category its screen (deposits, holdings, provident funds, insurance), on a provident-fund account its screen.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -109,12 +167,13 @@ private fun InvestmentsCard(
     collapsed: Boolean,
     onToggle: () -> Unit,
     onAccountLongPress: (Long) -> Unit,
+    onOpenInvestments: (String?) -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onToggle)
+                .combinedClickable(onClick = onToggle, onLongClick = { onOpenInvestments(null) })
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -141,6 +200,9 @@ private fun InvestmentsCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = {},
+                        onLongClick = { onOpenInvestments(categoryRoute(line.name)) })
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -178,6 +240,28 @@ private fun InvestmentsCard(
             }
         }
     }
+}
+
+/** The screen under Investments for a top-level category by its name; null (the hub) for a category of the user's own. */
+private fun categoryRoute(name: String): String? = when {
+    name.equals(
+        InvestmentCategories.FIXED_DEPOSITS,
+        ignoreCase = true
+    ) -> InvestmentRoutes.FIXED_DEPOSITS
+
+    name.equals(InvestmentCategories.STOCKS, ignoreCase = true) -> InvestmentRoutes.HOLDINGS
+    name.equals(InvestmentCategories.MUTUAL_FUNDS, ignoreCase = true) -> InvestmentRoutes.HOLDINGS
+    name.equals(
+        InvestmentCategories.PROVIDENT_FUNDS,
+        ignoreCase = true
+    ) -> InvestmentRoutes.PROVIDENT_FUNDS
+
+    name.equals(
+        InvestmentCategories.LIFE_INSURANCE,
+        ignoreCase = true
+    ) -> InvestmentRoutes.INSURANCE
+
+    else -> null
 }
 
 /** Fallback while the investment summary is still loading: the provident-fund balances. */

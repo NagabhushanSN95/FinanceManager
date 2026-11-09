@@ -5,16 +5,26 @@ import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityKind
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
 
 /** Lookup tables for rendering ledger rows without joins; small enough to keep in memory. */
 class LedgerLookups(
     accounts: List<Account>,
     categories: List<Category>,
     instruments: List<Instrument>,
+    /** Validity rows, so a service or emission test can say where it was done without that being in its particulars. */
+    periods: List<ValidityPeriod> = emptyList(),
 ) {
     val accounts = accounts.associateBy { it.id }
     val categories = categories.associateBy { it.id }
     val instruments = instruments.associateBy { it.id }
+    private val places = periods
+        .filter { (it.kind == ValidityKind.SERVICE || it.kind == ValidityKind.EMISSION_TEST) && it.transactionId != null && it.provider != null }
+        .associate { it.transactionId!! to it.provider!! }
+
+    /** The service or testing centre of a vehicle row, when recorded. */
+    fun placeOf(transactionId: Long): String? = places[transactionId]
 
     fun accountName(id: Long?) = id?.let { accounts[it]?.name } ?: "—"
 
@@ -45,7 +55,8 @@ class LedgerLookups(
         TransactionKind.EXPENSE -> listOfNotNull(
             "Expense",
             categoryPath(t.categoryId),
-            instrumentName(t.instrumentId)
+            instrumentName(t.instrumentId),
+            placeOf(t.id),
         )
             .joinToString(" · ") + " ← " + accountName(t.fromAccountId)
 

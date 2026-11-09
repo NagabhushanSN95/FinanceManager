@@ -81,6 +81,7 @@ import com.nagabhushansn95.financetracker.ui.investments.InstrumentDetailScreen
 import com.nagabhushansn95.financetracker.ui.investments.InstrumentListScreen
 import com.nagabhushansn95.financetracker.ui.investments.InsurancePolicyScreen
 import com.nagabhushansn95.financetracker.ui.investments.InsuranceScreen
+import com.nagabhushansn95.financetracker.ui.investments.InsuranceTypeScreen
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentRoutes
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentsScreen
 import com.nagabhushansn95.financetracker.ui.investments.ProvidentFundAccountScreen
@@ -374,6 +375,9 @@ fun HomeScreen() {
                 composable(Destination.SUMMARY.route) {
                     SummaryScreen(
                         onAccountLongPress = { navController.navigate(editorRoute(accountId = it)) },
+                        onOpenPfAccount = { openInstrument(InvestmentRoutes.pfAccount(it)) },
+                        onOpenInvestments = { openInvestments(it) },
+                        onOpenAlert = { type, id -> openInstrument(instrumentRoute(type, id)) },
                         investmentsUnlocked = investmentsUnlocked,
                         onToggleInvestments = { toggleInvestments() },
                     )
@@ -381,6 +385,7 @@ fun HomeScreen() {
                 composable(Destination.TRANSACTIONS.route) {
                     TransactionsScreen(
                         onEdit = { navController.navigate(editorRoute(id = it)) },
+                        onOpenPfAccount = { openInstrument(InvestmentRoutes.pfAccount(it)) },
                         onOpenInstrument = { type, id ->
                             openInstrument(
                                 instrumentRoute(
@@ -429,7 +434,6 @@ fun HomeScreen() {
                 composable(InvestmentRoutes.PROVIDENT_FUNDS) {
                     ProvidentFundsScreen(
                         onBack = { navController.popBackStack() },
-                        onAddToAccount = { navController.navigate(editorRoute(accountId = it)) },
                         onOpenAccount = { navController.navigate(InvestmentRoutes.pfAccount(it)) })
                 }
                 composable(
@@ -439,8 +443,6 @@ fun HomeScreen() {
                     ProvidentFundAccountScreen(
                         accountId = entry.arguments!!.getLong("id"),
                         onBack = { navController.popBackStack() },
-                        onAdd = { navController.navigate(editorRoute(accountId = it)) },
-                        onEditTransaction = { navController.navigate(editorRoute(id = it)) },
                     )
                 }
                 composable(InvestmentRoutes.FIXED_DEPOSITS) {
@@ -462,6 +464,17 @@ fun HomeScreen() {
                 composable(InvestmentRoutes.INSURANCE) {
                     InsuranceScreen(
                         onBack = { navController.popBackStack() },
+                        onOpenType = { navController.navigate(InvestmentRoutes.insuranceType(it)) })
+                }
+                composable(
+                    InvestmentRoutes.INSURANCE_TYPE,
+                    arguments = listOf(navArgument("type") { type = NavType.StringType })
+                ) { entry ->
+                    InsuranceTypeScreen(
+                        type = com.nagabhushansn95.financetracker.data.db.entity.InsuranceType.valueOf(
+                            entry.arguments!!.getString("type")!!
+                        ),
+                        onBack = { navController.popBackStack() },
                         onOpenPolicy = { navController.navigate(InvestmentRoutes.policy(it)) })
                 }
                 composable(
@@ -471,15 +484,6 @@ fun HomeScreen() {
                     InsurancePolicyScreen(
                         instrumentId = entry.arguments!!.getLong("id"),
                         onBack = { navController.popBackStack() },
-                        onPayPremium = { instrument, kind ->
-                            navController.navigate(
-                                editorRoute(
-                                    kind = kind,
-                                    instrumentId = instrument
-                                )
-                            )
-                        },
-                        onEditTransaction = { navController.navigate(editorRoute(id = it)) },
                     )
                 }
                 composable(InvestmentRoutes.SAVINGS) { SavingsScreen(onBack = { navController.popBackStack() }) }

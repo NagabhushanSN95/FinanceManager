@@ -102,7 +102,7 @@ class FixedDepositRepository(private val db: AppDatabase) {
                     toAccountId = toAccountId,
                     instrumentId = instrumentId,
                     amount = amountCredited,
-                    particulars = if (status == FdStatus.CLOSED_AT_MATURITY) "Fixed deposit matured" else "Fixed deposit closed before maturity",
+                    particulars = if (status == FdStatus.CLOSED_AT_MATURITY) "Fixed Deposit Matured And Closed" else "Fixed Deposit Closed Before Maturity",
                 )
             ), now
         )
@@ -156,12 +156,14 @@ class FixedDepositRepository(private val db: AppDatabase) {
         val rows = ArrayList<TransactionEntity>()
         rows += TransactionEntity(
             createdTime = now, modifiedTime = now, date = date, kind = TransactionKind.REDEEM,
-            instrumentId = oldId, amount = renewedAmount, particulars = "Renewed into $newName",
+            instrumentId = oldId,
+            amount = renewedAmount,
+            particulars = "Fixed Deposit Matured And Renewed Into $newName",
         )
         if (remainder > 0.005) rows += TransactionEntity(
             createdTime = now, modifiedTime = now, date = date, kind = TransactionKind.REDEEM,
             toAccountId = remainderToAccountId, instrumentId = oldId, amount = remainder,
-            particulars = "Fixed deposit matured, balance paid out",
+            particulars = "Fixed Deposit Matured, Balance Paid Out",
         )
         rows += TransactionEntity(
             createdTime = now,
@@ -170,7 +172,7 @@ class FixedDepositRepository(private val db: AppDatabase) {
             kind = TransactionKind.INVEST,
             instrumentId = newId,
             amount = renewedAmount,
-            particulars = "Renewed from ${old.name} · " + openedParticulars(terms).removePrefix("Fixed deposit opened · "),
+            particulars = "${openedParticulars(terms)} (Renewed From ${old.name})",
         )
         transactions.addAllInTransaction(rows, now)
         db.instrumentDao().upsertFixedDeposit(
@@ -274,12 +276,16 @@ class FixedDepositRepository(private val db: AppDatabase) {
             },
         )
 
-    private fun openedParticulars(terms: FixedDeposit): String = listOfNotNull(
-        terms.bankName,
-        FdMath.periodLabel(terms.periodMonths, terms.periodDays),
-        terms.rate?.let { "@ ${FdMath.plain(it)}%" },
-    ).joinToString(" ")
-        .let { if (it.isEmpty()) "Fixed deposit opened" else "Fixed deposit opened · $it" }
+    /** "Created A Fixed Deposit For 12 Months", as the 4.x ledger worded it; the terms hold the bank and the rate. */
+    private fun openedParticulars(terms: FixedDeposit): String {
+        val months = terms.periodMonths ?: 0
+        val days = terms.periodDays ?: 0
+        val period = listOfNotNull(
+            months.takeIf { it > 0 }?.let { "$it Month${if (it == 1) "" else "s"}" },
+            days.takeIf { it > 0 }?.let { "$it Day${if (it == 1) "" else "s"}" },
+        ).joinToString(" ")
+        return if (period.isEmpty()) "Created A Fixed Deposit" else "Created A Fixed Deposit For $period"
+    }
 
     private suspend fun <T> write(block: suspend () -> T): T =
         db.useWriterConnection { transactor -> transactor.immediateTransaction { block() } }

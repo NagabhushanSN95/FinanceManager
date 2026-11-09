@@ -7,6 +7,7 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.investments.InvestmentCategories
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
+import com.nagabhushansn95.financetracker.data.investments.ProvidentFunds
 import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
 import com.nagabhushansn95.financetracker.data.prices.AmfiNav
 import com.nagabhushansn95.financetracker.data.prices.PriceRefresher
@@ -46,6 +47,8 @@ class InvestmentsViewModel(application: Application) : InvestmentSummaryViewMode
         viewModelScope.launch(Dispatchers.IO) {
             // The category tree and risk levels on first open; retired holdings after 90 idle days.
             InvestmentCategories.seedIfEmpty(db)
+            ProvidentFunds.fileCategories(db)
+            com.nagabhushansn95.financetracker.data.investments.Insurance.fileCategories(db)
             InstrumentMaintenance(db).retireIdleHoldings()
             // Live prices at most once a day (or hour), when the setting allows it.
             if (prefs.autoPrices && System.currentTimeMillis() - prefs.lastPriceRefreshMillis > prefs.priceRefreshIntervalMillis) refreshPrices()

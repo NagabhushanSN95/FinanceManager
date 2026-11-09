@@ -6,11 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,22 +22,30 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,127 +59,268 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.entity.Account
+import com.nagabhushansn95.financetracker.data.db.entity.AccountType
+import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InsuranceType
-import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
-import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
-import com.nagabhushansn95.financetracker.data.investments.InvestmentCategories
-import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityKind
+import com.nagabhushansn95.financetracker.data.investments.FdMath
+import com.nagabhushansn95.financetracker.data.investments.Insurance
+import com.nagabhushansn95.financetracker.data.investments.InsuranceEntry
+import com.nagabhushansn95.financetracker.data.investments.InsuranceEntryKind
+import com.nagabhushansn95.financetracker.data.investments.PolicyView
+import com.nagabhushansn95.financetracker.data.repository.InsuranceRepository
 import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
+import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
-import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-
-/** A policy as the screens show it: instrument, details, premiums paid (INVEST or EXPENSE rows tagged with it). */
-data class PolicyView(
-    val instrument: Instrument,
-    val policy: InsurancePolicy?,
-    val rows: List<TransactionEntity>,
-    val asOf: LocalDate,
-) {
-    val type: InsuranceType get() = policy?.insuranceType ?: InsuranceType.OTHER
-    val premiums: List<TransactionEntity> get() = rows.filter { it.kind == TransactionKind.INVEST || it.kind == TransactionKind.EXPENSE }
-    val paid: Double get() = premiums.sumOf { it.amountInr }
-    val received: Double
-        get() = rows.filter { it.kind == TransactionKind.REDEEM || it.kind == TransactionKind.INCOME }
-            .sumOf { it.amountInr }
-    val lastPremium: LocalDate? get() = premiums.maxOfOrNull { it.date }
-    val countsAsInvestment: Boolean
-        get() = policy?.countsAsInvestment ?: (type == InsuranceType.LIFE)
-
-    /** The stored due date when it is still ahead of the last premium, else the last premium plus the frequency. */
-    val nextDue: LocalDate?
-        get() {
-            val stored = policy?.nextDueDate
-            val last = lastPremium
-            val months = policy?.premiumFrequencyMonths
-            return when {
-                stored != null && (last == null || stored.isAfter(last)) -> stored
-                last != null && months != null && months > 0 -> last.plusMonths(months.toLong())
-                else -> stored
-            }
-        }
-    val dueIn: Long? get() = nextDue?.let { java.time.temporal.ChronoUnit.DAYS.between(asOf, it) }
-    val expired: Boolean get() = policy?.maturityDate?.isBefore(asOf) == true
-    val title: String
-        get() = listOfNotNull(
-            policy?.provider,
-            policy?.policyName
-        ).joinToString(" · ").ifEmpty { instrument.name }
-}
+import java.time.Month
+import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 data class InsuranceState(
     val policies: List<PolicyView> = emptyList(),
-    val categories: List<InvestmentCategory> = emptyList(),
     val lookups: LedgerLookups? = null,
+    /** Accounts money moves against: everything but provident funds. */
+    val banks: List<Account> = emptyList(),
+    /** Expense categories by name (lower case), for the category an entry is filed under. */
+    val expenseCategoryIds: Map<String, Long> = emptyMap(),
     val loaded: Boolean = false,
 )
 
 class InsuranceViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getInstance(application)
+    private val repository = InsuranceRepository(db)
+
+    /** One-off outcome of a save or delete, shown in a snackbar. */
+    val message = MutableStateFlow<String?>(null)
+    fun messageShown() {
+        message.value = null
+    }
+
+    init {
+        // The expense categories entries are filed under, whichever way the screen was reached.
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                Insurance.fileCategories(
+                    db
+                )
+            }
+        }
+    }
 
     val state: StateFlow<InsuranceState> = combine(
         db.instrumentDao().observeAll(),
         db.instrumentDao().observeInsurancePolicies(),
         db.transactionDao().observeWithInstrument(),
-        db.instrumentDao().observeCategories(),
-        db.accountDao().observeAll(),
-    ) { instruments, policies, ledger, categories, accounts ->
-        val byId = policies.associateBy { it.instrumentId }
-        val rows = ledger.groupBy { it.instrumentId }
-        val today = LocalDate.now()
+        db.instrumentDao().observeValidityPeriods(),
+        combine(db.accountDao().observeAll(), db.categoryDao().observeAll()) { a, c -> a to c },
+    ) { instruments, policies, ledger, periods, (accounts, categories) ->
         InsuranceState(
-            policies = instruments.filter { it.instrumentType == InstrumentType.INSURANCE }
-                .map {
-                    PolicyView(
-                        it,
-                        byId[it.id],
-                        rows[it.id].orEmpty().sortedWith(compareBy({ r -> r.date }, { r -> r.id })),
-                        today
-                    )
-                },
-            categories = categories,
-            lookups = LedgerLookups(accounts, db.categoryDao().getAll(), instruments),
+            policies = Insurance.build(instruments, policies, ledger, periods, LocalDate.now()),
+            lookups = LedgerLookups(accounts, categories, instruments),
+            banks = accounts.filter { it.accountType != AccountType.PROVIDENT_FUND && !it.deleted },
+            expenseCategoryIds = categories.filter { !it.deleted && it.appliesTo != CategoryScope.INCOME }
+                .associate { it.name.lowercase() to it.id },
             loaded = true,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InsuranceState())
 
-    fun save(instrument: Instrument, policy: InsurancePolicy) {
-        viewModelScope.launch { EditDataRepository(db).saveInsurancePolicy(instrument, policy) }
+    fun savePolicy(
+        instrument: Instrument,
+        policy: InsurancePolicy,
+        manual: Map<ValidityKind, LocalDate?>
+    ) {
+        viewModelScope.launch {
+            runCatching { repository.savePolicy(instrument, policy, manual) }
+                .onFailure { message.value = it.message ?: it.toString() }
+        }
+    }
+
+    /** Records a new entry on [view] or rewrites [existing] as the sheet describes it. */
+    fun saveEntry(view: PolicyView, entry: InsuranceEntry, existing: TransactionEntity?) {
+        viewModelScope.launch {
+            runCatching {
+                val categoryId = Insurance.categoryNameFor(view.type, entry.kind)
+                    ?.let { state.value.expenseCategoryIds[it.lowercase()] }
+                repository.saveEntry(view, entry, categoryId, existing)
+            }.onSuccess {
+                message.value =
+                    if (existing == null) "${entry.kind.title} recorded" else "Entry saved"
+            }.onFailure { message.value = it.message ?: it.toString() }
+        }
+    }
+
+    fun deleteEntry(id: Long) {
+        viewModelScope.launch {
+            runCatching { repository.deleteEntry(id) }
+                .onSuccess { message.value = "Entry deleted" }
+                .onFailure { message.value = it.message ?: it.toString() }
+        }
+    }
+
+    /** Removes the policy or vehicle with everything on it; [onDone] runs once it is gone. */
+    fun deletePolicy(id: Long, onDone: () -> Unit) {
+        viewModelScope.launch {
+            runCatching { repository.deletePolicy(id) }
+                .onSuccess { onDone() }
+                .onFailure { message.value = it.message ?: it.toString() }
+        }
     }
 }
 
-fun insuranceTypeTitle(type: InsuranceType) = when (type) {
-    InsuranceType.LIFE -> "Life"
-    InsuranceType.HEALTH -> "Health"
-    InsuranceType.MOTOR -> "Motor"
-    InsuranceType.OTHER -> "Other"
+private fun LocalDate.inDays(asOf: LocalDate): Long = ChronoUnit.DAYS.between(asOf, this)
+
+/** "to 12 Nov 2027 (in 40 days)" for a validity end, or null when none is set. */
+private fun untilText(end: LocalDate?, asOf: LocalDate): String? = end?.let {
+    val days = it.inDays(asOf)
+    "${it.format(SHORT_DATE)} (${if (days < 0) "${-days} days ago" else "in $days days"})"
 }
 
-/** Policies grouped by type with premiums paid, next due date and whether they count as investments. */
+private fun monthName(month: Int): String =
+    Month.of(month).getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
+
+/** The detail lines of a policy row, by type: what the policy is, then the dates it runs on. */
+private fun rowLines(v: PolicyView): List<String> {
+    val p = v.policy
+    val asOf = v.asOf
+    fun until(kind: ValidityKind, label: String) =
+        v.validUntil(kind)?.let { "$label ${it.format(SHORT_DATE)}" }
+    return when (v.type) {
+        InsuranceType.LIFE, InsuranceType.TERM -> listOf(
+            listOfNotNull(
+                p?.premiumAmount?.let { "${MoneyFormat.amount(it)} ${Insurance.frequencyLabel(p.premiumFrequencyMonths)}" },
+                p?.sumAssured?.let { "assured ${MoneyFormat.amount(it)}" },
+                v.instrument.owner.takeIf { it != Instrument.OWNER_SELF }?.let { "owner $it" },
+            ).joinToString(" · "),
+            listOfNotNull(
+                p?.startDate?.format(SHORT_DATE),
+                p?.maturityDate?.format(SHORT_DATE)
+            ).joinToString(" → ").ifEmpty { "${v.premiums.size} premiums paid" },
+        )
+
+        InsuranceType.HEALTH -> listOf(
+            listOfNotNull(
+                (p?.premiumAmount ?: v.premiums.lastOrNull()?.amount)?.let {
+                    "${
+                        MoneyFormat.amount(
+                            it
+                        )
+                    } last premium"
+                },
+                v.sumInsured?.let { "insured ${MoneyFormat.amount(it)}" },
+                v.instrument.owner.takeIf { it != Instrument.OWNER_SELF }?.let { "owner $it" },
+            ).joinToString(" · "),
+            untilText(v.validUntil(ValidityKind.COVER), asOf)?.let { "Covered until $it" }
+                ?: "${v.premiums.size} premiums paid",
+        )
+
+        InsuranceType.MOTOR -> listOf(
+            listOfNotNull(
+                p?.vehicleNumber,
+                v.current(ValidityKind.THIRD_PARTY)?.provider
+                    ?: v.current(ValidityKind.OWN_DAMAGE)?.provider,
+                v.instrument.owner.takeIf { it != Instrument.OWNER_SELF }?.let { "owner $it" },
+            ).joinToString(" · "),
+            listOfNotNull(
+                until(ValidityKind.THIRD_PARTY, "Third party until"),
+                until(ValidityKind.OWN_DAMAGE, "Own damage until"),
+            ).joinToString(" · ").ifEmpty { "No cover recorded yet" },
+            listOfNotNull(
+                until(ValidityKind.SERVICE, "Service"),
+                until(ValidityKind.EMISSION_TEST, "Emission test"),
+            ).joinToString(" · "),
+        )
+    }.filter { it.isNotEmpty() }
+}
+
+/** What a row is waiting on: the thing, how far off it is, and whether it is a cover that ends or a task that falls due. */
+private data class Due(val what: String, val days: Long, val cover: Boolean) {
+    val near: Boolean get() = days <= 30
+
+    /** "Own damage cover ends in 6 days", "Emission test overdue 11 days", "Premium due in 19 days". */
+    fun text(): String = when {
+        cover && days < 0 -> "$what expired ${-days} days ago"
+        cover -> "$what ends in $days days"
+        days < 0 -> "$what overdue ${-days} days"
+        else -> "$what due in $days days"
+    }
+}
+
+/** The soonest date the row is waiting on: the next premium, or the earliest validity end. */
+private fun PolicyView.soonest(): Due? = when {
+    type.scheduled -> dueIn?.let { Due("Premium", it, cover = false) }
+    type == InsuranceType.HEALTH -> validUntil(ValidityKind.COVER)?.let {
+        Due(
+            "Cover",
+            it.inDays(asOf),
+            cover = true
+        )
+    }
+
+    else -> listOf(
+        Triple(ValidityKind.THIRD_PARTY, "Third party cover", true),
+        Triple(ValidityKind.OWN_DAMAGE, "Own damage cover", true),
+        Triple(ValidityKind.SERVICE, "Service", false),
+        Triple(ValidityKind.EMISSION_TEST, "Emission test", false)
+    ).mapNotNull { (k, label, cover) -> validUntil(k)?.let { Due(label, it.inDays(asOf), cover) } }
+        .minByOrNull { it.days }
+}
+
+/** The heading of a type's card and screen: "Life insurance", "Vehicles". */
+fun InsuranceType.heading(): String =
+    if (this == InsuranceType.MOTOR) "Vehicles" else "$title insurance"
+
+/** A type's card: one key figure and, when something is due, the soonest date with the policy it belongs to. */
+private data class TypeCard(val figure: String, val soonest: Due?, val soonestOf: String?)
+
+private fun typeCard(type: InsuranceType, active: List<PolicyView>): TypeCard {
+    if (active.isEmpty()) return TypeCard("None yet", null, null)
+    val soonest =
+        active.mapNotNull { v -> v.soonest()?.let { it to v } }.minByOrNull { it.first.days }
+    val figure = when (type) {
+        InsuranceType.LIFE -> "${MoneyFormat.compact(active.sumOf { it.paid })} paid in"
+        InsuranceType.TERM -> "${MoneyFormat.compact(active.sumOf { it.policy?.sumAssured ?: 0.0 })} assured"
+        InsuranceType.HEALTH -> "${MoneyFormat.compact(active.sumOf { it.sumInsured ?: 0.0 })} insured"
+        InsuranceType.MOTOR -> "${MoneyFormat.compact(active.sumOf { it.paid + it.upkeep })} spent"
+    }
+    return TypeCard(
+        figure,
+        soonest?.first,
+        soonest?.second?.let { if (type == InsuranceType.MOTOR) it.instrument.name else it.title })
+}
+
+/**
+ * The Insurance overview: four cards, two by two, one per kind of cover (life, term, health, vehicles), each with
+ * its count, one key figure and the soonest date due; a card opens that kind's own list. Life premiums count as
+ * investments; term, health and motor are protection and stay out of the investment totals, but their premiums,
+ * cover and (for vehicles) service and emission tests are tracked here, and Home's Alerts card reads their dates.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsuranceScreen(
     onBack: () -> Unit,
-    onOpenPolicy: (Long) -> Unit,
+    onOpenType: (InsuranceType) -> Unit,
     viewModel: InsuranceViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var creating by remember { mutableStateOf(false) }
-    val own = state.policies.filter { it.instrument.owner == Instrument.OWNER_SELF }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -176,9 +329,121 @@ fun InsuranceScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                creating = true
-            }) { Icon(Icons.Filled.Add, contentDescription = "New policy") }
+            FloatingActionButton(onClick = { creating = true }) {
+                Icon(Icons.Filled.Add, contentDescription = "New policy or vehicle")
+            }
+        },
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            if (!state.loaded) item {
+                Text(
+                    "Loading…",
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            items(InsuranceType.entries.chunked(2), key = { it.first().name }) { pair ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    pair.forEach { type ->
+                        val ofType = state.policies.filter { it.type == type }
+                        val active = ofType.filter { it.active }
+                        val card = typeCard(type, active)
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable { onOpenType(type) }
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(type.heading(), style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    when {
+                                        ofType.isEmpty() -> "—"
+                                        active.size == ofType.size -> "${active.size} active"
+                                        else -> "${active.size} of ${ofType.size} active"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    card.figure,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                card.soonest?.let { due ->
+                                    Text(
+                                        due.text(),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (due.near) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    card.soonestOf?.let {
+                                        Text(
+                                            it,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
+            }
+            item {
+                Text(
+                    "Life premiums count as investments; term, health and motor are protection and stay out of the investment totals.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+        }
+    }
+    if (creating) PolicySheet(
+        existing = null,
+        onSave = { i, p, m -> viewModel.savePolicy(i, p, m); creating = false },
+        onDismiss = { creating = false })
+}
+
+/** The policies or vehicles of one kind: active first, then the matured, lapsed or sold ones. "+" adds one of this kind. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InsuranceTypeScreen(
+    type: InsuranceType,
+    onBack: () -> Unit,
+    onOpenPolicy: (Long) -> Unit,
+    viewModel: InsuranceViewModel = viewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var creating by remember { mutableStateOf(false) }
+    val ofType = state.policies.filter { it.type == type }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(type.heading()) },
+                navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) },
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { creating = true }) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = if (type == InsuranceType.MOTOR) "New vehicle" else "New policy"
+                )
+            }
         },
     ) { padding ->
         LazyColumn(
@@ -187,61 +452,18 @@ fun InsuranceScreen(
                 .padding(padding),
             contentPadding = PaddingValues(bottom = 88.dp)
         ) {
-            item {
-                val active = own.filter { it.instrument.active && !it.expired }
-                Card(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(MoneyFormat.amount(active.filter { it.countsAsInvestment }
-                            .sumOf { it.paid }), style = MaterialTheme.typography.headlineSmall)
-                        Text(
-                            "Premiums paid into policies that count as investments",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Row {
-                            StatCell(
-                                "Sum assured",
-                                MoneyFormat.amount(active.sumOf { it.policy?.sumAssured ?: 0.0 })
-                            )
-                            StatCell(
-                                "Per year",
-                                MoneyFormat.amount(active.sumOf { v ->
-                                    v.policy?.let { p ->
-                                        (p.premiumAmount ?: 0.0) * 12.0 / (p.premiumFrequencyMonths
-                                            ?: 12).coerceAtLeast(1)
-                                    } ?: 0.0
-                                })
-                            )
-                            StatCell("Policies", "${active.size}")
-                        }
-                        active.mapNotNull { v -> v.nextDue?.let { it to v } }
-                            .minByOrNull { it.first }?.let { (date, v) ->
-                            Text(
-                                "Next premium ${date.format(SHORT_DATE)} · ${v.title}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-            if (state.policies.isEmpty()) item {
+            if (ofType.isEmpty()) item {
                 Text(
-                    if (state.loaded) "No policies yet. Tap + to add one." else "Loading…",
+                    if (state.loaded) "Nothing here yet. Tap + to add ${if (type == InsuranceType.MOTOR) "a vehicle" else "a policy"}." else "Loading…",
                     modifier = Modifier.padding(16.dp)
                 )
             }
             val groups = listOf(
-                "Active" to state.policies.filter { it.instrument.active && !it.expired },
-                "Matured or lapsed" to state.policies.filter { !it.instrument.active || it.expired },
+                "Active" to ofType.filter { it.active },
+                (if (type == InsuranceType.MOTOR) "Sold" else "Matured or lapsed") to ofType.filter { !it.active },
             ).filter { it.second.isNotEmpty() }
             groups.forEach { (title, list) ->
-                item(key = "h:$title") {
+                if (groups.size > 1 || title != "Active") item(key = "h:$title") {
                     Text(
                         title,
                         style = MaterialTheme.typography.labelLarge,
@@ -250,34 +472,27 @@ fun InsuranceScreen(
                     )
                     HorizontalDivider()
                 }
-                InsuranceType.entries.forEach { type ->
-                    val ofType = list.filter { it.type == type }
-                    if (ofType.isNotEmpty()) {
-                        item(key = "t:$title:$type") {
-                            Text(
-                                insuranceTypeTitle(type),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                            )
-                        }
-                        items(
-                            ofType,
-                            key = { it.instrument.id }) { v -> PolicyRow(v) { onOpenPolicy(v.instrument.id) } }
-                    }
-                }
+                items(
+                    list,
+                    key = { it.instrument.id }) { v -> PolicyRow(v) { onOpenPolicy(v.instrument.id) } }
             }
         }
     }
     if (creating) PolicySheet(
         existing = null,
-        categories = state.categories,
-        onSave = { i, p -> viewModel.save(i, p); creating = false },
+        initialType = type,
+        onSave = { i, p, m -> viewModel.savePolicy(i, p, m); creating = false },
         onDismiss = { creating = false })
 }
 
+/**
+ * One policy or vehicle in a kind's list. Only life rows carry the amount paid in: a life policy is a saving, so paid-in
+ * against assured matters; what has gone into term, health or motor cover over the years is not worth a column.
+ * Anything within 30 days, or already past, is called out in red under the details.
+ */
 @Composable
 private fun PolicyRow(v: PolicyView, onClick: () -> Unit) {
+    val lines = rowLines(v)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -290,84 +505,91 @@ private fun PolicyRow(v: PolicyView, onClick: () -> Unit) {
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
-            Text(
+            if (v.type == InsuranceType.LIFE) Text(
                 MoneyFormat.amount(v.paid),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium
             )
         }
-        Text(
-            listOfNotNull(
-                v.policy?.premiumAmount?.let { "${MoneyFormat.amount(it)} ${premiumFrequencyLabel(v.policy.premiumFrequencyMonths)}" },
-                v.policy?.sumAssured?.let { "assured ${MoneyFormat.amount(it)}" },
-                if (v.countsAsInvestment) "investment" else "not an investment",
-                v.instrument.owner.takeIf { it != Instrument.OWNER_SELF }?.let { "owner $it" },
-            ).joinToString(" · "),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Row {
+        lines.forEach {
             Text(
-                listOfNotNull(
-                    v.policy?.startDate?.format(SHORT_DATE),
-                    v.policy?.maturityDate?.format(SHORT_DATE)
-                ).joinToString(" → ").ifEmpty { "${v.premiums.size} premiums paid" },
+                it,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            v.dueIn?.let { days ->
-                Text(
-                    if (days < 0) "overdue ${-days} days" else "due in $days days",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (days <= 30) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+        }
+        if (v.active) v.soonest()?.takeIf { it.near }?.let { due ->
+            Text(
+                due.text(),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
     }
     HorizontalDivider()
 }
 
-fun premiumFrequencyLabel(months: Int?) = when (months) {
-    null -> ""
-    1 -> "monthly"
-    3 -> "quarterly"
-    6 -> "half-yearly"
-    12 -> "yearly"
-    else -> "every $months months"
-}
-
-/** One policy: details, totals, the premium ledger and "Pay premium" (opens the editor with the policy chosen). */
+/**
+ * One policy or vehicle: details, totals and the ledger. The "+" offers the entries its type takes (premium, payout,
+ * service, emission test); press-and-hold on a ledger row edits it in the same sheet. Insurance rows are touched
+ * only here: the transaction editor never offers these instruments.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun InsurancePolicyScreen(
     instrumentId: Long,
     onBack: () -> Unit,
-    onPayPremium: (instrumentId: Long, kind: TransactionKind) -> Unit,
-    onEditTransaction: (Long) -> Unit,
     viewModel: InsuranceViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val v = state.policies.firstOrNull { it.instrument.id == instrumentId }
-    var editing by remember { mutableStateOf(false) }
+    val message by viewModel.message.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+    var editingPolicy by remember { mutableStateOf(false) }
+    var deleting by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var adding by remember { mutableStateOf<InsuranceEntryKind?>(null) }
+    var editing by remember { mutableStateOf<TransactionEntity?>(null) }
+    LaunchedEffect(message) {
+        message?.let { snackbar.showSnackbar(it); viewModel.messageShown() }
+    }
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = { Text(v?.title ?: "Policy") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    if (v != null) IconButton(onClick = {
-                        editing = true
-                    }) { Icon(Icons.Filled.Edit, contentDescription = "Edit policy") }
+                    if (v != null) IconButton(onClick = { editingPolicy = true }) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Edit policy")
+                    }
+                    if (v != null) IconButton(onClick = { deleting = true }) {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = if (v.type == InsuranceType.MOTOR) "Delete vehicle" else "Delete policy"
+                        )
+                    }
                 },
             )
+        },
+        floatingActionButton = {
+            if (v != null) Box {
+                FloatingActionButton(onClick = { menuOpen = true }) {
+                    Icon(Icons.Filled.Add, contentDescription = "Record an entry")
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    Insurance.kindsFor(v.type).forEach { kind ->
+                        DropdownMenuItem(
+                            text = { Text(kind.title) },
+                            onClick = { menuOpen = false; adding = kind })
+                    }
+                }
+            }
         },
     ) { padding ->
         if (v == null) {
@@ -380,16 +602,19 @@ fun InsurancePolicyScreen(
             return@Scaffold
         }
         val p = v.policy
+        val asOf = v.asOf
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(bottom = 48.dp)
+            contentPadding = PaddingValues(bottom = 88.dp)
         ) {
             item {
-                Card(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -399,40 +624,134 @@ fun InsurancePolicyScreen(
                             style = MaterialTheme.typography.headlineSmall
                         )
                         Text(
-                            "Premiums paid (${v.premiums.size})",
+                            "Premiums paid (${v.premiums.size})" +
+                                    if (v.type == InsuranceType.MOTOR && v.upkeep > 0) " · services and tests ${
+                                        MoneyFormat.amount(
+                                            v.upkeep
+                                        )
+                                    }" else "",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Row {
-                            StatCell(
-                                "Premium",
-                                p?.premiumAmount?.let {
-                                    "${MoneyFormat.amount(it)} ${
-                                        premiumFrequencyLabel(p.premiumFrequencyMonths)
-                                    }"
-                                } ?: "—")
-                            StatCell(
-                                "Next due",
-                                v.nextDue?.format(SHORT_DATE) ?: "—",
-                                v.dueIn?.let { if (it <= 30) -1.0 else null })
-                        }
-                        Row {
-                            StatCell(
-                                "Sum assured",
-                                p?.sumAssured?.let { MoneyFormat.amount(it) } ?: "—")
-                            StatCell("Received back", MoneyFormat.amount(v.received))
-                        }
-                        Row {
-                            StatCell("Start", p?.startDate?.format(SHORT_DATE) ?: "—")
-                            StatCell("Maturity", p?.maturityDate?.format(SHORT_DATE) ?: "—")
-                        }
-                        Row {
-                            StatCell("Type", insuranceTypeTitle(v.type))
-                            StatCell("Policy no", p?.policyNumber ?: "—")
+                        when (v.type) {
+                            InsuranceType.LIFE, InsuranceType.TERM -> {
+                                Row {
+                                    StatCell(
+                                        "Premium",
+                                        p?.premiumAmount?.let {
+                                            "${MoneyFormat.amount(it)} ${
+                                                Insurance.frequencyLabel(
+                                                    p.premiumFrequencyMonths
+                                                )
+                                            }"
+                                        }
+                                            ?: "—")
+                                    StatCell(
+                                        "Next due",
+                                        v.nextDue?.format(SHORT_DATE) ?: "—",
+                                        v.dueIn?.let { if (it <= 30) -1.0 else null })
+                                }
+                                Row {
+                                    StatCell(
+                                        "Sum assured",
+                                        p?.sumAssured?.let { MoneyFormat.amount(it) } ?: "—")
+                                    if (v.type == InsuranceType.LIFE) StatCell(
+                                        "Received back",
+                                        MoneyFormat.amount(v.received)
+                                    )
+                                    else StatCell("Policy no", p?.policyNumber ?: "—")
+                                }
+                                Row {
+                                    StatCell("Start", p?.startDate?.format(SHORT_DATE) ?: "—")
+                                    StatCell(
+                                        if (v.type == InsuranceType.LIFE) "Maturity" else "Cover ends",
+                                        p?.maturityDate?.format(SHORT_DATE) ?: "—"
+                                    )
+                                }
+                                if (v.type == InsuranceType.LIFE) Row {
+                                    StatCell("Policy no", p?.policyNumber ?: "—")
+                                    StatCell("Due on", p?.dueDay?.let { d ->
+                                        if ((p.premiumFrequencyMonths
+                                                ?: 12) > 1 && p.dueMonth != null
+                                        ) "$d ${monthName(p.dueMonth)}" else "day $d"
+                                    } ?: "—")
+                                }
+                            }
+
+                            InsuranceType.HEALTH -> {
+                                val end = v.validUntil(ValidityKind.COVER)
+                                Row {
+                                    StatCell(
+                                        "Last premium",
+                                        (p?.premiumAmount ?: v.premiums.lastOrNull()?.amount)?.let {
+                                            MoneyFormat.amount(
+                                                it
+                                            )
+                                        } ?: "—")
+                                    StatCell(
+                                        "Covered until",
+                                        end?.format(SHORT_DATE) ?: "—",
+                                        end?.let { if (it.inDays(asOf) <= 30) -1.0 else null })
+                                }
+                                Row {
+                                    // The cover in force says the sum insured and the policy number; a renewal may change both.
+                                    StatCell(
+                                        "Sum insured",
+                                        v.sumInsured?.let { MoneyFormat.amount(it) } ?: "—")
+                                    StatCell("Policy no", v.policyNumber ?: "—")
+                                }
+                                Row {
+                                    StatCell("Start", p?.startDate?.format(SHORT_DATE) ?: "—")
+                                    StatCell("Premiums", "${v.premiums.size}")
+                                }
+                            }
+
+                            InsuranceType.MOTOR -> {
+                                Row {
+                                    val tp = v.validUntil(ValidityKind.THIRD_PARTY)
+                                    val od = v.validUntil(ValidityKind.OWN_DAMAGE)
+                                    StatCell(
+                                        "Third party until",
+                                        tp?.format(SHORT_DATE) ?: "—",
+                                        tp?.let { if (it.inDays(asOf) <= 30) -1.0 else null })
+                                    StatCell(
+                                        "Own damage until",
+                                        od?.format(SHORT_DATE) ?: "—",
+                                        od?.let { if (it.inDays(asOf) <= 30) -1.0 else null })
+                                }
+                                Row {
+                                    val service = v.validUntil(ValidityKind.SERVICE)
+                                    val emission = v.validUntil(ValidityKind.EMISSION_TEST)
+                                    StatCell(
+                                        "Service due",
+                                        service?.format(SHORT_DATE) ?: "—",
+                                        service?.let { if (it.inDays(asOf) <= 30) -1.0 else null })
+                                    StatCell(
+                                        "Emission test until",
+                                        emission?.format(SHORT_DATE) ?: "—",
+                                        emission?.let { if (it.inDays(asOf) <= 30) -1.0 else null })
+                                }
+                                Row {
+                                    // The cover in force that names its insurer: a hand-set third-party period may not.
+                                    val covers = listOfNotNull(
+                                        v.current(ValidityKind.OWN_DAMAGE),
+                                        v.current(ValidityKind.THIRD_PARTY)
+                                    )
+                                    val cover =
+                                        covers.firstOrNull { it.provider != null || it.reference != null }
+                                            ?: covers.firstOrNull()
+                                    StatCell("Insurer", cover?.provider ?: "—")
+                                    StatCell("Policy no", cover?.reference ?: "—")
+                                }
+                                Row {
+                                    StatCell("Vehicle no", p?.vehicleNumber ?: "—")
+                                    StatCell("Premiums", "${v.premiums.size}")
+                                }
+                            }
                         }
                         Text(
-                            if (v.countsAsInvestment) "Counts as an investment: premiums appear in the Investment Summary and the savings tables."
-                            else "Not an investment: premiums are expenses and stay out of the investment totals.",
+                            if (v.type.investment) "Counts as an investment: premiums appear in the Investment Summary and the savings tables."
+                            else "Protection, not an investment: premiums are expenses and stay out of the investment totals.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -442,31 +761,33 @@ fun InsurancePolicyScreen(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        Button(
-                            onClick = {
-                                onPayPremium(
-                                    v.instrument.id,
-                                    if (v.countsAsInvestment) TransactionKind.INVEST else TransactionKind.EXPENSE
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) { Text("Pay premium") }
                     }
                 }
                 Text(
-                    "Premiums and payouts",
+                    "Ledger",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
                 HorizontalDivider()
             }
+            if (v.rows.isEmpty()) item {
+                Text(
+                    "Nothing recorded yet. Tap + to record a ${
+                        Insurance.kindsFor(v.type).first().title.lowercase()
+                    }.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
             items(
                 v.rows.sortedWith(compareByDescending<TransactionEntity> { it.date }.thenByDescending { it.id }),
                 key = { it.id }) { t ->
+                val bought = v.periodsOf(t)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .combinedClickable(onClick = {}, onLongClick = { onEditTransaction(t.id) })
+                        .combinedClickable(onClick = {}, onLongClick = { editing = t })
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -477,9 +798,29 @@ fun InsurancePolicyScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        if (bought.isNotEmpty()) Text(
+                            bought.joinToString(" · ") {
+                                "${it.kind.title.lowercase()} to ${
+                                    it.endDate.format(
+                                        SHORT_DATE
+                                    )
+                                }"
+                            } +
+                                    listOfNotNull(
+                                        bought.firstNotNullOfOrNull { it.sumInsured }
+                                            ?.let { "insured ${MoneyFormat.amount(it)}" },
+                                        bought.firstNotNullOfOrNull { it.provider },
+                                        bought.firstNotNullOfOrNull { it.reference },
+                                    ).joinToString("") { " · $it" },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     Text(
-                        MoneyFormat.amount(t.amount, t.currency),
+                        (if (v.entryKindOf(t) == InsuranceEntryKind.PAYOUT) "−" else "") + MoneyFormat.amount(
+                            t.amount,
+                            t.currency
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -488,55 +829,104 @@ fun InsurancePolicyScreen(
             }
         }
     }
-    if (editing && v != null) PolicySheet(
+    if (deleting && v != null) {
+        val what = if (v.type == InsuranceType.MOTOR) "vehicle" else "policy"
+        AlertDialog(
+            onDismissRequest = { deleting = false },
+            title = { Text("Delete ${v.title}?") },
+            text = {
+                Text(
+                    if (v.rows.isEmpty()) "The $what has no entries; it is removed with its dates."
+                    else "Its ${v.rows.size} ${if (v.rows.size == 1) "entry goes" else "entries go"} too, with the account balances put back. This cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleting = false; viewModel.deletePolicy(
+                    v.instrument.id,
+                    onBack
+                )
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { deleting = false }) { Text("Cancel") } },
+        )
+    }
+    if (editingPolicy && v != null) PolicySheet(
         existing = v,
-        categories = state.categories,
-        onSave = { i, p -> viewModel.save(i, p); editing = false },
-        onDismiss = { editing = false })
+        onSave = { i, p, m -> viewModel.savePolicy(i, p, m); editingPolicy = false },
+        onDismiss = { editingPolicy = false })
+    val sheetKind = adding ?: editing?.let { v?.entryKindOf(it) }
+    if (v != null && sheetKind != null) InsuranceEntrySheet(
+        view = v,
+        banks = state.banks,
+        defaultBankId = v.rows.maxWithOrNull(compareBy({ it.date }, { it.id }))
+            ?.let { it.fromAccountId ?: it.toAccountId }
+            ?: state.banks.firstOrNull { it.accountType == AccountType.BANK }?.id,
+        places = state.policies.flatMap { p -> p.periods.filter { it.kind == ValidityKind.SERVICE || it.kind == ValidityKind.EMISSION_TEST } }
+            .mapNotNull { it.provider?.trim()?.ifBlank { null } }.distinct().sorted(),
+        initialKind = sheetKind,
+        existing = editing,
+        onSave = { entry -> viewModel.saveEntry(v, entry, editing); adding = null; editing = null },
+        onDelete = editing?.let { row -> { viewModel.deleteEntry(row.id); editing = null } },
+        onDismiss = { adding = null; editing = null },
+    )
+    // A row the sheet cannot describe (an old import, say) is left alone rather than edited blind.
+    LaunchedEffect(editing) {
+        val row = editing ?: return@LaunchedEffect
+        if (v?.entryKindOf(row) == null) {
+            editing = null
+            snackbar.showSnackbar("This row is not an entry the sheet knows; it stays as it is.")
+        }
+    }
 }
 
-/** New or edited policy: the instrument (name, owner, category, notes) and the policy details. */
+/**
+ * New or edited policy or vehicle: the type, what identifies it, the premium schedule (life and term), the sums,
+ * and, for health and motor, the validity in force when the last entry predates the app. Entries keep that validity
+ * up to date afterwards.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PolicySheet(
     existing: PolicyView?,
-    categories: List<InvestmentCategory>,
-    onSave: (Instrument, InsurancePolicy) -> Unit,
-    onDismiss: () -> Unit
+    onSave: (Instrument, InsurancePolicy, Map<ValidityKind, LocalDate?>) -> Unit,
+    onDismiss: () -> Unit,
+    initialType: InsuranceType = InsuranceType.LIFE,
 ) {
     val p = existing?.policy
-    var type by remember { mutableStateOf(p?.insuranceType ?: InsuranceType.LIFE) }
+    var type by remember { mutableStateOf(p?.insuranceType ?: initialType) }
     var provider by remember { mutableStateOf(p?.provider ?: "") }
     var policyName by remember { mutableStateOf(p?.policyName ?: "") }
+    var vehicleName by remember {
+        mutableStateOf(existing?.instrument?.name?.takeIf { p?.insuranceType == InsuranceType.MOTOR }
+            ?: "")
+    }
+    var vehicleNumber by remember { mutableStateOf(p?.vehicleNumber ?: "") }
     var number by remember { mutableStateOf(p?.policyNumber ?: "") }
-    var sumAssured by remember {
-        mutableStateOf(
-            p?.sumAssured?.let(com.nagabhushansn95.financetracker.data.investments.FdMath::plain)
-                ?: ""
-        )
-    }
-    var premium by remember {
-        mutableStateOf(
-            p?.premiumAmount?.let(com.nagabhushansn95.financetracker.data.investments.FdMath::plain)
-                ?: ""
-        )
-    }
+    var sumAssured by remember { mutableStateOf(p?.sumAssured?.let(FdMath::plain) ?: "") }
+    var premium by remember { mutableStateOf(p?.premiumAmount?.let(FdMath::plain) ?: "") }
     var frequency by remember { mutableStateOf(p?.premiumFrequencyMonths ?: 12) }
+    var dueDay by remember { mutableStateOf(p?.dueDay?.toString() ?: "") }
+    var dueMonth by remember { mutableStateOf(p?.dueMonth ?: LocalDate.now().monthValue) }
     var start by remember { mutableStateOf(p?.startDate) }
     var maturity by remember { mutableStateOf(p?.maturityDate) }
-    var nextDue by remember { mutableStateOf(p?.nextDueDate) }
-    var counts by remember { mutableStateOf(p?.countsAsInvestment ?: (type == InsuranceType.LIFE)) }
-    var countsTouched by remember { mutableStateOf(p != null) }
     var owner by remember { mutableStateOf(existing?.instrument?.owner ?: Instrument.OWNER_SELF) }
     var active by remember { mutableStateOf(existing?.instrument?.active ?: true) }
-    var categoryId by remember { mutableStateOf(existing?.instrument?.categoryId) }
     var notes by remember { mutableStateOf(existing?.instrument?.notes ?: "") }
-    val name =
-        listOf(provider.trim(), policyName.trim()).filter { it.isNotEmpty() }.joinToString(" - ")
-    val frequencies = listOf(1, 3, 6, 12)
+    val manual = remember {
+        androidx.compose.runtime.mutableStateMapOf<ValidityKind, LocalDate?>().also { m ->
+            existing?.let { v -> ValidityKind.entries.forEach { k -> m[k] = v.validUntil(k) } }
+        }
+    }
+    val name = if (type == InsuranceType.MOTOR) vehicleName.trim()
+    else listOf(provider.trim(), policyName.trim()).filter { it.isNotEmpty() }.joinToString(" - ")
+    val day = dueDay.toIntOrNull()
+    val dayOk = !type.scheduled || dueDay.isBlank() || (day != null && day in 1..31)
 
     FormSheet(
-        title = if (existing == null) "New policy" else "Edit policy",
+        title = if (existing == null) "New policy" else if (type == InsuranceType.MOTOR) "Edit vehicle" else "Edit policy",
         onDismiss = onDismiss
     ) {
         Row(
@@ -544,99 +934,143 @@ fun PolicySheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             InsuranceType.entries.forEach { t ->
-                FilterChip(
-                    selected = type == t,
-                    onClick = {
-                        type = t; if (!countsTouched) counts = t == InsuranceType.LIFE
-                    },
-                    label = { Text(insuranceTypeTitle(t)) })
+                FilterChip(selected = type == t, onClick = { type = t }, label = { Text(t.title) })
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = provider,
-                onValueChange = { provider = it },
-                label = { Text("Provider") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
+        if (type == InsuranceType.MOTOR) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = vehicleName,
+                    onValueChange = { vehicleName = it },
+                    label = { Text("Vehicle") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = vehicleNumber,
+                    onValueChange = { vehicleNumber = it },
+                    label = { Text("Vehicle number") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Text(
+                "Each year's premium carries its own insurer, policy number and cover dates; record them from the vehicle's + button.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = provider,
+                    onValueChange = { provider = it },
+                    label = { Text("Provider") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = policyName,
+                    onValueChange = { policyName = it },
+                    label = { Text("Plan name") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             OutlinedTextField(
-                value = policyName,
-                onValueChange = { policyName = it },
-                label = { Text("Plan name") },
+                value = number,
+                onValueChange = { number = it },
+                label = { Text("Policy number") },
                 singleLine = true,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NumberField(
+                    premium,
+                    if (type == InsuranceType.HEALTH) "Premium (last paid)" else "Premium",
+                    { premium = it },
+                    Modifier.weight(1f)
+                )
+                NumberField(
+                    sumAssured,
+                    if (type == InsuranceType.HEALTH) "Sum insured" else "Sum assured",
+                    { sumAssured = it },
+                    Modifier.weight(1f)
+                )
+            }
+            if (type == InsuranceType.HEALTH) Text(
+                "Each premium carries its own policy number, sum insured and cover dates; the latest ones show here and follow the premiums recorded from the policy's + button.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        OutlinedTextField(
-            value = number,
-            onValueChange = { number = it },
-            label = { Text("Policy number") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberField(premium, "Premium", { premium = it }, Modifier.weight(1f))
-            NumberField(sumAssured, "Sum assured", { sumAssured = it }, Modifier.weight(1f))
+        if (type.scheduled) {
+            ChoiceDropdown(
+                "Frequency",
+                Insurance.FREQUENCIES,
+                frequency,
+                { Insurance.frequencyLabel(it) }) { frequency = it }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                NumberField(dueDay, "Due day (1–31)", { dueDay = it }, Modifier.weight(1f))
+                if (frequency > 1) Box(modifier = Modifier.weight(1f)) {
+                    ChoiceDropdown(
+                        "Due month",
+                        (1..12).toList(),
+                        dueMonth,
+                        { monthName(it) }) { dueMonth = it }
+                }
+            }
+            Text(
+                if (frequency == 1) "The premium falls due on this day every month; the next due date follows the last premium paid."
+                else "The premium falls due on this day of this month and every ${
+                    Insurance.frequencyLabel(
+                        frequency
+                    ).removeSuffix("ly")
+                } step after it; the next due date follows the last premium paid.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        ChoiceDropdown(
-            "Paid",
-            frequencies,
-            frequency,
-            { premiumFrequencyLabel(it) }) { frequency = it }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (type != InsuranceType.MOTOR) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DateField("Start", start, { start = it }, Modifier.weight(1f), clearable = true)
-            DateField(
-                "Maturity",
+            if (type.scheduled) DateField(
+                if (type == InsuranceType.LIFE) "Maturity" else "Cover ends",
                 maturity,
                 { maturity = it },
                 Modifier.weight(1f),
                 clearable = true
             )
         }
-        DateField(
-            "Next premium due",
-            nextDue,
-            { nextDue = it },
-            Modifier.fillMaxWidth(),
-            clearable = true
-        )
-        Text(
-            "Leave the due date empty to take the last premium plus the payment interval.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = counts, onCheckedChange = { counts = it; countsTouched = true })
-            Text("Counts as an investment (premiums are savings, not expenses)")
-        }
-        if (categories.isNotEmpty()) {
-            val choices =
-                listOf<InvestmentCategory?>(null) + categories.filter { it.parentId == null }
-                    .flatMap { c -> listOf(c) + categories.filter { it.parentId == c.id } }
-            val byId = categories.associateBy { it.id }
-            ChoiceDropdown(
-                "Category",
-                choices,
-                choices.firstOrNull { it?.id == categoryId },
-                { c ->
-                    c?.let { x ->
-                        x.parentId?.let { byId[it]?.name }?.let { "$it › ${x.name}" } ?: x.name
-                    } ?: "By type (${InvestmentCategories.LIFE_INSURANCE})"
-                }) { categoryId = it?.id }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = owner,
-                onValueChange = { owner = it },
-                label = { Text("Owner") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
+        val manualKinds = Insurance.manualKindsFor(type)
+        if (manualKinds.isNotEmpty()) {
+            Text(
+                if (existing == null) "Validity in force now (for cover bought before using this app; entries keep it up to date afterwards):"
+                else "Validity in force (entries keep it up to date; change it here only for cover bought before using this app):",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            manualKinds.forEach { k ->
+                DateField(
+                    validityLabel(k),
+                    manual[k],
+                    { manual[k] = it },
+                    Modifier.fillMaxWidth(),
+                    clearable = true
+                )
+            }
         }
+        OutlinedTextField(
+            value = owner,
+            onValueChange = { owner = it },
+            label = { Text("Owner") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
         if (existing != null) Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = active, onCheckedChange = { active = it })
-            Text("Active (untick when matured or lapsed)")
+            Text(if (type == InsuranceType.MOTOR) "Active (untick when the vehicle is sold)" else "Active (untick when matured or lapsed)")
         }
         OutlinedTextField(
             value = notes,
@@ -644,7 +1078,7 @@ fun PolicySheet(
             label = { Text("Notes") },
             modifier = Modifier.fillMaxWidth()
         )
-        Button(enabled = name.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = {
+        Button(enabled = name.isNotBlank() && dayOk, modifier = Modifier.fillMaxWidth(), onClick = {
             val now = java.time.LocalDateTime.now()
             val instrument = (existing?.instrument ?: Instrument(
                 name = name,
@@ -652,29 +1086,31 @@ fun PolicySheet(
                 displayOrder = 0,
                 createdTime = now,
                 modifiedTime = now
-            ))
-                .copy(
-                    name = name,
-                    owner = owner.trim().ifBlank { Instrument.OWNER_SELF },
-                    categoryId = categoryId,
-                    active = active,
-                    notes = notes.ifBlank { null })
+            )).copy(
+                name = name,
+                owner = owner.trim().ifBlank { Instrument.OWNER_SELF },
+                categoryId = null,
+                active = active,
+                notes = notes.ifBlank { null })
+            val motor = type == InsuranceType.MOTOR
             onSave(
                 instrument,
                 InsurancePolicy(
                     instrumentId = instrument.id,
                     insuranceType = type,
-                    provider = provider.trim().ifBlank { null },
-                    policyName = policyName.trim().ifBlank { null },
-                    policyNumber = number.trim().ifBlank { null },
-                    sumAssured = sumAssured.toDoubleOrNull(),
-                    premiumAmount = premium.toDoubleOrNull(),
-                    premiumFrequencyMonths = frequency,
-                    startDate = start,
-                    maturityDate = maturity,
-                    nextDueDate = nextDue,
-                    countsAsInvestment = counts,
+                    provider = provider.trim().ifBlank { null }.takeIf { !motor },
+                    policyName = policyName.trim().ifBlank { null }.takeIf { !motor },
+                    policyNumber = number.trim().ifBlank { null }.takeIf { !motor },
+                    vehicleNumber = vehicleNumber.trim().ifBlank { null }.takeIf { motor },
+                    sumAssured = sumAssured.toDoubleOrNull().takeIf { !motor },
+                    premiumAmount = premium.toDoubleOrNull().takeIf { !motor },
+                    premiumFrequencyMonths = frequency.takeIf { type.scheduled },
+                    dueDay = day.takeIf { type.scheduled },
+                    dueMonth = dueMonth.takeIf { type.scheduled && frequency > 1 },
+                    startDate = start.takeIf { !motor },
+                    maturityDate = maturity.takeIf { type.scheduled },
                 ),
+                manualKinds.associateWith { manual[it] },
             )
         }) { Text("Save") }
     }

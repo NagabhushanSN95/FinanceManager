@@ -48,6 +48,12 @@ data class FdView(
     val bank: String? get() = terms?.bankName
     val rate: Double? get() = terms?.rate
     val matured: Boolean get() = isOpen && maturityDate != null && daysLeft != null && daysLeft <= 0
+
+    /** When a closed deposit was paid out (its last redemption), falling back to the maturity date; null while open. */
+    val closedOn: LocalDate?
+        get() = if (isOpen) null
+        else rows.filter { it.kind == TransactionKind.REDEEM }.maxOfOrNull { it.date }
+            ?: maturityDate
     val periodLabel: String?
         get() = terms?.let {
             FdMath.periodLabel(

@@ -56,7 +56,7 @@ object Holdings {
     private class Lot(var units: Double, var cost: Double)
 
     /** Prefix the bonus-or-split dialog writes for a split (see InstrumentDetailScreen). */
-    const val SPLIT_PREFIX = "Stock split"
+    const val SPLIT_PREFIX = "Stock Split"
 
     /** Zero-cost units from a split rather than a bonus: the dialog writes "Stock split old:new - name". */
     fun isSplit(particulars: String): Boolean =

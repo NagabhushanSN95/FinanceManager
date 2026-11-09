@@ -273,7 +273,6 @@ class V4Importer(private val db: AppDatabase) {
                             insuranceType = InsuranceType.LIFE,
                             provider = provider,
                             policyName = policyName,
-                            countsAsInvestment = true
                         )
                     )
                 }

@@ -34,10 +34,20 @@ data class LedgerRow(
     val hidden: Boolean,
     val instrumentId: Long? = null,
     val instrumentType: InstrumentType? = null,
+    /** The provident-fund account this row credits or debits, if any. */
+    val pfAccountId: Long? = null,
 ) {
-    /** Investments and redemptions are edited from the instrument's own screen, not from the ledger. */
+    /**
+     * Investments and redemptions are edited from the instrument's own screen, provident-fund entries from the
+     * account's screen and insurance entries (premiums, payouts, services, tests) from the policy's screen, not from
+     * the ledger.
+     */
     val editedUnderInvestments: Boolean
-        get() = (kind == TransactionKind.INVEST || kind == TransactionKind.REDEEM) && instrumentId != null && instrumentType != null
+        get() = pfAccountId != null || isInsurance ||
+                (kind == TransactionKind.INVEST || kind == TransactionKind.REDEEM) && instrumentId != null && instrumentType != null
+
+    /** Any row on a policy or vehicle, whatever its kind. */
+    val isInsurance: Boolean get() = instrumentId != null && instrumentType == InstrumentType.INSURANCE
 }
 
 data class LedgerDay(val date: LocalDate, val rows: List<LedgerRow>)
@@ -73,11 +83,14 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
         db.transactionDao().observeAll(),
         db.accountDao().observeAll(),
         db.categoryDao().observeAll(),
-        db.instrumentDao().observeAll(),
+        combine(
+            db.instrumentDao().observeAll(),
+            db.instrumentDao().observeValidityPeriods()
+        ) { i, p -> i to p },
         filter,
-    ) { transactions, accounts, categories, instruments, f ->
+    ) { transactions, accounts, categories, (instruments, periods), f ->
         // All rows (deleted accounts and categories included) so old transactions still get names.
-        val lookups = LedgerLookups(accounts, categories, instruments)
+        val lookups = LedgerLookups(accounts, categories, instruments, periods)
         val range = f.range(earliest = transactions.lastOrNull()?.date)
         val rows = transactions.filter { f.matches(it, range) }.map { it.toRow(lookups) }
         TransactionsUiState(
@@ -102,5 +115,7 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
         hidden = hidden,
         instrumentId = instrumentId,
         instrumentType = instrumentId?.let { lookups.instruments[it]?.instrumentType },
+        pfAccountId = listOfNotNull(toAccountId, fromAccountId)
+            .firstOrNull { lookups.accounts[it]?.accountType == com.nagabhushansn95.financetracker.data.db.entity.AccountType.PROVIDENT_FUND },
     )
 }

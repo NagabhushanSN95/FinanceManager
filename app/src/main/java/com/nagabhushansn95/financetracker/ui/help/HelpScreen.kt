@@ -18,7 +18,7 @@ private val SECTIONS = listOf(
         Income adds to an account; Expense takes from one and needs a category; Transfer moves money between two accounts.
         Invest pays from an account into an instrument (stock, fund, deposit, policy); Redeem brings money back from one.
         The + button on Home or Transactions opens the editor for the cash kinds; press and hold an account on Home to start with it chosen.
-        Invest and Redeem are recorded on the instrument's own screen under Investments (Buy / Sell, Renew, Pay premium, Add a contribution),
+        Invest and Redeem are recorded on the instrument's own screen under Investments (Buy / Sell, Renew, the + on a policy or a provident fund),
         and an investment row in the ledger opens that screen when pressed and held.
     """,
     "Accounts and instruments" to """

@@ -6,6 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
+import com.nagabhushansn95.financetracker.data.investments.Alert
+import com.nagabhushansn95.financetracker.data.investments.Alerts
+import com.nagabhushansn95.financetracker.data.investments.FixedDeposits
+import com.nagabhushansn95.financetracker.data.investments.Insurance
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
 import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
@@ -81,6 +85,38 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     /** The Investment Summary, for the Investments card. */
     val investments: StateFlow<InvestmentSummary?> = InvestmentSummaryBuilder.observe(db)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * Home's Alerts card: deposits past maturity, premiums falling due, cover, service and emission tests ending,
+     * within the run-up set in Settings.
+     */
+    val alerts: StateFlow<List<Alert>> = combine(
+        combine(
+            db.instrumentDao().observeAll(),
+            db.instrumentDao().observeFixedDeposits(),
+            db.transactionDao().observeWithInstrument(),
+            db.instrumentDao().observeValuations(),
+            db.instrumentDao().observeFdEvents(),
+        ) { instruments, terms, ledger, valuations, events ->
+            val today = java.time.LocalDate.now()
+            Triple(
+                instruments,
+                ledger,
+                FixedDeposits.build(instruments, terms, ledger, valuations, today, events)
+            )
+        },
+        db.instrumentDao().observeInsurancePolicies(),
+        db.instrumentDao().observeValidityPeriods(),
+        prefs.alertThresholdsFlow,
+    ) { (instruments, ledger, deposits), policies, periods, thresholds ->
+        val today = java.time.LocalDate.now()
+        Alerts.build(
+            deposits,
+            Insurance.build(instruments, policies, ledger, periods, today),
+            today,
+            thresholds
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun toggleSection(type: AccountType) {
         val now = !(collapsed.value[type] ?: false)

@@ -94,7 +94,7 @@ class FixedDepositRepositoryTest {
         assertTrue(v.estimated > 102000 && v.estimated < 103000)
         assertEquals(212L, v.daysLeft)
         assertTrue(v.isOpen)
-        assertEquals("Fixed deposit opened · SBI 1 year @ 6.25%", v.rows.single().particulars)
+        assertEquals("Created A Fixed Deposit For 12 Months", v.rows.single().particulars)
 
         // The Investment Summary values the deposit by the same formula.
         val summary = InvestmentSummaryBuilder.build(

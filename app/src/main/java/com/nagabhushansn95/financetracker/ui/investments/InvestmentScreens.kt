@@ -16,7 +16,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -138,7 +137,6 @@ fun InstrumentListScreen(
 @Composable
 fun ProvidentFundsScreen(
     onBack: () -> Unit,
-    onAddToAccount: (Long) -> Unit,
     onOpenAccount: (Long) -> Unit = {}
 ) {
     InvestmentScaffold("Provident funds", onBack) { s ->
@@ -151,16 +149,12 @@ fun ProvidentFundsScreen(
             else {
                 item { TypeHeader(listOf(pf)) }
                 items(pf.children, key = { it.name }) { line ->
-                    ProvidentFundCard(
-                        line,
-                        onAddToAccount,
-                        onOpenAccount,
-                    )
+                    ProvidentFundCard(line, onOpenAccount)
                 }
                 item {
                     Text(
-                        "Record employer and employee contributions as Income into the account with the contributor chip; " +
-                                "PPF deposits as a Transfer from the bank; interest as Income with contributor Interest.",
+                        "Open an account to record contributions, interest credits, transfers in and withdrawals from its + button. " +
+                                "They show under Transactions like any other row but are edited only there.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -171,7 +165,7 @@ fun ProvidentFundsScreen(
 }
 
 @Composable
-private fun ProvidentFundCard(line: SummaryLine, onAdd: (Long) -> Unit, onOpen: (Long) -> Unit) {
+private fun ProvidentFundCard(line: SummaryLine, onOpen: (Long) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth()
             .let { m -> line.accountId?.let { id -> m.clickable { onOpen(id) } } ?: m }) {
@@ -197,13 +191,9 @@ private fun ProvidentFundCard(line: SummaryLine, onAdd: (Long) -> Unit, onOpen: 
                 MoneyFormat.amount(line.income)
             ); Stat("XIRR", pct(line.xirr))
             }
-            line.accountId?.let { id ->
-                OutlinedButton(
-                    onClick = { onAdd(id) },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Add a contribution") }
+            if (line.accountId != null) {
                 Text(
-                    "Tap for the contributor breakdown, financial years and the ledger.",
+                    "Tap for the contributor breakdown, financial years, the ledger and the + button.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

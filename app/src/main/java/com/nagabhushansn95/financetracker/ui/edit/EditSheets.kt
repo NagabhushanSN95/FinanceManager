@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.nagabhushansn95.financetracker.data.db.entity.Account
@@ -716,6 +717,7 @@ fun TemplateSheet(
             onValueChange = { particulars = it },
             label = { Text("Particulars") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
             modifier = Modifier.fillMaxWidth()
         )
         if (showsFrom) com.nagabhushansn95.financetracker.ui.common.AccountDropdown(

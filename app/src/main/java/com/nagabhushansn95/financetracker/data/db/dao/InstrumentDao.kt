@@ -15,6 +15,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -130,6 +131,28 @@ interface InstrumentDao {
 
     @Query("SELECT * FROM insurance_policies")
     fun observeInsurancePolicies(): Flow<List<InsurancePolicy>>
+
+    // --- validity periods (health cover, vehicle insurance, service, emission test)
+    @Insert
+    suspend fun insertValidityPeriod(period: ValidityPeriod): Long
+
+    @Update
+    suspend fun updateValidityPeriod(period: ValidityPeriod)
+
+    @Query("DELETE FROM validity_periods WHERE id = :id")
+    suspend fun deleteValidityPeriod(id: Long)
+
+    @Query("DELETE FROM validity_periods WHERE transaction_id = :transactionId")
+    suspend fun deleteValidityPeriodsOf(transactionId: Long)
+
+    @Query("SELECT * FROM validity_periods WHERE instrument_id = :instrumentId ORDER BY end_date, id")
+    suspend fun getValidityPeriods(instrumentId: Long): List<ValidityPeriod>
+
+    @Query("SELECT * FROM validity_periods ORDER BY end_date, id")
+    suspend fun getAllValidityPeriods(): List<ValidityPeriod>
+
+    @Query("SELECT * FROM validity_periods ORDER BY end_date, id")
+    fun observeValidityPeriods(): Flow<List<ValidityPeriod>>
 
     // --- categories
     @Insert

@@ -213,7 +213,19 @@ data class FdEvent(
     val notes: String? = null,
 )
 
-enum class InsuranceType { LIFE, HEALTH, MOTOR, OTHER }
+/**
+ * Life policies are investments (premiums are INVEST rows and count in the summary); term, health and motor are
+ * protection: premiums are expenses that stay out of the totals. A MOTOR row is a vehicle, not a policy: each
+ * year's premium carries its own insurer, policy number and cover dates (see [ValidityPeriod]).
+ */
+enum class InsuranceType(val title: String) {
+    LIFE("Life"), TERM("Term"), HEALTH("Health"), MOTOR("Motor");
+
+    val investment: Boolean get() = this == LIFE
+
+    /** Premiums fall due by the calendar (frequency, due day and month) rather than when the last cover ends. */
+    val scheduled: Boolean get() = this == LIFE || this == TERM
+}
 
 @Entity(
     tableName = "insurance_policies",
@@ -223,7 +235,6 @@ enum class InsuranceType { LIFE, HEALTH, MOTOR, OTHER }
         childColumns = ["instrument_id"],
         onDelete = ForeignKey.CASCADE
     )],
-    indices = [Index("next_due_date")]
 )
 data class InsurancePolicy(
     @PrimaryKey @ColumnInfo(name = "instrument_id") val instrumentId: Long,
@@ -231,14 +242,68 @@ data class InsurancePolicy(
     val provider: String? = null,
     @ColumnInfo(name = "policy_name") val policyName: String? = null,
     @ColumnInfo(name = "policy_number") val policyNumber: String? = null,
+    /** Registration number of a MOTOR row's vehicle. */
+    @ColumnInfo(name = "vehicle_number") val vehicleNumber: String? = null,
     @ColumnInfo(name = "sum_assured") val sumAssured: Double? = null,
     @ColumnInfo(name = "premium_amount") val premiumAmount: Double? = null,
+    /** Life and term: 1, 3, 6 or 12. */
     @ColumnInfo(name = "premium_frequency_months") val premiumFrequencyMonths: Int? = null,
+    /** Day of the month a life or term premium falls due (clamped in short months). */
+    @ColumnInfo(name = "due_day") val dueDay: Int? = null,
+    /** The anchor month (1-12) of a quarterly, half-yearly or yearly premium; unused when monthly. */
+    @ColumnInfo(name = "due_month") val dueMonth: Int? = null,
     @ColumnInfo(name = "start_date") val startDate: LocalDate? = null,
+    /** Life: maturity; term: the end of cover. */
     @ColumnInfo(name = "maturity_date") val maturityDate: LocalDate? = null,
-    @ColumnInfo(name = "next_due_date") val nextDueDate: LocalDate? = null,
-    /** Life insurance counts as an investment in the dashboard; health does not. */
-    @ColumnInfo(name = "counts_as_investment") val countsAsInvestment: Boolean = false,
+)
+
+/** What a validity period covers. COVER is a health policy's cover; the rest belong to a vehicle. */
+enum class ValidityKind(val title: String) {
+    COVER("Cover"),
+    THIRD_PARTY("Third-party cover"),
+    OWN_DAMAGE("Own-damage cover"),
+    SERVICE("Service"),
+    EMISSION_TEST("Emission test");
+}
+
+/**
+ * How long something stays valid: a health policy's cover, a vehicle's third-party and own-damage insurance, the time
+ * to its next service, its emission certificate. Normally written with the entry that paid for it ([transactionId])
+ * and removed with it; a row without a transaction was set by hand on the policy sheet. The latest end per kind is
+ * the current one; alerts read it, and a health policy's insurer, policy number and sum insured are the current
+ * cover's, so each renewal's terms stay on the premium that bought them.
+ */
+@Entity(
+    tableName = "validity_periods",
+    foreignKeys = [
+        ForeignKey(
+            entity = Instrument::class,
+            parentColumns = ["id"],
+            childColumns = ["instrument_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = TransactionEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["transaction_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+    ],
+    indices = [Index(value = ["instrument_id", "kind"]), Index("transaction_id")]
+)
+data class ValidityPeriod(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @ColumnInfo(name = "instrument_id") val instrumentId: Long,
+    val kind: ValidityKind,
+    @ColumnInfo(name = "start_date") val startDate: LocalDate? = null,
+    @ColumnInfo(name = "end_date") val endDate: LocalDate,
+    @ColumnInfo(name = "transaction_id") val transactionId: Long? = null,
+    /** The insurer of a motor or health premium (it may change every year). */
+    val provider: String? = null,
+    /** The policy number of a motor or health premium. */
+    val reference: String? = null,
+    /** The sum insured a health premium bought (it may change at every renewal). */
+    @ColumnInfo(name = "sum_insured") val sumInsured: Double? = null,
 )
 
 enum class ValuationSource { YAHOO, AMFI, MANUAL, FD_FORMULA }

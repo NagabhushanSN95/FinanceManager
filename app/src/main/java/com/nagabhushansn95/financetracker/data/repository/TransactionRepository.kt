@@ -72,16 +72,19 @@ class TransactionRepository(private val db: AppDatabase) {
     /** Reverses the stored row's balance effect, then applies the new one. */
     suspend fun update(transaction: TransactionEntity, now: LocalDateTime = LocalDateTime.now()) =
         db.useWriterConnection { transactor ->
-            transactor.immediateTransaction {
-                validate(transaction)
-                val old = db.transactionDao().getById(transaction.id)
-                    ?: throw IllegalArgumentException("Transaction ${transaction.id} does not exist")
-                applyBalances(old, sign = -1, stamp = now)
-                val stamped = transaction.copy(createdTime = old.createdTime, modifiedTime = now)
-                db.transactionDao().update(stamped)
-                applyBalances(stamped, sign = +1, stamp = now)
-            }
+            transactor.immediateTransaction { updateInTransaction(transaction, now) }
         }
+
+    /** For callers that already hold a write transaction: [update] without a transaction of its own. */
+    suspend fun updateInTransaction(transaction: TransactionEntity, now: LocalDateTime) {
+        validate(transaction)
+        val old = db.transactionDao().getById(transaction.id)
+            ?: throw IllegalArgumentException("Transaction ${transaction.id} does not exist")
+        applyBalances(old, sign = -1, stamp = now)
+        val stamped = transaction.copy(createdTime = old.createdTime, modifiedTime = now)
+        db.transactionDao().update(stamped)
+        applyBalances(stamped, sign = +1, stamp = now)
+    }
 
     suspend fun delete(id: Long, now: LocalDateTime = LocalDateTime.now()) =
         db.useWriterConnection { transactor ->

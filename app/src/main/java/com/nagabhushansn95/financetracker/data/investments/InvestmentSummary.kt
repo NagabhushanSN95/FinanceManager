@@ -7,6 +7,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
@@ -113,14 +114,15 @@ object InvestmentSummaryBuilder {
             db.settingsDao().observe(Settings.GOAL_AMOUNT),
             combine(
                 db.instrumentDao().observeFixedDeposits(),
-                db.instrumentDao().observeFxRates()
-            ) { f, x -> f to x },
+                db.instrumentDao().observeFxRates(),
+                db.instrumentDao().observeInsurancePolicies(),
+            ) { f, x, p -> Triple(f, x, p) },
         ) { a, r, g, fx -> Quad(a, r, g, fx) }
         return combine(
             data,
             more
-        ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal, fdAndFx) ->
-            val (fixedDeposits, fxRates) = fdAndFx
+        ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal, fdFxPolicies) ->
+            val (fixedDeposits, fxRates, policies) = fdFxPolicies
             build(
                 instruments,
                 categories,
@@ -133,6 +135,7 @@ object InvestmentSummaryBuilder {
                 asOf(),
                 fixedDeposits,
                 latestFx(fxRates),
+                policies,
             )
         }.flowOn(Dispatchers.Default)
     }
@@ -147,11 +150,12 @@ object InvestmentSummaryBuilder {
     /**
      * Rolls the ledger up into the Investment Summary. Family-owned instruments and instruments of type OTHER (money
      * parked elsewhere, loans: savings rather than investments) are excluded from the totals; the latter still appear
-     * in [InvestmentSummary.byType] for their own screen. Provident funds come from the accounts: invested =
-     * contributions in minus transfers out, current = balance.
+     * in [InvestmentSummary.byType] for their own screen. Term, health and motor insurance is protection, not an
+     * investment: those instruments (and their premiums) are left out altogether. Provident funds come from the
+     * accounts: invested = contributions in minus transfers out, current = balance.
      */
     fun build(
-        instruments: List<Instrument>,
+        allInstruments: List<Instrument>,
         categories: List<InvestmentCategory>,
         ledgerWithInstrument: List<TransactionEntity>,
         valuations: List<InstrumentValuation>,
@@ -162,7 +166,12 @@ object InvestmentSummaryBuilder {
         asOf: LocalDate = LocalDate.now(),
         fixedDeposits: List<FixedDeposit> = emptyList(),
         fxToInr: Map<String, Double> = emptyMap(),
+        insurancePolicies: List<InsurancePolicy> = emptyList(),
     ): InvestmentSummary {
+        val protection =
+            insurancePolicies.filter { !it.insuranceType.investment }.map { it.instrumentId }
+                .toSet()
+        val instruments = allInstruments.filter { it.id !in protection }
         val fdTerms = fixedDeposits.associateBy { it.instrumentId }
         val unitBasedIds =
             instruments.filter { it.instrumentType == InstrumentType.STOCK || it.instrumentType == InstrumentType.MUTUAL_FUND }

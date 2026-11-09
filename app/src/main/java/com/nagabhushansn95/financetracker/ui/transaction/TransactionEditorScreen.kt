@@ -44,12 +44,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -104,8 +104,6 @@ fun TransactionEditorScreen(
     }
 
     val lookups = data.lookups
-    val toIsPf =
-        form.toAccountId?.let { data.accountsById[it]?.accountType } == AccountType.PROVIDENT_FUND
     // Invest and Redeem are recorded from the instrument's screen under Investments; the + button on Home and
     // Transactions only offers the cash kinds. Opened for an instrument, or on an investment row, all five show.
     val investmentKinds = setOf(TransactionKind.INVEST, TransactionKind.REDEEM)
@@ -186,21 +184,6 @@ fun TransactionEditorScreen(
                     ?: if (form.instrumentRequired) "Choose instrument" else "None",
                 onClick = { sheet = Sheet.INSTRUMENT },
             )
-            if (form.kind == TransactionKind.INCOME && toIsPf) {
-                Text("Contributed by", style = MaterialTheme.typography.labelLarge)
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TransactionEditorViewModel.PF_CONTRIBUTORS.forEach { c ->
-                        FilterChip(
-                            selected = form.contributor == c,
-                            onClick = { viewModel.setContributor(c) },
-                            label = { Text(c) })
-                    }
-                }
-            }
-
             ParticularsField(
                 value = form.particulars,
                 suggestions = data.templates.filter { it.kind == form.kind },
@@ -394,6 +377,7 @@ private fun ParticularsField(
             onValueChange = onChange,
             label = { Text("Particulars") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { focused = it.isFocused },

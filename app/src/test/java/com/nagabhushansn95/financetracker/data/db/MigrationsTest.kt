@@ -232,4 +232,68 @@ class MigrationsTest {
             db.close()
         }
     }
+
+    @Test
+    fun migrates6To7RebuildingInsuranceAndAddingValidityPeriods() = runTest {
+        createOldDatabase("migrate-6-7.db", 6) { c ->
+            c.execSQL("INSERT INTO instruments (id, name, instrument_type, currency, owner, active, display_order, created_time, modified_time) VALUES (3, 'SBI Life - Smart Platina Plus', 'INSURANCE', 'INR', 'Self', 1, 1, '2026-01-01T00:00:00', '2026-01-01T00:00:00')")
+            c.execSQL("INSERT INTO instruments (id, name, instrument_type, currency, owner, active, display_order, created_time, modified_time) VALUES (4, 'Something', 'INSURANCE', 'INR', 'Self', 1, 2, '2026-01-01T00:00:00', '2026-01-01T00:00:00')")
+            c.execSQL("INSERT INTO insurance_policies (instrument_id, insurance_type, provider, policy_name, premium_amount, premium_frequency_months, start_date, next_due_date, counts_as_investment) VALUES (3, 'LIFE', 'SBI Life', 'Smart Platina Plus', 8500.0, 1, '2024-06-28', '2026-11-20', 1)")
+            c.execSQL("INSERT INTO insurance_policies (instrument_id, insurance_type, premium_frequency_months, next_due_date, counts_as_investment) VALUES (4, 'OTHER', 12, '2027-03-10', 0)")
+        }
+        val db = AppDatabase.create(context, "migrate-6-7.db")
+        try {
+            val life = db.instrumentDao().getInsurancePolicy(3)!!
+            assertEquals(
+                com.nagabhushansn95.financetracker.data.db.entity.InsuranceType.LIFE,
+                life.insuranceType
+            )
+            assertEquals(20, life.dueDay)
+            assertEquals(11, life.dueMonth)
+            assertEquals(8500.0, life.premiumAmount!!, 1e-9)
+            assertEquals(java.time.LocalDate.of(2024, 6, 28), life.startDate)
+            assertNull(life.vehicleNumber)
+            val other = db.instrumentDao().getInsurancePolicy(4)!!
+            assertEquals(
+                com.nagabhushansn95.financetracker.data.db.entity.InsuranceType.TERM,
+                other.insuranceType
+            )
+            assertEquals(10, other.dueDay)
+            assertEquals(3, other.dueMonth)
+            val id = db.instrumentDao().insertValidityPeriod(
+                com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod(
+                    instrumentId = 3,
+                    kind = com.nagabhushansn95.financetracker.data.db.entity.ValidityKind.COVER,
+                    endDate = java.time.LocalDate.of(2027, 1, 1)
+                )
+            )
+            assertEquals(id, db.instrumentDao().getValidityPeriods(3).single().id)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun migrates7To8AddingTheSumInsuredToValidityPeriods() = runTest {
+        createOldDatabase("migrate-7-8.db", 7) { c ->
+            c.execSQL("INSERT INTO instruments (id, name, instrument_type, currency, owner, active, display_order, created_time, modified_time) VALUES (5, 'HDFC Ergo - Optima Secure', 'INSURANCE', 'INR', 'Self', 1, 1, '2026-01-01T00:00:00', '2026-01-01T00:00:00')")
+            c.execSQL("INSERT INTO insurance_policies (instrument_id, insurance_type, provider, policy_name, sum_assured) VALUES (5, 'HEALTH', 'HDFC Ergo', 'Optima Secure', 1000000.0)")
+            c.execSQL("INSERT INTO validity_periods (id, instrument_id, kind, start_date, end_date, provider, reference) VALUES (9, 5, 'COVER', '2026-03-16', '2027-03-15', 'HDFC Ergo', 'P-2026')")
+        }
+        val db = AppDatabase.create(context, "migrate-7-8.db")
+        try {
+            val period = db.instrumentDao().getValidityPeriods(5).single()
+            assertEquals(9L, period.id)
+            assertEquals("P-2026", period.reference)
+            assertNull(period.sumInsured)
+            db.instrumentDao().updateValidityPeriod(period.copy(sumInsured = 2000000.0))
+            assertEquals(
+                2000000.0,
+                db.instrumentDao().getValidityPeriods(5).single().sumInsured!!,
+                1e-9
+            )
+        } finally {
+            db.close()
+        }
+    }
 }

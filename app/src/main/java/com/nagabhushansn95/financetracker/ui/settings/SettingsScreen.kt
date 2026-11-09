@@ -36,6 +36,7 @@ fun SettingsScreen() {
     var daily by remember { mutableStateOf(prefs.dailyBackupEnabled) }
     var autoPrices by remember { mutableStateOf(prefs.autoPrices) }
     var priceInterval by remember { mutableStateOf(prefs.priceRefreshInterval) }
+    var thresholds by remember { mutableStateOf(prefs.alertThresholds) }
     var drive by remember { mutableStateOf(prefs.driveUploadEnabled) }
     var driveStatus by remember { mutableStateOf(prefs.lastDriveUpload) }
     var driveFolder by remember { mutableStateOf(prefs.driveFolderPath) }
@@ -155,6 +156,48 @@ fun SettingsScreen() {
                             onClick = { priceInterval = mode; prefs.priceRefreshInterval = mode },
                             label = { Text(label) })
                     }
+                }
+            }
+        }
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Alerts", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "How many days before a premium falls due, or a cover, service or emission test ends, Home starts listing it. " +
+                            "Deposits are listed once past maturity. Set by how often the thing recurs.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                @Composable
+                fun daysField(label: String, value: Int, onChange: (Int) -> Unit) {
+                    var text by remember { mutableStateOf(value.toString()) }
+                    androidx.compose.material3.OutlinedTextField(
+                        value = text,
+                        onValueChange = { t ->
+                            text = t.filter { it.isDigit() }.take(3)
+                            text.toIntOrNull()?.let(onChange)
+                        },
+                        label = { Text(label) },
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                daysField("Monthly premiums: days before", thresholds.monthly) {
+                    thresholds = thresholds.copy(monthly = it); prefs.alertThresholds = thresholds
+                }
+                daysField("Quarterly to yearly: days before", thresholds.withinYear) {
+                    thresholds = thresholds.copy(withinYear = it); prefs.alertThresholds =
+                    thresholds
+                }
+                daysField("Longer than a year: days before", thresholds.beyondYear) {
+                    thresholds = thresholds.copy(beyondYear = it); prefs.alertThresholds =
+                    thresholds
                 }
             }
         }

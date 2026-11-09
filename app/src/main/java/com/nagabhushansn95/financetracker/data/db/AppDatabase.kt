@@ -26,6 +26,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
 import com.nagabhushansn95.financetracker.data.db.entity.Setting
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
 import kotlinx.coroutines.Dispatchers
 import java.io.File
 
@@ -40,13 +41,14 @@ import java.io.File
         FdTemplate::class,
         FdEvent::class,
         InsurancePolicy::class,
+        ValidityPeriod::class,
         InstrumentValuation::class,
         FxRate::class,
         TransactionEntity::class,
         Template::class,
         Setting::class,
     ],
-    version = 6, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
+    version = 8, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -62,7 +64,7 @@ abstract class AppDatabase : RoomDatabase() {
         const val DATABASE_NAME = "finance_tracker.db"
 
         /** Same value as the @Database version; restore refuses files from a newer schema. */
-        const val SCHEMA_VERSION = 6
+        const val SCHEMA_VERSION = 8
 
         @Volatile
         private var instance: AppDatabase? = null
