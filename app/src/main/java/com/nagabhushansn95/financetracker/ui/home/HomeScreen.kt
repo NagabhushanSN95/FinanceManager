@@ -84,6 +84,8 @@ import com.nagabhushansn95.financetracker.ui.investments.InsuranceScreen
 import com.nagabhushansn95.financetracker.ui.investments.InsuranceTypeScreen
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentRoutes
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentsScreen
+import com.nagabhushansn95.financetracker.ui.investments.OtherScreen
+import com.nagabhushansn95.financetracker.ui.investments.OthersScreen
 import com.nagabhushansn95.financetracker.ui.investments.ProvidentFundAccountScreen
 import com.nagabhushansn95.financetracker.ui.investments.ProvidentFundsScreen
 import com.nagabhushansn95.financetracker.ui.investments.SavingsScreen
@@ -154,6 +156,7 @@ private const val SLIDE_MILLIS = 300
 private fun instrumentRoute(type: InstrumentType, id: Long) = when (type) {
     InstrumentType.FIXED_DEPOSIT -> InvestmentRoutes.fixedDeposit(id)
     InstrumentType.INSURANCE -> InvestmentRoutes.policy(id)
+    InstrumentType.OTHER -> InvestmentRoutes.other(id)
     else -> "instrument/$id"
 }
 
@@ -482,6 +485,20 @@ fun HomeScreen() {
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
                 ) { entry ->
                     InsurancePolicyScreen(
+                        instrumentId = entry.arguments!!.getLong("id"),
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+                composable(InvestmentRoutes.OTHERS) {
+                    OthersScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpen = { navController.navigate(InvestmentRoutes.other(it)) })
+                }
+                composable(
+                    InvestmentRoutes.OTHER,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { entry ->
+                    OtherScreen(
                         instrumentId = entry.arguments!!.getLong("id"),
                         onBack = { navController.popBackStack() },
                     )

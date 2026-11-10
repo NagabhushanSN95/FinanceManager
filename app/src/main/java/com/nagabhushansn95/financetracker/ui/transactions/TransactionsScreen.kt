@@ -190,6 +190,7 @@ fun TransactionsScreen(
                                 when {
                                     row.pfAccountId != null -> "Provident-fund entries are recorded and edited on the account's screen."
                                     row.isInsurance -> "Insurance entries are recorded and edited on the policy's screen."
+                                    row.instrumentType == InstrumentType.OTHER -> "Loans and money parked elsewhere are recorded and edited on their own screen under Others."
                                     else -> "Investments and redemptions are edited on the instrument's screen."
                                 }
                             )

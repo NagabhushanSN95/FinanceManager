@@ -1588,6 +1588,92 @@ def backfill_vehicles(db, vehicles, report):
 
 # --------------------------------------------------------------------------------------------------- merges
 
+def loans_extras(path):
+    """
+    Loans the 4.x ledger booked as an expense ("Lent To X") and income ("X Paid Back") rows, from a JSON file kept next
+    to the sheet export, never in this repository: {"loans": [{"name": "Loan To X", "notes": ..., "out": [...],
+    "in": [...], "outstanding": 15000}]}. Each item of "out" and "in" picks ledger rows by "particulars" (whole, case
+    ignored) between "from" and "to" (dates, both optional), or by "ids". "outstanding" is what should still be out
+    after the rows are moved; a difference is a problem.
+    """
+    with open(path) as f:
+        data = json.load(f)
+    loans = list(data.get("loans") or [])
+    for loan in loans:
+        if not str(loan.get("name") or "").strip():
+            sys.exit(f"{path}: every loan needs a name")
+        if not loan.get("out"):
+            sys.exit(f"{path}: loan {loan['name']} needs at least one \"out\" match")
+    return loans
+
+
+def match_rows(db, kind, matches):
+    """Ledger rows of [kind] that any of the matches picks, oldest first, each once."""
+    found = {}
+    for m in matches or []:
+        if m.get("ids"):
+            rows = db.q(f"SELECT * FROM transactions WHERE kind = ? AND id IN ({','.join('?' * len(m['ids']))})", kind, *m["ids"])
+        else:
+            sql = "SELECT * FROM transactions WHERE kind = ? AND lower(trim(particulars)) = lower(trim(?))"
+            args = [kind, m["particulars"]]
+            if m.get("from"):
+                sql += " AND date >= ?"
+                args.append(m["from"])
+            if m.get("to"):
+                sql += " AND date <= ?"
+                args.append(m["to"])
+            rows = db.q(sql, *args)
+        for r in rows:
+            found[r["id"]] = r
+    return sorted(found.values(), key=lambda r: (r["date"], r["id"]))
+
+
+def backfill_loans(db, loans, report):
+    """
+    Each loan becomes an OTHER instrument under the Others category; its "Lent To" expenses become money out (INVEST
+    from the same account) and its "Paid Back" incomes money in (REDEEM into the same account). No balance changes:
+    the rows keep their accounts and amounts, only the kind, category and instrument change. A loan that already exists
+    by name is skipped, so the step can be repeated.
+    """
+    if not loans:
+        return
+    report.add("## Loans")
+    report.add("")
+    others = db.one("SELECT id FROM investment_categories WHERE name = 'Others' AND parent_id IS NULL")
+    now = now_iso()
+    for loan in loans:
+        name = loan["name"].strip()
+        if db.one("SELECT id FROM instruments WHERE name = ? AND instrument_type = 'OTHER'", name):
+            report.add(f"- {name}: already there; skipped.")
+            continue
+        out_rows = match_rows(db, "EXPENSE", loan.get("out"))
+        in_rows = match_rows(db, "INCOME", loan.get("in"))
+        if not out_rows:
+            report.problem(f"{name}: no expense row matches its \"out\"; nothing done.")
+            continue
+        iid = db.insert_instrument(name, "OTHER", others[0] if others else None, notes=loan.get("notes"), now=now)
+        for r in out_rows:
+            db.x("UPDATE transactions SET kind = 'INVEST', category_id = NULL, instrument_id = ?, quantity = NULL, rate = NULL, "
+                 "modified_time = ? WHERE id = ?", iid, now, r["id"])
+        for r in in_rows:
+            db.x("UPDATE transactions SET kind = 'REDEEM', category_id = NULL, instrument_id = ?, quantity = NULL, rate = NULL, "
+                 "modified_time = ? WHERE id = ?", iid, now, r["id"])
+        out_total = sum(r["amount"] for r in out_rows)
+        in_total = sum(r["amount"] for r in in_rows)
+        outstanding = out_total - in_total
+        report.add(f"- {name} (instrument {iid}): {len(out_rows)} row(s) out, {plain(out_total)}; {len(in_rows)} row(s) back, "
+                   f"{plain(in_total)}; outstanding {plain(outstanding)}"
+                   + (" (settled)." if abs(outstanding) < 0.005 else "."))
+        for r in out_rows:
+            report.add(f"  - out {r['id']} {r['date']} {plain(r['amount'])} {r['particulars']}")
+        for r in in_rows:
+            report.add(f"  - back {r['id']} {r['date']} {plain(r['amount'])} {r['particulars']}")
+        if loan.get("outstanding") is not None and abs(float(loan["outstanding"]) - outstanding) > 0.005:
+            report.problem(f"{name}: outstanding {plain(outstanding)} but the file says {plain(float(loan['outstanding']))}; "
+                           "check the matches.")
+    report.add("")
+
+
 def merge_instruments(db, merges, report):
     """EditDataRepository.mergeInstruments: rows, templates and deposit links move to the target, the old one goes."""
     for spec in merges:
@@ -1758,6 +1844,9 @@ def main():
     ap.add_argument("--add-insurance", action="store_true",
                     help="on a database the app is using now (already backfilled): only add the health policy and the vehicles, "
                          "leaving everything else as it is")
+    ap.add_argument("--loans", metavar="JSON",
+                    help="JSON file naming the loans booked as expense and income rows in 4.x (kept next to the sheet); "
+                         "alone on an already backfilled database it adds only the loans")
     ap.add_argument("--keep-sheet-ids", action="store_true",
                     help="name deposits after the sheet's ID column instead of numbering every deposit by its date")
     ap.add_argument("--carry-from", metavar="DB",
@@ -1786,9 +1875,10 @@ def main():
     report.add("")
     try:
         backfilled = db.one("SELECT value FROM settings WHERE key = ?", BACKFILL_KEY) if db.version() >= 2 else None
-        if backfilled and not args.add_insurance:
+        touch_up = bool(backfilled) and (args.add_insurance or args.loans)
+        if backfilled and not touch_up:
             sys.exit("This database was already backfilled (settings.backfill.sheet is set). Start from a fresh backup, "
-                     "or pass --add-insurance to add only the health policy and the vehicles to it.")
+                     "or pass --add-insurance (the health policy and the vehicles) or --loans (the loans) to add only those.")
         if db.version() == 1:
             db.migrate_1_to_2(report)
         if db.version() == 2:
@@ -1808,12 +1898,17 @@ def main():
         before = db.account_fingerprint()
         sheet = Sheet(args.sheet)
         health_extras, vehicles = insurance_extras(args.insurance) if args.insurance else ([], [])
-        if args.add_insurance:
-            # The database is in use: nothing is renumbered or re-filed, only the protection policies are added.
-            report.add("- --add-insurance: only the health policy and the vehicles are added; deposits, categories and income rows are left as they are.")
-            backfill_health(db, sheet, health_extras, report)
-            backfill_vehicles(db, vehicles, report)
-            key = BACKFILL_KEY + ".insurance"
+        loans = loans_extras(args.loans) if args.loans else []
+        if touch_up or args.add_insurance:
+            # The database is in use: nothing is renumbered or re-filed, only what was asked for is added.
+            if args.add_insurance:
+                report.add("- --add-insurance: only the health policy and the vehicles are added; deposits, categories and income rows are left as they are.")
+                backfill_health(db, sheet, health_extras, report)
+                backfill_vehicles(db, vehicles, report)
+            if loans:
+                report.add("- --loans: only the loans are added; everything else is left as it is.")
+                backfill_loans(db, loans, report)
+            key = BACKFILL_KEY + (".insurance" if args.add_insurance else ".loans")
         else:
             risk = seed_categories(db, report)
             seed_income_categories(db, report)
@@ -1826,6 +1921,7 @@ def main():
             backfill_insurance(db, sheet, report)
             backfill_health(db, sheet, health_extras, report)
             backfill_vehicles(db, vehicles, report)
+            backfill_loans(db, loans, report)
             # After the deposits: a 4.x maturity booked as income has become a redemption by now.
             assign_income_categories(db, report, apply=args.assign_income)
             if args.carry_from:
@@ -1838,7 +1934,7 @@ def main():
                 report.problem(f"Account '{name}' net cash flow changed from {plain(b)} to {plain(a)}.")
         else:
             report.add("- Every account's net cash flow is unchanged (no money moved in or out of any account).")
-        if not args.add_insurance:
+        if not (touch_up or args.add_insurance):
             reconcile(db, sheet, report)
         db.x("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", key, args.sheet.rsplit("/", 1)[-1])
         if report.problems and not args.force:

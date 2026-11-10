@@ -48,7 +48,10 @@ object InvestmentRoutes {
     const val INSURANCE_TYPE = "investments/insurance/type/{type}"
     const val PF_ACCOUNT = "investments/pf/{id}"
     const val SAVINGS = "investments/savings"
+    const val OTHERS = "investments/others"
+    const val OTHER = "investments/others/{id}"
     fun fixedDeposit(id: Long) = "investments/fd/$id"
+    fun other(id: Long) = "investments/others/$id"
     fun policy(id: Long) = "investments/insurance/$id"
     fun insuranceType(type: com.nagabhushansn95.financetracker.data.db.entity.InsuranceType) =
         "investments/insurance/type/${type.name}"
@@ -56,6 +59,7 @@ object InvestmentRoutes {
     fun type(type: InstrumentType) = when (type) {
         InstrumentType.FIXED_DEPOSIT -> FIXED_DEPOSITS
         InstrumentType.INSURANCE -> INSURANCE
+        InstrumentType.OTHER -> OTHERS
         else -> "investments/type/${type.name}"
     }
     fun isInvestmentRoute(route: String?) = route?.startsWith("investments/") == true

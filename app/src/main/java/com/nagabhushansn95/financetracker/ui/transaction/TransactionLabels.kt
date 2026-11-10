@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.ui.transaction
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityKind
@@ -62,12 +63,18 @@ class LedgerLookups(
 
         TransactionKind.TRANSFER -> "Transfer ${accountName(t.fromAccountId)} → ${accountName(t.toAccountId)}"
 
-        TransactionKind.INVEST -> "Invested in ${instrumentName(t.instrumentId) ?: "—"}" +
-                quantityRate(t) + (t.fromAccountId?.let { " ← ${accountName(it)}" } ?: "")
+        // A loan or money parked elsewhere is not invested or redeemed: it goes out and comes back.
+        TransactionKind.INVEST -> (if (isOther(t)) "Out to ${instrumentName(t.instrumentId)}" else
+            "Invested in ${instrumentName(t.instrumentId) ?: "—"}" + quantityRate(t)) +
+                (t.fromAccountId?.let { " ← ${accountName(it)}" } ?: "")
 
-        TransactionKind.REDEEM -> "Redeemed ${instrumentName(t.instrumentId) ?: "—"}" +
-                quantityRate(t) + (t.toAccountId?.let { " → ${accountName(it)}" } ?: "")
+        TransactionKind.REDEEM -> (if (isOther(t)) "Back from ${instrumentName(t.instrumentId)}" else
+            "Redeemed ${instrumentName(t.instrumentId) ?: "—"}" + quantityRate(t)) +
+                (t.toAccountId?.let { " → ${accountName(it)}" } ?: "")
     }
+
+    private fun isOther(t: TransactionEntity) =
+        t.instrumentId?.let { instruments[it]?.instrumentType } == InstrumentType.OTHER
 
     private fun quantityRate(t: TransactionEntity): String {
         val q = t.quantity ?: return ""

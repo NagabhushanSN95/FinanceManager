@@ -146,6 +146,18 @@ left
 exactly as they are; a policy or vehicle that already exists is skipped, so the run is safe to
 repeat.
 
+`--loans loans.json` turns the loans the 4.x ledger booked as an expense ("Lent To X") and
+incomes ("X Paid Back") into an instrument each under Others, so they show on the Others screen
+with what is still out. The file lives next to the sheet export, never in this repository, and
+holds `{"loans": [...]}`: each loan has a `name` ("Loan To X"; the screen reads a name that starts
+with "Loan To" as loaned and paid back), optional `notes`, `out` and `in` (lists of matches, each
+picking ledger rows by `particulars`, whole and case ignored, between `from` and `to`, or by
+`ids`) and `outstanding`, what should still be out once the rows are moved (a difference is a
+problem). The expense rows become money out (INVEST from the same account), the income rows money
+in (REDEEM into the same account); accounts and amounts stay, so no balance moves, and the
+particulars are kept as they were. A loan that already exists by name is skipped. Alone on a
+database the script already backfilled, `--loans` adds only the loans, like `--add-insurance`.
+
 `--carry-from <db>` takes a 5.0.0 database the app is using now (pulled from the phone or a backup)
 and carries over what was set by hand in it, so a re-import of the 4.5.4 data does not lose it: the
 deposit templates (the paying account matched by the account's name), the order of the investment
