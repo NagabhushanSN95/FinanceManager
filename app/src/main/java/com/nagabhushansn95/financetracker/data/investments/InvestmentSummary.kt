@@ -7,11 +7,12 @@ import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
-import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
+import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import kotlinx.coroutines.Dispatchers
@@ -76,8 +77,8 @@ data class InvestmentSummary(
     /** Top-level categories with children, in display order; provident funds included; empty categories left out. */
     val categories: List<SummaryLine>,
     val riskLevels: List<SummaryLine>,
-    val zerodha: SummaryLine,
-    val liquid: SummaryLine,
+    /** The user's own groups (Liquid, In Zerodha, ...), as set up under Manage › Summary groups. */
+    val groups: List<SummaryLine>,
     val total: SummaryLine,
     /** Stocks and funds (own, active or still holding units): the Holdings screen. */
     val holdings: List<HoldingRow>,
@@ -116,13 +117,14 @@ object InvestmentSummaryBuilder {
                 db.instrumentDao().observeFixedDeposits(),
                 db.instrumentDao().observeFxRates(),
                 db.instrumentDao().observeInsurancePolicies(),
-            ) { f, x, p -> Triple(f, x, p) },
+                db.summaryGroupDao().observeAll(),
+            ) { f, x, p, g -> Quad(f, x, p, g) },
         ) { a, r, g, fx -> Quad(a, r, g, fx) }
         return combine(
             data,
             more
         ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal, fdFxPolicies) ->
-            val (fixedDeposits, fxRates, policies) = fdFxPolicies
+            val (fixedDeposits, fxRates, policies, groups) = fdFxPolicies
             build(
                 instruments,
                 categories,
@@ -136,6 +138,7 @@ object InvestmentSummaryBuilder {
                 fixedDeposits,
                 latestFx(fxRates),
                 policies,
+                groups,
             )
         }.flowOn(Dispatchers.Default)
     }
@@ -167,6 +170,7 @@ object InvestmentSummaryBuilder {
         fixedDeposits: List<FixedDeposit> = emptyList(),
         fxToInr: Map<String, Double> = emptyMap(),
         insurancePolicies: List<InsurancePolicy> = emptyList(),
+        summaryGroups: List<SummaryGroup> = emptyList(),
     ): InvestmentSummary {
         val protection =
             insurancePolicies.filter { !it.insuranceType.investment }.map { it.instrumentId }
@@ -237,7 +241,10 @@ object InvestmentSummaryBuilder {
         fun childOf(h: HoldingRow): InvestmentCategory? =
             h.instrument.categoryId?.let { byId[it] }?.takeIf { it.parentId != null }
 
-        fun riskOf(h: HoldingRow): Long? = childOf(h)?.riskLevelId ?: topOf(h)?.riskLevelId
+        // A group's own risk level counts only when it has no sub-categories; otherwise the sub-category decides.
+        val hasChildren = categories.filter { it.parentId != null }.map { it.parentId }.toSet()
+        fun riskOf(h: HoldingRow): Long? =
+            childOf(h)?.riskLevelId ?: topOf(h)?.takeIf { it.id !in hasChildren }?.riskLevelId
 
         fun lineFor(
             id: Long?,
@@ -392,38 +399,111 @@ object InvestmentSummaryBuilder {
         val total =
             totalRaw.copy(targetPct = if (totalCurrent > 0) 1.0 else null, children = emptyList())
 
+        // Targets for a line made of parts of several categories (a risk level, a group): each leaf category's goal
+        // and wealth shares count by the share of its value the line holds; the provident funds count whole.
+        class Leaf(
+            val ids: Set<Long>,
+            val current: Double,
+            val goalPct: Double?,
+            val wealthPct: Double?,
+            val pf: Boolean = false
+        )
+
+        val leaves = ArrayList<Leaf>()
+        for (top in topLevel) {
+            if (top.id == pfCategory?.id) continue
+            val kids = categories.filter { it.parentId == top.id }
+            if (kids.isEmpty()) {
+                val rows = counted.filter { topOf(it)?.id == top.id }
+                leaves += Leaf(
+                    rows.map { it.instrument.id }.toSet(),
+                    rows.sumOf { it.currentValue },
+                    top.targetGoalPct,
+                    top.targetWealthPct
+                )
+            } else kids.forEach { child ->
+                val rows = counted.filter { childOf(it)?.id == child.id }
+                leaves += Leaf(
+                    rows.map { it.instrument.id }.toSet(),
+                    rows.sumOf { it.currentValue },
+                    child.targetGoalPct,
+                    child.targetWealthPct
+                )
+            }
+        }
+        if (pfLine != null) leaves += Leaf(
+            emptySet(),
+            pfLine.current,
+            pfCategory?.targetGoalPct,
+            pfCategory?.targetWealthPct,
+            pf = true
+        )
+        fun targetsOf(rows: List<HoldingRow>, includesPf: Boolean): Pair<Double?, Double?> {
+            val ids = rows.map { it.instrument.id }.toSet()
+            var goalSum = 0.0
+            var wealthSum = 0.0
+            var any = false
+            for (leaf in leaves) {
+                if (leaf.goalPct == null && leaf.wealthPct == null) continue
+                val share = when {
+                    leaf.pf -> if (includesPf) 1.0 else 0.0
+                    leaf.ids.isEmpty() -> 0.0
+                    leaf.current > 0 -> rows.filter { it.instrument.id in leaf.ids }
+                        .sumOf { it.currentValue } / leaf.current
+
+                    else -> leaf.ids.count { it in ids }.toDouble() / leaf.ids.size
+                }
+                if (share <= 0) continue
+                any = true
+                goalSum += share * (leaf.goalPct ?: 0.0)
+                wealthSum += share * (leaf.wealthPct ?: 0.0)
+            }
+            return if (any) goalSum to wealthSum else null to null
+        }
+
+        fun composite(name: String, rows: List<HoldingRow>, pf: SummaryLine?): SummaryLine {
+            val parts = listOfNotNull(
+                lineFor(
+                    null,
+                    name,
+                    rows,
+                    null
+                ).takeIf { rows.isNotEmpty() || pf == null }, pf
+            )
+            val (goalPct, wealthPct) = targetsOf(rows, pf != null)
+            return withTargets(
+                group(name, parts).copy(
+                    goalPct = goalPct,
+                    wealthPct = wealthPct
+                )
+            ).copy(children = emptyList())
+        }
+
         // Risk levels: by the finest category that has one; PF by its category.
         val riskLines = ArrayList<SummaryLine>()
         for (level in riskLevels) {
-            val lines = listOfNotNull(
-                lineFor(
-                    null,
-                    level.name,
-                    counted.filter { riskOf(it) == level.id },
-                    null
-                )
-            ) +
-                    listOfNotNull(pfLine?.takeIf { pfCategory?.riskLevelId == level.id })
-            riskLines += group(level.name, lines)
+            riskLines += composite(
+                level.name,
+                counted.filter { riskOf(it) == level.id },
+                pfLine?.takeIf { pfCategory?.riskLevelId == level.id })
         }
         val unrated = counted.filter { riskOf(it) == null }
         val pfUnrated = pfLine?.takeIf { pfCategory?.riskLevelId == null }
-        if (unrated.isNotEmpty() || pfUnrated != null) {
-            riskLines += group(
-                "No risk level set",
-                listOfNotNull(lineFor(null, "", unrated, null), pfUnrated)
-            )
+        if (unrated.isNotEmpty() || pfUnrated != null) riskLines += composite(
+            "No risk level set",
+            unrated,
+            pfUnrated
+        )
+
+        // The user's groups: any mix of kinds and categories; they overlap by design.
+        val groupLines =
+            summaryGroups.sortedWith(compareBy({ it.displayOrder }, { it.id })).map { g ->
+                composite(
+                    g.name,
+                    counted.filter { SummaryGroups.includes(g, it, byId) },
+                    pfLine?.takeIf { SummaryGroups.includesPf(g) })
         }
 
-        val zerodha = lineFor(
-            null,
-            "In Zerodha",
-            counted.filter { it.instrument.instrumentType == InstrumentType.STOCK || it.instrument.instrumentType == InstrumentType.MUTUAL_FUND },
-            null
-        )
-        val liquid = lineFor(null, "Liquid (deposits, funds, stocks)", counted.filter {
-            it.instrument.instrumentType == InstrumentType.STOCK || it.instrument.instrumentType == InstrumentType.MUTUAL_FUND || it.instrument.instrumentType == InstrumentType.FIXED_DEPOSIT
-        }, null)
         val byType = InstrumentType.entries.associateWith { type ->
             lineFor(
                 null,
@@ -436,9 +516,8 @@ object InvestmentSummaryBuilder {
         return InvestmentSummary(
             asOf = asOf,
             categories = finalCategories,
-            riskLevels = riskLines.map { it.copy(children = emptyList()) },
-            zerodha = zerodha,
-            liquid = liquid,
+            riskLevels = riskLines,
+            groups = groupLines,
             total = total,
             // The Holdings list is stocks and funds; deposits, policies and others have their own screens.
             holdings = own.filter { it.instrument.id in unitBasedIds && (it.instrument.active || it.position.units != 0.0) }

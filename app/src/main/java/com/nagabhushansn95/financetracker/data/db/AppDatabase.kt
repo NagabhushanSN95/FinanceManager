@@ -24,6 +24,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
 import com.nagabhushansn95.financetracker.data.db.entity.Setting
+import com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
@@ -47,8 +48,9 @@ import java.io.File
         TransactionEntity::class,
         Template::class,
         Setting::class,
+        SummaryGroup::class,
     ],
-    version = 8, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
+    version = 9, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -59,12 +61,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun statisticsDao(): StatisticsDao
     abstract fun settingsDao(): SettingsDao
+    abstract fun summaryGroupDao(): com.nagabhushansn95.financetracker.data.db.dao.SummaryGroupDao
 
     companion object {
         const val DATABASE_NAME = "finance_tracker.db"
 
         /** Same value as the @Database version; restore refuses files from a newer schema. */
-        const val SCHEMA_VERSION = 8
+        const val SCHEMA_VERSION = 9
 
         @Volatile
         private var instance: AppDatabase? = null

@@ -250,35 +250,6 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         )
     }
 
-    /** Minimal "new instrument" for the picker; full editing comes with the Investments screens. */
-    fun createInstrument(
-        name: String,
-        type: InstrumentType,
-        symbol: String?,
-        onCreated: (Long) -> Unit
-    ) {
-        viewModelScope.launch {
-            val now = LocalDateTime.now()
-            val id = db.instrumentDao().insert(
-                Instrument(
-                    name = name.trim(),
-                    instrumentType = type,
-                    symbol = symbol?.trim()?.takeIf { it.isNotEmpty() },
-                    exchange = if (type == InstrumentType.STOCK) "NSE" else if (type == InstrumentType.MUTUAL_FUND) "AMFI" else null,
-                    displayOrder = db.instrumentDao().maxDisplayOrder() + 1,
-                    createdTime = now,
-                    modifiedTime = now,
-                )
-            )
-            _data.update {
-                it.copy(
-                    instruments = db.instrumentDao().getAll()
-                        .filter { i -> i.active && i.instrumentType != com.nagabhushansn95.financetracker.data.db.entity.InstrumentType.INSURANCE })
-            }
-            setInstrument(id)
-            onCreated(id)
-        }
-    }
 
     fun save() {
         // A rate with no amount means one unit (or the typed quantity) at that rate.
@@ -303,7 +274,8 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             fromAccountId = f.fromAccountId.takeIf { f.showsFrom },
             toAccountId = f.toAccountId.takeIf { f.showsTo },
             categoryId = f.categoryId.takeIf { f.showsCategory },
-            instrumentId = f.instrumentId.takeIf { f.showsInstrument },
+            // Kept as it was: rows on an instrument are edited on the instrument's screen, never retagged here.
+            instrumentId = f.instrumentId,
             particulars = f.particulars.trim(),
             quantity = f.quantityValue,
             rate = f.rateValue,

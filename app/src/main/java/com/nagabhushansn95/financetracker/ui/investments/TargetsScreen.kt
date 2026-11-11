@@ -12,13 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -31,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,34 +98,42 @@ private fun fmt(share: Double) = (share * 100).let {
 }
 
 /**
- * Categories & targets: the one place for what each investment category is: its risk level, and its share of the
- * goal corpus and of the wealth corpus (the rest) with a tolerance. Shares are entered on the leaves and roll up;
- * each set should add up to 100%. The categories themselves (names, groups, order) are kept under Manage.
+ * Targets: each investment category's share of the goal corpus and of the wealth corpus (the rest), with a
+ * tolerance. Opens in a compact view of the shares and where each category stands (rows with no share left out);
+ * the pencil switches to the form, where shares are entered on the leaves and roll up, each set adding up to 100%.
+ * The categories themselves (names, groups, order) are kept under Manage, their risk levels under Manage › Risk levels.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
-    val riskLevels by viewModel.riskLevels.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(message) { message?.let { snackbar.showSnackbar(it); viewModel.messageShown() } }
 
+    var editing by rememberSaveable { mutableStateOf(false) }
     var goalText by remember { mutableStateOf<String?>(null) }
     var entries by remember { mutableStateOf<Map<Long, Entry>?>(null) }
+    fun goalTextOf() = state.summary?.goalAmount?.let {
+        if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString()
+    } ?: ""
     LaunchedEffect(categories, state.loaded) {
         if (entries == null && categories.isNotEmpty()) entries =
             categories.associate { it.id to entryOf(it) }
-        if (goalText == null && state.loaded) goalText = state.summary?.goalAmount?.let {
-            if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString()
-        } ?: ""
+        if (goalText == null && state.loaded) goalText = goalTextOf()
     }
     val edits = entries ?: emptyMap()
     val goal = goalText ?: ""
     val goalValue = goal.trim().toDoubleOrNull()
     val totalCurrent = state.summary?.total?.current ?: 0.0
-    val parents = categories.filter { it.parentId == null }
+    // Others (loans, money parked) sit outside the total, so they have no share to target.
+    val parents = categories.filter {
+        it.parentId == null && !it.name.equals(
+            com.nagabhushansn95.financetracker.data.investments.InvestmentCategories.OTHERS,
+            ignoreCase = true
+        )
+    }
     val childrenOf = categories.filter { it.parentId != null }.groupBy { it.parentId!! }
 
     fun leafShare(id: Long, pick: (Entry) -> String): Double? = edits[id]?.let { it.pct(pick(it)) }
@@ -148,17 +156,36 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
     val allValid =
         edits.values.all { it.valid } && (goal.isBlank() || goalValue != null && goalValue >= 0)
 
+    fun hasShare(c: InvestmentCategory) =
+        (share(c) { it.goal } ?: 0.0) > 0.0 || (share(c) { it.wealth } ?: 0.0) > 0.0
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Categories & targets") },
-                navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) })
+                title = { Text("Targets") },
+                navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) },
+                actions = {
+                    androidx.compose.material3.IconButton(onClick = {
+                        // Closing the form discards what was typed: back to what is saved.
+                        if (editing) {
+                            entries = categories.associate { it.id to entryOf(it) }; goalText =
+                                goalTextOf()
+                        }
+                        editing = !editing
+                    }) {
+                        androidx.compose.material3.Icon(
+                            if (editing) Icons.Filled.Close else Icons.Filled.Edit,
+                            contentDescription = if (editing) "Stop editing" else "Edit targets"
+                        )
+                    }
+                },
+            )
         },
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
-            Column(modifier = Modifier
-                .padding(16.dp)
-                .imePadding()) {
+            if (editing) Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .imePadding()) {
                 SumLine("Goal shares", goalSum); SumLine("Wealth shares", wealthSum)
                 Button(
                     enabled = allValid && entries != null,
@@ -174,6 +201,7 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                             if (next == c) null else next
                         }
                         viewModel.save(goalValue, updated)
+                        editing = false
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -182,6 +210,92 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
             }
         },
     ) { padding ->
+        if (!editing) {
+            // The compact view: goal, then every category with a share and where it stands.
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp),
+            ) {
+                item {
+                    Text(
+                        (goalValue?.let { "Goal ${MoneyFormat.compact(it)} · " }
+                            ?: "No goal amount · ") +
+                                "current ${MoneyFormat.compact(totalCurrent)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                        Text("", modifier = Modifier.weight(1.6f))
+                        listOf("Goal", "Wealth", "Target", "Now").forEach {
+                            Text(
+                                it,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    HorizontalDivider()
+                }
+                parents.filter { p -> hasShare(p) || childrenOf[p.id].orEmpty().any(::hasShare) }
+                    .forEach { parent ->
+                        val kids = childrenOf[parent.id].orEmpty().filter(::hasShare)
+                        item(key = "v${parent.id}") {
+                            ViewRow(
+                                parent.name,
+                                bold = true,
+                                goal = share(parent) { it.goal },
+                                wealth = share(parent) { it.wealth },
+                                target = target(
+                                    share(parent) { it.goal },
+                                    share(parent) { it.wealth }),
+                                now = currentShareOf(state, parent.name),
+                                drifted = state.summary?.categories?.firstOrNull { it.name == parent.name }
+                                    ?.offTarget(totalCurrent) == true,
+                            )
+                        }
+                        kids.forEach { child ->
+                            item(key = "v${child.id}") {
+                                ViewRow(
+                                    child.name,
+                                    bold = false,
+                                    goal = leafShare(child.id) { it.goal },
+                                    wealth = leafShare(child.id) { it.wealth },
+                                    target = target(
+                                        leafShare(child.id) { it.goal },
+                                        leafShare(child.id) { it.wealth }),
+                                    now = currentShareOf(state, parent.name, child.name),
+                                    drifted = state.summary?.categories?.firstOrNull { it.name == parent.name }?.children
+                                        ?.firstOrNull { it.name == child.name }
+                                        ?.offTarget(totalCurrent) == true,
+                                )
+                            }
+                        }
+                    }
+                item {
+                    HorizontalDivider()
+                    ViewRow(
+                        "Total",
+                        bold = true,
+                        goal = goalSum,
+                        wealth = wealthSum,
+                        target = if (totalCurrent > 0) 1.0 else null,
+                        now = if (totalCurrent > 0) 1.0 else null,
+                        drifted = false
+                    )
+                    Text(
+                        "Categories without a share are left out. \"!\" marks a drift beyond the tolerance. The pencil opens the form.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp),
+                    )
+                }
+            }
+            return@Scaffold
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -204,7 +318,7 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Text(
-                            "Each category has a risk level (for the \"By risk\" table) and two target shares. " +
+                            "Each category has two target shares (its risk level is set under Manage › Risk levels). " +
                                     "The goal corpus follows the goal shares; everything above it (${
                                 MoneyFormat.compact(
                                     (totalCurrent - (goalValue ?: 0.0)).coerceAtLeast(0.0)
@@ -230,7 +344,7 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                             summaryShare = currentShareOf(state, parent.name)
                         )
                         val parentEntry = edits[parent.id] ?: Entry("", "", "")
-                        RiskRow(parentEntry, riskLevels) { entries = edits + (parent.id to it) }
+                        // A group with sub-categories takes its risk from them, so it has no risk row of its own.
                         if (kids.isEmpty()) EntryFields(parentEntry) {
                             entries = edits + (parent.id to it)
                         }
@@ -253,12 +367,47 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                                 summaryShare = currentShareOf(state, parent.name, child.name)
                             )
                             val childEntry = edits[child.id] ?: Entry("", "", "")
-                            RiskRow(childEntry, riskLevels) { entries = edits + (child.id to it) }
                             EntryFields(childEntry) { entries = edits + (child.id to it) }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+/** One line of the compact view: name, then the goal, wealth, target and current shares. */
+@Composable
+private fun ViewRow(
+    name: String,
+    bold: Boolean,
+    goal: Double?,
+    wealth: Double?,
+    target: Double?,
+    now: Double?,
+    drifted: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = if (bold) 0.dp else 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            name,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
+            maxLines = 1,
+            modifier = Modifier.weight(if (bold) 1.6f else 1.6f - 12f / 160f)
+        )
+        listOf(pct(goal), pct(wealth), pct(target), pct(now) + if (drifted) " !" else "").forEach {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                color = if (drifted && it.endsWith("!")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -297,33 +446,6 @@ private fun CategoryHeader(name: String, bold: Boolean, target: Double?, summary
     }
 }
 
-/** The category's risk level as a small dropdown; "no risk level" leaves it out of the By-risk table. */
-@Composable
-private fun RiskRow(entry: Entry, riskLevels: List<RiskLevel>, onChange: (Entry) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            "Risk",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        androidx.compose.material3.TextButton(onClick = { open = true }) {
-            Text(riskLevels.firstOrNull { it.id == entry.riskLevelId }?.name ?: "no risk level")
-        }
-        androidx.compose.material3.DropdownMenu(
-            expanded = open,
-            onDismissRequest = { open = false }) {
-            androidx.compose.material3.DropdownMenuItem(
-                text = { Text("No risk level") },
-                onClick = { onChange(entry.copy(riskLevelId = null)); open = false })
-            riskLevels.forEach { r ->
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(r.name) },
-                    onClick = { onChange(entry.copy(riskLevelId = r.id)); open = false })
-            }
-        }
-    }
-}
 
 @Composable
 private fun EntryFields(entry: Entry, onChange: (Entry) -> Unit) {

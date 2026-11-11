@@ -38,13 +38,17 @@ data class LedgerRow(
     val pfAccountId: Long? = null,
 ) {
     /**
-     * Investments and redemptions are edited from the instrument's own screen, provident-fund entries from the
-     * account's screen and insurance entries (premiums, payouts, services, tests) from the policy's screen, not from
-     * the ledger.
+     * Every row on an instrument is edited from the instrument's own screen under Investments: deposits, policies
+     * (premiums, payouts, services, tests), loans and parked money, stocks and funds (buys, sells, dividends, bonus
+     * units, charges), and provident-fund entries from the account's screen; not from the ledger.
      */
     val editedUnderInvestments: Boolean
-        get() = pfAccountId != null || isInsurance ||
+        get() = pfAccountId != null || isInsurance || isHolding ||
                 (kind == TransactionKind.INVEST || kind == TransactionKind.REDEEM) && instrumentId != null && instrumentType != null
+
+    /** Any row on a stock, ETF or mutual fund, whatever its kind. */
+    val isHolding: Boolean
+        get() = instrumentId != null && (instrumentType == InstrumentType.STOCK || instrumentType == InstrumentType.MUTUAL_FUND)
 
     /** Any row on a policy or vehicle, whatever its kind. */
     val isInsurance: Boolean get() = instrumentId != null && instrumentType == InstrumentType.INSURANCE

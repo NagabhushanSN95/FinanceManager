@@ -161,6 +161,19 @@ object Migrations {
         }
     }
 
+    /**
+     * 8 → 9: the summary's third table becomes the user's own groups (`summary_groups`), seeded with the two lines the
+     * sheet always had: Liquid (deposits, funds, stocks) and In Zerodha (stocks, funds).
+     */
+    val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("CREATE TABLE IF NOT EXISTS `summary_groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `display_order` INTEGER NOT NULL, `members` TEXT NOT NULL)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_summary_groups_display_order` ON `summary_groups` (`display_order`)")
+            connection.execSQL("INSERT INTO `summary_groups` (`name`, `display_order`, `members`) VALUES ('Liquid', 1, 'type:FIXED_DEPOSIT,type:MUTUAL_FUND,type:STOCK'), ('In Zerodha', 2, 'type:STOCK,type:MUTUAL_FUND')")
+            connection.execSQL("INSERT OR REPLACE INTO `settings` (`key`, `value`) VALUES ('summary_groups.seeded', '1')")
+        }
+    }
+
     val ALL = arrayOf<Migration>(
         MIGRATION_1_2,
         MIGRATION_2_3,
@@ -168,6 +181,7 @@ object Migrations {
         MIGRATION_4_5,
         MIGRATION_5_6,
         MIGRATION_6_7,
-        MIGRATION_7_8
+        MIGRATION_7_8,
+        MIGRATION_8_9,
     )
 }

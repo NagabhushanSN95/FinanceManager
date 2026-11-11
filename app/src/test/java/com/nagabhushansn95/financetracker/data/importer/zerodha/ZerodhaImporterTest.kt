@@ -210,10 +210,7 @@ class ZerodhaImporterTest {
             .first { it.kind == TransactionKind.INCOME }
         assertEquals(bank, d.toAccountId)
         assertEquals(LocalDate.of(2026, 8, 4), d.exDate)
-        assertEquals(
-            "Dividend From Stocks - GOLDBEES (Ex-Dividend Date: 04/08/2026)",
-            d.particulars
-        )
+        assertEquals("Dividend From Stocks - GOLDBEES", d.particulars)
         assertEquals(97.5, d.amount, 1e-9)
         assertNotNull(d.categoryId)
         assertEquals("Interest & Dividends", db.categoryDao().getById(d.categoryId!!)!!.name)

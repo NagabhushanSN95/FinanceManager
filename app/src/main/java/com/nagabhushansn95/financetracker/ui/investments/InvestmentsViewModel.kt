@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,9 +38,39 @@ open class InvestmentSummaryViewModel(application: Application) : AndroidViewMod
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InvestmentsUiState())
 }
 
+/** What the Savings tile shows: the net saved this month and this year, from the sheet's Savings tables. */
+data class SavingsGlance(val thisMonth: Double, val thisYear: Double)
+
 /** The Investments hub: the summary plus the housekeeping that belongs to opening it. */
 class InvestmentsViewModel(application: Application) : InvestmentSummaryViewModel(application) {
     private val prefs = AppPreferences(application)
+
+    val savings: StateFlow<SavingsGlance?> = kotlinx.coroutines.flow.combine(
+        db.transactionDao().observeAll(),
+        db.instrumentDao().observeAll(),
+        db.instrumentDao().observeCategories(),
+        db.accountDao().observeAll(),
+    ) { ledger, instruments, categories, accounts ->
+        val today = java.time.LocalDate.now().toString()
+        val month = com.nagabhushansn95.financetracker.data.investments.Savings.build(
+            ledger,
+            instruments,
+            categories,
+            accounts,
+            monthly = true
+        )
+            .firstOrNull { it.key == today.take(7) }?.total ?: 0.0
+        val year = com.nagabhushansn95.financetracker.data.investments.Savings.build(
+            ledger,
+            instruments,
+            categories,
+            accounts,
+            monthly = false
+        )
+            .firstOrNull { it.key == today.take(4) }?.total ?: 0.0
+        SavingsGlance(month, year)
+    }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     private val _prices = MutableStateFlow(PriceStatus(message = prefs.lastPriceRefreshSummary))
     val prices: StateFlow<PriceStatus> = _prices
 
@@ -47,6 +78,18 @@ class InvestmentsViewModel(application: Application) : InvestmentSummaryViewMode
         viewModelScope.launch(Dispatchers.IO) {
             // The category tree and risk levels on first open; retired holdings after 90 idle days.
             InvestmentCategories.seedIfEmpty(db)
+            InvestmentCategories.renameLegacy(db)
+            com.nagabhushansn95.financetracker.data.investments.SummaryGroups.seedIfEmpty(db)
+            // Invest and Redeem left the editor (every instrument records on its own screen): their templates go, once.
+            if (db.settingsDao().get("templates.investment_kinds_removed") == null) {
+                db.transactionDao().deleteInvestmentTemplates()
+                db.settingsDao().set(
+                    com.nagabhushansn95.financetracker.data.db.entity.Setting(
+                        "templates.investment_kinds_removed",
+                        "1"
+                    )
+                )
+            }
             ProvidentFunds.fileCategories(db)
             com.nagabhushansn95.financetracker.data.investments.Insurance.fileCategories(db)
             InstrumentMaintenance(db).retireIdleHoldings()

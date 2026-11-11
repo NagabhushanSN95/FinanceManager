@@ -226,6 +226,33 @@ class EditDataRepository(private val db: AppDatabase) {
         }
     }
 
+    // ------------------------------------------------------------------ summary groups
+
+    suspend fun addSummaryGroup(name: String, members: String): Long {
+        require(name.isNotBlank()) { "A name is needed" }
+        return db.summaryGroupDao().insert(
+            com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup(
+                name = name.trim(),
+                displayOrder = (db.summaryGroupDao().getAll().maxOfOrNull { it.displayOrder }
+                    ?: 0) + 1,
+                members = members,
+            )
+        )
+    }
+
+    suspend fun updateSummaryGroup(group: com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup) {
+        require(group.name.isNotBlank()) { "A name is needed" }
+        db.summaryGroupDao().update(group.copy(name = group.name.trim()))
+    }
+
+    suspend fun deleteSummaryGroup(id: Long) = db.summaryGroupDao().delete(id)
+
+    suspend fun reorderSummaryGroups(orderedIds: List<Long>) = write {
+        val current = db.summaryGroupDao().getAll().filter { it.id in orderedIds }
+        val base = current.minOfOrNull { it.displayOrder } ?: 1
+        orderedIds.forEachIndexed { i, id -> db.summaryGroupDao().setDisplayOrder(id, base + i) }
+    }
+
     // ------------------------------------------------------------------ allocation targets
 
     /** Writes the goal amount and the per-category goal / wealth / tolerance percentages in one transaction. */

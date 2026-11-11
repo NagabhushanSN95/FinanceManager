@@ -19,6 +19,9 @@ object InvestmentCategories {
     const val LIFE_INSURANCE = "Life Insurance"
     const val OTHERS = "Others"
 
+    /** Index-tracking equity ETFs (NIFTYBEES, JUNIORBEES, ...): the sheet called the sub-category just "ETF". */
+    const val EQUITY_INDEX_ETF = "Equity Index ETF"
+
     const val NO_RISK = "No risk"
     const val LOW_RISK = "Low risk"
     const val MEDIUM_RISK = "Medium risk"
@@ -49,7 +52,7 @@ object InvestmentCategories {
             STOCKS, MEDIUM_RISK, listOf(
                 "Debt ETF" to NO_RISK,
                 "Gold ETF" to LOW_RISK,
-                "ETF" to MEDIUM_RISK,
+                EQUITY_INDEX_ETF to MEDIUM_RISK,
                 "Foreign ETF" to MEDIUM_RISK,
                 "REIT" to MEDIUM_RISK,
                 "Silver ETF" to MEDIUM_RISK,
@@ -68,6 +71,32 @@ object InvestmentCategories {
         InstrumentType.STOCK -> STOCKS
         InstrumentType.INSURANCE -> LIFE_INSURANCE
         InstrumentType.OTHER -> OTHERS
+    }
+
+    /**
+     * Names that changed after the tree was first seeded: the sheet's "ETF" under Stocks became "Equity Index ETF",
+     * since Gold, Silver, Debt and Foreign ETFs sit beside it. Applied once per database, and only when the old name
+     * is still there and the new one is not.
+     */
+    suspend fun renameLegacy(db: AppDatabase) {
+        val key = "categories.renamed.equity_index_etf"
+        if (db.settingsDao().get(key) != null) return
+        val dao = db.instrumentDao()
+        val all = dao.getAllCategories()
+        val stocks =
+            all.firstOrNull { it.parentId == null && it.name.equals(STOCKS, ignoreCase = true) }
+        if (stocks != null) {
+            val children = all.filter { it.parentId == stocks.id }
+            val old = children.firstOrNull { it.name.equals("ETF", ignoreCase = true) }
+            if (old != null && children.none {
+                    it.name.equals(
+                        EQUITY_INDEX_ETF,
+                        ignoreCase = true
+                    )
+                })
+                dao.updateCategory(old.copy(name = EQUITY_INDEX_ETF))
+        }
+        db.settingsDao().set(com.nagabhushansn95.financetracker.data.db.entity.Setting(key, "1"))
     }
 
     /** Seeds the risk levels and the category tree where each is empty. Returns true when the tree was seeded. */

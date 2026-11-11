@@ -37,6 +37,25 @@ class InvestmentSummaryTest {
     fun tearDown() = db.close()
 
     @Test
+    fun theOldEtfCategoryIsRenamedOnceAndOnlyWhenTheNewNameIsFree() = runTest {
+        InvestmentCategories.seedIfEmpty(db)
+        val dao = db.instrumentDao()
+        val fresh =
+            dao.getAllCategories().first { it.name == InvestmentCategories.EQUITY_INDEX_ETF }
+        // A tree seeded by an older build: the child was called "ETF".
+        dao.updateCategory(fresh.copy(name = "ETF"))
+        InvestmentCategories.renameLegacy(db)
+        assertEquals(
+            InvestmentCategories.EQUITY_INDEX_ETF,
+            dao.getAllCategories().first { it.id == fresh.id }.name
+        )
+        // Done once: a later "ETF" the user adds on purpose is left alone.
+        dao.updateCategory(fresh.copy(name = "ETF"))
+        InvestmentCategories.renameLegacy(db)
+        assertEquals("ETF", dao.getAllCategories().first { it.id == fresh.id }.name)
+    }
+
+    @Test
     fun seedsTheTreeOnceAndRollsHoldingsUp() = runTest {
         assertTrue(InvestmentCategories.seedIfEmpty(db))
         assertTrue(!InvestmentCategories.seedIfEmpty(db))
@@ -207,6 +226,7 @@ class InvestmentSummaryTest {
             db.instrumentDao().getAllRiskLevels(),
             50_000.0,
             today,
+            summaryGroups = SummaryGroups.DEFAULTS,
         )
 
         val stocksLine = summary.categories.first { it.name == InvestmentCategories.STOCKS }
@@ -239,19 +259,35 @@ class InvestmentSummaryTest {
         assertEquals(20000.0, summary.byType.getValue(InstrumentType.OTHER).invested, 1e-9)
         assertTrue(summary.categories.none { it.name == InvestmentCategories.OTHERS })
         assertEquals(1, summary.rows.count { it.instrument.id == loan })
-        assertEquals(15000.0, summary.zerodha.invested, 1e-9)
-        assertEquals(115000.0, summary.liquid.invested, 1e-9)
+        // The default groups: Liquid (deposits, funds, stocks) and In Zerodha (stocks, funds).
+        assertEquals(listOf("Liquid", "In Zerodha"), summary.groups.map { it.name })
+        assertEquals(115000.0, summary.groups[0].invested, 1e-9)
+        assertEquals(15000.0, summary.groups[1].invested, 1e-9)
         assertEquals(2, summary.holdings.size)   // stocks and funds only
         assertEquals(today, summary.latestPriceDate)
-        assertEquals(InvestmentCategories.DEFAULT_RISK_LEVELS, summary.riskLevels.map { it.name })
+        // GOLDBEES has no sub-category: the Stocks group has sub-categories, so its own level does not apply.
+        assertEquals(
+            InvestmentCategories.DEFAULT_RISK_LEVELS + "No risk level set",
+            summary.riskLevels.map { it.name })
+        assertEquals(5000.0, summary.riskLevels.last().invested, 1e-9)
         val noRisk = summary.riskLevels.first { it.name == InvestmentCategories.NO_RISK }
         assertEquals(100000.0 + 2000.0, noRisk.invested, 1e-9)       // FD + PF
         val medium = summary.riskLevels.first { it.name == InvestmentCategories.MEDIUM_RISK }
+        assertEquals(10000.0, medium.invested, 1e-9)                  // the REIT sub-category
+        // A risk level's target is its members' targets added up: here just the REIT sub-category's.
         assertEquals(
-            15000.0,
-            medium.invested,
+            stocksLine.children.first { it.name == "REIT" }.targetPct!!,
+            medium.targetPct!!,
             1e-9
-        )                  // REIT child + Stocks top-level default
+        )
+        assertEquals(1.0, summary.total.targetPct!!, 1e-9)
+        // Liquid holds the deposit (goal 80%) and the stocks (REIT, wealth 50%); In Zerodha only the stocks.
+        assertEquals(
+            50_000.0 * 0.8 / 120_300.0 + 70_300.0 * 0.5 / 120_300.0,
+            summary.groups[0].targetPct!!,
+            1e-9
+        )
+        assertEquals(70_300.0 * 0.5 / 120_300.0, summary.groups[1].targetPct!!, 1e-9)
 
         // Derived targets: (goal × goal share + (total − goal) × wealth share) / total.
         val total = 120_300.0

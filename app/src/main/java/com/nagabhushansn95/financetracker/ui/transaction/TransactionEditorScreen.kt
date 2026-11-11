@@ -44,24 +44,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-private enum class Sheet { FROM, TO, CATEGORY, INSTRUMENT, NEW_INSTRUMENT }
+private enum class Sheet { FROM, TO, CATEGORY }
 
 /**
- * Add or edit one transaction (plan 4.2): kind selector, date, account pickers in bottom sheets, category,
- * instrument with quantity × rate, particulars with template suggestions.
+ * Add or edit one cash transaction (income, expense, transfer): kind selector, date, account pickers in bottom
+ * sheets, category, particulars with template suggestions. Anything on an instrument is recorded on the
+ * instrument's own screen under Investments.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,17 +70,9 @@ fun TransactionEditorScreen(
     initialKind: TransactionKind?,
     initialAccountId: Long?,
     onDone: () -> Unit,
-    initialInstrumentId: Long? = null,
     viewModel: TransactionEditorViewModel = viewModel(),
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.start(
-            transactionId,
-            initialKind,
-            initialAccountId,
-            initialInstrumentId
-        )
-    }
+    LaunchedEffect(Unit) { viewModel.start(transactionId, initialKind, initialAccountId) }
     val form by viewModel.form.collectAsStateWithLifecycle()
     val data by viewModel.data.collectAsStateWithLifecycle()
     val event by viewModel.event.collectAsStateWithLifecycle()
@@ -104,11 +96,11 @@ fun TransactionEditorScreen(
     }
 
     val lookups = data.lookups
-    // Invest and Redeem are recorded from the instrument's screen under Investments; the + button on Home and
-    // Transactions only offers the cash kinds. Opened for an instrument, or on an investment row, all five show.
+    // Invest and Redeem are recorded only from the instrument's screen under Investments, so the editor offers the
+    // cash kinds. An investment row that still reaches it (a deposit's, say) keeps its kind and shows all five.
     val investmentKinds = setOf(TransactionKind.INVEST, TransactionKind.REDEEM)
     val kinds =
-        if (initialInstrumentId != null || initialKind in investmentKinds || form.kind in investmentKinds) TransactionKind.entries
+        if (form.kind in investmentKinds) TransactionKind.entries
         else TransactionKind.entries.filter { it !in investmentKinds }
 
     Scaffold(
@@ -177,12 +169,6 @@ fun TransactionEditorScreen(
                 value = lookups.categoryPath(form.categoryId)
                     ?: if (form.kind == TransactionKind.EXPENSE) "Choose category" else "None",
                 onClick = { sheet = Sheet.CATEGORY },
-            )
-            if (form.showsInstrument) FieldRow(
-                label = if (form.instrumentRequired) "Instrument" else "Instrument (optional)",
-                value = form.instrumentId?.let { lookups.instruments[it]?.name }
-                    ?: if (form.instrumentRequired) "Choose instrument" else "None",
-                onClick = { sheet = Sheet.INSTRUMENT },
             )
             ParticularsField(
                 value = form.particulars,
@@ -262,31 +248,6 @@ fun TransactionEditorScreen(
             scope = if (form.kind == TransactionKind.INCOME) CategoryScope.INCOME else CategoryScope.EXPENSE,
             categories = data.categories, recent = data.recentCategories,
             onPick = { viewModel.setCategory(it); sheet = null }, onDismiss = { sheet = null },
-        )
-
-        // Deposits are opened, renewed and closed from their own screens; the picker offers them only when the
-        // transaction already belongs to one (editing a deposit's row, or opened from the deposit itself).
-        Sheet.INSTRUMENT -> InstrumentPickerSheet(
-            instruments = data.instruments.filter {
-                it.instrumentType != InstrumentType.FIXED_DEPOSIT || it.id == form.instrumentId || it.id == initialInstrumentId
-            },
-            recent = data.recentInstruments,
-            optional = !form.instrumentRequired,
-            onPick = { viewModel.setInstrument(it); sheet = null },
-            onNew = { sheet = Sheet.NEW_INSTRUMENT },
-            onDismiss = { sheet = null },
-            typeOrder = data.instrumentTypeOrder,
-        )
-
-        Sheet.NEW_INSTRUMENT -> NewInstrumentSheet(
-            onCreate = { name, type, symbol ->
-                viewModel.createInstrument(
-                    name,
-                    type,
-                    symbol
-                ) { sheet = null }
-            },
-            onDismiss = { sheet = null },
         )
 
         null -> Unit

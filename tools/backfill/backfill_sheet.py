@@ -67,7 +67,7 @@ TREE = [
         ("Small Cap", "High risk"),
     ]),
     ("Stocks", "Medium risk", [
-        ("Debt ETF", "No risk"), ("Gold ETF", "Low risk"), ("ETF", "Medium risk"), ("Foreign ETF", "Medium risk"),
+        ("Debt ETF", "No risk"), ("Gold ETF", "Low risk"), ("Equity Index ETF", "Medium risk"), ("Foreign ETF", "Medium risk"),
         ("REIT", "Medium risk"), ("Silver ETF", "Medium risk"), ("Equity", "High risk"),
     ]),
     ("Provident Funds", "No risk", []),
@@ -661,6 +661,17 @@ def seed_categories(db, report):
     return risk
 
 
+# Sub-categories the app names differently from the sheet (the sheet's "ETF" sits beside Gold, Silver, Debt and Foreign ETFs).
+SHEET_CATEGORY_NAMES = {"ETF": "Equity Index ETF"}
+
+
+def drop_investment_templates(db, report):
+    """Invest and Redeem templates: the 5.0 editor records only cash kinds, every instrument has its own screen."""
+    n = db.x("DELETE FROM templates WHERE kind IN ('INVEST', 'REDEEM')").rowcount
+    db.x("INSERT OR REPLACE INTO settings (`key`, value) VALUES ('templates.investment_kinds_removed', '1')")
+    report.add(f"- {n} Invest / Redeem templates removed (the editor no longer offers those kinds).")
+
+
 def category_index(db):
     """(parent name or None, name) -> id."""
     cats = db.q("SELECT c.id, c.name, p.name AS parent FROM investment_categories c LEFT JOIN investment_categories p ON p.id = c.parent_id")
@@ -688,6 +699,7 @@ def apply_targets(db, sheet, report):
     applied = 0
     for r in rows:
         name = str(r["Name"]).strip()
+        name = SHEET_CATEGORY_NAMES.get(name, name)
         if name == "Amount needed for Goal":
             goal = as_float(r.get("Amount Invested"))
             continue
@@ -726,6 +738,7 @@ def assign_instrument_categories(db, sheet, risk, report):
         cat = None
         if t == "STOCK":
             st = stock_types.get(inst["name"])
+            st = SHEET_CATEGORY_NAMES.get(st, st)
             if st:
                 cat = idx.get(("Stocks", st)) or ensure_child(db, "Stocks", st, risk["Medium risk"], report, "stock type used in the sheet")
                 idx = category_index(db)
@@ -1908,6 +1921,7 @@ def main():
             if loans:
                 report.add("- --loans: only the loans are added; everything else is left as it is.")
                 backfill_loans(db, loans, report)
+            drop_investment_templates(db, report)
             key = BACKFILL_KEY + (".insurance" if args.add_insurance else ".loans")
         else:
             risk = seed_categories(db, report)

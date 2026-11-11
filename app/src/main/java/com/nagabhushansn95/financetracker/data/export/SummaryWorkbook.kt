@@ -117,7 +117,7 @@ class SummaryWorkbook(private val db: AppDatabase) {
             sheet.row()
             summary.riskLevels.forEach { line(it, "") }
             sheet.row()
-            line(summary.zerodha, ""); line(summary.liquid, ""); line(summary.total, "")
+            summary.groups.forEach { line(it, "") }; line(summary.total, "")
             sheet.row()
             sheet.row("Goal amount", goal); sheet.row("As of", asOf); sheet.row(
             "Prices as of",

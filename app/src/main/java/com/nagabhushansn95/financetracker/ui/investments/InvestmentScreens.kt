@@ -27,14 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.nagabhushansn95.financetracker.data.db.entity.Instrument
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.investments.HoldingRow
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.SummaryLine
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.StatCell
-import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,76 +56,6 @@ private fun InvestmentScaffold(
                 modifier = Modifier.padding(16.dp)
             )
             else content(summary)
-        }
-    }
-}
-
-/** Stocks and funds: units, average cost, price, value, held and realised profit, XIRR, grouped by category. */
-@Composable
-fun HoldingsScreen(onBack: () -> Unit, onOpenInstrument: (Long) -> Unit) {
-    InvestmentScaffold("Stocks & funds", onBack) { s ->
-        val groups = s.holdings.groupBy { it.categoryName }
-        LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-            item {
-                TypeHeader(
-                    listOfNotNull(
-                        s.byType[InstrumentType.STOCK],
-                        s.byType[InstrumentType.MUTUAL_FUND]
-                    )
-                )
-            }
-            groups.forEach { (category, rows) ->
-                item(key = "h:$category") { SectionTitle(category) }
-                items(rows, key = { it.instrument.id }) { h ->
-                    HoldingRowView(h) {
-                        onOpenInstrument(
-                            h.instrument.id
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/** Deposits, policies or others: one row per instrument, own first, then closed, then family-owned. */
-@Composable
-fun InstrumentListScreen(
-    type: InstrumentType,
-    onBack: () -> Unit,
-    onOpenInstrument: (Long) -> Unit
-) {
-    InvestmentScaffold(typeTitle(type), onBack) { s ->
-        val rows = s.rows.filter { it.instrument.instrumentType == type }
-            .sortedWith(compareBy({ it.instrument.displayOrder }, { it.instrument.id }))
-        val own = rows.filter { it.instrument.owner == Instrument.OWNER_SELF }
-        val sections = listOf(
-            "Active" to own.filter { it.instrument.active },
-            "Closed or retired" to own.filter { !it.instrument.active },
-            "Family (not in the totals)" to rows.filter { it.instrument.owner != Instrument.OWNER_SELF },
-        ).filter { it.second.isNotEmpty() }
-        LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
-            item { TypeHeader(listOfNotNull(s.byType[type])) }
-            if (type == InstrumentType.OTHER) item {
-                Text(
-                    "Money parked elsewhere and loans: savings rather than investments. These count in the Savings tables but not under Total investments.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                )
-            }
-            if (sections.isEmpty()) item {
-                Text(
-                    "Nothing here yet.",
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            sections.forEach { (title, list) ->
-                item(key = "s:$title") { SectionTitle(title) }
-                items(
-                    list,
-                    key = { it.instrument.id }) { h -> AmountRowView(h) { onOpenInstrument(h.instrument.id) } }
-            }
         }
     }
 }
@@ -203,11 +130,15 @@ private fun ProvidentFundCard(line: SummaryLine, onOpen: (Long) -> Unit) {
 }
 
 @Composable
-private fun TypeHeader(lines: List<SummaryLine>) {
+internal fun TypeHeader(lines: List<SummaryLine>) {
     if (lines.isEmpty()) return
     val invested = lines.sumOf { it.invested }
     val current = lines.sumOf { it.current }
     val realised = lines.sumOf { it.realised }
+    val xirr = lines.singleOrNull()?.xirr
+        ?: com.nagabhushansn95.financetracker.data.investments.Holdings.xirr(
+            lines.flatMap { it.cashFlows }, current, java.time.LocalDate.now()
+        )
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp)) {
@@ -215,7 +146,19 @@ private fun TypeHeader(lines: List<SummaryLine>) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(MoneyFormat.amount(current), style = MaterialTheme.typography.headlineSmall)
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    MoneyFormat.amount(current),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "XIRR ${pct(xirr)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
             Row {
                 Stat("Invested", MoneyFormat.amount(invested)); Stat(
                 "Held P/L",
@@ -237,7 +180,7 @@ private fun androidx.compose.foundation.layout.RowScope.Stat(
 }
 
 @Composable
-private fun SectionTitle(text: String) {
+internal fun SectionTitle(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.labelLarge,
@@ -248,82 +191,7 @@ private fun SectionTitle(text: String) {
 }
 
 @Composable
-private fun HoldingRowView(h: HoldingRow, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                h.instrument.name,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                MoneyFormat.amount(h.currentValue),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-        }
-        val units = h.position.units.takeIf { h.position.hasUnits }
-        val line = listOfNotNull(
-            units?.let {
-                "%s units".format(
-                    if (it == it.toLong().toDouble()) it.toLong().toString() else "%.3f".format(it)
-                )
-            },
-            h.position.averageCost?.let { "avg %.2f".format(it) },
-            h.unitPrice?.let { "price %.2f".format(it) } ?: if (units != null) "no price" else null,
-            "invested ${MoneyFormat.amount(h.position.costHeld)}",
-        ).joinToString(" · ")
-        Text(
-            line,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        ProfitLine(h)
-    }
-    HorizontalDivider()
-}
-
-@Composable
-private fun AmountRowView(h: HoldingRow, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                h.instrument.name,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                MoneyFormat.amount(h.currentValue),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-        }
-        Text(
-            listOfNotNull(
-                "invested ${MoneyFormat.amount(h.position.costHeld)}",
-                h.position.firstDate?.let { "since $it" },
-                h.instrument.owner.takeIf { it != Instrument.OWNER_SELF }
-                    ?.let { "owner $it" }).joinToString(" · "),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        ProfitLine(h)
-    }
-    HorizontalDivider()
-}
-
-@Composable
-private fun ProfitLine(h: HoldingRow) {
+internal fun ProfitLine(h: HoldingRow) {
     Row {
         val held = h.heldProfit
         Text(

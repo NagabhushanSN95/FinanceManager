@@ -7,20 +7,19 @@ import androidx.lifecycle.viewModelScope
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
+import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
-
-import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.Template
-import com.nagabhushansn95.financetracker.ui.investments.FdSuggestions
-import kotlinx.coroutines.flow.combine
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import com.nagabhushansn95.financetracker.data.repository.FixedDepositRepository
+import com.nagabhushansn95.financetracker.ui.investments.FdSuggestions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -40,6 +39,9 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val riskLevels: StateFlow<List<RiskLevel>> = db.instrumentDao().observeRiskLevels()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val summaryGroups: StateFlow<List<com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup>> =
+        db.summaryGroupDao().observeAll()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val templates: StateFlow<List<Template>> = db.transactionDao().observeTemplates()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val fdTemplates: StateFlow<List<FdTemplate>> = db.instrumentDao().observeFdTemplates()
@@ -115,6 +117,15 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
 
     fun deleteRiskLevel(id: Long) = run { repository.deleteRiskLevel(id) }
     fun reorderRiskLevels(ids: List<Long>) = run { repository.reorderRiskLevels(ids) }
+
+    fun addSummaryGroup(name: String, members: String) =
+        run { repository.addSummaryGroup(name, members) }
+
+    fun updateSummaryGroup(group: com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup) =
+        run { repository.updateSummaryGroup(group) }
+
+    fun deleteSummaryGroup(id: Long) = run { repository.deleteSummaryGroup(id) }
+    fun reorderSummaryGroups(ids: List<Long>) = run { repository.reorderSummaryGroups(ids) }
 
     fun deleteTemplate(template: Template) = run { db.transactionDao().deleteTemplate(template) }
     fun saveTemplate(template: Template) = run {

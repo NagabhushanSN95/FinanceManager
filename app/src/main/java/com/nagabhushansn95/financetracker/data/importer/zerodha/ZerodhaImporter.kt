@@ -13,7 +13,6 @@ import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.repository.TransactionRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 /** Which accounts the statement's money moves through, and whether to add the DP charge on each sale. */
@@ -91,7 +90,6 @@ data class ImportResult(
  * date, quantity and amount and stamped with the reference.
  */
 class ZerodhaImporter(private val db: AppDatabase) {
-    private val exDateText: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
     /** The Demat and bank accounts the existing ledger already uses for these flows, else the first of each type. */
     suspend fun defaultSettings(): ZerodhaImportSettings {
@@ -221,9 +219,7 @@ class ZerodhaImporter(private val db: AppDatabase) {
                         toAccountId = bank,
                         categoryId = dividends,
                         instrumentId = id,
-                        particulars = "Dividend From Stocks - ${row.symbol} (Ex-Dividend Date: ${
-                            ex.format(exDateText)
-                        })",
+                        particulars = "Dividend From Stocks - ${row.symbol}",
                         quantity = row.quantity,
                         rate = row.perShare,
                         amount = row.total,

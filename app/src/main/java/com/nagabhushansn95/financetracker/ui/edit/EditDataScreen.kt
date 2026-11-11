@@ -1,6 +1,7 @@
 package com.nagabhushansn95.financetracker.ui.edit
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,17 +9,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -42,21 +47,35 @@ import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
+import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
-import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
-import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.investments.InvestmentOrder
+import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.investments.FdTemplateSheet
 import com.nagabhushansn95.financetracker.ui.investments.summary
+import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
 import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 import kotlinx.coroutines.launch
 
 /** Tab titles, in order; the drawer's Manage sub-entries use the same list. */
 val MANAGE_TABS =
-    listOf("Accounts", "Categories", "Instruments", "Investment categories", "Templates")
-private val TABS = MANAGE_TABS
+    listOf(
+        "Accounts",
+        "Categories",
+        "Instruments",
+        "Investment categories",
+        "Risk levels",
+        "Summary groups",
+        "Templates"
+    )
+
+/** The tabs that stay while the investments are locked: nothing about instruments, categories or their groups. */
+private val CASH_TABS = listOf("Accounts", "Categories", "Templates")
+
+/** The tabs to show: all of them once the investments are unlocked, else the cash-side ones. */
+fun manageTabs(investmentsUnlocked: Boolean): List<String> =
+    if (investmentsUnlocked) MANAGE_TABS else MANAGE_TABS.filter { it in CASH_TABS }
 
 /**
  * Manage: accounts, categories, instruments, investment categories and templates with add / edit / delete /
@@ -69,11 +88,14 @@ fun EditDataScreen(
     initialTab: Int = 0,
     viewModel: EditDataViewModel = viewModel()
 ) {
-    val pager =
-        rememberPagerState(initialPage = initialTab.coerceIn(0, TABS.size - 1)) { TABS.size }
+    // Locked investments leave only the cash-side tabs; [initialTab] indexes MANAGE_TABS, so it is mapped by title.
+    val unlocked = com.nagabhushansn95.financetracker.ui.common.InvestmentsLock.unlocked
+    val TABS = manageTabs(unlocked)
+    fun pageOf(tab: Int) = TABS.indexOf(MANAGE_TABS.getOrNull(tab)).coerceAtLeast(0)
+    val pager = rememberPagerState(initialPage = pageOf(initialTab)) { TABS.size }
     val scope = rememberCoroutineScope()
     // The drawer's sub-entries land on a tab; a repeat visit with another tab scrolls there.
-    LaunchedEffect(initialTab) { pager.scrollToPage(initialTab.coerceIn(0, TABS.size - 1)) }
+    LaunchedEffect(initialTab, unlocked) { pager.scrollToPage(pageOf(initialTab)) }
     val message by viewModel.message.collectAsStateWithLifecycle()
     LaunchedEffect(message) { message?.let { snackbarHostState.showSnackbar(it); viewModel.messageShown() } }
 
@@ -90,12 +112,14 @@ fun EditDataScreen(
             }
         }
         HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
-            when (page) {
-                0 -> AccountsTab(viewModel)
-                1 -> CategoriesTab(viewModel)
-                2 -> InstrumentsTab(viewModel)
-                3 -> InvestmentCategoriesTab(viewModel)
-                else -> TemplatesTab(viewModel)
+            when (TABS.getOrNull(page)) {
+                "Accounts" -> AccountsTab(viewModel)
+                "Categories" -> CategoriesTab(viewModel)
+                "Instruments" -> InstrumentsTab(viewModel)
+                "Investment categories" -> InvestmentCategoriesTab(viewModel)
+                "Risk levels" -> RiskLevelsTab(viewModel)
+                "Summary groups" -> SummaryGroupsTab(viewModel)
+                else -> TemplatesTab(viewModel, showDeposits = unlocked)
             }
         }
     }
@@ -301,6 +325,7 @@ private fun InstrumentsTab(viewModel: EditDataViewModel) {
     val all by viewModel.instruments.collectAsStateWithLifecycle()
     val investmentCategories by viewModel.investmentCategories.collectAsStateWithLifecycle()
     var showInactive by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
     var collapsed by rememberSaveable { mutableStateOf(setOf<String>()) }
     var editing by remember { mutableStateOf<Instrument?>(null) }
     var adding by remember { mutableStateOf(false) }
@@ -311,13 +336,29 @@ private fun InstrumentsTab(viewModel: EditDataViewModel) {
 
     // Fixed deposits are managed entirely from Investments › Fixed deposits; nothing about them lives here.
     val managed = all.filter { it.instrumentType != InstrumentType.FIXED_DEPOSIT }
-    val active = managed.filter { it.active }
-    val inactive = managed.filter { !it.active }
+    // A search looks through everything, inactive included, by name, symbol or ISIN.
+    val q = query.trim()
+    fun matches(i: Instrument) =
+        q.isEmpty() || listOfNotNull(i.name, i.shortName, i.symbol, i.isin).any {
+            it.contains(
+                q,
+                ignoreCase = true
+            )
+        }
+
+    val active = managed.filter { it.active && matches(it) }
+    val inactive = managed.filter { !it.active && matches(it) }
     val sections =
         InvestmentOrder.types(InvestmentOrder.names(investmentCategories)).mapNotNull { type ->
         val ofType = active.filter { it.instrumentType == type }
-        if (ofType.isEmpty()) null else Section(type.name, typeTitle(type), ofType)
-    } + if (showInactive && inactive.isNotEmpty()) listOf(
+            // Only the Others screen lists in hand order; stocks, funds and policies sort by category and name.
+            if (ofType.isEmpty()) null else Section(
+                type.name,
+                typeTitle(type),
+                ofType,
+                reorderable = type == InstrumentType.OTHER && q.isEmpty()
+            )
+        } + if ((showInactive || q.isNotEmpty()) && inactive.isNotEmpty()) listOf(
         Section(
             "inactive",
             "Inactive",
@@ -328,8 +369,28 @@ private fun InstrumentsTab(viewModel: EditDataViewModel) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column {
-            ShowDeletedRow(
-                "Show inactive instruments (${inactive.size})",
+            androidx.compose.material3.OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("Search instruments") },
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                trailingIcon = if (query.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(
+                                Icons.Filled.Close,
+                                contentDescription = "Clear"
+                            )
+                        }
+                    }
+                } else null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+            )
+            if (q.isEmpty()) ShowDeletedRow(
+                "Show inactive instruments (${managed.count { !it.active }})",
                 showInactive
             ) { showInactive = it }
             ReorderableSections(
@@ -384,6 +445,330 @@ private fun InstrumentsTab(viewModel: EditDataViewModel) {
     }
 }
 
+// ---------------------------------------------------------------------------------------------------- summary groups
+
+/**
+ * The lines of the summary's third table: each a name and what it holds, any mix of kinds (deposits, provident
+ * funds, life insurance, stocks, funds) and investment categories. Drag to order, press and hold to edit or delete,
+ * + to add. The app starts with Liquid and In Zerodha.
+ */
+@Composable
+private fun SummaryGroupsTab(viewModel: EditDataViewModel) {
+    val groups by viewModel.summaryGroups.collectAsStateWithLifecycle()
+    val categories by viewModel.investmentCategories.collectAsStateWithLifecycle()
+    val instruments by viewModel.instruments.collectAsStateWithLifecycle()
+    val byId = categories.associateBy { it.id }
+    val instrumentsById = instruments.associateBy { it.id }
+    var editing by remember {
+        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup?>(
+            null
+        )
+    }
+    var adding by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column {
+            Text(
+                "Each group is a line of the Investment Summary's Groups table, adding up whatever it holds: kinds of " +
+                        "instrument, investment categories, or both. Groups may overlap. Press and hold one to change it.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            ReorderableSections(
+                sections = listOf(Section("groups", "Groups", groups)),
+                id = { it.id },
+                onReordered = { _, ids -> viewModel.reorderSummaryGroups(ids) },
+                row = { g, handle ->
+                    EditRow(
+                        g.name,
+                        subtitle = com.nagabhushansn95.financetracker.data.investments.SummaryGroups.describe(
+                            g,
+                            byId,
+                            instrumentsById
+                        ),
+                        onLongPress = { editing = g },
+                        handle = handle,
+                    )
+                },
+            )
+        }
+        FloatingActionButton(
+            onClick = { adding = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) { Icon(Icons.Filled.Add, contentDescription = "Add group") }
+    }
+    if (editing != null || adding) {
+        val existing = editing
+        SummaryGroupSheet(
+            existing = existing,
+            categories = categories,
+            instruments = instruments,
+            onSave = { name, members ->
+                if (existing == null) viewModel.addSummaryGroup(name, members)
+                else viewModel.updateSummaryGroup(existing.copy(name = name, members = members))
+                editing = null; adding = false
+            },
+            onDelete = existing?.let { g ->
+                {
+                    viewModel.deleteSummaryGroup(g.id); editing = null
+                }
+            },
+            onDismiss = { editing = null; adding = false },
+        )
+    }
+}
+
+/**
+ * Name plus a tree of what a group may hold: the kinds at the top (deposits, provident funds, life insurance,
+ * stocks, funds), their investment categories under them, and the holdings under those. Ticking a node takes
+ * everything under it (future holdings included); ticking every child of a node is the same as ticking the node.
+ * Unticking one holding under a ticked kind keeps the rest. Nodes fold and unfold from their chevron.
+ */
+@Composable
+private fun SummaryGroupSheet(
+    existing: com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup?,
+    categories: List<com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory>,
+    instruments: List<Instrument>,
+    onSave: (String, String) -> Unit,
+    onDelete: (() -> Unit)?,
+    onDismiss: () -> Unit,
+) {
+    val sg = com.nagabhushansn95.financetracker.data.investments.SummaryGroups
+    var name by remember { mutableStateOf(existing?.name ?: "") }
+    var members by remember {
+        mutableStateOf(
+            existing?.let { sg.parse(it.members) }?.toSet() ?: emptySet()
+        )
+    }
+    var expanded by remember { mutableStateOf(setOf<String>()) }
+    val tree = remember(categories, instruments) { GroupTree.build(categories, instruments) }
+    com.nagabhushansn95.financetracker.ui.common.FormSheet(
+        title = if (existing == null) "New group" else "Edit group",
+        onDismiss = onDismiss
+    ) {
+        androidx.compose.material3.OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            placeholder = { Text("Nifty 50") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        tree.forEach { node ->
+            GroupNodeRows(
+                node,
+                0,
+                members,
+                expanded,
+                { clicked -> members = GroupTree.toggle(tree, clicked, members) }) { key ->
+                expanded = if (key in expanded) expanded - key else expanded + key
+            }
+        }
+        Text(
+            "A tick on a kind or a category takes everything under it, holdings bought later included; ticks on single holdings take just those.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        androidx.compose.material3.Button(
+            enabled = name.isNotBlank() && members.isNotEmpty(),
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { onSave(name.trim(), sg.format(members)) },
+        ) { Text(if (existing == null) "Add" else "Save") }
+        if (onDelete != null) androidx.compose.material3.OutlinedButton(
+            onClick = onDelete,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Delete group", color = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+/** One node of the group tree with its own member token and its children. */
+private data class GroupNode(
+    val member: com.nagabhushansn95.financetracker.data.investments.GroupMember,
+    val label: String,
+    val children: List<GroupNode> = emptyList(),
+) {
+    val key: String get() = member.token
+}
+
+private object GroupTree {
+    private val OWN = Instrument.OWNER_SELF
+
+    /**
+     * Kinds, then their categories, then the holdings, active ones first and the retired (sold out) after them; a
+     * holding without a sub-category sits right under its kind.
+     */
+    fun build(
+        categories: List<com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory>,
+        instruments: List<Instrument>,
+    ): List<GroupNode> {
+        val own = instruments.filter { it.owner == OWN }
+        return com.nagabhushansn95.financetracker.data.investments.SummaryGroups.TYPES.map { (member, label) ->
+            val type =
+                (member as? com.nagabhushansn95.financetracker.data.investments.GroupMember.Type)?.type
+                    ?: return@map GroupNode(member, label)
+            val top = categories.firstOrNull {
+                it.parentId == null && it.name.equals(
+                    com.nagabhushansn95.financetracker.data.investments.InvestmentCategories.defaultCategoryName(
+                        type
+                    ), ignoreCase = true
+                )
+            }
+            val ofKind = own.filter { it.instrumentType == type }
+                .sortedWith(compareBy({ !it.active }, { it.name.lowercase() }))
+
+            fun leaf(i: Instrument) = GroupNode(
+                com.nagabhushansn95.financetracker.data.investments.GroupMember.Instrument(i.id),
+                (i.symbol?.takeIf { s -> s.isNotBlank() && !s.all(Char::isDigit) }
+                    ?.let { "${i.name} ($it)" } ?: i.name) +
+                        if (i.active) "" else " · inactive",
+            )
+
+            val subs = categories.filter { top != null && it.parentId == top.id }.map { c ->
+                GroupNode(
+                    com.nagabhushansn95.financetracker.data.investments.GroupMember.Category(c.id),
+                    c.name,
+                    ofKind.filter { it.categoryId == c.id }.map(::leaf),
+                )
+            }
+            val subIds =
+                subs.map { (it.member as com.nagabhushansn95.financetracker.data.investments.GroupMember.Category).id }
+                    .toSet()
+            val loose = ofKind.filter { it.categoryId !in subIds }.map(::leaf)
+            GroupNode(member, label, subs + loose)
+        }
+    }
+
+    /** Whether [node] is wholly in [members]: its own token, or an ancestor's. */
+    fun checked(
+        path: List<GroupNode>,
+        members: Set<com.nagabhushansn95.financetracker.data.investments.GroupMember>
+    ): Boolean =
+        path.any { it.member in members }
+
+    fun partly(
+        node: GroupNode,
+        members: Set<com.nagabhushansn95.financetracker.data.investments.GroupMember>
+    ): Boolean =
+        node.children.any { it.member in members || partly(it, members) }
+
+    private fun descendants(node: GroupNode): List<com.nagabhushansn95.financetracker.data.investments.GroupMember> =
+        node.children.flatMap { listOf(it.member) + descendants(it) }
+
+    private fun pathTo(
+        roots: List<GroupNode>,
+        target: GroupNode,
+        path: List<GroupNode> = emptyList()
+    ): List<GroupNode>? {
+        for (n in roots) {
+            val here = path + n
+            if (n === target) return here
+            pathTo(n.children, target, here)?.let { return it }
+        }
+        return null
+    }
+
+    /**
+     * Ticks or unticks [node]. Unticking a node covered by an ancestor's tick replaces that tick with ticks on the
+     * other branches, so the rest stays; ticking the last sibling folds the ticks into the parent.
+     */
+    fun toggle(
+        roots: List<GroupNode>,
+        node: GroupNode,
+        members: Set<com.nagabhushansn95.financetracker.data.investments.GroupMember>,
+    ): Set<com.nagabhushansn95.financetracker.data.investments.GroupMember> {
+        val path = pathTo(roots, node, emptyList()) ?: return members
+        var next = members.toMutableSet()
+        if (checked(path, members)) {
+            // Explode the ticked ancestor (or the node itself) down to this node, then drop it.
+            val ticked = path.first { it.member in members }
+            if (ticked !== node) {
+                next.remove(ticked.member)
+                val chain = path.dropWhile { it !== ticked }
+                chain.zipWithNext().forEach { (parent, child) ->
+                    parent.children.filter { it !== child }.forEach { next.add(it.member) }
+                }
+            }
+            next.remove(node.member)
+            descendants(node).forEach { next.remove(it) }
+        } else {
+            next.add(node.member)
+            descendants(node).forEach { next.remove(it) }
+            // Fold up: every sibling ticked means the parent is.
+            var chain = path
+            while (chain.size >= 2) {
+                val parent = chain[chain.size - 2]
+                if (parent.children.isNotEmpty() && parent.children.all { it.member in next }) {
+                    parent.children.forEach { next.remove(it.member) }
+                    next.add(parent.member)
+                    chain = chain.dropLast(1)
+                } else break
+            }
+        }
+        return next
+    }
+}
+
+@Composable
+private fun GroupNodeRows(
+    node: GroupNode,
+    depth: Int,
+    members: Set<com.nagabhushansn95.financetracker.data.investments.GroupMember>,
+    expanded: Set<String>,
+    onToggle: (GroupNode) -> Unit,
+    onExpand: (String) -> Unit,
+) {
+    GroupNodeRowsInner(listOf(node), depth, members, expanded, onToggle, onExpand)
+}
+
+@Composable
+private fun GroupNodeRowsInner(
+    path: List<GroupNode>,
+    depth: Int,
+    members: Set<com.nagabhushansn95.financetracker.data.investments.GroupMember>,
+    expanded: Set<String>,
+    onToggle: (GroupNode) -> Unit,
+    onExpand: (String) -> Unit,
+) {
+    val node = path.last()
+    val checked = GroupTree.checked(path, members)
+    val state = when {
+        checked -> androidx.compose.ui.state.ToggleableState.On
+        GroupTree.partly(node, members) -> androidx.compose.ui.state.ToggleableState.Indeterminate
+        else -> androidx.compose.ui.state.ToggleableState.Off
+    }
+    val open = node.key in expanded
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = (depth * 20).dp)
+            .clickable { if (node.children.isNotEmpty()) onExpand(node.key) else onToggle(node) },
+    ) {
+        if (node.children.isNotEmpty()) Icon(
+            if (open) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowRight,
+            contentDescription = if (open) "Fold ${node.label}" else "Unfold ${node.label}",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        ) else androidx.compose.foundation.layout.Spacer(Modifier.width(24.dp))
+        Text(
+            node.label,
+            style = if (depth == 0) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodySmall,
+            fontWeight = if (depth == 0) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 4.dp),
+            maxLines = 2,
+        )
+        androidx.compose.material3.TriStateCheckbox(state = state, onClick = { onToggle(node) })
+    }
+    if (open) node.children.forEach { child ->
+        GroupNodeRowsInner(path + child, depth + 1, members, expanded, onToggle, onExpand)
+    }
+}
+
 // ---------------------------------------------------------------------------------------------------- templates
 
 /**
@@ -392,7 +777,7 @@ private fun InstrumentsTab(viewModel: EditDataViewModel) {
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun TemplatesTab(viewModel: EditDataViewModel) {
+private fun TemplatesTab(viewModel: EditDataViewModel, showDeposits: Boolean = true) {
     val templates by viewModel.templates.collectAsStateWithLifecycle()
     val fdTemplates by viewModel.fdTemplates.collectAsStateWithLifecycle()
     val fdSuggestions by viewModel.fdSuggestions.collectAsStateWithLifecycle()
@@ -475,7 +860,7 @@ private fun TemplatesTab(viewModel: EditDataViewModel) {
                 ofKind,
                 reorderable = false
             )
-        } + if (matchingFd.isEmpty()) emptyList() else listOf(
+        } + if (!showDeposits || matchingFd.isEmpty()) emptyList() else listOf(
             Section<Any>(
                 "FD",
                 "Fixed deposits",
@@ -550,7 +935,7 @@ private fun TemplatesTab(viewModel: EditDataViewModel) {
                 DropdownMenuItem(
                     text = { Text("Transaction template") },
                     onClick = { addMenu = false; adding = true })
-                DropdownMenuItem(
+                if (showDeposits) DropdownMenuItem(
                     text = { Text("Fixed deposit template") },
                     onClick = { addMenu = false; fdAdding = true })
             }
@@ -676,17 +1061,10 @@ private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
             null
         )
     }
-    var editingRisk by remember {
-        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.RiskLevel?>(
-            null
-        )
-    }
-    var adding by remember { mutableStateOf<String?>(null) }   // "category" or "risk"
-    var addMenu by remember { mutableStateOf(false) }
+    var adding by remember { mutableStateOf<String?>(null) }   // "category"
     val parents = all.filter { it.parentId == null }
     val riskName = riskLevels.associate { it.id to it.name }
     val sections: List<Section<Any>> = listOf(
-        Section<Any>("risk", "Risk levels (least to most risky)", riskLevels),
         Section<Any>("top", "Groups", parents)
     ) +
             parents.map { p ->
@@ -700,8 +1078,8 @@ private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
             Text(
                 "The rows of the Investment Summary. Every instrument belongs to one of these (chosen in the instrument's sheet) " +
                         "and the summary adds its value up by group and by risk level. Here you add, rename, group and order the " +
-                        "categories and name the risk levels. Which risk level a category has, and its allocation targets, " +
-                        "are set under Investments › Categories & targets. Press and hold a row to edit it.",
+                        "categories. Risk levels have their own tab; allocation targets are set under Investments › Targets. " +
+                        "Press and hold a row to edit it.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -712,20 +1090,9 @@ private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
                     (it as? com.nagabhushansn95.financetracker.data.db.entity.RiskLevel)?.id
                         ?: (it as com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory).id
                 },
-                onReordered = { key, ids ->
-                    if (key == "risk") viewModel.reorderRiskLevels(ids) else viewModel.reorderInvestmentCategories(
-                        ids
-                    )
-                },
+                onReordered = { _, ids -> viewModel.reorderInvestmentCategories(ids) },
                 row = { item, handle ->
                     when (item) {
-                        is com.nagabhushansn95.financetracker.data.db.entity.RiskLevel -> EditRow(
-                            item.name,
-                            subtitle = null,
-                            onLongPress = { editingRisk = item },
-                            handle = handle
-                        )
-
                         is com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory -> EditRow(
                             item.name,
                             subtitle = listOfNotNull(
@@ -741,26 +1108,12 @@ private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
                 },
             )
         }
-        Box(modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .padding(16.dp)) {
-            FloatingActionButton(onClick = { addMenu = true }) {
-                Icon(
-                    Icons.Filled.Add,
-                    contentDescription = "Add"
-                )
-            }
-            androidx.compose.material3.DropdownMenu(
-                expanded = addMenu,
-                onDismissRequest = { addMenu = false }) {
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text("Investment category") },
-                    onClick = { adding = "category"; addMenu = false })
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text("Risk level") },
-                    onClick = { adding = "risk"; addMenu = false })
-            }
-        }
+        FloatingActionButton(
+            onClick = { adding = "category" },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) { Icon(Icons.Filled.Add, contentDescription = "Add investment category") }
     }
     if (editing != null || adding == "category") {
         InvestmentCategorySheet(
@@ -774,7 +1127,102 @@ private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
             onDismiss = { editing = null; adding = null },
         )
     }
-    if (editingRisk != null || adding == "risk") {
+}
+
+/**
+ * Risk levels, least to most risky, and under each the investment categories that carry it (a group with
+ * sub-categories is represented by them). Press and hold a level to rename or delete it, a category to move it to
+ * another level; the + adds a level. The summary's "By risk" table follows this grouping.
+ */
+@Composable
+private fun RiskLevelsTab(viewModel: EditDataViewModel) {
+    val all by viewModel.investmentCategories.collectAsStateWithLifecycle()
+    val riskLevels by viewModel.riskLevels.collectAsStateWithLifecycle()
+    var editingRisk by remember {
+        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.RiskLevel?>(
+            null
+        )
+    }
+    var adding by remember { mutableStateOf(false) }
+    var moving by remember {
+        mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory?>(
+            null
+        )
+    }
+    val byId = all.associateBy { it.id }
+    val hasChildren = all.mapNotNull { it.parentId }.toSet()
+    // Loans and parked money (the Others group) sit outside the risk table.
+    val others = all.firstOrNull {
+        it.parentId == null && it.name.equals(
+            com.nagabhushansn95.financetracker.data.investments.InvestmentCategories.OTHERS,
+            ignoreCase = true
+        )
+    }?.id
+    val rated = all.filter { it.id !in hasChildren && it.id != others && it.parentId != others }
+    fun label(c: com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory) =
+        c.parentId?.let { byId[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
+
+    val sections: List<Section<Any>> =
+        listOf(Section<Any>("levels", "Risk levels (least to most risky)", riskLevels)) +
+                riskLevels.map { r ->
+                    Section<Any>(
+                        "r${r.id}",
+                        r.name,
+                        rated.filter { it.riskLevelId == r.id },
+                        reorderable = false
+                    )
+                } +
+                listOf(
+                    Section<Any>(
+                        "none",
+                        "No risk level",
+                        rated.filter { it.riskLevelId == null || byId[it.riskLevelId!!] == null && riskLevels.none { r -> r.id == it.riskLevelId } },
+                        reorderable = false
+                    )
+                )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column {
+            Text(
+                "Each investment category sits in one risk level, and the Investment Summary adds the holdings up by level. " +
+                        "Drag the levels into order; press and hold a level to rename or delete it, a category to move it to another level.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            ReorderableSections(
+                sections = sections.filter { it.key == "levels" || it.items.isNotEmpty() },
+                id = {
+                    (it as? com.nagabhushansn95.financetracker.data.db.entity.RiskLevel)?.let { r -> -r.id }
+                        ?: (it as com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory).id
+                },
+                onReordered = { _, ids -> viewModel.reorderRiskLevels(ids.map { -it }) },
+                row = { item, handle ->
+                    when (item) {
+                        is com.nagabhushansn95.financetracker.data.db.entity.RiskLevel -> EditRow(
+                            item.name,
+                            subtitle = rated.count { it.riskLevelId == item.id }
+                                .let { n -> if (n == 1) "1 category" else "$n categories" },
+                            onLongPress = { editingRisk = item },
+                            handle = handle
+                        )
+
+                        is com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory -> EditRow(
+                            label(item),
+                            subtitle = null,
+                            onLongPress = { moving = item },
+                        ) {}
+                    }
+                },
+            )
+        }
+        FloatingActionButton(
+            onClick = { adding = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) { Icon(Icons.Filled.Add, contentDescription = "Add risk level") }
+    }
+    if (editingRisk != null || adding) {
         val level = editingRisk
         RiskLevelSheet(
             existing = level,
@@ -782,10 +1230,32 @@ private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
                 if (level == null) viewModel.addRiskLevel(name) else viewModel.renameRiskLevel(
                     level,
                     name
-                ); editingRisk = null; adding = null
+                )
+                editingRisk = null; adding = false
             },
             onDelete = level?.let { r -> { viewModel.deleteRiskLevel(r.id); editingRisk = null } },
-            onDismiss = { editingRisk = null; adding = null },
+            onDismiss = { editingRisk = null; adding = false },
         )
+    }
+    moving?.let { c ->
+        com.nagabhushansn95.financetracker.ui.common.FormSheet(
+            title = "Risk level for ${label(c)}",
+            onDismiss = { moving = null }) {
+            (riskLevels.map { it.id to it.name } + (null to "No risk level")).forEach { (id, name) ->
+                androidx.compose.material3.ListItem(
+                    headlineContent = { Text(name) },
+                    trailingContent = {
+                        if (c.riskLevelId == id) Text(
+                            "current",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    modifier = Modifier.clickable {
+                        if (c.riskLevelId != id) viewModel.saveInvestmentCategory(c.copy(riskLevelId = id))
+                        moving = null
+                    },
+                )
+            }
+        }
     }
 }

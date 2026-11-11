@@ -49,6 +49,109 @@ class PriceSourcesTest {
     }
 
     @Test
+    fun yahooTriesTheRrSeriesAndBseWhenThePlainListingIsStale() = kotlinx.coroutines.test.runTest {
+        fun chart(symbol: String, price: Double, time: Long) =
+            """{"chart":{"result":[{"meta":{"currency":"INR","symbol":"$symbol","exchangeTimezoneName":"Asia/Kolkata","regularMarketTime":$time,"regularMarketPrice":$price}}],"error":null}}"""
+
+        val yahoo = YahooQuotes(object : HttpClient {
+            override suspend fun get(url: String) = when {
+                url.contains("EMBASSY.NS") -> chart(
+                    "EMBASSY.NS",
+                    369.92,
+                    1721800000
+                )      // 24 Jul 2024: frozen
+                url.contains("EMBASSY-RR.NS") -> chart("EMBASSY-RR.NS", 419.93, 1793700000)
+                url.contains("BAGMANE-RR.NS") -> chart("BAGMANE-RR.NS", 106.86, 1793700000)
+                url.contains("OLD.NS") -> chart("OLD.NS", 10.0, 1721800000)
+                else -> """{"chart":{"result":null,"error":{"code":"Not Found","description":"No data found, symbol may be delisted"}}}"""
+            }
+        })
+        val embassy = instrument("Embassy", InstrumentType.STOCK, symbol = "EMBASSY")
+        assertEquals(listOf("EMBASSY.NS", "EMBASSY-RR.NS", "EMBASSY.BO"), yahoo.tickers(embassy))
+        val stale = LocalDate.of(2026, 10, 4)
+        assertEquals(419.93, yahoo.quoteAny(yahoo.tickers(embassy), stale).price, 1e-9)
+        assertEquals(
+            106.86,
+            yahoo.quoteAny(
+                yahoo.tickers(
+                    instrument(
+                        "Bagmane",
+                        InstrumentType.STOCK,
+                        symbol = "BAGMANE"
+                    )
+                ), stale
+            ).price,
+            1e-9
+        )
+        // Nothing fresh anywhere: the stale quote is better than none, and is reported as stale by its date.
+        val old = yahoo.quoteAny(
+            yahoo.tickers(instrument("Old", InstrumentType.STOCK, symbol = "OLD")),
+            stale
+        )
+        assertEquals(LocalDate.of(2024, 7, 24), old.date)
+        val none = runCatching {
+            yahoo.quoteAny(
+                yahoo.tickers(
+                    instrument(
+                        "Gone",
+                        InstrumentType.STOCK,
+                        symbol = "GONE"
+                    )
+                ), stale
+            )
+        }
+        assertEquals("No data found, symbol may be delisted", none.exceptionOrNull()?.message)
+        assertEquals(
+            listOf("500325.BO"),
+            yahoo.tickers(
+                instrument(
+                    "x",
+                    InstrumentType.STOCK,
+                    symbol = "500325",
+                    exchange = "BSE"
+                )
+            )
+        )
+        assertEquals(
+            listOf("AAPL"),
+            yahoo.tickers(
+                instrument(
+                    "x",
+                    InstrumentType.STOCK,
+                    symbol = "AAPL",
+                    exchange = "NASDAQ"
+                )
+            )
+        )
+    }
+
+    @Test
+    fun amfiMatchesARenamedSchemeByItsWords() {
+        val text =
+            "Scheme Code;ISIN Div Payout/ ISIN Growth;ISIN Div Reinvestment;Scheme Name;Plan;Option;Net Asset Value;Date\n" +
+                    "120323;INF109K012K1;-;ICICI Prudential Value Fund (erstwhile Value Discovery Fund);Direct Plan;Growth;522.08;09-Nov-2026\n" +
+                    "120322;INF109K011K3;INF109K010K5;ICICI Prudential Value Fund (erstwhile Value Discovery Fund);Direct Plan;IDCW;60.1;09-Nov-2026\n" +
+                    "102594;INF109K01AF8;-;ICICI Prudential Value Fund (erstwhile Value Discovery Fund);Regular Plan;Growth;480.2;09-Nov-2026\n" +
+                    "127042;INF247L01445;-;Motilal Oswal Midcap Fund;;;119.1088;09-Nov-2026\n" +
+                    "127039;INF247L01411;-;Motilal Oswal Midcap Fund;;;102.9235;09-Nov-2026\n"
+        val schemes = AmfiNav.parse(text)
+        assertEquals(
+            "120323",
+            AmfiNav.match(instrument("ICICI Prudential Value Discovery Fund"), schemes)?.code
+        )
+        // Blank plan and option on every row: nothing says which is Direct Growth, so no guess.
+        assertNull(AmfiNav.match(instrument("Motilal Oswal Midcap Fund"), schemes))
+        assertEquals(
+            "127042",
+            AmfiNav.match(
+                instrument("Motilal Oswal Midcap Fund", isin = "INF247L01445"),
+                schemes
+            )?.code
+        )
+        assertNull(AmfiNav.match(instrument("Value Fund"), schemes))
+    }
+
+    @Test
     fun yahooTickers() {
         val yahoo = YahooQuotes(object : HttpClient {
             override suspend fun get(url: String) = ""

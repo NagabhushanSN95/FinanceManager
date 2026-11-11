@@ -140,6 +140,64 @@ class HoldingsTest {
     }
 
     @Test
+    fun lotsAreKeptPerAccountAndASaleTakesItsOwnAccountsLotsFirst() {
+        val rows = listOf(
+            row(
+                "2025-01-10",
+                TransactionKind.INVEST,
+                10000.0,
+                qty = 100.0
+            ).copy(fromAccountId = 49),   // 100 @ 100, own demat
+            row(
+                "2025-02-10",
+                TransactionKind.INVEST,
+                6000.0,
+                qty = 50.0
+            ).copy(fromAccountId = 70),     // 50 @ 120, Amma's demat
+            row(
+                "2025-03-01",
+                TransactionKind.INCOME,
+                0.0,
+                qty = 150.0
+            ),                                  // bonus 1:1, spread 100/50
+            row(
+                "2025-04-01",
+                TransactionKind.REDEEM,
+                7000.0,
+                qty = 100.0
+            ).copy(toAccountId = 70),       // Amma's 50 @ 120 + 50 bonus
+            row(
+                "2025-05-01",
+                TransactionKind.REDEEM,
+                7000.0,
+                qty = 100.0
+            ).copy(toAccountId = 70),       // nothing left of hers: the oldest own lot
+        )
+        val afterBonus = Holdings.position(1, rows.take(3))
+        assertEquals(mapOf<Long?, Double>(49L to 200.0, 70L to 100.0), afterBonus.unitsByAccount)
+        val afterHers = Holdings.position(1, rows.take(4))
+        assertEquals(7000.0 - 6000.0, afterHers.realised, 1e-9)
+        assertEquals(mapOf<Long?, Double>(49L to 200.0), afterHers.unitsByAccount)
+        val p = Holdings.position(1, rows)
+        assertEquals(1000.0 + 7000.0 - 10000.0, p.realised, 1e-9)
+        assertEquals(mapOf<Long?, Double>(49L to 100.0), p.unitsByAccount)
+        assertEquals(0.0, p.costHeld, 1e-9)
+        // The preview agrees with the engine.
+        assertEquals(
+            7000.0 - 10000.0,
+            Holdings.realisedBySelling(
+                1,
+                rows.take(4),
+                100.0,
+                7000.0,
+                LocalDate.of(2025, 5, 1),
+                70
+            ),
+            1e-9
+        )
+    }
+
+    @Test
     fun amountOnlyInstrumentsReturnCostFirst() {
         val fd = Holdings.position(
             1, listOf(

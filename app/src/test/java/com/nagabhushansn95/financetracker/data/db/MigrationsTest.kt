@@ -274,6 +274,27 @@ class MigrationsTest {
     }
 
     @Test
+    fun migrates8To9SeedingTheSummaryGroups() = runTest {
+        createOldDatabase("migrate-8-9.db", 8) { c ->
+            c.execSQL("INSERT INTO settings (`key`, value) VALUES ('investments.goal_amount', '6000000')")
+        }
+        val db = AppDatabase.create(context, "migrate-8-9.db")
+        try {
+            val groups = db.summaryGroupDao().getAll()
+            assertEquals(listOf("Liquid", "In Zerodha"), groups.map { it.name })
+            assertEquals("type:FIXED_DEPOSIT,type:MUTUAL_FUND,type:STOCK", groups[0].members)
+            assertEquals("1", db.settingsDao().get("summary_groups.seeded"))
+            assertEquals("6000000", db.settingsDao().get("investments.goal_amount"))
+            // Seeded once: an empty table after the user deletes them stays empty.
+            groups.forEach { db.summaryGroupDao().delete(it.id) }
+            com.nagabhushansn95.financetracker.data.investments.SummaryGroups.seedIfEmpty(db)
+            assertEquals(0, db.summaryGroupDao().count())
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
     fun migrates7To8AddingTheSumInsuredToValidityPeriods() = runTest {
         createOldDatabase("migrate-7-8.db", 7) { c ->
             c.execSQL("INSERT INTO instruments (id, name, instrument_type, currency, owner, active, display_order, created_time, modified_time) VALUES (5, 'HDFC Ergo - Optima Secure', 'INSURANCE', 'INR', 'Self', 1, 1, '2026-01-01T00:00:00', '2026-01-01T00:00:00')")

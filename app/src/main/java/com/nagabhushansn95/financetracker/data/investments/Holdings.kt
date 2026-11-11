@@ -14,9 +14,12 @@ data class CashFlow(val date: LocalDate, val amount: Double)
  * What the ledger says about one instrument, in INR.
  *
  * Unit-based instruments (rows carry quantities) match every sale against the oldest units still held, first in
- * first out, as Zerodha's P&L and the income-tax rules do: a sale realises `amount − cost of those lots`. Bonus units
- * form a lot of their own at zero cost; a split spreads the existing lots over the new unit count. [averageCost] is
- * the average of the lots still held.
+ * first out, as Zerodha's P&L and the income-tax rules do: a sale realises `amount − cost of those lots`. Lots are
+ * kept per cash account (the demat account a purchase was paid from), and a sale takes the oldest lots of the
+ * account its proceeds land in before any other, since capital gains are taxed per account holder; a holding bought
+ * through one account and sold through another still matches. Bonus units form a lot of their own at zero cost,
+ * spread over the accounts in proportion to what each holds; a split spreads the existing lots over the new unit
+ * count. [averageCost] is the average of the lots still held.
  * Amount-only instruments (deposits, policies, SIPs recorded without units) treat redemptions as returning cost
  * first; anything beyond the cost ever put in is realised profit.
  */
@@ -36,6 +39,8 @@ data class Position(
     val lastDate: LocalDate?,
     val hasUnits: Boolean,
     val cashFlows: List<CashFlow>,
+    /** Units still held through each cash account (null: bought without an account), when more than one is involved. */
+    val unitsByAccount: Map<Long?, Double> = emptyMap(),
 ) {
     val averageCost: Double? get() = if (hasUnits && units > UNIT_EPSILON) costHeld / units else null
 
@@ -52,8 +57,8 @@ data class Position(
 }
 
 object Holdings {
-    /** Units bought together and the cost still attached to them. */
-    private class Lot(var units: Double, var cost: Double)
+    /** Units bought together, the cost still attached to them, and the cash account they were bought through. */
+    private class Lot(var units: Double, var cost: Double, val account: Long?)
 
     /** Prefix the bonus-or-split dialog writes for a split (see InstrumentDetailScreen). */
     const val SPLIT_PREFIX = "Stock Split"
@@ -108,7 +113,7 @@ object Holdings {
                         val q = t.quantity ?: 0.0
                         units += q
                         // A purchase recorded without units keeps its cost in the holding; nothing can sell it.
-                        if (q > Position.UNIT_EPSILON) lots.addLast(Lot(q, amount))
+                        if (q > Position.UNIT_EPSILON) lots.addLast(Lot(q, amount, t.fromAccountId))
                     }
                     if (amount != 0.0) flows += CashFlow(t.date, -amount)
                 }
@@ -120,14 +125,16 @@ object Holdings {
                         var need = q
                         var costOut = 0.0
                         while (need > Position.UNIT_EPSILON && lots.isNotEmpty()) {
-                            val lot = lots.first()
+                            // The oldest lot of the account the money comes back to, else the oldest of any.
+                            val lot =
+                                lots.firstOrNull { it.account == t.toAccountId } ?: lots.first()
                             val take = minOf(lot.units, need)
                             val share = lot.cost * take / lot.units
                             costOut += share
                             lot.units -= take
                             lot.cost -= share
                             need -= take
-                            if (lot.units <= Position.UNIT_EPSILON) lots.removeFirst()
+                            if (lot.units <= Position.UNIT_EPSILON) lots.remove(lot)
                         }
                         costOut = costOut.coerceAtMost(cost)
                         realised += amount - costOut
@@ -148,7 +155,15 @@ object Holdings {
                             // A split: the same cost now covers more units in every open lot.
                             val factor = (units + t.quantity) / units
                             lots.forEach { it.units *= factor }
-                        } else lots.addLast(Lot(t.quantity, 0.0))
+                        } else {
+                            // Bonus units land in each account in proportion to what it holds.
+                            val held = lots.sumOf { it.units }
+                            val byAccount = lots.groupBy { it.account }
+                                .mapValues { (_, l) -> l.sumOf { it.units } }
+                            if (held > Position.UNIT_EPSILON) byAccount.forEach { (account, u) ->
+                                lots.addLast(Lot(t.quantity * u / held, 0.0, account))
+                            } else lots.addLast(Lot(t.quantity, 0.0, null))
+                        }
                         units += t.quantity
                     } else {
                         income += amount
@@ -179,7 +194,40 @@ object Holdings {
             lastDate = rows.lastOrNull()?.date,
             hasUnits = hasUnits,
             cashFlows = flows,
+            unitsByAccount = lots.groupBy { it.account }
+                .mapValues { (_, l) -> l.sumOf { it.units } }
+                .filterValues { it > Position.UNIT_EPSILON },
         )
+    }
+
+    /**
+     * What a sale of [units] for [amount] into [toAccountId] would realise on top of what [rows] already have: the
+     * amount less the FIFO cost of the lots it would consume. For the Sell sheet's preview.
+     */
+    fun realisedBySelling(
+        instrumentId: Long,
+        rows: List<TransactionEntity>,
+        units: Double,
+        amount: Double,
+        date: LocalDate,
+        toAccountId: Long?,
+        excludingId: Long? = null,
+    ): Double {
+        val base = rows.filter { it.id != excludingId }
+        val sale = TransactionEntity(
+            id = Long.MAX_VALUE,
+            createdTime = java.time.LocalDateTime.MIN,
+            modifiedTime = java.time.LocalDateTime.MIN,
+            date = date,
+            kind = TransactionKind.REDEEM,
+            toAccountId = toAccountId,
+            instrumentId = instrumentId,
+            particulars = "",
+            quantity = units,
+            amount = amount,
+        )
+        val ordered = (base + sale).sortedWith(compareBy({ it.date }, { it.id }))
+        return position(instrumentId, ordered).realised - position(instrumentId, base).realised
     }
 
     /**

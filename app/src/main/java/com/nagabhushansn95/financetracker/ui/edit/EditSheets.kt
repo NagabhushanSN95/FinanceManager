@@ -2,12 +2,10 @@ package com.nagabhushansn95.financetracker.ui.edit
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,12 +37,11 @@ import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
-import com.nagabhushansn95.financetracker.ui.common.FormSheet
-
-import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
-import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorViewModel.Companion.plain
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.investments.InvestmentOrder
+import com.nagabhushansn95.financetracker.ui.common.FormSheet
+import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
+import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorViewModel.Companion.plain
 import com.nagabhushansn95.financetracker.ui.transaction.label
 import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 import java.time.LocalDateTime
@@ -339,12 +336,7 @@ fun InstrumentSheet(
     val categoryById = categories.associateBy { it.id }
     fun categoryLabel(id: Long?) = id?.let { categoryById[it] }?.let { c ->
         c.parentId?.let { categoryById[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
-    }
-        ?: "By type (${
-            com.nagabhushansn95.financetracker.data.investments.InvestmentCategories.defaultCategoryName(
-                existing?.instrumentType ?: initialType
-            )
-        })"
+    } ?: "Choose a category"
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var shortName by remember { mutableStateOf(existing?.shortName ?: "") }
     var type by remember { mutableStateOf(existing?.instrumentType ?: initialType) }
@@ -361,19 +353,24 @@ fun InstrumentSheet(
         title = if (existing == null) "New instrument" else "Edit instrument",
         onDismiss = onDismiss
     ) {
-        Row(
+        // The kind is chosen once: a deposit edited into a stock would lose its terms and its screen. A new deposit
+        // or policy needs its terms, so those are opened from their own Investments screens.
+        if (existing == null) Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // A new deposit or policy needs its terms: those are opened from their own Investments screens.
             InvestmentOrder.types(InvestmentOrder.names(categories))
-                .filter { existing != null || it in InvestmentOrder.CREATABLE_HERE }.forEach { t ->
+                .filter { it in InvestmentOrder.CREATABLE_HERE }.forEach { t ->
                 FilterChip(
                     selected = type == t,
                     onClick = { type = t },
                     label = { Text(typeTitle(t)) })
             }
-        }
+        } else Text(
+            typeTitle(type),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
@@ -388,7 +385,16 @@ fun InstrumentSheet(
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (categories.isNotEmpty()) {
+        // The category stays within the kind's own group (a fund is a kind of mutual fund, never a stock type).
+        // Policies and deposits are filed by their own screens, so they offer no choice here.
+        val group = categories.firstOrNull {
+            it.parentId == null && it.name.equals(
+                com.nagabhushansn95.financetracker.data.investments.InvestmentCategories.defaultCategoryName(
+                    type
+                ), ignoreCase = true
+            )
+        }
+        if (group != null && type != InstrumentType.INSURANCE && type != InstrumentType.FIXED_DEPOSIT) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -401,17 +407,12 @@ fun InstrumentSheet(
                 TextButton(onClick = { categoryMenu = true }) { Text(categoryLabel(categoryId)) }
                 DropdownMenu(expanded = categoryMenu, onDismissRequest = { categoryMenu = false }) {
                     DropdownMenuItem(
-                        text = { Text("By type") },
-                        onClick = { categoryId = null; categoryMenu = false })
-                    categories.filter { it.parentId == null }.forEach { parent ->
+                        text = { Text(group.name) },
+                        onClick = { categoryId = group.id; categoryMenu = false })
+                    categories.filter { it.parentId == group.id }.forEach { child ->
                         DropdownMenuItem(
-                            text = { Text(parent.name) },
-                            onClick = { categoryId = parent.id; categoryMenu = false })
-                        categories.filter { it.parentId == parent.id }.forEach { child ->
-                            DropdownMenuItem(
-                                text = { Text("    ${child.name}") },
-                                onClick = { categoryId = child.id; categoryMenu = false })
-                        }
+                            text = { Text("    ${child.name}") },
+                            onClick = { categoryId = child.id; categoryMenu = false })
                     }
                 }
             }
@@ -589,7 +590,7 @@ fun InvestmentCategorySheet(
             modifier = Modifier.fillMaxWidth()
         )
         Text(
-            "The risk level and the goal, wealth and tolerance percentages can also be set on Investments › Categories & targets.",
+            "The risk level and the goal, wealth and tolerance percentages can also be set on Investments › Targets.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

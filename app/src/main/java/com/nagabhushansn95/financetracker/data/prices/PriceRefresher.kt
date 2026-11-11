@@ -22,7 +22,7 @@ data class RefreshResult(
     val usdInr: Double? = null,
     val linked: List<String> = emptyList(),
     val failed: List<String> = emptyList(),
-    /** Symbols whose latest quote is more than a month old (Yahoo keeps renamed or delisted tickers). */
+    /** Symbols whose latest quote is more than a month old on every ticker tried (renamed or delisted). */
     val stale: List<String> = emptyList(),
     val skipped: Boolean = false,
 ) {
@@ -58,7 +58,7 @@ class PriceRefresher(
         val positions = Holdings.positions(ledger)
         fun held(i: Instrument) = (positions[i.id]?.units ?: 0.0) > Position.UNIT_EPSILON
         val stocks = instruments.filter {
-            it.instrumentType == InstrumentType.STOCK && held(it) && yahoo.ticker(it) != null
+            it.instrumentType == InstrumentType.STOCK && held(it) && yahoo.tickers(it).isNotEmpty()
         }
         val funds =
             instruments.filter { it.instrumentType == InstrumentType.MUTUAL_FUND && held(it) }
@@ -71,7 +71,7 @@ class PriceRefresher(
         val stockJobs = stocks.map { instrument ->
             async {
                 gate.withPermit {
-                    runCatching { yahoo.quote(yahoo.ticker(instrument)!!) }
+                    runCatching { yahoo.quoteAny(yahoo.tickers(instrument), staleBefore) }
                         .onSuccess { q ->
                             store(instrument.id, q.price, q.date, ValuationSource.YAHOO, now)
                             if (q.date.isBefore(staleBefore)) synchronized(stale) { stale += "${instrument.symbol ?: instrument.name} (${q.date})" }

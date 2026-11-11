@@ -31,10 +31,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.investments.Alert
-import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.data.investments.InvestmentCategories
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
+import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.investments.InvestmentRoutes
 
 /**
@@ -249,8 +249,8 @@ private fun categoryRoute(name: String): String? = when {
         ignoreCase = true
     ) -> InvestmentRoutes.FIXED_DEPOSITS
 
-    name.equals(InvestmentCategories.STOCKS, ignoreCase = true) -> InvestmentRoutes.HOLDINGS
-    name.equals(InvestmentCategories.MUTUAL_FUNDS, ignoreCase = true) -> InvestmentRoutes.HOLDINGS
+    name.equals(InvestmentCategories.STOCKS, ignoreCase = true) -> InvestmentRoutes.STOCKS
+    name.equals(InvestmentCategories.MUTUAL_FUNDS, ignoreCase = true) -> InvestmentRoutes.FUNDS
     name.equals(
         InvestmentCategories.PROVIDENT_FUNDS,
         ignoreCase = true

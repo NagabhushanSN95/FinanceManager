@@ -21,14 +21,36 @@ data class Quote(
  */
 class YahooQuotes(private val http: HttpClient) {
     /** The Yahoo ticker for an instrument, or null when it has no symbol. */
-    fun ticker(instrument: Instrument): String? {
-        val symbol = instrument.symbol?.trim()?.takeIf { it.isNotEmpty() } ?: return null
-        if (symbol.contains('.') || symbol.contains('=')) return symbol
+    fun ticker(instrument: Instrument): String? = tickers(instrument).firstOrNull()
+
+    /**
+     * The tickers to try for an instrument, best first. An NSE symbol is tried plain, then in the RR series (REITs
+     * and InvITs trade there, and Yahoo keeps the plain listing frozen on the day they moved), then on the BSE. A
+     * symbol that already carries a suffix is used as it is.
+     */
+    fun tickers(instrument: Instrument): List<String> {
+        val symbol = instrument.symbol?.trim()?.takeIf { it.isNotEmpty() } ?: return emptyList()
+        if (symbol.contains('.') || symbol.contains('=')) return listOf(symbol)
         return when (instrument.exchange?.uppercase()) {
-            null, "", "NSE" -> "$symbol.NS"
-            "BSE" -> "$symbol.BO"
-            else -> symbol
+            null, "", "NSE" -> listOf("$symbol.NS", "$symbol-RR.NS", "$symbol.BO")
+            "BSE" -> listOf("$symbol.BO")
+            else -> listOf(symbol)
         }
+    }
+
+    /**
+     * The first fresh quote among [tickers] (one dated after [staleBefore]); when none is fresh, the freshest stale
+     * one, so a delisted holding still shows its last price. Throws the last failure when nothing answers at all.
+     */
+    suspend fun quoteAny(tickers: List<String>, staleBefore: LocalDate): Quote {
+        var stale: Quote? = null
+        var failure: Throwable? = null
+        for (t in tickers) {
+            val q = runCatching { quote(t) }.getOrElse { failure = it; null } ?: continue
+            if (!q.date.isBefore(staleBefore)) return q
+            if (stale == null || q.date.isAfter(stale!!.date)) stale = q
+        }
+        return stale ?: throw (failure ?: IllegalStateException("No ticker"))
     }
 
     suspend fun quote(ticker: String): Quote = parse(http.get(url(ticker)))

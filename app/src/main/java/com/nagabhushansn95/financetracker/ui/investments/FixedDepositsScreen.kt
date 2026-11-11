@@ -576,6 +576,18 @@ private fun FdTotals(open: List<FdView>) {
     val principal = open.sumOf { it.principal }
     val estimated = open.sumOf { it.estimated }
     val next = open.mapNotNull { it.maturityDate }.minOrNull()
+    // The open deposits' money-weighted return so far: each principal on its deposit date against today's accrual.
+    val xirr = com.nagabhushansn95.financetracker.data.investments.Holdings.xirr(
+        open.mapNotNull { v ->
+            v.depositDate?.let {
+                com.nagabhushansn95.financetracker.data.investments.CashFlow(
+                    it,
+                    -v.principal
+                )
+            }
+        },
+        estimated, java.time.LocalDate.now()
+    )
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp)) {
@@ -583,7 +595,19 @@ private fun FdTotals(open: List<FdView>) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(MoneyFormat.amount(estimated), style = MaterialTheme.typography.headlineSmall)
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    MoneyFormat.amount(estimated),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "XIRR ${pct(xirr)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
             Row {
                 StatCell("Deposited", MoneyFormat.amount(principal))
                 StatCell(

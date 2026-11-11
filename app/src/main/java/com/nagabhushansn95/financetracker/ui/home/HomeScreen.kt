@@ -76,9 +76,8 @@ import com.nagabhushansn95.financetracker.ui.help.AboutScreen
 import com.nagabhushansn95.financetracker.ui.help.HelpScreen
 import com.nagabhushansn95.financetracker.ui.investments.FixedDepositDetailScreen
 import com.nagabhushansn95.financetracker.ui.investments.FixedDepositsScreen
-import com.nagabhushansn95.financetracker.ui.investments.HoldingsScreen
-import com.nagabhushansn95.financetracker.ui.investments.InstrumentDetailScreen
-import com.nagabhushansn95.financetracker.ui.investments.InstrumentListScreen
+import com.nagabhushansn95.financetracker.ui.investments.HoldingScreen
+import com.nagabhushansn95.financetracker.ui.investments.HoldingsListScreen
 import com.nagabhushansn95.financetracker.ui.investments.InsurancePolicyScreen
 import com.nagabhushansn95.financetracker.ui.investments.InsuranceScreen
 import com.nagabhushansn95.financetracker.ui.investments.InsuranceTypeScreen
@@ -120,7 +119,6 @@ private fun manageRoute(tab: Int) = "manage?tab=$tab"
 /** Non-drawer routes. */
 private const val ROUTE_EDITOR =
     "transaction?id={id}&kind={kind}&account={account}&instrument={instrument}"
-private const val ROUTE_INSTRUMENT = "instrument/{id}"
 
 /** Drawer entries under Investments, one per group, in the order of the categories under Manage. */
 private fun investmentScreens(categoryNames: List<String>): List<Pair<String, String>> =
@@ -129,11 +127,12 @@ private fun investmentScreens(categoryNames: List<String>): List<Pair<String, St
             InvestmentGroup.FIXED_DEPOSITS -> "Fixed deposits" to InvestmentRoutes.FIXED_DEPOSITS
             InvestmentGroup.PROVIDENT_FUNDS -> "Provident funds" to InvestmentRoutes.PROVIDENT_FUNDS
             InvestmentGroup.INSURANCE -> "Insurance" to InvestmentRoutes.INSURANCE
-            InvestmentGroup.STOCKS_AND_FUNDS -> "Stocks & funds" to InvestmentRoutes.HOLDINGS
+            InvestmentGroup.STOCKS -> "Stocks & ETFs" to InvestmentRoutes.STOCKS
+            InvestmentGroup.MUTUAL_FUNDS -> "Mutual funds" to InvestmentRoutes.FUNDS
             InvestmentGroup.OTHERS -> "Others" to InvestmentRoutes.type(InstrumentType.OTHER)
         }
     } + listOf(
-        "Categories & targets" to InvestmentRoutes.TARGETS,
+        "Targets" to InvestmentRoutes.TARGETS,
         "Savings" to InvestmentRoutes.SAVINGS,
     )
 
@@ -152,12 +151,12 @@ class DrawerViewModel(application: android.app.Application) :
 private const val DOUBLE_BACK_MILLIS = 2_000L
 private const val SLIDE_MILLIS = 300
 
-/** The screen for an instrument's own ledger: deposits and policies have theirs, the rest the generic detail. */
+/** The screen for an instrument's own ledger. */
 private fun instrumentRoute(type: InstrumentType, id: Long) = when (type) {
     InstrumentType.FIXED_DEPOSIT -> InvestmentRoutes.fixedDeposit(id)
     InstrumentType.INSURANCE -> InvestmentRoutes.policy(id)
     InstrumentType.OTHER -> InvestmentRoutes.other(id)
-    else -> "instrument/$id"
+    InstrumentType.STOCK, InstrumentType.MUTUAL_FUND -> InvestmentRoutes.holding(id)
 }
 
 private tailrec fun Context.findActivity(): FragmentActivity? = when (this) {
@@ -194,11 +193,8 @@ fun HomeScreen() {
         backStackEntry?.destination?.hierarchy?.any { it.route?.substringBefore('?') == d.route } == true
     } ?: Destination.SUMMARY
     val route = backStackEntry?.destination?.route
-    // Screens with their own top bar (editor, instrument detail, the investment sub-screens).
-    val inEditor =
-        route == ROUTE_EDITOR || route == ROUTE_INSTRUMENT || InvestmentRoutes.isInvestmentRoute(
-            route
-        )
+    // Screens with their own top bar (editor, the investment sub-screens).
+    val inEditor = route == ROUTE_EDITOR || InvestmentRoutes.isInvestmentRoute(route)
 
     fun goTo(destination: Destination) {
         navController.navigate(destination.route) {
@@ -287,12 +283,7 @@ fun HomeScreen() {
                                 selected = current == destination && !inEditor,
                                 children = investmentScreens,
                                 selectedChild = investmentScreens.map { it.second }
-                                    .firstOrNull { subRoute ->
-                                        route == subRoute || (subRoute.startsWith("investments/type/") && route == InvestmentRoutes.TYPE && backStackEntry?.arguments?.getString(
-                                            "type"
-                                        )
-                                            ?.let { InvestmentRoutes.type(InstrumentType.valueOf(it)) } == subRoute)
-                                    },
+                                    .firstOrNull { subRoute -> route == subRoute },
                                 onToggleExpanded = { investmentsExpanded = !investmentsExpanded },
                                 onOpen = { subRoute ->
                                     scope.launch { drawerState.close() }
@@ -300,8 +291,10 @@ fun HomeScreen() {
                                 },
                             )
                         } else if (destination == Destination.EDIT) {
-                            val manageTabs =
-                                MANAGE_TABS.mapIndexed { i, title -> title to manageRoute(i) }
+                            val manageTabs = com.nagabhushansn95.financetracker.ui.edit.manageTabs(
+                                investmentsUnlocked
+                            )
+                                .map { title -> title to manageRoute(MANAGE_TABS.indexOf(title)) }
                             val currentTab = backStackEntry?.arguments?.getInt("tab")
                                 ?.takeIf { route == ROUTE_MANAGE }
                             DrawerGroup(
@@ -419,19 +412,25 @@ fun HomeScreen() {
                         )
                     })
                 }
-                composable(InvestmentRoutes.HOLDINGS) {
-                    HoldingsScreen(
+                composable(InvestmentRoutes.STOCKS) {
+                    HoldingsListScreen(
+                        type = InstrumentType.STOCK,
                         onBack = { navController.popBackStack() },
-                        onOpenInstrument = { navController.navigate("instrument/$it") })
+                        onOpen = { navController.navigate(InvestmentRoutes.holding(it)) })
+                }
+                composable(InvestmentRoutes.FUNDS) {
+                    HoldingsListScreen(
+                        type = InstrumentType.MUTUAL_FUND,
+                        onBack = { navController.popBackStack() },
+                        onOpen = { navController.navigate(InvestmentRoutes.holding(it)) })
                 }
                 composable(
-                    InvestmentRoutes.TYPE,
-                    arguments = listOf(navArgument("type") { type = NavType.StringType })
+                    InvestmentRoutes.HOLDING,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
                 ) { entry ->
-                    InstrumentListScreen(
-                        type = InstrumentType.valueOf(entry.arguments!!.getString("type")!!),
+                    HoldingScreen(
+                        instrumentId = entry.arguments!!.getLong("id"),
                         onBack = { navController.popBackStack() },
-                        onOpenInstrument = { navController.navigate("instrument/$it") },
                     )
                 }
                 composable(InvestmentRoutes.PROVIDENT_FUNDS) {
@@ -505,25 +504,6 @@ fun HomeScreen() {
                 }
                 composable(InvestmentRoutes.SAVINGS) { SavingsScreen(onBack = { navController.popBackStack() }) }
                 composable(InvestmentRoutes.TARGETS) { TargetsScreen(onBack = { navController.popBackStack() }) }
-                composable(
-                    ROUTE_INSTRUMENT,
-                    arguments = listOf(navArgument("id") { type = NavType.LongType })
-                ) { entry ->
-                    val instrumentId = entry.arguments!!.getLong("id")
-                    InstrumentDetailScreen(
-                        instrumentId = instrumentId,
-                        onBack = { navController.popBackStack() },
-                        onEditTransaction = { navController.navigate(editorRoute(id = it)) },
-                        onAddTransaction = { kind ->
-                            navController.navigate(
-                                editorRoute(
-                                    kind = kind,
-                                    instrumentId = instrumentId
-                                )
-                            )
-                        },
-                    )
-                }
                 composable(Destination.STATISTICS.route) { StatisticsScreen() }
                 composable(Destination.SETTINGS.route) { SettingsScreen() }
                 composable(Destination.HELP.route) { HelpScreen() }
@@ -541,14 +521,11 @@ fun HomeScreen() {
                     val kind = entry.arguments?.getString("kind")?.takeIf { it.isNotEmpty() }
                         ?.let { TransactionKind.valueOf(it) }
                     val account = entry.arguments?.getLong("account")?.takeIf { it > 0 }
-                    val instrument = entry.arguments?.getLong("instrument")?.takeIf { it > 0 }
                     TransactionEditorScreen(
                         id,
                         kind,
                         account,
-                        onDone = { navController.popBackStack() },
-                        initialInstrumentId = instrument
-                    )
+                        onDone = { navController.popBackStack() })
                 }
             }
             }

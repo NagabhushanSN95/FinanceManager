@@ -4,7 +4,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 
 /** The groups the investment screens are organised in: one tile on the hub, one entry in the drawer each. */
-enum class InvestmentGroup { FIXED_DEPOSITS, PROVIDENT_FUNDS, INSURANCE, STOCKS_AND_FUNDS, OTHERS }
+enum class InvestmentGroup { FIXED_DEPOSITS, PROVIDENT_FUNDS, INSURANCE, STOCKS, MUTUAL_FUNDS, OTHERS }
 
 /**
  * The order investments are listed in everywhere (hub tiles, drawer, Manage › Instruments, pickers) follows the
@@ -31,7 +31,8 @@ object InvestmentOrder {
         InvestmentGroup.FIXED_DEPOSITS,
         InvestmentGroup.PROVIDENT_FUNDS,
         InvestmentGroup.INSURANCE,
-        InvestmentGroup.STOCKS_AND_FUNDS,
+        InvestmentGroup.STOCKS,
+        InvestmentGroup.MUTUAL_FUNDS,
         InvestmentGroup.OTHERS,
     )
 
@@ -62,9 +63,10 @@ object InvestmentOrder {
                     InvestmentCategories.LIFE_INSURANCE
                 )
 
-                InvestmentGroup.STOCKS_AND_FUNDS -> minOf(
-                    rank(categoryNames, InvestmentCategories.STOCKS),
-                    rank(categoryNames, InvestmentCategories.MUTUAL_FUNDS)
+                InvestmentGroup.STOCKS -> rank(categoryNames, InvestmentCategories.STOCKS)
+                InvestmentGroup.MUTUAL_FUNDS -> rank(
+                    categoryNames,
+                    InvestmentCategories.MUTUAL_FUNDS
                 )
 
                 InvestmentGroup.OTHERS -> rank(categoryNames, InvestmentCategories.OTHERS)

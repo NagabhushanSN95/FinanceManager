@@ -28,7 +28,8 @@ data class AmfiScheme(
 
 /**
  * AMFI's daily NAV list (every scheme, one file). Funds are matched by ISIN, then by the scheme code kept in
- * [Instrument.symbol] (exchange AMFI), then by name when exactly one Direct-Growth plan has that name.
+ * [Instrument.symbol] (exchange AMFI), then by name when exactly one Direct-Growth plan has that name, or has every
+ * word of it (a renamed scheme keeps the old name in brackets).
  */
 class AmfiNav(private val http: HttpClient) {
     suspend fun fetchAll(): List<AmfiScheme> = parse(http.get(URL))
@@ -74,7 +75,16 @@ class AmfiNav(private val http: HttpClient) {
             val wanted = norm(instrument.name)
             val sameName = schemes.filter { norm(it.name) == wanted }
             val directGrowth = sameName.filter { it.isDirect && it.isGrowth }
-            return directGrowth.singleOrNull() ?: sameName.singleOrNull()
+            (directGrowth.singleOrNull() ?: sameName.singleOrNull())?.let { return it }
+            // A renamed scheme keeps its old name in brackets ("ICICI Prudential Value Fund (erstwhile Value
+            // Discovery Fund)"): every word of ours in its name, and exactly one Direct Growth plan, is a match.
+            val words = wanted.split(' ').filter { it.isNotEmpty() }.toSet()
+            if (words.size < 3) return null
+            val containing = schemes.filter { s ->
+                val theirs = norm(s.name).split(' ').toSet()
+                words.all { it in theirs }
+            }
+            return containing.filter { it.isDirect && it.isGrowth }.singleOrNull()
         }
 
         /** Schemes whose name contains every word of [query]; for the "Link AMFI scheme" picker. */

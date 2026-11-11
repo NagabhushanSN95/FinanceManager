@@ -72,6 +72,9 @@ interface TransactionDao {
     @Delete
     suspend fun deleteTemplate(template: Template)
 
+    @Query("DELETE FROM templates WHERE kind IN ('INVEST', 'REDEEM')")
+    suspend fun deleteInvestmentTemplates(): Int
+
     @Query("SELECT * FROM templates WHERE hidden = 0 ORDER BY particulars")
     suspend fun getVisibleTemplates(): List<Template>
 

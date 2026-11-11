@@ -1,17 +1,12 @@
 package com.nagabhushansn95.financetracker.ui.transaction
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -236,53 +231,3 @@ fun typeTitle(type: InstrumentType): String = when (type) {
     InstrumentType.OTHER -> "Others"
 }
 
-/**
- * Minimal new-instrument sheet: name, type, optional symbol. Fixed deposits and insurance policies are not offered:
- * they need their terms, so they are opened from their own screens under Investments.
- */
-@Composable
-fun NewInstrumentSheet(
-    onCreate: (name: String, type: InstrumentType, symbol: String?) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var symbol by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(InstrumentType.STOCK) }
-    FormSheet(title = "New instrument", onDismiss = onDismiss) {
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.DEFAULT_TYPES.filter { it in com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.CREATABLE_HERE }
-                    .forEach { t ->
-                    FilterChip(
-                        selected = type == t,
-                        onClick = { type = t },
-                        label = { Text(typeTitle(t)) })
-                }
-            }
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            if (type == InstrumentType.STOCK || type == InstrumentType.MUTUAL_FUND) {
-                OutlinedTextField(
-                    value = symbol, onValueChange = { symbol = it },
-                    label = { Text(if (type == InstrumentType.STOCK) "NSE symbol" else "Scheme code (optional)") },
-                    singleLine = true, modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            Text(
-                "ISIN, category and the rest can be filled in under Investments. Fixed deposits and insurance policies are opened from their own screens there.",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Button(
-                enabled = name.isNotBlank(),
-                onClick = { onCreate(name, type, symbol) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("Create") }
-    }
-}
