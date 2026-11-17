@@ -89,12 +89,13 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
         db.categoryDao().observeAll(),
         combine(
             db.instrumentDao().observeAll(),
-            db.instrumentDao().observeValidityPeriods()
-        ) { i, p -> i to p },
+            com.nagabhushansn95.financetracker.data.investments.Validity.observeAll(db),
+            db.instrumentDao().observeSecurities(),
+        ) { i, p, s -> Triple(i, p, s) },
         filter,
-    ) { transactions, accounts, categories, (instruments, periods), f ->
+    ) { transactions, accounts, categories, (instruments, periods, securities), f ->
         // All rows (deleted accounts and categories included) so old transactions still get names.
-        val lookups = LedgerLookups(accounts, categories, instruments, periods)
+        val lookups = LedgerLookups(accounts, categories, instruments, periods, securities)
         val range = f.range(earliest = transactions.lastOrNull()?.date)
         val rows = transactions.filter { f.matches(it, range) }.map { it.toRow(lookups) }
         TransactionsUiState(
@@ -114,7 +115,13 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
         kind = kind,
         particulars = particulars,
         description = lookups.describe(this),
-        amountText = MoneyFormat.amount(amount, currency),
+        amountText = MoneyFormat.amount(amount, lookups.currencyOf(this)) +
+                (toAmount?.let {
+                    " → " + MoneyFormat.amount(
+                        it,
+                        lookups.accounts[toAccountId]?.currency ?: "INR"
+                    )
+                } ?: ""),
         outflow = kind == TransactionKind.EXPENSE || kind == TransactionKind.INVEST,
         hidden = hidden,
         instrumentId = instrumentId,

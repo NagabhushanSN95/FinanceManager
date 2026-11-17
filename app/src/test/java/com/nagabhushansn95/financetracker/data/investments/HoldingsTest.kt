@@ -1,5 +1,7 @@
 package com.nagabhushansn95.financetracker.data.investments
 
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import org.junit.Assert.assertEquals
@@ -12,6 +14,15 @@ import java.time.LocalDateTime
 class HoldingsTest {
     private val now = LocalDateTime.of(2026, 11, 4, 9, 0)
     private var nextId = 1L
+    private fun event(date: String, kind: HoldingEventKind, units: Double) =
+        HoldingEvent(
+            id = nextId++,
+            instrumentId = 1,
+            date = LocalDate.parse(date),
+            kind = kind,
+            units = units
+        )
+
     private fun row(
         date: String,
         kind: TransactionKind,
@@ -30,7 +41,6 @@ class HoldingsTest {
             particulars = "x",
             quantity = qty,
             amount = amount,
-            currency = currency,
             fxRate = fx
         )
 
@@ -40,12 +50,6 @@ class HoldingsTest {
             1, listOf(
                 row("2025-01-10", TransactionKind.INVEST, 10000.0, qty = 100.0),   // 100 @ 100
                 row("2025-03-10", TransactionKind.INVEST, 6000.0, qty = 50.0),     // 50 @ 120
-                row(
-                    "2025-05-01",
-                    TransactionKind.INCOME,
-                    0.0,
-                    qty = 15.0
-                ),        // bonus: a lot of 15 at no cost
                 row("2025-06-01", TransactionKind.INCOME, 330.0),                  // dividend
                 row(
                     "2025-09-01",
@@ -54,7 +58,14 @@ class HoldingsTest {
                     qty = 65.0
                 ),     // sells 65 of the first lot @ 100
                 row("2025-09-02", TransactionKind.EXPENSE, 20.0),                  // DP charges
-            )
+            ),
+            events = listOf(
+                event(
+                    "2025-05-01",
+                    HoldingEventKind.BONUS,
+                    15.0
+                )
+            ),    // bonus: a lot of 15 at no cost
         )
         assertEquals(100.0, p.units, 1e-9)
         assertEquals(16000.0 - 6500.0, p.costHeld, 1e-6)
@@ -100,18 +111,13 @@ class HoldingsTest {
             1, listOf(
                 row("2025-01-01", TransactionKind.INVEST, 10000.0, qty = 100.0),
                 row(
-                    "2025-02-01",
-                    TransactionKind.INCOME,
-                    0.0,
-                    qty = 400.0
-                ).copy(particulars = "Stock split 1:5 - X"),
-                row(
                     "2025-03-01",
                     TransactionKind.REDEEM,
                     1500.0,
                     qty = 50.0
                 ),     // 50 of 500 units at 20 each
-            )
+            ),
+            events = listOf(event("2025-02-01", HoldingEventKind.SPLIT, 400.0)),
         )
         assertEquals(450.0, split.units, 1e-9)
         assertEquals(9000.0, split.costHeld, 1e-9)
@@ -121,18 +127,13 @@ class HoldingsTest {
             1, listOf(
                 row("2025-01-01", TransactionKind.INVEST, 10000.0, qty = 100.0),
                 row(
-                    "2025-02-01",
-                    TransactionKind.INCOME,
-                    0.0,
-                    qty = 100.0
-                ).copy(particulars = "Bonus Shares 1:1 - X"),
-                row(
                     "2025-03-01",
                     TransactionKind.REDEEM,
                     15000.0,
                     qty = 150.0
                 ),   // the 100 bought, then 50 free
-            )
+            ),
+            events = listOf(event("2025-02-01", HoldingEventKind.BONUS, 100.0)),
         )
         assertEquals(50.0, bonus.units, 1e-9)
         assertEquals(0.0, bonus.costHeld, 1e-9)
@@ -155,12 +156,6 @@ class HoldingsTest {
                 qty = 50.0
             ).copy(fromAccountId = 70),     // 50 @ 120, Amma's demat
             row(
-                "2025-03-01",
-                TransactionKind.INCOME,
-                0.0,
-                qty = 150.0
-            ),                                  // bonus 1:1, spread 100/50
-            row(
                 "2025-04-01",
                 TransactionKind.REDEEM,
                 7000.0,
@@ -173,12 +168,14 @@ class HoldingsTest {
                 qty = 100.0
             ).copy(toAccountId = 70),       // nothing left of hers: the oldest own lot
         )
-        val afterBonus = Holdings.position(1, rows.take(3))
+        val bonus =
+            listOf(event("2025-03-01", HoldingEventKind.BONUS, 150.0)) // bonus 1:1, spread 100/50
+        val afterBonus = Holdings.position(1, rows.take(2), events = bonus)
         assertEquals(mapOf<Long?, Double>(49L to 200.0, 70L to 100.0), afterBonus.unitsByAccount)
-        val afterHers = Holdings.position(1, rows.take(4))
+        val afterHers = Holdings.position(1, rows.take(3), events = bonus)
         assertEquals(7000.0 - 6000.0, afterHers.realised, 1e-9)
         assertEquals(mapOf<Long?, Double>(49L to 200.0), afterHers.unitsByAccount)
-        val p = Holdings.position(1, rows)
+        val p = Holdings.position(1, rows, events = bonus)
         assertEquals(1000.0 + 7000.0 - 10000.0, p.realised, 1e-9)
         assertEquals(mapOf<Long?, Double>(49L to 100.0), p.unitsByAccount)
         assertEquals(0.0, p.costHeld, 1e-9)
@@ -187,11 +184,12 @@ class HoldingsTest {
             7000.0 - 10000.0,
             Holdings.realisedBySelling(
                 1,
-                rows.take(4),
+                rows.take(3),
                 100.0,
                 7000.0,
                 LocalDate.of(2025, 5, 1),
-                70
+                70,
+                events = bonus,
             ),
             1e-9
         )
@@ -231,7 +229,8 @@ class HoldingsTest {
     }
 
     @Test
-    fun foreignCurrencyRowsUseTheRate() {
+    fun foreignCurrencyRowsStayInTheirOwnCurrency() {
+        // A US holding is kept in dollars; the summary brings its value to rupees at the latest rate.
         val us = Holdings.position(
             1,
             listOf(
@@ -245,8 +244,8 @@ class HoldingsTest {
                 )
             )
         )
-        assertEquals(8500.0, us.costHeld, 1e-9)
-        assertEquals(4250.0, us.averageCost!!, 1e-9)
+        assertEquals(100.0, us.costHeld, 1e-9)
+        assertEquals(50.0, us.averageCost!!, 1e-9)
     }
 
     @Test

@@ -3,13 +3,17 @@ package com.nagabhushansn95.financetracker.data.repository
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.Converters
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
+import com.nagabhushansn95.financetracker.data.db.entity.PendingDividend
+import com.nagabhushansn95.financetracker.data.db.entity.PriceSource
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
-import com.nagabhushansn95.financetracker.data.db.entity.ValuationSource
 import com.nagabhushansn95.financetracker.data.investments.HoldingEntries
 import com.nagabhushansn95.financetracker.data.investments.HoldingEntryKind
 import com.nagabhushansn95.financetracker.data.investments.HoldingView
@@ -36,37 +40,75 @@ class HoldingsRepository(private val db: AppDatabase) {
         owner: String,
         notes: String?,
         now: LocalDateTime = LocalDateTime.now(),
+        shortName: String? = null,
+        series: String? = null,
     ): Long {
         require(type == InstrumentType.STOCK || type == InstrumentType.MUTUAL_FUND) { "Not a stock or fund" }
         require(name.isNotBlank()) { "A name is needed" }
         val code = symbol?.trim()?.ifBlank { null }
         val defaultCategory =
             db.instrumentDao().getCategoryByName(InvestmentCategories.defaultCategoryName(type))?.id
-        return edit.addInstrument(
-            Instrument(
-                name = name.trim(),
-                instrumentType = type,
-                symbol = code,
-                exchange = exchange?.trim()?.uppercase()?.ifBlank { null }
-                    ?: if (type == InstrumentType.STOCK) "NSE" else if (code != null) AmfiNav.EXCHANGE else null,
-                isin = isin?.trim()?.uppercase()?.ifBlank { null },
-                currency = currency.trim().uppercase().ifBlank { "INR" },
-                categoryId = categoryId ?: defaultCategory,
-                owner = owner.trim().ifBlank { Instrument.OWNER_SELF },
-                displayOrder = 0,
-                notes = notes?.trim()?.ifBlank { null },
-                createdTime = now,
-                modifiedTime = now,
-            ), now
-        )
+        return db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                val id = edit.addInstrument(
+                    Instrument(
+                        name = name.trim(),
+                        instrumentType = type,
+                        categoryId = categoryId ?: defaultCategory,
+                        owner = owner.trim().ifBlank { Instrument.OWNER_SELF },
+                        notes = notes?.trim()?.ifBlank { null },
+                        createdTime = now,
+                        modifiedTime = now,
+                    ), now
+                )
+                db.instrumentDao().upsertSecurity(
+                    Security(
+                        instrumentId = id,
+                        shortName = shortName?.trim()?.ifBlank { null },
+                        symbol = code,
+                        exchange = exchange?.trim()?.uppercase()?.ifBlank { null }
+                            ?: if (type == InstrumentType.STOCK) "NSE" else if (code != null) AmfiNav.EXCHANGE else null,
+                        isin = isin?.trim()?.uppercase()?.ifBlank { null },
+                        series = series?.trim()?.uppercase()?.ifBlank { null },
+                        currency = currency.trim().uppercase().ifBlank { "INR" },
+                    )
+                )
+                id
+            }
+        }
     }
 
-    suspend fun update(instrument: Instrument, now: LocalDateTime = LocalDateTime.now()) {
-        require(instrument.name.isNotBlank()) { "A name is needed" }
-        edit.updateInstrument(instrument, now)
+    /** Saves the instrument and its listing together (the kind never changes). */
+    suspend fun update(listed: Listed, now: LocalDateTime = LocalDateTime.now()) {
+        require(listed.name.isNotBlank()) { "A name is needed" }
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                edit.updateInstrument(listed.instrument, now)
+                db.instrumentDao().upsertSecurity(listed.security.copy(instrumentId = listed.id))
+            }
+        }
     }
 
-    /** Records an entry, or rewrites [existing] as the sheet now describes it; account balances follow. */
+    /** Records bonus shares or a split (units that arrived without cash), or rewrites [existing]. */
+    suspend fun saveEvent(
+        view: HoldingView,
+        kind: HoldingEntryKind,
+        date: LocalDate,
+        units: Double?,
+        ratio: String?,
+        existing: HoldingEvent? = null,
+    ): Long {
+        HoldingEntries.problem(view, kind, units, 0.0, null, null)
+            ?.let { throw IllegalArgumentException(it) }
+        val event = HoldingEntries.toEvent(view, kind, date, units!!, ratio, existing)
+        return if (existing == null) db.holdingEventDao().insert(event) else {
+            db.holdingEventDao().update(event); event.id
+        }
+    }
+
+    suspend fun deleteEvent(id: Long) = db.holdingEventDao().delete(id)
+
+    /** Records a cash entry, or rewrites [existing] as the sheet now describes it; account balances follow. */
     suspend fun saveEntry(
         view: HoldingView,
         kind: HoldingEntryKind,
@@ -79,6 +121,7 @@ class HoldingsRepository(private val db: AppDatabase) {
         exDate: LocalDate? = null,
         existing: TransactionEntity? = null,
         now: LocalDateTime = LocalDateTime.now(),
+        brokerRef: String? = null,
     ): Long {
         HoldingEntries.problem(view, kind, units, amount, accountId, existing)
             ?.let { throw IllegalArgumentException(it) }
@@ -107,7 +150,8 @@ class HoldingsRepository(private val db: AppDatabase) {
             exDate,
             categoryId,
             existing,
-            now
+            now,
+            brokerRef,
         )
         return if (existing == null) transactions.add(row, now = now)
         else {
@@ -117,6 +161,44 @@ class HoldingsRepository(private val db: AppDatabase) {
 
     suspend fun deleteEntry(id: Long, now: LocalDateTime = LocalDateTime.now()) =
         transactions.delete(id, now)
+
+    /**
+     * The bank credited a dividend the statement announced: records it as the stock's dividend entry with the
+     * statement's reference (so a re-import knows it) and takes it off the pending list.
+     */
+    suspend fun recordPendingDividend(
+        pending: PendingDividend,
+        view: HoldingView,
+        date: LocalDate,
+        /** The gross figures as the sheet left them (the statement's unless corrected); null keeps the statement's. */
+        units: Double?,
+        rate: Double?,
+        amount: Double,
+        accountId: Long?,
+        particulars: String,
+        now: LocalDateTime = LocalDateTime.now(),
+    ): Long {
+        require(view.instrument.id == pending.instrumentId) { "Not this holding's dividend" }
+        val id = saveEntry(
+            view,
+            HoldingEntryKind.DIVIDEND,
+            date,
+            units ?: pending.quantity,
+            rate ?: pending.perShare,
+            amount,
+            accountId,
+            particulars,
+            pending.exDate,
+            null,
+            now,
+            pending.brokerRef,
+        )
+        db.pendingDividendDao().delete(pending.id)
+        return id
+    }
+
+    /** Drops a pending dividend without recording it (recorded by hand already, or never due). */
+    suspend fun dismissPendingDividend(id: Long) = db.pendingDividendDao().delete(id)
 
     /** Removes the holding with every entry on it (balances put back) and its valuations, in one write. */
     suspend fun delete(instrumentId: Long, now: LocalDateTime = LocalDateTime.now()) =
@@ -133,7 +215,7 @@ class HoldingsRepository(private val db: AppDatabase) {
     suspend fun mergeInto(fromId: Long, intoId: Long, now: LocalDateTime = LocalDateTime.now()) =
         edit.mergeInstruments(fromId, intoId, now)
 
-    /** A price typed by hand, as today's valuation. */
+    /** A price typed by hand, as the security's last price. */
     suspend fun setManualPrice(
         instrumentId: Long,
         unitPrice: Double,
@@ -141,14 +223,13 @@ class HoldingsRepository(private val db: AppDatabase) {
         now: LocalDateTime = LocalDateTime.now()
     ) {
         require(unitPrice >= 0) { "The price cannot be negative" }
-        db.instrumentDao().insertValuation(
-            InstrumentValuation(
-                instrumentId = instrumentId,
-                date = date,
-                unitPrice = unitPrice,
-                source = ValuationSource.MANUAL,
-                fetchedAt = now
-            )
+        val c = Converters()
+        db.instrumentDao().setPrice(
+            instrumentId,
+            unitPrice,
+            c.localDateToString(date)!!,
+            PriceSource.MANUAL,
+            c.localDateTimeToString(now)!!
         )
     }
 
@@ -158,22 +239,21 @@ class HoldingsRepository(private val db: AppDatabase) {
         scheme: AmfiScheme,
         now: LocalDateTime = LocalDateTime.now()
     ) {
-        val instrument = db.instrumentDao().getById(instrumentId) ?: return
-        edit.updateInstrument(
-            instrument.copy(
+        val security = db.instrumentDao().getSecurity(instrumentId) ?: return
+        db.instrumentDao().upsertSecurity(
+            security.copy(
                 symbol = scheme.code,
                 exchange = AmfiNav.EXCHANGE,
-                isin = scheme.isinGrowth ?: scheme.isinReinvestment ?: instrument.isin,
-            ), now
-        )
-        db.instrumentDao().insertValuation(
-            InstrumentValuation(
-                instrumentId = instrumentId,
-                date = scheme.date,
-                unitPrice = scheme.nav,
-                source = ValuationSource.AMFI,
-                fetchedAt = now
+                isin = scheme.isinGrowth ?: scheme.isinReinvestment ?: security.isin,
             )
+        )
+        val c = Converters()
+        db.instrumentDao().setPrice(
+            instrumentId,
+            scheme.nav,
+            c.localDateToString(scheme.date)!!,
+            PriceSource.AMFI,
+            c.localDateTimeToString(now)!!
         )
     }
 

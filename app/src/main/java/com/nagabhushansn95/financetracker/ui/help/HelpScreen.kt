@@ -17,22 +17,24 @@ private val SECTIONS = listOf(
     "Five kinds of transaction" to """
         Income adds to an account; Expense takes from one and needs a category; Transfer moves money between two accounts.
         Invest pays from an account into an instrument (stock, fund, deposit, policy); Redeem brings money back from one.
-        The + button on Home or Transactions opens the editor for the cash kinds; press and hold an account on Home to start with it chosen.
+        The + button on Home or Transactions opens the editor for the three cash kinds; press and hold an account on Home to start with it chosen.
         Invest and Redeem are recorded on the instrument's own screen under Investments (the + on a stock, a fund, a deposit, a policy, a provident fund, a loan or an account under Others),
         and any row on an instrument in the ledger opens that screen when pressed and held. The + on a stock or fund offers Buy, Sell, Dividend, Bonus shares, Stock split and Charges.
     """,
     "Accounts and instruments" to """
-        Accounts hold cash: wallets, banks, credit cards (negative balance = outstanding), demat and provident funds.
-        Instruments are what you invest in. They never hold cash themselves; the Invest and Redeem rows carry the amounts and units.
-        Both are managed under Manage, where lists can be reordered by their drag handle.
+        Accounts hold cash: wallets, banks, credit cards (negative balance = outstanding), demat and provident funds. They are added and edited under Manage › Accounts.
+        Instruments are what you invest in; they never hold cash themselves. Each kind lives on its own screen under Investments:
+        the + there adds one (a deposit, a policy, a stock, a fund, a loan), the pencil on its screen edits it, and its screen is where it is deleted.
+        Provident funds are accounts, so they come from Manage › Accounts and show under Investments once added.
     """,
     "Provident funds" to """
         Record employee and employer contributions as Income into EPF with the contributor chip; PPF deposits as a Transfer from your bank;
         interest as Income with contributor "Interest". None of these count as income in Statistics; contributions count as savings, interest as growth.
     """,
     "Editing and deleting" to """
-        A single tap on a list row does nothing, so stray touches are harmless. Press and hold a transaction, account, category,
-        instrument or template to edit or delete it. Deleting an account or category hides it; its transactions stay and it can be restored.
+        A single tap on a list row does nothing, so stray touches are harmless. Press and hold a transaction, account, category
+        or template to edit or delete it; press and hold an entry on an instrument's screen to do the same there. Deleting an account
+        or category hides it; its transactions stay and it can be restored. Deleting an instrument from its screen removes it with its entries.
     """,
     "Statistics" to """
         Expenses, income, savings and withdrawals per month or year, straight from the ledger, plus a breakdown by category.

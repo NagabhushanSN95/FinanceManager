@@ -45,7 +45,7 @@ class AppPreferences(context: Context) {
     fun setSummarySectionCollapsed(section: String, collapsed: Boolean) =
         prefs.edit().putBoolean(KEY_SUMMARY_COLLAPSED_PREFIX + section, collapsed).apply()
 
-    /** SYSTEM, LIGHT or DARK. */
+    /** SYSTEM, LIGHT, DARK or CLASSIC (the 4.x look: white screens, dark bars, Holo blue). */
     var themeMode: String
         get() = prefs.getString(KEY_THEME, THEME_SYSTEM) ?: THEME_SYSTEM
         set(value) = prefs.edit().putString(KEY_THEME, value).apply()
@@ -164,10 +164,11 @@ class AppPreferences(context: Context) {
         set(value) = prefs.edit().putString(KEY_LAST_PRICE_SUMMARY, value).apply()
 
     /**
-     * Every preference as a type-tagged string ("b:true", "s:…", "l:…", "i:…"), for the settings table of a backup.
-     * [setupComplete] is left out: a restored phone is set up by definition.
+     * The preferences worth carrying to another phone, as type-tagged strings ("b:true", "s:…", "l:…", "i:…"), for
+     * the settings table of a backup: the alert run-ups, the theme, the price and backup options. Device and session
+     * state (paths, URIs, last-run summaries, list filters, folded sections) stays on the phone.
      */
-    fun export(): Map<String, String> = prefs.all.filterKeys { it != KEY_SETUP_COMPLETE }
+    fun export(): Map<String, String> = prefs.all.filterKeys { it in EXPORTED_KEYS }
         .mapNotNull { (key, value) ->
             when (value) {
                 is Boolean -> key to "b:$value"
@@ -266,8 +267,22 @@ class AppPreferences(context: Context) {
         const val THEME_SYSTEM = "SYSTEM"
         const val THEME_LIGHT = "LIGHT"
         const val THEME_DARK = "DARK"
+        const val THEME_CLASSIC = "CLASSIC"
         const val FILE_NAME = "finance_tracker_prefs"
         private const val KEY_SETUP_COMPLETE = "setup_complete"
+
+        /** The keys a backup carries; everything else is this phone's own business. */
+        val EXPORTED_KEYS = setOf(
+            KEY_ALERT_MONTHLY,
+            KEY_ALERT_WITHIN_YEAR,
+            KEY_ALERT_BEYOND_YEAR,
+            KEY_THEME,
+            KEY_AUTO_PRICES,
+            KEY_PRICE_INTERVAL,
+            KEY_DAILY_BACKUP,
+            KEY_DRIVE_UPLOAD,
+            KEY_DRIVE_FOLDER,
+        )
         private const val KEY_LAST_IMPORT_SUMMARY = "last_import_summary"
         private const val KEY_LAST_BACKUP = "last_backup"
         private const val KEY_SUMMARY_COLLAPSED_PREFIX = "summary_collapsed_"

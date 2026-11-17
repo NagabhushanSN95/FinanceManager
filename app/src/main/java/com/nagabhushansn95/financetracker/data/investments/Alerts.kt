@@ -82,7 +82,7 @@ object Alerts {
                 val months = (p.policy?.premiumFrequencyMonths ?: 12).toLong()
                 if (days <= thresholds.daysFor(months)) alerts += Alert(
                     AlertKind.PREMIUM_DUE,
-                    InstrumentType.INSURANCE,
+                    p.instrument.instrumentType,
                     p.instrument.id,
                     p.title,
                     "Premium ${phrase(days)}",
@@ -137,7 +137,7 @@ object Alerts {
                 }
                 alerts += Alert(
                     alertKind,
-                    InstrumentType.INSURANCE,
+                    p.instrument.instrumentType,
                     p.instrument.id,
                     listOfNotNull(p.title, p.reference).joinToString(" · "),
                     detail,

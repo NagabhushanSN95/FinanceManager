@@ -11,6 +11,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityKind
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
+import com.nagabhushansn95.financetracker.data.db.entity.Vehicle
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -31,15 +32,18 @@ enum class InsuranceEntryKind(val title: String, val outflow: Boolean = false) {
     val bankLabel: String get() = if (outflow) "Paid to" else "Paid from"
 }
 
-/** A policy (or, for MOTOR, a vehicle) as the screens and the alerts see it. */
+/** A policy, or a vehicle (an instrument of kind VEHICLE, seen as type MOTOR), as the screens and the alerts see it. */
 data class PolicyView(
     val instrument: Instrument,
     val policy: InsurancePolicy?,
     val rows: List<TransactionEntity>,
     val periods: List<ValidityPeriod>,
     val asOf: LocalDate,
+    val vehicle: Vehicle? = null,
 ) {
-    val type: InsuranceType get() = policy?.insuranceType ?: InsuranceType.LIFE
+    val isVehicle: Boolean get() = instrument.instrumentType == InstrumentType.VEHICLE
+    val type: InsuranceType
+        get() = if (isVehicle) InsuranceType.MOTOR else policy?.insuranceType ?: InsuranceType.LIFE
     private val periodsByTransaction =
         periods.filter { it.transactionId != null }.groupBy { it.transactionId!! }
 
@@ -62,12 +66,12 @@ data class PolicyView(
         rows.filter { entryKindOf(it) == kind }
 
     val premiums: List<TransactionEntity> get() = rowsOf(InsuranceEntryKind.PREMIUM)
-    val paid: Double get() = premiums.sumOf { it.amountInr }
-    val received: Double get() = rowsOf(InsuranceEntryKind.PAYOUT).sumOf { it.amountInr }
+    val paid: Double get() = premiums.sumOf { it.amount }
+    val received: Double get() = rowsOf(InsuranceEntryKind.PAYOUT).sumOf { it.amount }
 
     /** Services and emission tests on a vehicle. */
     val upkeep: Double
-        get() = (rowsOf(InsuranceEntryKind.SERVICE) + rowsOf(InsuranceEntryKind.EMISSION_TEST)).sumOf { it.amountInr }
+        get() = (rowsOf(InsuranceEntryKind.SERVICE) + rowsOf(InsuranceEntryKind.EMISSION_TEST)).sumOf { it.amount }
     val lastPremium: LocalDate? get() = premiums.maxOfOrNull { it.date }
 
     /** Validity bought by [t], by kind. */
@@ -111,7 +115,7 @@ data class PolicyView(
             .ifEmpty { instrument.name }
 
     /** The vehicle's registration number, or the policy number. */
-    val reference: String? get() = if (type == InsuranceType.MOTOR) policy?.vehicleNumber else policyNumber
+    val reference: String? get() = if (isVehicle) vehicle?.registrationNo else policyNumber
 }
 
 /** What the entry sheet hands back: the row and the validity it buys. */
@@ -284,7 +288,7 @@ object Insurance {
         now: LocalDateTime = LocalDateTime.now(),
     ): TransactionEntity {
         val instrument = view.instrument
-        require(instrument.instrumentType == InstrumentType.INSURANCE) { "${instrument.name} is not a policy" }
+        require(instrument.instrumentType == InstrumentType.INSURANCE || instrument.instrumentType == InstrumentType.VEHICLE) { "${instrument.name} is not a policy" }
         require(entry.kind in kindsFor(view.type)) { "${entry.kind.title} is not an entry of a ${view.type.title.lowercase()} policy" }
         require(entry.amount >= 0) { "Amount cannot be negative" }
         require(entry.bankAccountId != null) { "Choose the bank account" }
@@ -315,8 +319,6 @@ object Insurance {
             quantity = null,
             rate = null,
             amount = entry.amount,
-            currency = instrument.currency,
-            fxRate = null,
             contributor = null,
         )
     }
@@ -341,24 +343,28 @@ object Insurance {
             )
         }
 
-    /** Builds the views for every INSURANCE instrument. */
+    /** Builds the views for every INSURANCE and VEHICLE instrument. */
     fun build(
         instruments: List<Instrument>,
         policies: List<InsurancePolicy>,
         ledgerWithInstrument: List<TransactionEntity>,
         periods: List<ValidityPeriod>,
         asOf: LocalDate,
+        vehicles: List<Vehicle> = emptyList(),
     ): List<PolicyView> {
         val byId = policies.associateBy { it.instrumentId }
+        val vehiclesById = vehicles.associateBy { it.instrumentId }
         val rows = ledgerWithInstrument.groupBy { it.instrumentId }
         val periodsById = periods.groupBy { it.instrumentId }
-        return instruments.filter { it.instrumentType == InstrumentType.INSURANCE }.map {
+        return instruments.filter { it.instrumentType == InstrumentType.INSURANCE || it.instrumentType == InstrumentType.VEHICLE }
+            .map {
             PolicyView(
                 it,
                 byId[it.id],
                 rows[it.id].orEmpty().sortedWith(compareBy({ r -> r.date }, { r -> r.id })),
                 periodsById[it.id].orEmpty(),
-                asOf
+                asOf,
+                vehiclesById[it.id],
             )
         }
     }
@@ -392,13 +398,14 @@ object Insurance {
         val vehicleId = ensure(VEHICLE_CATEGORY)
         val others =
             categories.filter { it.name.equals("Others", ignoreCase = true) }.map { it.id }.toSet()
-        val periods = db.instrumentDao().getAllValidityPeriods()
+        val periods = Validity.getAll(db)
         val views = build(
-            db.instrumentDao().getByType(InstrumentType.INSURANCE),
+            db.instrumentDao().getAll(),
             db.instrumentDao().getAllInsurancePolicies(),
             db.transactionDao().getAllWithInstrument(),
             periods,
-            now.toLocalDate()
+            now.toLocalDate(),
+            db.vehicleDao().getAllVehicles(),
         )
         var filed = 0
         for (view in views) for (t in view.rows) {

@@ -1,5 +1,7 @@
 package com.nagabhushansn95.financetracker.data.investments
 
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import java.time.LocalDate
@@ -11,7 +13,7 @@ import kotlin.math.pow
 data class CashFlow(val date: LocalDate, val amount: Double)
 
 /**
- * What the ledger says about one instrument, in INR.
+ * What the ledger says about one instrument, in the instrument's currency.
  *
  * Unit-based instruments (rows carry quantities) match every sale against the oldest units still held, first in
  * first out, as Zerodha's P&L and the income-tax rules do: a sale realises `amount − cost of those lots`. Lots are
@@ -19,7 +21,8 @@ data class CashFlow(val date: LocalDate, val amount: Double)
  * account its proceeds land in before any other, since capital gains are taxed per account holder; a holding bought
  * through one account and sold through another still matches. Bonus units form a lot of their own at zero cost,
  * spread over the accounts in proportion to what each holds; a split spreads the existing lots over the new unit
- * count. [averageCost] is the average of the lots still held.
+ * count; both come from the holding's events, never from the ledger. [averageCost] is the average of the lots still
+ * held.
  * Amount-only instruments (deposits, policies, SIPs recorded without units) treat redemptions as returning cost
  * first; anything beyond the cost ever put in is realised profit.
  */
@@ -71,25 +74,37 @@ object Holdings {
      * Positions for every instrument that appears in [transactions] (which may be the whole ledger). [unitBased] says
      * which instruments are tracked in units (stocks, funds); every other instrument uses the amount-only method even
      * when its rows carry a quantity, because deposits and policies imported from 4.x all carry a quantity of 1.
+     * [events] carry the bonus and split units.
      */
     fun positions(
         transactions: List<TransactionEntity>,
-        unitBased: (Long) -> Boolean = { true }
-    ): Map<Long, Position> =
-        transactions.filter { it.instrumentId != null }
+        unitBased: (Long) -> Boolean = { true },
+        events: List<HoldingEvent> = emptyList(),
+    ): Map<Long, Position> {
+        val eventsById = events.groupBy { it.instrumentId }
+        return transactions.filter { it.instrumentId != null }
             .groupBy { it.instrumentId!! }
             .mapValues { (id, rows) ->
                 position(
                     id,
                     rows.sortedWith(compareBy({ it.date }, { it.id })),
-                    unitBased(id)
+                    unitBased(id),
+                    eventsById[id].orEmpty(),
                 )
             }
+    }
+
+    /** One step of a holding's history: a ledger row, or an event that added units. */
+    private sealed class Step(val date: LocalDate) {
+        class Cash(val row: TransactionEntity) : Step(row.date)
+        class Units(val event: HoldingEvent) : Step(event.date)
+    }
 
     fun position(
         instrumentId: Long,
         rows: List<TransactionEntity>,
-        unitBased: Boolean = true
+        unitBased: Boolean = true,
+        events: List<HoldingEvent> = emptyList(),
     ): Position {
         var units = 0.0
         var cost = 0.0
@@ -102,9 +117,34 @@ object Holdings {
             unitBased && rows.any { it.quantity != null && (it.kind == TransactionKind.INVEST || it.kind == TransactionKind.REDEEM) }
         // Open lots, oldest first; a sale consumes them in that order (FIFO).
         val lots = ArrayDeque<Lot>()
+        // Rows and unit events in date order; on one day the rows come first, then the events in their order.
+        val steps = (rows.map { Step.Cash(it) } + events.filter { it.kind.addsUnits }
+            .sortedWith(compareBy({ it.date }, { it.id })).map { Step.Units(it) })
+            .sortedBy { it.date }
 
-        for (t in rows) {
-            val amount = t.amountInr
+        for (step in steps) {
+            if (step is Step.Units) {
+                val e = step.event
+                val q = e.units ?: 0.0
+                if (!hasUnits || q <= Position.UNIT_EPSILON) continue
+                if (e.kind == HoldingEventKind.SPLIT && units > Position.UNIT_EPSILON) {
+                    // A split: the same cost now covers more units in every open lot.
+                    val factor = (units + q) / units
+                    lots.forEach { it.units *= factor }
+                } else {
+                    // Bonus units land in each account in proportion to what it holds.
+                    val held = lots.sumOf { it.units }
+                    val byAccount =
+                        lots.groupBy { it.account }.mapValues { (_, l) -> l.sumOf { it.units } }
+                    if (held > Position.UNIT_EPSILON) byAccount.forEach { (account, u) ->
+                        lots.addLast(Lot(q * u / held, 0.0, account))
+                    } else lots.addLast(Lot(q, 0.0, null))
+                }
+                units += q
+                continue
+            }
+            val t = (step as Step.Cash).row
+            val amount = t.amount
             when (t.kind) {
                 TransactionKind.INVEST -> {
                     invested += amount
@@ -149,26 +189,9 @@ object Holdings {
                 }
 
                 TransactionKind.INCOME -> {
-                    // Bonus units carry a quantity and no cash; dividends and interest carry cash.
-                    if (hasUnits && t.quantity != null && amount == 0.0) {
-                        if (isSplit(t.particulars) && units > Position.UNIT_EPSILON) {
-                            // A split: the same cost now covers more units in every open lot.
-                            val factor = (units + t.quantity) / units
-                            lots.forEach { it.units *= factor }
-                        } else {
-                            // Bonus units land in each account in proportion to what it holds.
-                            val held = lots.sumOf { it.units }
-                            val byAccount = lots.groupBy { it.account }
-                                .mapValues { (_, l) -> l.sumOf { it.units } }
-                            if (held > Position.UNIT_EPSILON) byAccount.forEach { (account, u) ->
-                                lots.addLast(Lot(t.quantity * u / held, 0.0, account))
-                            } else lots.addLast(Lot(t.quantity, 0.0, null))
-                        }
-                        units += t.quantity
-                    } else {
-                        income += amount
-                        if (amount != 0.0) flows += CashFlow(t.date, amount)
-                    }
+                    // Dividends and interest; bonus and split units are events, not rows.
+                    income += amount
+                    if (amount != 0.0) flows += CashFlow(t.date, amount)
                 }
 
                 TransactionKind.EXPENSE -> {
@@ -212,6 +235,7 @@ object Holdings {
         date: LocalDate,
         toAccountId: Long?,
         excludingId: Long? = null,
+        events: List<HoldingEvent> = emptyList(),
     ): Double {
         val base = rows.filter { it.id != excludingId }
         val sale = TransactionEntity(
@@ -227,7 +251,11 @@ object Holdings {
             amount = amount,
         )
         val ordered = (base + sale).sortedWith(compareBy({ it.date }, { it.id }))
-        return position(instrumentId, ordered).realised - position(instrumentId, base).realised
+        return position(instrumentId, ordered, events = events).realised - position(
+            instrumentId,
+            base,
+            events = events
+        ).realised
     }
 
     /**

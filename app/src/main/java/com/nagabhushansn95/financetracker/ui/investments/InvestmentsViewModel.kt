@@ -78,18 +78,7 @@ class InvestmentsViewModel(application: Application) : InvestmentSummaryViewMode
         viewModelScope.launch(Dispatchers.IO) {
             // The category tree and risk levels on first open; retired holdings after 90 idle days.
             InvestmentCategories.seedIfEmpty(db)
-            InvestmentCategories.renameLegacy(db)
             com.nagabhushansn95.financetracker.data.investments.SummaryGroups.seedIfEmpty(db)
-            // Invest and Redeem left the editor (every instrument records on its own screen): their templates go, once.
-            if (db.settingsDao().get("templates.investment_kinds_removed") == null) {
-                db.transactionDao().deleteInvestmentTemplates()
-                db.settingsDao().set(
-                    com.nagabhushansn95.financetracker.data.db.entity.Setting(
-                        "templates.investment_kinds_removed",
-                        "1"
-                    )
-                )
-            }
             ProvidentFunds.fileCategories(db)
             com.nagabhushansn95.financetracker.data.investments.Insurance.fileCategories(db)
             InstrumentMaintenance(db).retireIdleHoldings()

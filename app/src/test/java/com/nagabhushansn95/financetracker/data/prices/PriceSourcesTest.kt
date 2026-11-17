@@ -2,6 +2,8 @@ package com.nagabhushansn95.financetracker.data.prices
 
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -20,16 +22,18 @@ class PriceSourcesTest {
         isin: String? = null,
         exchange: String? = null
     ) =
-        Instrument(
-            name = name,
-            instrumentType = type,
-            symbol = symbol,
-            isin = isin,
-            exchange = exchange,
-            displayOrder = 1,
-            createdTime = now,
-            modifiedTime = now
+        Listed(
+            Instrument(name = name, instrumentType = type, createdTime = now, modifiedTime = now),
+            Security(symbol = symbol, isin = isin, exchange = exchange),
         )
+
+    private fun sec(
+        name: String,
+        type: InstrumentType = InstrumentType.MUTUAL_FUND,
+        symbol: String? = null,
+        isin: String? = null,
+        exchange: String? = null
+    ) = instrument(name, type, symbol, isin, exchange).security
 
     @Test
     fun yahooParsesTheChartMeta() {
@@ -67,14 +71,22 @@ class PriceSourcesTest {
             }
         })
         val embassy = instrument("Embassy", InstrumentType.STOCK, symbol = "EMBASSY")
-        assertEquals(listOf("EMBASSY.NS", "EMBASSY-RR.NS", "EMBASSY.BO"), yahoo.tickers(embassy))
+        assertEquals(
+            listOf("EMBASSY.NS", "EMBASSY-RR.NS", "EMBASSY.BO"),
+            yahoo.tickers(embassy.security)
+        )
+        // A stock known to trade in the RR series starts there.
+        assertEquals(
+            listOf("EMBASSY-RR.NS", "EMBASSY.NS", "EMBASSY.BO"),
+            yahoo.tickers(embassy.security.copy(series = "RR"))
+        )
         val stale = LocalDate.of(2026, 10, 4)
-        assertEquals(419.93, yahoo.quoteAny(yahoo.tickers(embassy), stale).price, 1e-9)
+        assertEquals(419.93, yahoo.quoteAny(yahoo.tickers(embassy.security), stale).price, 1e-9)
         assertEquals(
             106.86,
             yahoo.quoteAny(
                 yahoo.tickers(
-                    instrument(
+                    sec(
                         "Bagmane",
                         InstrumentType.STOCK,
                         symbol = "BAGMANE"
@@ -85,14 +97,14 @@ class PriceSourcesTest {
         )
         // Nothing fresh anywhere: the stale quote is better than none, and is reported as stale by its date.
         val old = yahoo.quoteAny(
-            yahoo.tickers(instrument("Old", InstrumentType.STOCK, symbol = "OLD")),
+            yahoo.tickers(sec("Old", InstrumentType.STOCK, symbol = "OLD")),
             stale
         )
         assertEquals(LocalDate.of(2024, 7, 24), old.date)
         val none = runCatching {
             yahoo.quoteAny(
                 yahoo.tickers(
-                    instrument(
+                    sec(
                         "Gone",
                         InstrumentType.STOCK,
                         symbol = "GONE"
@@ -104,7 +116,7 @@ class PriceSourcesTest {
         assertEquals(
             listOf("500325.BO"),
             yahoo.tickers(
-                instrument(
+                sec(
                     "x",
                     InstrumentType.STOCK,
                     symbol = "500325",
@@ -115,7 +127,7 @@ class PriceSourcesTest {
         assertEquals(
             listOf("AAPL"),
             yahoo.tickers(
-                instrument(
+                sec(
                     "x",
                     InstrumentType.STOCK,
                     symbol = "AAPL",
@@ -159,7 +171,7 @@ class PriceSourcesTest {
         assertEquals(
             "GOLDBEES.NS",
             yahoo.ticker(
-                instrument(
+                sec(
                     "x",
                     InstrumentType.STOCK,
                     symbol = "GOLDBEES",
@@ -169,16 +181,16 @@ class PriceSourcesTest {
         )
         assertEquals(
             "GOLDBEES.NS",
-            yahoo.ticker(instrument("x", InstrumentType.STOCK, symbol = "GOLDBEES"))
+            yahoo.ticker(sec("x", InstrumentType.STOCK, symbol = "GOLDBEES"))
         )
         assertEquals(
             "500325.BO",
-            yahoo.ticker(instrument("x", InstrumentType.STOCK, symbol = "500325", exchange = "BSE"))
+            yahoo.ticker(sec("x", InstrumentType.STOCK, symbol = "500325", exchange = "BSE"))
         )
         assertEquals(
             "AAPL",
             yahoo.ticker(
-                instrument(
+                sec(
                     "x",
                     InstrumentType.STOCK,
                     symbol = "AAPL",
@@ -189,7 +201,7 @@ class PriceSourcesTest {
         assertEquals(
             "BRK-B.X",
             yahoo.ticker(
-                instrument(
+                sec(
                     "x",
                     InstrumentType.STOCK,
                     symbol = "BRK-B.X",
@@ -197,7 +209,7 @@ class PriceSourcesTest {
                 )
             )
         )
-        assertNull(yahoo.ticker(instrument("x", InstrumentType.STOCK)))
+        assertNull(yahoo.ticker(sec("x", InstrumentType.STOCK)))
     }
 
     private val navAll =

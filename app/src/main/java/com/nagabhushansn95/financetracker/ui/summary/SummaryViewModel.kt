@@ -95,24 +95,25 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
             db.instrumentDao().observeAll(),
             db.instrumentDao().observeFixedDeposits(),
             db.transactionDao().observeWithInstrument(),
-            db.instrumentDao().observeValuations(),
-            db.instrumentDao().observeFdEvents(),
-        ) { instruments, terms, ledger, valuations, events ->
+            db.holdingEventDao().observeAll(),
+            db.vehicleDao().observeVehicles(),
+        ) { instruments, terms, ledger, events, vehicles ->
             val today = java.time.LocalDate.now()
-            Triple(
+            Quad(
                 instruments,
                 ledger,
-                FixedDeposits.build(instruments, terms, ledger, valuations, today, events)
+                FixedDeposits.build(instruments, terms, ledger, today, events),
+                vehicles,
             )
         },
         db.instrumentDao().observeInsurancePolicies(),
-        db.instrumentDao().observeValidityPeriods(),
+        com.nagabhushansn95.financetracker.data.investments.Validity.observeAll(db),
         prefs.alertThresholdsFlow,
-    ) { (instruments, ledger, deposits), policies, periods, thresholds ->
+    ) { (instruments, ledger, deposits, vehicles), policies, periods, thresholds ->
         val today = java.time.LocalDate.now()
         Alerts.build(
             deposits,
-            Insurance.build(instruments, policies, ledger, periods, today),
+            Insurance.build(instruments, policies, ledger, periods, today, vehicles),
             today,
             thresholds
         )
@@ -123,6 +124,8 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         prefs.setSummarySectionCollapsed(type.name, now)
         collapsed.value = collapsed.value + (type to now)
     }
+
+    private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 
     companion object {
         private const val INVESTMENTS_SECTION = "INVESTMENTS"

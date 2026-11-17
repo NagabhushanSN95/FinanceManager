@@ -8,26 +8,33 @@ import androidx.room.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.nagabhushansn95.financetracker.data.db.dao.AccountDao
 import com.nagabhushansn95.financetracker.data.db.dao.CategoryDao
+import com.nagabhushansn95.financetracker.data.db.dao.HoldingEventDao
 import com.nagabhushansn95.financetracker.data.db.dao.InstrumentDao
+import com.nagabhushansn95.financetracker.data.db.dao.PendingDividendDao
 import com.nagabhushansn95.financetracker.data.db.dao.SettingsDao
 import com.nagabhushansn95.financetracker.data.db.dao.StatisticsDao
+import com.nagabhushansn95.financetracker.data.db.dao.SummaryGroupDao
 import com.nagabhushansn95.financetracker.data.db.dao.TransactionDao
+import com.nagabhushansn95.financetracker.data.db.dao.VehicleDao
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
-import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
 import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
+import com.nagabhushansn95.financetracker.data.db.entity.HealthCover
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.PendingDividend
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.Setting
 import com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
-import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
+import com.nagabhushansn95.financetracker.data.db.entity.Vehicle
+import com.nagabhushansn95.financetracker.data.db.entity.VehicleRecord
 import kotlinx.coroutines.Dispatchers
 import java.io.File
 
@@ -38,19 +45,22 @@ import java.io.File
         RiskLevel::class,
         InvestmentCategory::class,
         Instrument::class,
+        Security::class,
         FixedDeposit::class,
         FdTemplate::class,
-        FdEvent::class,
         InsurancePolicy::class,
-        ValidityPeriod::class,
-        InstrumentValuation::class,
+        HealthCover::class,
+        Vehicle::class,
+        VehicleRecord::class,
+        HoldingEvent::class,
         FxRate::class,
         TransactionEntity::class,
         Template::class,
         Setting::class,
         SummaryGroup::class,
+        PendingDividend::class,
     ],
-    version = 9, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
+    version = 11, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -61,13 +71,16 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun statisticsDao(): StatisticsDao
     abstract fun settingsDao(): SettingsDao
-    abstract fun summaryGroupDao(): com.nagabhushansn95.financetracker.data.db.dao.SummaryGroupDao
+    abstract fun summaryGroupDao(): SummaryGroupDao
+    abstract fun pendingDividendDao(): PendingDividendDao
+    abstract fun holdingEventDao(): HoldingEventDao
+    abstract fun vehicleDao(): VehicleDao
 
     companion object {
         const val DATABASE_NAME = "finance_tracker.db"
 
         /** Same value as the @Database version; restore refuses files from a newer schema. */
-        const val SCHEMA_VERSION = 9
+        const val SCHEMA_VERSION = 11
 
         @Volatile
         private var instance: AppDatabase? = null
@@ -103,19 +116,13 @@ abstract class AppDatabase : RoomDatabase() {
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, name)
                 .configure().build()
 
-        /** An in-memory database with the production configuration, for tests. */
-        fun inMemory(context: Context): AppDatabase =
-            Room.inMemoryDatabaseBuilder(context.applicationContext, AppDatabase::class.java)
-                .configure().build()
-
         /**
          * Bundled SQLite instead of the framework's: the same engine on every Android version (VACUUM INTO, window
          * functions), and prepared statements are reused across rows. The framework compatibility path re-prepares
          * per row and measured ~8x slower on bulk inserts. With a driver configured, transactions must use
          * [androidx.room.useWriterConnection], not the legacy `withTransaction`.
          */
-        private fun RoomDatabase.Builder<AppDatabase>.configure(): RoomDatabase.Builder<AppDatabase> =
+        internal fun RoomDatabase.Builder<AppDatabase>.configure(): RoomDatabase.Builder<AppDatabase> =
             setDriver(BundledSQLiteDriver()).setQueryCoroutineContext(Dispatchers.IO)
-                .addMigrations(*Migrations.ALL)
     }
 }

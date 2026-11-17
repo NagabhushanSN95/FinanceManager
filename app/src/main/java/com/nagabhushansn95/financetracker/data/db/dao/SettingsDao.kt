@@ -34,8 +34,11 @@ interface SettingsDao {
 /** The keys of the settings table. */
 object Settings {
     /** The corpus to keep for the goal (the sheet's "Amount needed for Goal"), in INR. */
-    const val GOAL_AMOUNT = "investments.goal_amount"
+    const val GOAL_AMOUNT = "data.goal_amount"
 
-    /** The app's preferences, mirrored into the database just before each backup so a restore brings them back. */
+    /**
+     * The preferences worth carrying across phones (alert run-ups, theme, price and backup options), mirrored into the
+     * database just before each backup so a restore brings them back. Device and session state never goes in.
+     */
     const val PREFS_PREFIX = "prefs."
 }

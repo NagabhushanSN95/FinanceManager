@@ -6,12 +6,13 @@ import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -21,7 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import java.time.LocalDate
 
-/** One instrument with its position, as the lists show it. */
+/** One instrument with its position, as the lists show it. [security] is set for stocks and funds. */
 data class HoldingRow(
     val instrument: Instrument,
     val position: Position,
@@ -30,6 +31,7 @@ data class HoldingRow(
     val priceDate: LocalDate?,
     val currentValue: Double,
     val xirr: Double?,
+    val security: Security? = null,
 ) {
     val isDeposit: Boolean get() = instrument.instrumentType == InstrumentType.FIXED_DEPOSIT
     val heldProfit get() = currentValue - position.costHeld
@@ -107,7 +109,10 @@ object InvestmentSummaryBuilder {
             db.instrumentDao().observeAll(),
             db.instrumentDao().observeCategories(),
             db.transactionDao().observeAll(),
-            db.instrumentDao().observeValuations()
+            combine(
+                db.instrumentDao().observeSecurities(),
+                db.holdingEventDao().observeAll()
+            ) { s, e -> s to e }
         ) { i, c, t, v -> Quad(i, c, t, v) }
         val more = combine(
             db.accountDao().observeAll(),
@@ -123,13 +128,13 @@ object InvestmentSummaryBuilder {
         return combine(
             data,
             more
-        ) { (instruments, categories, transactions, valuations), (accounts, riskLevels, goal, fdFxPolicies) ->
+        ) { (instruments, categories, transactions, securitiesAndEvents), (accounts, riskLevels, goal, fdFxPolicies) ->
             val (fixedDeposits, fxRates, policies, groups) = fdFxPolicies
             build(
                 instruments,
                 categories,
                 transactions.filter { it.instrumentId != null },
-                valuations,
+                securitiesAndEvents.first,
                 accounts,
                 transactions,
                 riskLevels,
@@ -139,6 +144,7 @@ object InvestmentSummaryBuilder {
                 latestFx(fxRates),
                 policies,
                 groups,
+                securitiesAndEvents.second,
             )
         }.flowOn(Dispatchers.Default)
     }
@@ -153,15 +159,15 @@ object InvestmentSummaryBuilder {
     /**
      * Rolls the ledger up into the Investment Summary. Family-owned instruments and instruments of type OTHER (money
      * parked elsewhere, loans: savings rather than investments) are excluded from the totals; the latter still appear
-     * in [InvestmentSummary.byType] for their own screen. Term, health and motor insurance is protection, not an
-     * investment: those instruments (and their premiums) are left out altogether. Provident funds come from the
-     * accounts: invested = contributions in minus transfers out, current = balance.
+     * in [InvestmentSummary.byType] for their own screen. Term, health and motor insurance (vehicles) is protection,
+     * not an investment: those instruments (and their premiums) are left out altogether. Provident funds come from
+     * the accounts: invested = contributions in minus transfers out, current = balance.
      */
     fun build(
         allInstruments: List<Instrument>,
         categories: List<InvestmentCategory>,
         ledgerWithInstrument: List<TransactionEntity>,
-        valuations: List<InstrumentValuation>,
+        securities: List<Security>,
         accounts: List<Account>,
         allTransactions: List<TransactionEntity>,
         riskLevels: List<RiskLevel> = emptyList(),
@@ -171,25 +177,27 @@ object InvestmentSummaryBuilder {
         fxToInr: Map<String, Double> = emptyMap(),
         insurancePolicies: List<InsurancePolicy> = emptyList(),
         summaryGroups: List<SummaryGroup> = emptyList(),
+        holdingEvents: List<HoldingEvent> = emptyList(),
     ): InvestmentSummary {
         val protection =
             insurancePolicies.filter { !it.insuranceType.investment }.map { it.instrumentId }
                 .toSet()
-        val instruments = allInstruments.filter { it.id !in protection }
+        val instruments =
+            allInstruments.filter { it.id !in protection && it.instrumentType != InstrumentType.VEHICLE }
         val fdTerms = fixedDeposits.associateBy { it.instrumentId }
         val unitBasedIds =
             instruments.filter { it.instrumentType == InstrumentType.STOCK || it.instrumentType == InstrumentType.MUTUAL_FUND }
                 .map { it.id }.toSet()
-        val positions = Holdings.positions(ledgerWithInstrument) { it in unitBasedIds }
-        val latest = valuations.groupBy { it.instrumentId }
-            .mapValues { (_, v) -> v.maxWith(compareBy({ it.date }, { it.id })) }
+        val positions =
+            Holdings.positions(ledgerWithInstrument, { it in unitBasedIds }, holdingEvents)
+        val securityById = securities.associateBy { it.instrumentId }
         val byId = categories.associateBy { it.id }
         val byName = categories.filter { it.parentId == null }.associateBy { it.name }
         val riskName = riskLevels.associate { it.id to it.name }
 
         val rows = instruments.mapNotNull { instrument ->
             val position = positions[instrument.id] ?: return@mapNotNull null
-            val valuation = latest[instrument.id]
+            val security = securityById[instrument.id]
             val category = instrument.categoryId?.let { byId[it] }
             val categoryName = category?.let { c ->
                 c.parentId?.let { byId[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
@@ -201,29 +209,22 @@ object InvestmentSummaryBuilder {
             val formula =
                 if (fd != null && depositDate != null && position.costHeld > Position.UNIT_EPSILON)
                     FdMath.estimate(fd, position.costHeld, depositDate, asOf) else null
-            // Prices and manual values are in the instrument's currency; costs are already INR.
-            val fx = if (instrument.currency == "INR") 1.0 else fxToInr[instrument.currency] ?: 1.0
-            val priced = valuation?.unitPrice != null || valuation?.totalValue != null
+            // Prices and costs are in the security's currency; a foreign holding is brought to rupees at the latest rate.
+            val currency = security?.currency ?: "INR"
+            val fx = if (currency == "INR") 1.0 else fxToInr[currency] ?: 1.0
             val current = when {
-                formula != null && (valuation?.totalValue == null || valuation.date.isBefore(
-                    asOf.minusDays(
-                        7
-                    )
-                )) -> formula
-
-                else -> position.currentValue(
-                    valuation?.unitPrice,
-                    valuation?.totalValue
-                ) * (if (priced) fx else 1.0)
+                formula != null -> formula
+                else -> position.currentValue(security?.lastPrice, null) * fx
             }
             HoldingRow(
                 instrument = instrument,
                 position = position,
                 categoryName = categoryName,
-                unitPrice = valuation?.unitPrice,
-                priceDate = valuation?.date,
+                unitPrice = security?.lastPrice,
+                priceDate = security?.lastPriceDate,
                 currentValue = current,
                 xirr = Holdings.xirr(position.cashFlows, current, asOf),
+                security = security,
             )
         }
         val own = rows.filter { it.instrument.owner == Instrument.OWNER_SELF }
@@ -304,24 +305,24 @@ object InvestmentSummaryBuilder {
                 allTransactions.filter { it.toAccountId == pf.id || it.fromAccountId == pf.id }
             val contributions =
                 rows.filter { it.toAccountId == pf.id && it.kind == TransactionKind.INCOME && it.contributor != "Interest" }
-                    .sumOf { it.amountInr } +
+                    .sumOf { it.amount } +
                         rows.filter { it.toAccountId == pf.id && it.kind == TransactionKind.TRANSFER }
-                            .sumOf { it.amountInr } -
+                            .sumOf { it.arriving } -
                         rows.filter { it.fromAccountId == pf.id && it.kind == TransactionKind.TRANSFER }
-                            .sumOf { it.amountInr }
+                            .sumOf { it.amount }
             val interest =
                 rows.filter { it.toAccountId == pf.id && it.kind == TransactionKind.INCOME && it.contributor == "Interest" }
-                    .sumOf { it.amountInr }
+                    .sumOf { it.amount }
             val flows = rows.mapNotNull { t ->
                 when {
                     t.toAccountId == pf.id && (t.kind == TransactionKind.INCOME && t.contributor != "Interest" || t.kind == TransactionKind.TRANSFER) -> CashFlow(
                         t.date,
-                        -t.amountInr
+                        -t.arriving
                     )
 
                     t.fromAccountId == pf.id && t.kind == TransactionKind.TRANSFER -> CashFlow(
                         t.date,
-                        t.amountInr
+                        t.amount
                     )
 
                     else -> null
@@ -525,13 +526,13 @@ object InvestmentSummaryBuilder {
                     compareBy(
                         { it.instrument.instrumentType },
                         { it.categoryName },
-                        { it.instrument.displayOrder })
+                        { it.instrument.name.lowercase() })
                 ),
             rows = rows,
             byType = byType,
             providentFunds = pfLine?.let(::withTargets),
             goalAmount = goalAmount,
-            latestPriceDate = latest.values.maxOfOrNull { it.date },
+            latestPriceDate = securities.mapNotNull { it.lastPriceDate }.maxOrNull(),
         )
     }
 }

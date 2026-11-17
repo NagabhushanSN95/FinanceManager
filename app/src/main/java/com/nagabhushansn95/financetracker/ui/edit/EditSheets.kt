@@ -33,17 +33,13 @@ import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
-import com.nagabhushansn95.financetracker.data.db.entity.Instrument
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
-import com.nagabhushansn95.financetracker.data.investments.InvestmentOrder
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorViewModel.Companion.plain
 import com.nagabhushansn95.financetracker.ui.transaction.label
-import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 import java.time.LocalDateTime
 
 @Composable
@@ -82,7 +78,10 @@ private fun DeleteRow(label: String, note: String?, onDelete: () -> Unit) {
     }
 }
 
-/** Add or edit an account. [initialType] seeds the type for a new one. */
+/**
+ * Add or edit an account. [initialType] seeds the type for a new one; [types] are the types on offer (one type means
+ * the chips are not shown: a provident fund stays a provident fund).
+ */
 @Composable
 fun AccountSheet(
     existing: Account?,
@@ -91,6 +90,7 @@ fun AccountSheet(
     onSave: (Account) -> Unit,
     onDelete: (() -> Unit)?,
     onDismiss: () -> Unit,
+    types: List<AccountType> = SummaryViewModel.SECTION_ORDER,
 ) {
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var type by remember { mutableStateOf(existing?.accountType ?: initialType) }
@@ -112,11 +112,11 @@ fun AccountSheet(
         title = if (existing == null) "New account" else "Edit account",
         onDismiss = onDismiss
     ) {
-        Row(
+        if (types.size > 1) Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SummaryViewModel.SECTION_ORDER.forEach { t ->
+            types.forEach { t ->
                 FilterChip(
                     selected = type == t,
                     onClick = { type = t },
@@ -321,211 +321,6 @@ fun scopeTitle(scope: CategoryScope) = when (scope) {
     CategoryScope.BOTH -> "Both"
 }
 
-/** Add or edit an instrument's identity. Deposit and policy details come with the Investments screens. */
-@Composable
-fun InstrumentSheet(
-    existing: Instrument?,
-    initialType: InstrumentType,
-    transactionCount: Int?,
-    categories: List<InvestmentCategory> = emptyList(),
-    onSave: (Instrument) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var categoryId by remember { mutableStateOf(existing?.categoryId) }
-    var categoryMenu by remember { mutableStateOf(false) }
-    val categoryById = categories.associateBy { it.id }
-    fun categoryLabel(id: Long?) = id?.let { categoryById[it] }?.let { c ->
-        c.parentId?.let { categoryById[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
-    } ?: "Choose a category"
-    var name by remember { mutableStateOf(existing?.name ?: "") }
-    var shortName by remember { mutableStateOf(existing?.shortName ?: "") }
-    var type by remember { mutableStateOf(existing?.instrumentType ?: initialType) }
-    var symbol by remember { mutableStateOf(existing?.symbol ?: "") }
-    var isin by remember { mutableStateOf(existing?.isin ?: "") }
-    var exchange by remember { mutableStateOf(existing?.exchange ?: "") }
-    var currency by remember { mutableStateOf(existing?.currency ?: "INR") }
-    var owner by remember { mutableStateOf(existing?.owner ?: Instrument.OWNER_SELF) }
-    var active by remember { mutableStateOf(existing?.active ?: true) }
-    var notes by remember { mutableStateOf(existing?.notes ?: "") }
-    val tradable = type == InstrumentType.STOCK || type == InstrumentType.MUTUAL_FUND
-
-    FormSheet(
-        title = if (existing == null) "New instrument" else "Edit instrument",
-        onDismiss = onDismiss
-    ) {
-        // The kind is chosen once: a deposit edited into a stock would lose its terms and its screen. A new deposit
-        // or policy needs its terms, so those are opened from their own Investments screens.
-        if (existing == null) Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            InvestmentOrder.types(InvestmentOrder.names(categories))
-                .filter { it in InvestmentOrder.CREATABLE_HERE }.forEach { t ->
-                FilterChip(
-                    selected = type == t,
-                    onClick = { type = t },
-                    label = { Text(typeTitle(t)) })
-            }
-        } else Text(
-            typeTitle(type),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = shortName,
-            onValueChange = { shortName = it },
-            label = { Text("Short name (optional)") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-        // The category stays within the kind's own group (a fund is a kind of mutual fund, never a stock type).
-        // Policies and deposits are filed by their own screens, so they offer no choice here.
-        val group = categories.firstOrNull {
-            it.parentId == null && it.name.equals(
-                com.nagabhushansn95.financetracker.data.investments.InvestmentCategories.defaultCategoryName(
-                    type
-                ), ignoreCase = true
-            )
-        }
-        if (group != null && type != InstrumentType.INSURANCE && type != InstrumentType.FIXED_DEPOSIT) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Category",
-                    style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.width(72.dp)
-                )
-                TextButton(onClick = { categoryMenu = true }) { Text(categoryLabel(categoryId)) }
-                DropdownMenu(expanded = categoryMenu, onDismissRequest = { categoryMenu = false }) {
-                    DropdownMenuItem(
-                        text = { Text(group.name) },
-                        onClick = { categoryId = group.id; categoryMenu = false })
-                    categories.filter { it.parentId == group.id }.forEach { child ->
-                        DropdownMenuItem(
-                            text = { Text("    ${child.name}") },
-                            onClick = { categoryId = child.id; categoryMenu = false })
-                    }
-                }
-            }
-        }
-        if (tradable) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = symbol,
-                    onValueChange = { symbol = it },
-                    label = { Text(if (type == InstrumentType.STOCK) "Symbol" else "Scheme code") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = exchange,
-                    onValueChange = { exchange = it.uppercase() },
-                    label = { Text("Exchange") },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            OutlinedTextField(
-                value = isin,
-                onValueChange = { isin = it.uppercase() },
-                label = { Text("ISIN") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = currency,
-                onValueChange = { currency = it.uppercase().take(3) },
-                label = { Text("Currency") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = owner,
-                onValueChange = { owner = it },
-                label = { Text("Owner") },
-                singleLine = true,
-                modifier = Modifier.weight(2f)
-            )
-        }
-        if (owner.trim() != Instrument.OWNER_SELF) {
-            Text(
-                "Owned by someone else: excluded from your totals and statistics.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text("Notes (optional)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        if (existing != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Active",
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Switch(checked = active, onCheckedChange = { active = it })
-            }
-            Text(
-                "Inactive instruments (sold out, matured) leave the pickers; their ${
-                    transactionCount?.let {
-                        "%,d ".format(
-                            it
-                        )
-                    } ?: ""
-                }transactions stay.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Button(
-            enabled = name.isNotBlank() && currency.trim().length == 3 && owner.isNotBlank(),
-            onClick = {
-                val now = LocalDateTime.now()
-                onSave(
-                    (existing ?: Instrument(
-                        name = "",
-                        instrumentType = type,
-                        displayOrder = 0,
-                        createdTime = now,
-                        modifiedTime = now
-                    )).copy(
-                        name = name.trim(),
-                        shortName = shortName.trim().takeIf { it.isNotEmpty() },
-                        instrumentType = type,
-                        symbol = symbol.trim().takeIf { it.isNotEmpty() && tradable },
-                        isin = isin.trim().takeIf { it.isNotEmpty() && tradable },
-                        exchange = exchange.trim().takeIf { it.isNotEmpty() && tradable },
-                        currency = currency.trim(),
-                        owner = owner.trim(),
-                        categoryId = categoryId,
-                        active = active,
-                        notes = notes.trim().takeIf { it.isNotEmpty() },
-                    )
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Save") }
-    }
-}
-
 /** Add or edit an investment category: name, parent, risk bucket and the Investment Summary targets. */
 @Composable
 fun InvestmentCategorySheet(
@@ -649,6 +444,9 @@ fun RiskLevelSheet(
     }
 }
 
+/** The kinds a template (and the transaction editor) can record. */
+val CASH_KINDS = listOf(TransactionKind.EXPENSE, TransactionKind.INCOME, TransactionKind.TRANSFER)
+
 /**
  * Add or edit a template: what the editor fills in when the template is picked. Every field but the particulars
  * and kind is optional. A template carries a rate and a quantity, never an amount: a rate alone fills only the
@@ -659,7 +457,6 @@ fun TemplateSheet(
     existing: com.nagabhushansn95.financetracker.data.db.entity.Template?,
     accounts: List<Account>,
     categories: List<Category>,
-    instruments: List<Instrument>,
     onSave: (com.nagabhushansn95.financetracker.data.db.entity.Template) -> Unit,
     onDelete: (() -> Unit)?,
     onDismiss: () -> Unit,
@@ -669,16 +466,12 @@ fun TemplateSheet(
     var fromId by remember { mutableStateOf(existing?.fromAccountId) }
     var toId by remember { mutableStateOf(existing?.toAccountId) }
     var categoryId by remember { mutableStateOf(existing?.categoryId) }
-    var instrumentId by remember { mutableStateOf(existing?.instrumentId) }
     var rate by remember { mutableStateOf(existing?.rate?.let { plain(it) } ?: "") }
     var quantity by remember { mutableStateOf(existing?.quantity?.let { plain(it) } ?: "") }
     var hidden by remember { mutableStateOf(existing?.hidden ?: false) }
-    val showsFrom =
-        kind == TransactionKind.EXPENSE || kind == TransactionKind.TRANSFER || kind == TransactionKind.INVEST
-    val showsTo =
-        kind == TransactionKind.INCOME || kind == TransactionKind.TRANSFER || kind == TransactionKind.REDEEM
+    val showsFrom = kind == TransactionKind.EXPENSE || kind == TransactionKind.TRANSFER
+    val showsTo = kind == TransactionKind.INCOME || kind == TransactionKind.TRANSFER
     val showsCategory = kind == TransactionKind.EXPENSE || kind == TransactionKind.INCOME
-    val showsInstrument = kind != TransactionKind.TRANSFER
     val scope =
         if (kind == TransactionKind.INCOME) CategoryScope.INCOME else CategoryScope.EXPENSE
     val applicable =
@@ -691,7 +484,6 @@ fun TemplateSheet(
     val categoryChoices: List<Long?> =
         listOf<Long?>(null) + applicable.filter { it.parentId == null }
             .flatMap { p -> listOf(p.id) + applicable.filter { it.parentId == p.id }.map { it.id } }
-    val instrumentChoices: List<Long?> = listOf<Long?>(null) + instruments.map { it.id }
     val rateValue = rate.trim().toDoubleOrNull()
     val quantityValue = quantity.trim().toDoubleOrNull()
     val valid =
@@ -706,7 +498,8 @@ fun TemplateSheet(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            TransactionKind.entries.forEach { k ->
+            // Only the cash kinds: investment entries are recorded on the instrument's screen, never from a template.
+            CASH_KINDS.forEach { k ->
                 FilterChip(
                     selected = kind == k,
                     onClick = { kind = k },
@@ -722,25 +515,16 @@ fun TemplateSheet(
             modifier = Modifier.fillMaxWidth()
         )
         if (showsFrom) com.nagabhushansn95.financetracker.ui.common.AccountDropdown(
-            if (kind == TransactionKind.INVEST) "Paid from" else "From",
-            accounts, fromId, { fromId = it }, none = "Not set"
+            "From", accounts, fromId, { fromId = it }, none = "Not set"
         )
         if (showsTo) com.nagabhushansn95.financetracker.ui.common.AccountDropdown(
-            if (kind == TransactionKind.REDEEM) "Credited to" else "To",
-            accounts, toId, { toId = it }, none = "Not set"
+            "To", accounts, toId, { toId = it }, none = "Not set"
         )
         if (showsCategory) com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown(
             "Category",
             categoryChoices,
             categoryId.takeIf { it in categoryById },
             { categoryPath(it) ?: "Not set" }) { categoryId = it }
-        if (showsInstrument) com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown(
-            "Instrument",
-            instrumentChoices,
-            instrumentId.takeIf { id -> instruments.any { it.id == id } },
-            { id -> instruments.firstOrNull { it.id == id }?.name ?: "Not set" }) {
-            instrumentId = it
-        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             NumberField(rate, "Rate (optional)", { rate = it }, Modifier.weight(1f))
             NumberField(quantity, "Quantity (optional)", { quantity = it }, Modifier.weight(1f))
@@ -770,7 +554,6 @@ fun TemplateSheet(
                         fromAccountId = fromId.takeIf { showsFrom },
                         toAccountId = toId.takeIf { showsTo },
                         categoryId = categoryId.takeIf { showsCategory && it in categoryById },
-                        instrumentId = instrumentId.takeIf { showsInstrument },
                         rate = rateValue,
                         quantity = quantityValue,
                         hidden = hidden,

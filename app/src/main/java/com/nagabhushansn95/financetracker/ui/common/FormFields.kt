@@ -108,6 +108,31 @@ fun NumberField(
     )
 }
 
+/**
+ * A field for numbers that are identifiers, not amounts (account numbers): the number pad opens first, and the
+ * trailing "Abc" switches to the full keyboard for the odd letter. The value is kept as typed.
+ */
+@Composable
+fun DigitsField(
+    value: String,
+    label: String,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var letters by remember { mutableStateOf(value.any { it.isLetter() }) }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = if (letters) KeyboardType.Text else KeyboardType.Number),
+        trailingIcon = {
+            TextButton(onClick = { letters = !letters }) { Text(if (letters) "123" else "Abc") }
+        },
+        modifier = modifier,
+    )
+}
+
 /** Label plus a dropdown of accounts; [none] adds an entry that picks null. */
 @Composable
 fun AccountDropdown(
@@ -209,8 +234,11 @@ fun AutocompleteField(
     suggestions: List<String>,
     onChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    /** An identifier number (customer ID): the number pad opens first, "Abc" switches to the full keyboard. */
+    digits: Boolean = false,
 ) {
     var focused by remember { mutableStateOf(false) }
+    var letters by remember { mutableStateOf(!digits || value.any { it.isLetter() }) }
     val matches = remember(value, suggestions) {
         val typed = value.trim()
         suggestions.filter {
@@ -230,6 +258,14 @@ fun AutocompleteField(
             onValueChange = onChange,
             label = { Text(label) },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = if (letters) KeyboardType.Text else KeyboardType.Number),
+            trailingIcon = if (digits) {
+                {
+                    TextButton(onClick = {
+                        letters = !letters
+                    }) { Text(if (letters) "123" else "Abc") }
+                }
+            } else null,
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { focused = it.isFocused }

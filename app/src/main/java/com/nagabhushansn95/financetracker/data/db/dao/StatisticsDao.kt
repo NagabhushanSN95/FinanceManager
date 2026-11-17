@@ -21,22 +21,24 @@ data class CategoryTotal(val categoryId: Long?, val total: Double, val count: In
  * savings = INVEST paid from an account + TRANSFER into a provident fund + INCOME into a provident fund other than interest;
  * withdrawals = REDEEM credited to an account + TRANSFER out of a provident fund + deposit interest credited to an
  * account as its own INCOME row (a sweep-in deposit's), which a regular deposit pays out inside its REDEEM.
- * Amounts are converted with fx_rate; foreign-currency rows without a rate count as zero rather than at face value.
+ * Only rupee accounts are summed here: a row on a foreign-currency account (its from-account for an outflow, its
+ * to-account for an inflow) is converted by [com.nagabhushansn95.financetracker.data.investments.ForeignCurrency]
+ * at the cost of the money spent and added by [com.nagabhushansn95.financetracker.data.investments.Statistics].
  */
 @Dao
 interface StatisticsDao {
     @Query(
         """
         SELECT substr(t.date, 1, :periodLength) AS period,
-          SUM(CASE WHEN t.kind = 'EXPENSE' THEN $AMOUNT_INR ELSE 0 END) AS expense,
-          SUM(CASE WHEN t.kind = 'INCOME' AND ta.account_type IS NOT NULL AND ta.account_type != 'PROVIDENT_FUND' THEN $AMOUNT_INR ELSE 0 END) AS income,
-          SUM(CASE WHEN (t.kind = 'INVEST' AND t.from_account_id IS NOT NULL)
+          SUM(CASE WHEN t.kind = 'EXPENSE' AND $FROM_INR THEN t.amount ELSE 0 END) AS expense,
+          SUM(CASE WHEN t.kind = 'INCOME' AND $TO_INR AND ta.account_type != 'PROVIDENT_FUND' THEN t.amount ELSE 0 END) AS income,
+          SUM(CASE WHEN (t.kind = 'INVEST' AND $FROM_INR)
                      OR (t.kind = 'TRANSFER' AND ta.account_type = 'PROVIDENT_FUND')
-                     OR (t.kind = 'INCOME' AND ta.account_type = 'PROVIDENT_FUND' AND COALESCE(t.contributor, '') != 'Interest') THEN $AMOUNT_INR ELSE 0 END) AS savings,
-          SUM(CASE WHEN (t.kind = 'REDEEM' AND t.to_account_id IS NOT NULL)
+                     OR (t.kind = 'INCOME' AND ta.account_type = 'PROVIDENT_FUND' AND COALESCE(t.contributor, '') != 'Interest') THEN t.amount ELSE 0 END) AS savings,
+          SUM(CASE WHEN (t.kind = 'REDEEM' AND $TO_INR)
                      OR (t.kind = 'TRANSFER' AND fa.account_type = 'PROVIDENT_FUND')
-                     OR (t.kind = 'INCOME' AND ta.account_type IS NOT NULL AND ta.account_type != 'PROVIDENT_FUND'
-                         AND fi.instrument_type = 'FIXED_DEPOSIT') THEN $AMOUNT_INR ELSE 0 END) AS withdrawals
+                     OR (t.kind = 'INCOME' AND $TO_INR AND ta.account_type != 'PROVIDENT_FUND'
+                         AND fi.kind = 'FIXED_DEPOSIT') THEN t.amount ELSE 0 END) AS withdrawals
         FROM transactions t
           LEFT JOIN accounts fa ON fa.id = t.from_account_id
           LEFT JOIN accounts ta ON ta.id = t.to_account_id
@@ -56,10 +58,11 @@ interface StatisticsDao {
     /** Totals per category for one kind (EXPENSE or INCOME); rows without a category come back with a NULL id. */
     @Query(
         """
-        SELECT t.category_id AS categoryId, SUM($AMOUNT_INR) AS total, COUNT(*) AS count
-        FROM transactions t LEFT JOIN accounts ta ON ta.id = t.to_account_id
+        SELECT t.category_id AS categoryId, SUM(t.amount) AS total, COUNT(*) AS count
+        FROM transactions t LEFT JOIN accounts fa ON fa.id = t.from_account_id LEFT JOIN accounts ta ON ta.id = t.to_account_id
         WHERE t.include_in_statistics = 1 AND t.kind = :kind AND t.date BETWEEN :from AND :to
-          AND (t.kind != 'INCOME' OR (ta.account_type IS NOT NULL AND ta.account_type != 'PROVIDENT_FUND'))
+          AND (t.kind != 'INCOME' OR ($TO_INR AND ta.account_type != 'PROVIDENT_FUND'))
+          AND (t.kind != 'EXPENSE' OR $FROM_INR)
           AND (:filterAccounts = 0 OR t.from_account_id IN (:accountIds) OR t.to_account_id IN (:accountIds))
         GROUP BY t.category_id ORDER BY total DESC
         """
@@ -73,7 +76,7 @@ interface StatisticsDao {
     suspend fun earliestDate(): String?
 
     companion object {
-        const val AMOUNT_INR =
-            "(CASE WHEN t.currency = 'INR' THEN t.amount ELSE t.amount * COALESCE(t.fx_rate, 0) END)"
+        const val FROM_INR = "(fa.currency = 'INR')"
+        const val TO_INR = "(ta.currency = 'INR')"
     }
 }

@@ -4,6 +4,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityKind
@@ -16,10 +17,13 @@ class LedgerLookups(
     instruments: List<Instrument>,
     /** Validity rows, so a service or emission test can say where it was done without that being in its particulars. */
     periods: List<ValidityPeriod> = emptyList(),
+    /** The listings of stocks and funds, for their short names and tickers. */
+    securities: List<Security> = emptyList(),
 ) {
     val accounts = accounts.associateBy { it.id }
     val categories = categories.associateBy { it.id }
     val instruments = instruments.associateBy { it.id }
+    val securities = securities.associateBy { it.instrumentId }
     private val places = periods
         .filter { (it.kind == ValidityKind.SERVICE || it.kind == ValidityKind.EMISSION_TEST) && it.transactionId != null && it.provider != null }
         .associate { it.transactionId!! to it.provider!! }
@@ -40,9 +44,15 @@ class LedgerLookups(
     fun instrumentName(id: Long?) =
         id?.let {
             instruments[it]?.let { i ->
-                i.shortName ?: i.symbol?.takeIf { s -> !s.all(Char::isDigit) } ?: i.name
+                val s = securities[i.id]
+                s?.shortName?.takeIf { n -> n.isNotBlank() } ?: s?.tickerOrNull ?: i.name
             }
         }
+
+    /** The currency of the account a row's amount is in (the from side for an outflow, the to side for an income). */
+    fun currencyOf(t: TransactionEntity): String =
+        (if (t.kind == TransactionKind.INCOME || t.kind == TransactionKind.REDEEM) t.toAccountId else t.fromAccountId)
+            ?.let { accounts[it]?.currency } ?: "INR"
 
     /** Secondary line for a ledger row, derived from kind and endpoints (plan 3.3). */
     fun describe(t: TransactionEntity): String = when (t.kind) {

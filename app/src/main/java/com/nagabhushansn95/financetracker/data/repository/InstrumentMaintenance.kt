@@ -27,7 +27,9 @@ class InstrumentMaintenance(private val db: AppDatabase) {
         }
         val ids = candidates.map { it.id }.toSet()
         val positions = Holdings.positions(
-            db.transactionDao().getAllWithInstrument().filter { it.instrumentId in ids })
+            db.transactionDao().getAllWithInstrument().filter { it.instrumentId in ids },
+            events = db.holdingEventDao().getAll(),
+        )
         val cutoff = today.minusDays(idleDays)
         val retired = candidates.filter { instrument ->
             val p = positions[instrument.id] ?: return@filter false

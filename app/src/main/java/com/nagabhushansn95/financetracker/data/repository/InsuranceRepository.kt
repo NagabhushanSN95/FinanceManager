@@ -4,15 +4,18 @@ import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InsuranceType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityKind
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
+import com.nagabhushansn95.financetracker.data.db.entity.Vehicle
 import com.nagabhushansn95.financetracker.data.investments.Insurance
 import com.nagabhushansn95.financetracker.data.investments.InsuranceEntry
 import com.nagabhushansn95.financetracker.data.investments.InsuranceEntryKind
 import com.nagabhushansn95.financetracker.data.investments.PolicyView
+import com.nagabhushansn95.financetracker.data.investments.Validity
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -21,43 +24,42 @@ class InsuranceRepository(private val db: AppDatabase) {
     private val transactions = TransactionRepository(db)
 
     /**
-     * Adds or updates a policy with its instrument in one write and sets the validity the sheet entered by hand
-     * ([manual], by kind: null clears a hand-set period; a value equal to the one in force changes nothing).
-     * Returns the instrument id.
+     * Adds or updates a policy (or a vehicle) with its instrument in one write and sets the validity the sheet
+     * entered by hand ([manual], by kind: null clears a hand-set period; a value equal to the one in force changes
+     * nothing). A policy comes with its [policy] terms, a vehicle with its [vehicle] row. Returns the instrument id.
      */
     suspend fun savePolicy(
         instrument: Instrument,
-        policy: InsurancePolicy,
+        policy: InsurancePolicy?,
         manual: Map<ValidityKind, LocalDate?> = emptyMap(),
         now: LocalDateTime = LocalDateTime.now(),
+        vehicle: Vehicle? = null,
     ): Long = db.useWriterConnection { transactor ->
         transactor.immediateTransaction {
+            require((vehicle != null) == (instrument.instrumentType == InstrumentType.VEHICLE)) { "A vehicle needs its vehicle row" }
+            require(vehicle != null || policy != null) { "A policy needs its terms" }
             val id = if (instrument.id == 0L) db.instrumentDao().insert(
-                instrument.copy(
-                    displayOrder = db.instrumentDao().maxDisplayOrder() + 1,
-                    createdTime = now,
-                    modifiedTime = now
-                )
+                instrument.copy(createdTime = now, modifiedTime = now)
             ) else {
                 db.instrumentDao().update(instrument.copy(modifiedTime = now)); instrument.id
             }
-            db.instrumentDao().upsertInsurancePolicy(policy.copy(instrumentId = id))
-            val periods = db.instrumentDao().getValidityPeriods(id)
+            if (vehicle != null) db.vehicleDao().upsertVehicle(vehicle.copy(instrumentId = id))
+            else db.instrumentDao().upsertInsurancePolicy(policy!!.copy(instrumentId = id))
+            val periods = Validity.getFor(db, id)
             for ((kind, end) in manual) {
                 val ofKind = periods.filter { it.kind == kind }
                 val inForce = ofKind.maxWithOrNull(compareBy({ it.endDate }, { it.id }))?.endDate
                 val byHand = ofKind.filter { it.transactionId == null }
                 when {
-                    end == null -> byHand.forEach { db.instrumentDao().deleteValidityPeriod(it.id) }
+                    end == null -> byHand.forEach { Validity.delete(db, it) }
                     end == inForce -> Unit
-                    byHand.isNotEmpty() -> db.instrumentDao()
-                        .updateValidityPeriod(byHand.last().copy(endDate = end))
-
-                    else -> db.instrumentDao().insertValidityPeriod(
+                    byHand.isNotEmpty() -> Validity.update(db, byHand.last().copy(endDate = end))
+                    else -> Validity.insert(
+                        db,
                         ValidityPeriod(
                             instrumentId = id,
                             kind = kind,
-                            startDate = policy.startDate,
+                            startDate = policy?.startDate,
                             endDate = end
                         )
                     )
@@ -85,9 +87,8 @@ class InsuranceRepository(private val db: AppDatabase) {
                 else {
                     transactions.updateInTransaction(row, now); row.id
                 }
-            db.instrumentDao().deleteValidityPeriodsOf(id)
-            Insurance.toPeriods(view, entry, id)
-                .forEach { db.instrumentDao().insertValidityPeriod(it) }
+            Validity.deleteOf(db, id)
+            Insurance.toPeriods(view, entry, id).forEach { Validity.insert(db, it) }
             if (view.type == InsuranceType.HEALTH && entry.kind == InsuranceEntryKind.PREMIUM) refreshHealthPolicy(
                 view.instrument.id
             )
@@ -101,8 +102,7 @@ class InsuranceRepository(private val db: AppDatabase) {
      */
     private suspend fun refreshHealthPolicy(instrumentId: Long) {
         val policy = db.instrumentDao().getInsurancePolicy(instrumentId) ?: return
-        val periods = db.instrumentDao().getValidityPeriods(instrumentId)
-            .filter { it.kind == ValidityKind.COVER }
+        val periods = db.vehicleDao().getCovers(instrumentId).map { it.toPeriod() }
         val current = periods.maxWithOrNull(compareBy({ it.endDate }, { it.id })) ?: return
         val premium = current.transactionId?.let { db.transactionDao().getById(it) }
         val updated = policy.copy(
@@ -129,8 +129,7 @@ class InsuranceRepository(private val db: AppDatabase) {
                 transactions.deleteAllInTransaction(
                     db.transactionDao().getForInstrument(instrumentId), now
                 )
-                db.instrumentDao().getValidityPeriods(instrumentId)
-                    .forEach { db.instrumentDao().deleteValidityPeriod(it.id) }
+                Validity.getFor(db, instrumentId).forEach { Validity.delete(db, it) }
                 db.instrumentDao().delete(instrumentId)
             }
         }

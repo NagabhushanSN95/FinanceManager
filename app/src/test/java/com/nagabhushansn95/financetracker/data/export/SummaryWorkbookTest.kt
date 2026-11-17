@@ -3,13 +3,16 @@ package com.nagabhushansn95.financetracker.data.export
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.db.insertListed
 import com.nagabhushansn95.financetracker.data.investments.InvestmentCategories
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -32,7 +35,7 @@ class SummaryWorkbookTest {
 
     @Before
     fun setUp() {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
     }
 
     @After
@@ -110,7 +113,6 @@ class SummaryWorkbookTest {
             Instrument(
                 name = "FD #1",
                 instrumentType = InstrumentType.FIXED_DEPOSIT,
-                displayOrder = 1,
                 createdTime = now,
                 modifiedTime = now
             )
@@ -125,15 +127,13 @@ class SummaryWorkbookTest {
                 maturityDate = LocalDate.of(2027, 2, 3)
             )
         )
-        val gold = db.instrumentDao().insert(
+        val gold = db.insertListed(
             Instrument(
                 name = "GOLDBEES",
-                symbol = "GOLDBEES",
                 instrumentType = InstrumentType.STOCK,
-                displayOrder = 2,
                 createdTime = now,
                 modifiedTime = now
-            )
+            ), Security(symbol = "GOLDBEES")
         )
 
         fun t(

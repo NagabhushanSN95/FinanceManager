@@ -7,7 +7,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 enum class InvestmentGroup { FIXED_DEPOSITS, PROVIDENT_FUNDS, INSURANCE, STOCKS, MUTUAL_FUNDS, OTHERS }
 
 /**
- * The order investments are listed in everywhere (hub tiles, drawer, Manage › Instruments, pickers) follows the
+ * The order investments are listed in everywhere (hub tiles, drawer, pickers) follows the
  * order of the top-level categories under Manage › Investment categories, so one drag there moves them all.
  * A type whose default category is missing goes last, in the default order.
  */
@@ -15,17 +15,11 @@ object InvestmentOrder {
     val DEFAULT_TYPES = listOf(
         InstrumentType.FIXED_DEPOSIT,
         InstrumentType.INSURANCE,
+        InstrumentType.VEHICLE,
         InstrumentType.STOCK,
         InstrumentType.MUTUAL_FUND,
         InstrumentType.OTHER,
     )
-
-    /**
-     * Types a plain "New instrument" form may create. Fixed deposits and insurance policies carry terms of their own
-     * and are opened only from their screens under Investments.
-     */
-    val CREATABLE_HERE =
-        setOf(InstrumentType.STOCK, InstrumentType.MUTUAL_FUND, InstrumentType.OTHER)
 
     val DEFAULT_GROUPS = listOf(
         InvestmentGroup.FIXED_DEPOSITS,
@@ -42,7 +36,9 @@ object InvestmentOrder {
 
     fun types(categoryNames: List<String>): List<InstrumentType> =
         DEFAULT_TYPES.withIndex().sortedWith(compareBy({ (_, t) ->
-            rank(categoryNames, InvestmentCategories.defaultCategoryName(t))
+            // Vehicles sit with the policies, under the Insurance screen.
+            val type = if (t == InstrumentType.VEHICLE) InstrumentType.INSURANCE else t
+            rank(categoryNames, InvestmentCategories.defaultCategoryName(type))
         }, { it.index })).map { it.value }
 
     fun groups(categoryNames: List<String>): List<InvestmentGroup> =

@@ -9,6 +9,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.investments.Statistics
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -34,7 +35,7 @@ class StatisticsDaoTest {
 
     @Before
     fun setUp() = runTest {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
         bank = db.accountDao().insert(
             Account(
                 name = "Bank",
@@ -79,7 +80,6 @@ class StatisticsDaoTest {
             Instrument(
                 name = "X",
                 instrumentType = InstrumentType.STOCK,
-                displayOrder = 1,
                 createdTime = now,
                 modifiedTime = now
             )
@@ -109,7 +109,6 @@ class StatisticsDaoTest {
                     instrumentId = instrument,
                     particulars = "x",
                     amount = amount,
-                    currency = currency,
                     fxRate = fx,
                     includeInStatistics = inStats
                 )
@@ -193,15 +192,20 @@ class StatisticsDaoTest {
 
     @Test
     fun monthlyCountersFollowThePlanRules() = runTest {
-        val rows = db.statisticsDao()
-            .periodTotals("2026-01-01", "2026-12-31", 7, false, emptyList(), false, emptyList())
+        val rows = Statistics(db).periodTotals(
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 12, 31),
+            7,
+            emptyList(),
+            emptyList()
+        )
         assertEquals(listOf("2026-10", "2026-11"), rows.map { it.period })
         val oct = rows[0]
         assertEquals(
             2840.0,
             oct.expense,
             1e-9
-        )       // 1200 + 800 + 840 (USD w/o rate = 0, excluded row ignored)
+        )       // 1200 + 800 + 840 (the USD spend nothing can price counts 0; the excluded row is ignored)
         assertEquals(50000.0, oct.income, 1e-9)       // employer PF not counted
         assertEquals(18000.0, oct.savings, 1e-9)      // 3000 PF + 5000 PPF + 10000 invest
         assertEquals(0.0, oct.withdrawals, 1e-9)
@@ -212,37 +216,54 @@ class StatisticsDaoTest {
 
     @Test
     fun yearlyGroupingAndFilters() = runTest {
-        val year = db.statisticsDao()
-            .periodTotals("2000-01-01", "2099-12-31", 4, false, emptyList(), false, emptyList())
+        val statistics = Statistics(db)
+        val year = statistics.periodTotals(
+            LocalDate.of(2000, 1, 1),
+            LocalDate.of(2099, 12, 31),
+            4,
+            emptyList(),
+            emptyList()
+        )
         assertEquals(listOf("2026"), year.map { it.period })
         assertEquals(3140.0, year.single().expense, 1e-9)
 
-        val onlyUsd = db.statisticsDao().periodTotals(
-            "2026-01-01",
-            "2026-12-31",
+        val onlyUsd = statistics.periodTotals(
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 12, 31),
             7,
-            true,
             listOf(usdWallet),
-            false,
             emptyList()
         )
         assertEquals(840.0, onlyUsd.single().expense, 1e-9)
 
-        val onlyTravel = db.statisticsDao()
-            .periodTotals("2026-01-01", "2026-12-31", 7, false, emptyList(), true, listOf(travel))
+        val onlyTravel = statistics.periodTotals(
+            LocalDate.of(2026, 1, 1),
+            LocalDate.of(2026, 12, 31),
+            7,
+            emptyList(),
+            listOf(travel)
+        )
         assertEquals(800.0, onlyTravel.single().expense, 1e-9)
     }
 
     @Test
     fun categoryBreakdown() = runTest {
-        val expense = db.statisticsDao()
-            .categoryTotals("EXPENSE", "2026-10-01", "2026-10-31", false, emptyList())
+        val expense = Statistics(db).categoryTotals(
+            TransactionKind.EXPENSE,
+            LocalDate.of(2026, 10, 1),
+            LocalDate.of(2026, 10, 31),
+            emptyList()
+        )
         assertEquals(listOf(food, travel), expense.map { it.categoryId })
         assertEquals(2040.0, expense[0].total, 1e-9)
         assertEquals(3, expense[0].count)
 
-        val income = db.statisticsDao()
-            .categoryTotals("INCOME", "2026-10-01", "2026-10-31", false, emptyList())
+        val income = Statistics(db).categoryTotals(
+            TransactionKind.INCOME,
+            LocalDate.of(2026, 10, 1),
+            LocalDate.of(2026, 10, 31),
+            emptyList()
+        )
         assertEquals(listOf(salary), income.map { it.categoryId })  // PF credit excluded
         assertEquals("2026-10-05", db.statisticsDao().earliestDate())
     }
@@ -253,7 +274,6 @@ class StatisticsDaoTest {
             Instrument(
                 name = "FD #1",
                 instrumentType = InstrumentType.FIXED_DEPOSIT,
-                displayOrder = 2,
                 createdTime = now,
                 modifiedTime = now
             )

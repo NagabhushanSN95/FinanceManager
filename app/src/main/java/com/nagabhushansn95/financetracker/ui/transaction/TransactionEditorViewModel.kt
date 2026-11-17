@@ -8,8 +8,6 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Category
-import com.nagabhushansn95.financetracker.data.db.entity.Instrument
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -30,11 +28,17 @@ data class EditorForm(
     val fromAccountId: Long? = null,
     val toAccountId: Long? = null,
     val categoryId: Long? = null,
+    /** Carried through an edit untouched: rows on an instrument are edited on the instrument's screen. */
     val instrumentId: Long? = null,
     val particulars: String = "",
     val quantity: String = "",
     val rate: String = "",
     val amount: String = "",
+    /** A transfer between currencies: what arrives in the to-account, in its currency. */
+    val toAmount: String = "",
+    /** A credit into a foreign account with no load behind it: rupees per unit, for statistics. */
+    val fxRate: String = "",
+    /** The provident-fund contributor, carried through an edit untouched like [instrumentId]. */
     val contributor: String? = null,
     val saveAsTemplate: Boolean = false,
     val hidden: Boolean = false,
@@ -45,23 +49,40 @@ data class EditorForm(
     val amountValue get() = amount.trim().toDoubleOrNull()
     val quantityValue get() = quantity.trim().toDoubleOrNull()
     val rateValue get() = rate.trim().toDoubleOrNull()
+    val toAmountValue get() = toAmount.trim().toDoubleOrNull()
+    val fxRateValue get() = fxRate.trim().toDoubleOrNull()
 
-    val showsFrom get() = kind == TransactionKind.EXPENSE || kind == TransactionKind.TRANSFER || kind == TransactionKind.INVEST
-    val showsTo get() = kind == TransactionKind.INCOME || kind == TransactionKind.TRANSFER || kind == TransactionKind.REDEEM
+    /** The currencies of the two sides, when both accounts are chosen. */
+    fun currencies(accounts: Map<Long, Account>): Pair<String?, String?> =
+        fromAccountId?.let { accounts[it]?.currency } to toAccountId?.let { accounts[it]?.currency }
+
+    /** A transfer whose two accounts hold different currencies: the amount arriving is asked separately. */
+    fun crossesCurrencies(accounts: Map<Long, Account>): Boolean {
+        if (kind != TransactionKind.TRANSFER) return false
+        val (from, to) = currencies(accounts)
+        return from != null && to != null && from != to
+    }
+
+    /** An income into a foreign-currency account: its rupee rate may be typed. */
+    fun intoForeign(accounts: Map<Long, Account>): Boolean =
+        kind == TransactionKind.INCOME && (toAccountId?.let { accounts[it]?.currency }
+            ?: "INR") != "INR"
+
+    val showsFrom get() = kind == TransactionKind.EXPENSE || kind == TransactionKind.TRANSFER
+    val showsTo get() = kind == TransactionKind.INCOME || kind == TransactionKind.TRANSFER
     val showsCategory get() = kind == TransactionKind.EXPENSE || kind == TransactionKind.INCOME
-    val instrumentRequired get() = kind == TransactionKind.INVEST || kind == TransactionKind.REDEEM
-    val showsInstrument get() = instrumentRequired || kind == TransactionKind.INCOME || kind == TransactionKind.EXPENSE
 
-    /** Why the form cannot be saved yet, or null. */
+    /** Why the form cannot be saved yet, or null. A transfer may go without particulars, as in 4.x. */
     fun problem(accounts: Map<Long, Account>): String? = when {
-        particulars.isBlank() -> "Enter the particulars"
+        particulars.isBlank() && kind != TransactionKind.TRANSFER -> "Enter the particulars"
         amountValue == null || amountValue!! < 0 -> "Enter a valid amount"
         kind == TransactionKind.EXPENSE && fromAccountId == null -> "Choose the account"
         kind == TransactionKind.EXPENSE && categoryId == null -> "Choose a category"
         kind == TransactionKind.INCOME && toAccountId == null -> "Choose the account"
         kind == TransactionKind.TRANSFER && (fromAccountId == null || toAccountId == null) -> "Choose both accounts"
         kind == TransactionKind.TRANSFER && fromAccountId == toAccountId -> "Choose two different accounts"
-        instrumentRequired && instrumentId == null -> "Choose the instrument"
+        crossesCurrencies(accounts) && (toAmountValue == null || toAmountValue!! < 0) -> "Enter the amount arriving"
+        fxRate.isNotBlank() && fxRateValue == null -> "Rate is not a number"
         quantity.isNotBlank() && quantityValue == null -> "Quantity is not a number"
         rate.isNotBlank() && rateValue == null -> "Rate is not a number"
         else -> null
@@ -71,23 +92,23 @@ data class EditorForm(
 data class EditorData(
     val accounts: List<Account> = emptyList(),
     val categories: List<Category> = emptyList(),
-    val instruments: List<Instrument> = emptyList(),
     val templates: List<Template> = emptyList(),
     val recentFrom: List<Long> = emptyList(),
     val recentTo: List<Long> = emptyList(),
     val recentCategories: List<Long> = emptyList(),
-    val recentInstruments: List<Long> = emptyList(),
-    val instrumentTypeOrder: List<InstrumentType> = com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.DEFAULT_TYPES,
     val loaded: Boolean = false,
 ) {
     val accountsById by lazy { accounts.associateBy { it.id } }
-    val lookups by lazy { LedgerLookups(accounts, categories, instruments) }
+    val lookups by lazy { LedgerLookups(accounts, categories, emptyList()) }
 }
 
 sealed interface EditorEvent {
     data object Saved : EditorEvent
     data object Deleted : EditorEvent
     data class Error(val message: String) : EditorEvent
+
+    /** The transaction cannot be edited as things stand (an account of it is deleted); the screen explains and leaves. */
+    data class Blocked(val message: String) : EditorEvent
 }
 
 class TransactionEditorViewModel(application: Application) : AndroidViewModel(application) {
@@ -108,7 +129,6 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         transactionId: Long?,
         kind: TransactionKind?,
         accountId: Long?,
-        instrumentId: Long? = null
     ) {
         if (initialised) return
         initialised = true
@@ -119,23 +139,26 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                 accounts = db.accountDao().getVisible()
                     .filter { it.accountType != AccountType.PROVIDENT_FUND },
                 categories = db.categoryDao().getVisible(),
-                instruments = db.instrumentDao().getAll()
-                    .filter { it.instrumentType != com.nagabhushansn95.financetracker.data.db.entity.InstrumentType.INSURANCE },
                 templates = db.transactionDao().getVisibleTemplates(),
                 recentFrom = prefs.recentIds(RECENT_FROM),
                 recentTo = prefs.recentIds(RECENT_TO),
                 recentCategories = prefs.recentIds(RECENT_CATEGORY),
-                recentInstruments = prefs.recentIds(RECENT_INSTRUMENT),
-                instrumentTypeOrder = com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.types(
-                    com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.names(
-                        db.instrumentDao().getAllCategories()
-                    )
-                ),
                 loaded = true,
             )
             if (transactionId != null) {
                 val t = db.transactionDao().getById(transactionId)
                 if (t != null) {
+                    // As in 4.x: a row on a deleted account is read-only until the account is restored, so that the
+                    // edit cannot move money through an account that is no longer offered.
+                    val gone = listOfNotNull(t.fromAccountId, t.toAccountId)
+                        .mapNotNull { db.accountDao().getById(it) }.firstOrNull { it.deleted }
+                    if (gone != null) {
+                        _event.value = EditorEvent.Blocked(
+                            "This transaction is on the deleted account '${gone.name}'. Restore the account under " +
+                                    "Manage › Accounts (Show deleted) before editing it."
+                        )
+                        return@launch
+                    }
                     _form.value = EditorForm(
                         id = t.id,
                         kind = t.kind,
@@ -148,6 +171,8 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                         quantity = t.quantity?.let { plain(it) } ?: "",
                         rate = t.rate?.let { plain(it) } ?: "",
                         amount = plain(t.amount),
+                        toAmount = t.toAmount?.let { plain(it) } ?: "",
+                        fxRate = t.fxRate?.let { plain(it) } ?: "",
                         contributor = t.contributor,
                         hidden = t.hidden,
                         includeInStatistics = t.includeInStatistics,
@@ -160,11 +185,10 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             val data = _data.value
             _form.value = EditorForm(
                 kind = k,
-                fromAccountId = accountId.takeIf { k != TransactionKind.INCOME && k != TransactionKind.REDEEM }
+                fromAccountId = accountId.takeIf { k != TransactionKind.INCOME }
                     ?: data.recentFrom.firstOrNull { id -> data.accountsById.containsKey(id) },
-                toAccountId = accountId.takeIf { k == TransactionKind.INCOME || k == TransactionKind.REDEEM }
+                toAccountId = accountId.takeIf { k == TransactionKind.INCOME }
                     ?: data.recentTo.firstOrNull { id -> data.accountsById.containsKey(id) },
-                instrumentId = instrumentId,
             )
         }
     }
@@ -173,11 +197,9 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         f.copy(
             kind = kind,
             // Keep what still applies, clear what does not.
-            fromAccountId = if (kind == TransactionKind.INCOME || kind == TransactionKind.REDEEM) null else f.fromAccountId,
-            toAccountId = if (kind == TransactionKind.EXPENSE || kind == TransactionKind.INVEST) null else f.toAccountId,
+            fromAccountId = if (kind == TransactionKind.INCOME) null else f.fromAccountId,
+            toAccountId = if (kind == TransactionKind.EXPENSE) null else f.toAccountId,
             categoryId = if (kind == TransactionKind.EXPENSE || kind == TransactionKind.INCOME) f.categoryId else null,
-            instrumentId = if (kind == TransactionKind.TRANSFER) null else f.instrumentId,
-            contributor = if (kind == TransactionKind.INCOME) f.contributor else null,
         )
     }
 
@@ -185,9 +207,9 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     fun setFrom(id: Long?) = _form.update { it.copy(fromAccountId = id) }
     fun setTo(id: Long?) = _form.update { it.copy(toAccountId = id) }
     fun setCategory(id: Long?) = _form.update { it.copy(categoryId = id) }
-    fun setInstrument(id: Long?) = _form.update { it.copy(instrumentId = id) }
     fun setParticulars(text: String) = _form.update { it.copy(particulars = text) }
-    fun setContributor(c: String?) = _form.update { it.copy(contributor = c) }
+    fun setToAmount(text: String) = _form.update { it.copy(toAmount = text) }
+    fun setFxRate(text: String) = _form.update { it.copy(fxRate = text) }
     fun setSaveAsTemplate(b: Boolean) = _form.update { it.copy(saveAsTemplate = b) }
     fun setHidden(b: Boolean) = _form.update { it.copy(hidden = b) }
     fun setIncludeInStatistics(b: Boolean) = _form.update { it.copy(includeInStatistics = b) }
@@ -243,7 +265,6 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             fromAccountId = t.fromAccountId,
             toAccountId = t.toAccountId,
             categoryId = t.categoryId,
-            instrumentId = t.instrumentId,
             rate = rate,
             quantity = quantity,
             amount = if (t.rate != null && r != null && q != null) plain(r * q) else f.amount,
@@ -280,8 +301,22 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             quantity = f.quantityValue,
             rate = f.rateValue,
             amount = f.amountValue!!,
-            currency = accountCurrency(entityAccountFor(f), data),
-            contributor = f.contributor.takeIf { f.kind == TransactionKind.INCOME },
+            // A load of a foreign card: the rupees out, the foreign money in, and the rate the two imply. A credit into
+            // a foreign account keeps the rate typed, if any; everything else carries neither.
+            toAmount = f.toAmountValue.takeIf { f.crossesCurrencies(data.accountsById) },
+            fxRate = when {
+                f.crossesCurrencies(data.accountsById) -> {
+                    val (from, to) = f.currencies(data.accountsById)
+                    val toValue = f.toAmountValue
+                    if (from == "INR" && toValue != null && toValue > 0) f.amountValue!! / toValue
+                    else if (to == "INR" && f.amountValue!! > 0 && toValue != null) toValue / f.amountValue!!
+                    else null
+                }
+
+                f.intoForeign(data.accountsById) -> f.fxRateValue
+                else -> null
+            },
+            contributor = f.contributor,
             hidden = f.hidden,
             includeInStatistics = f.includeInStatistics,
         )
@@ -296,7 +331,6 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                 entity.fromAccountId?.let { prefs.pushRecentId(RECENT_FROM, it) }
                 entity.toAccountId?.let { prefs.pushRecentId(RECENT_TO, it) }
                 entity.categoryId?.let { prefs.pushRecentId(RECENT_CATEGORY, it) }
-                entity.instrumentId?.let { prefs.pushRecentId(RECENT_INSTRUMENT, it) }
                 _event.value = EditorEvent.Saved
             }.onFailure { e ->
                 Log.e(TAG, "Save failed", e)
@@ -321,7 +355,7 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
 
     /** The cash side that decides the row's currency: `from` for outflows, `to` for inflows. */
     private fun entityAccountFor(f: EditorForm): Long? =
-        if (f.kind == TransactionKind.INCOME || f.kind == TransactionKind.REDEEM) f.toAccountId else f.fromAccountId
+        if (f.kind == TransactionKind.INCOME) f.toAccountId else f.fromAccountId
 
     private fun accountCurrency(accountId: Long?, data: EditorData): String =
         accountId?.let { data.accountsById[it]?.currency } ?: "INR"
@@ -331,7 +365,6 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         const val RECENT_FROM = "account_from"
         const val RECENT_TO = "account_to"
         const val RECENT_CATEGORY = "category"
-        const val RECENT_INSTRUMENT = "instrument"
 
         /** Numbers as the user would type them: no exponent, no trailing zeros. */
         fun plain(value: Double): String =

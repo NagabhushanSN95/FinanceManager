@@ -2,7 +2,6 @@ package com.nagabhushansn95.financetracker.data.backup
 
 import android.content.ContentValues
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -65,14 +64,6 @@ class DatabaseBackup(private val context: Context, private val db: AppDatabase) 
         dao.setAll(
             AppPreferences(context).export()
                 .map { (k, v) -> Setting(Settings.PREFS_PREFIX + k, v) })
-    }
-
-    /** Writes the database to a document the user picked with ACTION_CREATE_DOCUMENT. */
-    suspend fun saveTo(uri: Uri): Result {
-        val stream = context.contentResolver.openOutputStream(uri, "wt")
-            ?: throw IOException("Could not open $uri for writing")
-        stream.use { writeTo(it) }
-        return Result(uri.lastPathSegment ?: uri.toString())
     }
 
     /**

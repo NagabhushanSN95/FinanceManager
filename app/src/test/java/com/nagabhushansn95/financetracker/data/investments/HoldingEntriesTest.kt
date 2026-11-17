@@ -1,36 +1,41 @@
 package com.nagabhushansn95.financetracker.data.investments
 
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 class HoldingEntriesTest {
     private val now = LocalDateTime.of(2026, 11, 10, 9, 0)
-    private val stock = Instrument(
-        id = 4,
-        name = "Nippon India ETF Nifty 50 BeES",
-        instrumentType = InstrumentType.STOCK,
-        symbol = "NIFTYBEES",
-        exchange = "NSE",
-        displayOrder = 1,
-        createdTime = now,
-        modifiedTime = now
+    private val stock = Listed(
+        Instrument(
+            id = 4,
+            name = "Nippon India ETF Nifty 50 BeES",
+            instrumentType = InstrumentType.STOCK,
+            createdTime = now,
+            modifiedTime = now
+        ),
+        Security(instrumentId = 4, symbol = "NIFTYBEES", exchange = "NSE"),
     )
-    private val fund = Instrument(
-        id = 29,
-        name = "Parag Parikh Flexi Cap Fund",
-        instrumentType = InstrumentType.MUTUAL_FUND,
-        symbol = "122639",
-        exchange = "AMFI",
-        displayOrder = 2,
-        createdTime = now,
-        modifiedTime = now
+    private val fund = Listed(
+        Instrument(
+            id = 29,
+            name = "Parag Parikh Flexi Cap Fund",
+            instrumentType = InstrumentType.MUTUAL_FUND,
+            createdTime = now,
+            modifiedTime = now
+        ),
+        Security(instrumentId = 29, symbol = "122639", exchange = "AMFI"),
     )
 
     private fun row(
@@ -109,31 +114,38 @@ class HoldingEntriesTest {
                 )
             )
         )
+        // Bonus and split units are events beside the ledger, never rows in it.
         assertEquals(
             HoldingEntryKind.BONUS,
             HoldingEntries.kindOf(
-                row(
-                    4,
-                    4,
-                    TransactionKind.INCOME,
-                    "2026-01-04",
-                    0.0,
-                    "Bonus Shares 1:1 - NIFTYBEES",
-                    10.0
+                HoldingEvent(
+                    instrumentId = 4,
+                    date = LocalDate.parse("2026-01-04"),
+                    kind = HoldingEventKind.BONUS,
+                    units = 10.0,
+                    ratio = "1:1"
                 )
             )
         )
         assertEquals(
             HoldingEntryKind.SPLIT,
             HoldingEntries.kindOf(
-                row(
-                    5,
-                    4,
-                    TransactionKind.INCOME,
-                    "2026-01-05",
-                    0.0,
-                    "Stock Split 1:5 - NIFTYBEES",
-                    40.0
+                HoldingEvent(
+                    instrumentId = 4,
+                    date = LocalDate.parse("2026-01-05"),
+                    kind = HoldingEventKind.SPLIT,
+                    units = 40.0,
+                    ratio = "1:5"
+                )
+            )
+        )
+        assertNull(
+            HoldingEntries.kindOf(
+                HoldingEvent(
+                    instrumentId = 9,
+                    date = LocalDate.parse("2026-01-05"),
+                    kind = HoldingEventKind.TDS_DEDUCTED,
+                    amount = 640.0
                 )
             )
         )
@@ -264,7 +276,12 @@ class HoldingEntriesTest {
         assertEquals(100.0, HoldingEntries.bonusUnits(100.0, 1.0, 1.0), 1e-9)
         assertEquals(50.0, HoldingEntries.bonusUnits(100.0, 1.0, 2.0), 1e-9)
         assertEquals(400.0, HoldingEntries.splitUnits(100.0, 1.0, 5.0), 1e-9)
-        val view = HoldingView(stock, emptyList(), Holdings.position(4, emptyList()))
+        val view = HoldingView(
+            stock.instrument,
+            stock.security,
+            emptyList(),
+            Holdings.position(4, emptyList())
+        )
         val buy = HoldingEntries.toTransaction(
             view,
             HoldingEntryKind.BUY,
@@ -302,24 +319,33 @@ class HoldingEntriesTest {
         assertEquals(36L, dividend.toAccountId)
         assertEquals(7L, dividend.categoryId)
         assertEquals(LocalDate.of(2026, 1, 20), dividend.exDate)
-        val bonus = HoldingEntries.toTransaction(
+        val bonus = HoldingEntries.toEvent(
             view,
             HoldingEntryKind.BONUS,
             LocalDate.of(2026, 3, 1),
             10.0,
-            null,
-            123.0,
-            49,
-            "Bonus Shares 1:1 - NIFTYBEES",
-            null,
-            null,
-            now = now
+            "1:1"
         )
-        assertEquals(0.0, bonus.amount, 1e-9)
-        assertNull(bonus.fromAccountId)
-        assertNull(bonus.toAccountId)
-        assertNull(bonus.categoryId)
-        assertEquals(10.0, bonus.quantity!!, 1e-9)
+        assertEquals(HoldingEventKind.BONUS, bonus.kind)
+        assertEquals(4L, bonus.instrumentId)
+        assertEquals(10.0, bonus.units!!, 1e-9)
+        assertEquals("1:1", bonus.ratio)
+        assertEquals(LocalDate.of(2026, 3, 1), bonus.date)
+        assertTrue(runCatching {
+            HoldingEntries.toTransaction(
+                view,
+                HoldingEntryKind.BONUS,
+                LocalDate.of(2026, 3, 1),
+                10.0,
+                null,
+                0.0,
+                null,
+                "",
+                null,
+                null,
+                now = now
+            )
+        }.isFailure)
         val charges = HoldingEntries.toTransaction(
             view,
             HoldingEntryKind.CHARGES,
@@ -345,7 +371,8 @@ class HoldingEntriesTest {
     @Test
     fun problemsAreNamedBeforeSaving() {
         val held = HoldingView(
-            stock,
+            stock.instrument,
+            stock.security,
             listOf(
                 row(
                     1,
@@ -394,7 +421,12 @@ class HoldingEntriesTest {
             HoldingEntries.problem(held, HoldingEntryKind.DIVIDEND, null, 0.0, 36, null)
         )
         assertNull(HoldingEntries.problem(held, HoldingEntryKind.BONUS, 10.0, 0.0, null, null))
-        val empty = HoldingView(stock, emptyList(), Holdings.position(4, emptyList()))
+        val empty = HoldingView(
+            stock.instrument,
+            stock.security,
+            emptyList(),
+            Holdings.position(4, emptyList())
+        )
         assertEquals(
             "Nothing is held to split",
             HoldingEntries.problem(empty, HoldingEntryKind.SPLIT, 10.0, 0.0, null, null)

@@ -3,14 +3,18 @@ package com.nagabhushansn95.financetracker.data.repository
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.db.insertListed
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -36,7 +40,7 @@ class TransactionRepositoryTest {
 
     @Before
     fun setUp() = runTest {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
         repo = TransactionRepository(db)
         wallet = db.accountDao().insert(
             Account(
@@ -70,15 +74,13 @@ class TransactionRepositoryTest {
         )
         food = db.categoryDao()
             .insert(Category(name = "Food", appliesTo = CategoryScope.EXPENSE, displayOrder = 1))
-        stock = db.instrumentDao().insert(
+        stock = db.insertListed(
             Instrument(
                 name = "GOLDBEES",
                 instrumentType = InstrumentType.STOCK,
-                symbol = "GOLDBEES",
-                displayOrder = 1,
                 createdTime = now,
                 modifiedTime = now
-            )
+            ), Security(symbol = "GOLDBEES")
         )
     }
 
@@ -172,7 +174,7 @@ class TransactionRepositoryTest {
                 particulars = "Lunch"
             ), saveAsTemplate = true
         )
-        val template = db.transactionDao().getAllTemplates().single()
+        val template = db.transactionDao().observeTemplates().first().single()
         assertEquals("Lunch", template.particulars)
         assertEquals(TransactionKind.EXPENSE, template.kind)
         assertEquals(wallet, template.fromAccountId)

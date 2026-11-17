@@ -12,47 +12,64 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.investments.HoldingRow
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.SummaryLine
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.StatCell
+import com.nagabhushansn95.financetracker.ui.edit.AccountSheet
+import com.nagabhushansn95.financetracker.ui.edit.EditDataViewModel
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InvestmentScaffold(
     title: String,
     onBack: () -> Unit,
+    floatingActionButton: @Composable () -> Unit = {},
+    empty: String = "Nothing invested yet.",
     content: @Composable (InvestmentSummary) -> Unit
 ) {
     val viewModel: InvestmentSummaryViewModel = viewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text(title) },
-            navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) })
-    }) { padding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                colors = appTopBarColors(),
+                title = { Text(title) },
+                navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) })
+        },
+        floatingActionButton = floatingActionButton,
+    ) { padding ->
         androidx.compose.foundation.layout.Box(modifier = Modifier
             .fillMaxSize()
             .padding(padding)) {
             val summary = state.summary
             if (summary == null) Text(
-                if (state.loaded) "Nothing invested yet." else "Loading…",
+                if (state.loaded) empty else "Loading…",
                 modifier = Modifier.padding(16.dp)
             )
             else content(summary)
@@ -60,19 +77,44 @@ private fun InvestmentScaffold(
     }
 }
 
-/** EPF and PPF: contributions, interest, balance and XIRR per account. */
+/**
+ * EPF and PPF: contributions, interest, balance and XIRR per account. The + adds a provident-fund account; like
+ * every other investment, these accounts are added, edited and deleted only here, never under Manage.
+ */
 @Composable
 fun ProvidentFundsScreen(
     onBack: () -> Unit,
     onOpenAccount: (Long) -> Unit = {}
 ) {
-    InvestmentScaffold("Provident funds", onBack) { s ->
+    val editData: EditDataViewModel = viewModel()
+    var adding by remember { mutableStateOf(false) }
+    if (adding) AccountSheet(
+        existing = null,
+        initialType = AccountType.PROVIDENT_FUND,
+        transactionCount = null,
+        onSave = { editData.saveAccount(it); adding = false },
+        onDelete = null,
+        onDismiss = { adding = false },
+        types = listOf(AccountType.PROVIDENT_FUND),
+    )
+    InvestmentScaffold(
+        "Provident funds", onBack,
+        floatingActionButton = {
+            FloatingActionButton(onClick = { adding = true }) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = "Add a provident-fund account"
+                )
+            }
+        },
+        empty = "No provident-fund accounts yet. Add one with +.",
+    ) { s ->
         val pf = s.providentFunds
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (pf == null) item { Text("No provident-fund accounts. Add one under Manage › Accounts.") }
+            if (pf == null) item { Text("No provident-fund accounts yet. Add one with +.") }
             else {
                 item { TypeHeader(listOf(pf)) }
                 items(pf.children, key = { it.name }) { line ->

@@ -33,7 +33,18 @@ data class TradeRow(
     val ref: String,
     val mutualFund: Boolean,
     val sip: Boolean = false,
-) : ZerodhaRow
+    /** NSE or BSE from the tradebook; null for funds. */
+    val exchange: String? = null,
+    /** The tradebook's series (EQ, BE, RR …); null for funds. */
+    val series: String? = null,
+    /** Coin's order date (the day the bank was debited) when the file carries one; else null. */
+    val orderDate: LocalDate? = null,
+    /** Coin's folio number for the scheme. */
+    val folio: String? = null,
+) : ZerodhaRow {
+    /** The day the money moved: a fund buy on its order date, everything else on the trade date. */
+    val cashDate: LocalDate get() = if (mutualFund && side == Side.BUY) orderDate ?: date else date
+}
 
 data class DividendRow(
     override val date: LocalDate,
@@ -139,6 +150,10 @@ object ZerodhaStatements {
         val ref =
             c("exchange_order_id").ifBlank { "${c("settlement_id")}:${c("isin")}:${c("trade_date")}" }
         val tag = c("tag")
+        // "ordered_at" is a time of day in some exports and a full timestamp in others; only a date counts.
+        val orderDate = c("ordered_at").split(' ', 'T').firstOrNull { part ->
+            runCatching { anyDate(part) }.isSuccess
+        }?.let(::anyDate)
         return TradeRow(
             date = date,
             side = side,
@@ -154,6 +169,8 @@ object ZerodhaStatements {
                 "sip",
                 ignoreCase = true
             ),
+            orderDate = orderDate,
+            folio = c("folio_number").ifBlank { null },
         )
     }
 
@@ -179,6 +196,8 @@ object ZerodhaStatements {
             // A fund order's trade id is Coin's exchange order id, so the two statements de-duplicate against each other.
             ref = "zerodha:${c("trade_id")}",
             mutualFund = mutualFund,
+            exchange = if (mutualFund) null else c("exchange").uppercase().ifBlank { null },
+            series = if (mutualFund) null else c("series").uppercase().ifBlank { null },
         )
     }
 
@@ -216,10 +235,49 @@ object ZerodhaStatements {
         return ChargeRow(anyDate(c("date")), round2(c("amount").toDouble()))
     }
 
-    private fun anyDate(text: String): LocalDate {
+    fun anyDate(text: String): LocalDate {
         val t = text.trim().substringBefore(' ').substringBefore('T')
         for (f in DATE_FORMATS) runCatching { return LocalDate.parse(t, f) }
         throw ZerodhaParseException("unreadable date '$text'")
+    }
+
+    /**
+     * The Coin order history with the allotment prices of the MF tradebook: each order takes the price of the
+     * tradebook row with the same order id, or failing that the row for the same ISIN and units within five days of
+     * it. Orders without a tradebook row keep Coin's NAV and are listed in [ParsedStatement.skipped] as a note.
+     */
+    fun mergeCoinWithTradebook(coin: ParsedStatement, tradebook: ParsedStatement): ParsedStatement {
+        require(coin.type == StatementType.COIN_ORDERS) { "The first file is not a Coin order history" }
+        require(tradebook.type == StatementType.KITE_TRADEBOOK) { "The second file is not a Kite tradebook" }
+        val trades =
+            tradebook.rows.filterIsInstance<TradeRow>().filter { it.mutualFund }.toMutableList()
+        require(trades.isNotEmpty()) { "The tradebook has no mutual-fund rows; export the MF segment" }
+        val notes = ArrayList<String>()
+        val merged = coin.rows.map { row ->
+            if (row !is TradeRow) return@map row
+            val match = trades.firstOrNull { it.ref == row.ref }
+                ?: trades.firstOrNull {
+                    it.isin != null && it.isin == row.isin && kotlin.math.abs(it.quantity - row.quantity) < 1e-3 &&
+                            kotlin.math.abs(
+                                java.time.temporal.ChronoUnit.DAYS.between(
+                                    it.date,
+                                    row.date
+                                )
+                            ) <= 5
+                }
+            if (match == null) {
+                notes += "${row.name} on ${row.date}: no tradebook row, Coin's NAV kept"
+                row
+            } else {
+                trades.remove(match)
+                row.copy(price = match.price)
+            }
+        }
+        return ParsedStatement(
+            StatementType.COIN_ORDERS,
+            merged,
+            coin.skipped + tradebook.skipped + notes
+        )
     }
 
     /** Fund houses whose names are acronyms and must stay upper case when a shouting tradebook name is title-cased. */

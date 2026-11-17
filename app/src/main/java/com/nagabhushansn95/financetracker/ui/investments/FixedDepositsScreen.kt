@@ -55,11 +55,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
-import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
 import com.nagabhushansn95.financetracker.data.db.entity.FdStatus
 import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FdType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.investments.FdMath
@@ -73,6 +73,7 @@ import com.nagabhushansn95.financetracker.ui.common.AccountField
 import com.nagabhushansn95.financetracker.ui.common.AutocompleteField
 import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
 import com.nagabhushansn95.financetracker.ui.common.DateField
+import com.nagabhushansn95.financetracker.ui.common.DigitsField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.LabelRow
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
@@ -81,6 +82,7 @@ import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.PickDateDialog
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -110,27 +112,26 @@ class FixedDepositsViewModel(application: Application) : AndroidViewModel(applic
         db.instrumentDao().observeAll(),
         db.instrumentDao().observeFixedDeposits(),
         db.transactionDao().observeWithInstrument(),
-        db.instrumentDao().observeValuations(),
+        db.instrumentDao().observeSecurities(),
         combine(
             db.accountDao().observeVisible(),
             db.instrumentDao().observeCategories(),
             db.instrumentDao().observeFdTemplates(),
-            db.instrumentDao().observeFdEvents(),
+            db.holdingEventDao().observeAll(),
         ) { a, c, t, e -> Extras(a, c, t, e) },
-    ) { instruments, terms, ledger, valuations, (accounts, categories, templates, events) ->
+    ) { instruments, terms, ledger, securities, (accounts, categories, templates, events) ->
         FixedDepositsState(
             deposits = FixedDeposits.build(
                 instruments,
                 terms,
                 ledger,
-                valuations,
                 LocalDate.now(),
                 events
             ),
             accounts = accounts.filter { it.isCashAccount },
             categories = categories,
             templates = templates,
-            lookups = LedgerLookups(accounts, emptyList(), instruments),
+            lookups = LedgerLookups(accounts, emptyList(), instruments, securities = securities),
             loaded = true,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FixedDepositsState())
@@ -139,7 +140,7 @@ class FixedDepositsViewModel(application: Application) : AndroidViewModel(applic
         val accounts: List<Account>,
         val categories: List<InvestmentCategory>,
         val templates: List<FdTemplate>,
-        val events: List<FdEvent>,
+        val events: List<HoldingEvent>,
     )
 
     /** Filter and sort of the list, kept across visits and restarts. */
@@ -152,9 +153,9 @@ class FixedDepositsViewModel(application: Application) : AndroidViewModel(applic
 
     fun nextName() = FixedDeposits.nextName(state.value.deposits.map { it.instrument })
 
-    fun saveEvent(event: FdEvent) = run {
+    fun saveEvent(event: HoldingEvent) = run {
         repo.saveEvent(event)
-        if (event.kind == com.nagabhushansn95.financetracker.data.db.entity.FdEventKind.TDS) "Tax deduction recorded" else "Interest credit recorded"
+        if (event.kind == com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind.TDS_DEDUCTED) "Tax deduction recorded" else "Interest credit recorded"
     }
 
     fun deleteEvent(id: Long) = run { repo.deleteEvent(id); "Entry deleted" }
@@ -345,6 +346,7 @@ fun FixedDepositsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text("Fixed deposits") },
                 navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) },
             )
@@ -883,7 +885,6 @@ fun FixedDepositSheet(
             ?: FdMath.DEFAULT_COMPOUNDING_MONTHS,
         maturityDate = shownMaturity,
         maturityAmountPrinted = printed.toDoubleOrNull(),
-        tdsRate = t?.tdsRate,
         tdsReported = t?.tdsReported,
         tdsYearly = t?.tdsYearly,
         status = t?.status ?: FdStatus.ACTIVE,
@@ -998,20 +999,8 @@ fun FixedDepositSheet(
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = certificate,
-                onValueChange = { certificate = it },
-                label = { Text("Certificate no") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
-            OutlinedTextField(
-                value = accountNo,
-                onValueChange = { accountNo = it },
-                label = { Text("FD account no") },
-                singleLine = true,
-                modifier = Modifier.weight(1f)
-            )
+            DigitsField(certificate, "Certificate no", { certificate = it }, Modifier.weight(1f))
+            DigitsField(accountNo, "FD account no", { accountNo = it }, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AutocompleteField(
@@ -1019,7 +1008,8 @@ fun FixedDepositSheet(
                 "Customer ID",
                 suggestions.custIds,
                 { custId = it },
-                Modifier.weight(1f)
+                Modifier.weight(1f),
+                digits = true,
             )
             AutocompleteField(
                 owner,
@@ -1251,7 +1241,8 @@ fun FdTemplateSheet(
                 "Customer ID",
                 suggestions.custIds,
                 { custId = it },
-                Modifier.weight(1f)
+                Modifier.weight(1f),
+                digits = true,
             )
             AutocompleteField(
                 owner,

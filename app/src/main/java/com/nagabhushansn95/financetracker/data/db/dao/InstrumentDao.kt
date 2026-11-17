@@ -5,17 +5,18 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
+import androidx.room.Upsert
 import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
+import com.nagabhushansn95.financetracker.data.db.entity.PriceSource
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
-import com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -29,38 +30,48 @@ interface InstrumentDao {
     @Query("SELECT * FROM instruments WHERE id = :id")
     suspend fun getById(id: Long): Instrument?
 
-    @Query("SELECT * FROM instruments WHERE isin = :isin LIMIT 1")
-    suspend fun getByIsin(isin: String): Instrument?
-
-    @Query("SELECT * FROM instruments WHERE symbol = :symbol AND instrument_type = :type LIMIT 1")
-    suspend fun getBySymbol(symbol: String, type: InstrumentType): Instrument?
-
-    @Query("SELECT * FROM instruments WHERE name = :name AND instrument_type = :type LIMIT 1")
-    suspend fun getByName(name: String, type: InstrumentType): Instrument?
-
-    @Query("SELECT * FROM instruments ORDER BY display_order, id")
+    @Query("SELECT * FROM instruments ORDER BY id")
     suspend fun getAll(): List<Instrument>
 
-    @Query("SELECT * FROM instruments WHERE active = 1 ORDER BY display_order, id")
-    fun observeActive(): Flow<List<Instrument>>
-
-    @Query("SELECT * FROM instruments WHERE instrument_type = :type ORDER BY display_order, id")
+    @Query("SELECT * FROM instruments WHERE kind = :type ORDER BY id")
     suspend fun getByType(type: InstrumentType): List<Instrument>
 
-    @Query("SELECT * FROM instruments ORDER BY display_order, id")
+    @Query("SELECT * FROM instruments ORDER BY id")
     fun observeAll(): Flow<List<Instrument>>
 
-    @Query("SELECT COALESCE(MAX(display_order), 0) FROM instruments")
-    suspend fun maxDisplayOrder(): Int
+    // --- securities (stocks, ETFs, funds)
+    @Upsert
+    suspend fun upsertSecurity(security: Security)
 
-    @Query("UPDATE instruments SET display_order = :order WHERE id = :id")
-    suspend fun setDisplayOrder(id: Long, order: Int)
+    @Query("SELECT * FROM securities WHERE instrument_id = :instrumentId")
+    suspend fun getSecurity(instrumentId: Long): Security?
+
+    @Query("SELECT * FROM securities")
+    suspend fun getAllSecurities(): List<Security>
+
+    @Query("SELECT * FROM securities")
+    fun observeSecurities(): Flow<List<Security>>
+
+    @Query("SELECT i.*, s.* FROM instruments i JOIN securities s ON s.instrument_id = i.id ORDER BY i.id")
+    suspend fun getListed(): List<Listed>
+
+    @Query("SELECT i.*, s.* FROM instruments i JOIN securities s ON s.instrument_id = i.id WHERE i.id = :id")
+    suspend fun getListed(id: Long): Listed?
+
+    @Query("SELECT i.*, s.* FROM instruments i JOIN securities s ON s.instrument_id = i.id ORDER BY i.id")
+    fun observeListed(): Flow<List<Listed>>
+
+    @Query("UPDATE securities SET last_price = :price, last_price_date = :date, last_price_source = :source, last_price_fetched_at = :fetchedAt WHERE instrument_id = :instrumentId")
+    suspend fun setPrice(
+        instrumentId: Long,
+        price: Double,
+        date: String,
+        source: PriceSource,
+        fetchedAt: String
+    )
 
     @Query("UPDATE instruments SET active = :active, modified_time = :modifiedTime WHERE id = :id")
     suspend fun setActive(id: Long, active: Boolean, modifiedTime: String)
-
-    @Query("SELECT COUNT(*) FROM transactions WHERE instrument_id = :instrumentId")
-    suspend fun transactionCount(instrumentId: Long): Int
 
     @Query("DELETE FROM instruments WHERE id = :id")
     suspend fun delete(id: Long)
@@ -72,7 +83,7 @@ interface InstrumentDao {
     suspend fun reassignNextFd(from: Long, into: Long)
 
     // --- fixed deposits
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertFixedDeposit(fd: FixedDeposit)
 
     @Query("SELECT * FROM fixed_deposits WHERE instrument_id = :instrumentId")
@@ -103,24 +114,8 @@ interface InstrumentDao {
     @Query("SELECT COALESCE(MAX(display_order), 0) FROM fd_templates")
     suspend fun maxFdTemplateOrder(): Int
 
-    // --- fixed deposit events (interest credited, TDS deducted)
-    @Insert
-    suspend fun insertFdEvent(event: FdEvent): Long
-
-    @Update
-    suspend fun updateFdEvent(event: FdEvent)
-
-    @Query("DELETE FROM fd_events WHERE id = :id")
-    suspend fun deleteFdEvent(id: Long)
-
-    @Query("SELECT * FROM fd_events ORDER BY date, id")
-    suspend fun getAllFdEvents(): List<FdEvent>
-
-    @Query("SELECT * FROM fd_events ORDER BY date, id")
-    fun observeFdEvents(): Flow<List<FdEvent>>
-
     // --- insurance
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertInsurancePolicy(policy: InsurancePolicy)
 
     @Query("SELECT * FROM insurance_policies WHERE instrument_id = :instrumentId")
@@ -131,28 +126,6 @@ interface InstrumentDao {
 
     @Query("SELECT * FROM insurance_policies")
     fun observeInsurancePolicies(): Flow<List<InsurancePolicy>>
-
-    // --- validity periods (health cover, vehicle insurance, service, emission test)
-    @Insert
-    suspend fun insertValidityPeriod(period: ValidityPeriod): Long
-
-    @Update
-    suspend fun updateValidityPeriod(period: ValidityPeriod)
-
-    @Query("DELETE FROM validity_periods WHERE id = :id")
-    suspend fun deleteValidityPeriod(id: Long)
-
-    @Query("DELETE FROM validity_periods WHERE transaction_id = :transactionId")
-    suspend fun deleteValidityPeriodsOf(transactionId: Long)
-
-    @Query("SELECT * FROM validity_periods WHERE instrument_id = :instrumentId ORDER BY end_date, id")
-    suspend fun getValidityPeriods(instrumentId: Long): List<ValidityPeriod>
-
-    @Query("SELECT * FROM validity_periods ORDER BY end_date, id")
-    suspend fun getAllValidityPeriods(): List<ValidityPeriod>
-
-    @Query("SELECT * FROM validity_periods ORDER BY end_date, id")
-    fun observeValidityPeriods(): Flow<List<ValidityPeriod>>
 
     // --- categories
     @Insert
@@ -182,12 +155,6 @@ interface InstrumentDao {
     @Query("DELETE FROM investment_categories WHERE id = :id")
     suspend fun deleteCategory(id: Long)
 
-    @Query("SELECT * FROM instrument_valuations WHERE instrument_id = :instrumentId ORDER BY date DESC, id DESC")
-    suspend fun valuationHistory(instrumentId: Long): List<InstrumentValuation>
-
-    @Query("SELECT * FROM instrument_valuations ORDER BY date DESC, id DESC")
-    fun observeValuations(): Flow<List<InstrumentValuation>>
-
     @Query("SELECT * FROM investment_categories WHERE name = :name LIMIT 1")
     suspend fun getCategoryByName(name: String): InvestmentCategory?
 
@@ -216,33 +183,13 @@ interface InstrumentDao {
     @Query("UPDATE risk_levels SET display_order = :order WHERE id = :id")
     suspend fun setRiskLevelDisplayOrder(id: Long, order: Int)
 
-    // --- valuations
-    @Insert
-    suspend fun insertValuation(valuation: InstrumentValuation): Long
-
-    @Query("SELECT * FROM instrument_valuations WHERE instrument_id = :instrumentId ORDER BY date DESC, id DESC LIMIT 1")
-    suspend fun latestValuation(instrumentId: Long): InstrumentValuation?
-
-    @Query(
-        "SELECT v.* FROM instrument_valuations v " +
-                "JOIN (SELECT instrument_id, MAX(date) AS max_date FROM instrument_valuations GROUP BY instrument_id) m " +
-                "ON v.instrument_id = m.instrument_id AND v.date = m.max_date"
-    )
-    suspend fun latestValuations(): List<InstrumentValuation>
-
     // --- fx
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertFxRate(rate: FxRate)
-
-    @Query("SELECT * FROM fx_rates WHERE base = :base AND quote = :quote ORDER BY date DESC LIMIT 1")
-    suspend fun latestFxRate(base: String, quote: String): FxRate?
 
     @Query("SELECT * FROM fx_rates ORDER BY date")
     fun observeFxRates(): Flow<List<FxRate>>
 
     @Query("SELECT * FROM fx_rates ORDER BY date")
     suspend fun getAllFxRates(): List<FxRate>
-
-    @Query("SELECT * FROM instrument_valuations ORDER BY date DESC, id DESC")
-    suspend fun getAllValuationsLatestFirst(): List<InstrumentValuation>
 }

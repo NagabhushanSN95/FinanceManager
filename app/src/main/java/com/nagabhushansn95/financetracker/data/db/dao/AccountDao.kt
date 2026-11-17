@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.nagabhushansn95.financetracker.data.db.entity.Account
-import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,12 +27,6 @@ interface AccountDao {
     @Query("SELECT * FROM accounts WHERE deleted = 0 ORDER BY display_order, id")
     suspend fun getVisible(): List<Account>
 
-    @Query("SELECT * FROM accounts WHERE deleted = 0 AND account_type = :type ORDER BY display_order, id")
-    suspend fun getVisibleByType(type: AccountType): List<Account>
-
-    @Query("SELECT * FROM accounts WHERE deleted = 1 ORDER BY display_order, id")
-    suspend fun getDeleted(): List<Account>
-
     @Query("SELECT * FROM accounts ORDER BY display_order, id")
     suspend fun getAll(): List<Account>
 
@@ -54,4 +47,8 @@ interface AccountDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE from_account_id = :accountId OR to_account_id = :accountId")
     suspend fun transactionCount(accountId: Long): Int
+
+    /** Removes the row outright (templates on it go with it); only the 4.x import uses this, for empty deleted accounts. */
+    @Query("DELETE FROM accounts WHERE id = :id")
+    suspend fun delete(id: Long)
 }

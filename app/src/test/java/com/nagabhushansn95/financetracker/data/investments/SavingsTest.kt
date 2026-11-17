@@ -35,12 +35,20 @@ class SavingsTest {
         createdTime = now,
         modifiedTime = now
     )
+    private val usd = Account(
+        id = 12,
+        name = "Demat USD",
+        accountType = AccountType.DEMAT,
+        currency = "USD",
+        displayOrder = 3,
+        createdTime = now,
+        modifiedTime = now
+    )
     private val embassy = Instrument(
         id = 20,
         name = "EMBASSY",
         instrumentType = InstrumentType.STOCK,
         categoryId = 2,
-        displayOrder = 1,
         createdTime = now,
         modifiedTime = now
     )
@@ -48,7 +56,6 @@ class SavingsTest {
         id = 21,
         name = "FD #1",
         instrumentType = InstrumentType.FIXED_DEPOSIT,
-        displayOrder = 2,
         createdTime = now,
         modifiedTime = now
     )
@@ -57,7 +64,6 @@ class SavingsTest {
         name = "FD #2",
         instrumentType = InstrumentType.FIXED_DEPOSIT,
         owner = "Appa Amma",
-        displayOrder = 3,
         createdTime = now,
         modifiedTime = now
     )
@@ -73,6 +79,7 @@ class SavingsTest {
         fx: Double? = null
     ) =
         TransactionEntity(
+            id = nextId++,
             createdTime = now,
             modifiedTime = now,
             date = LocalDate.parse(date),
@@ -82,9 +89,10 @@ class SavingsTest {
             instrumentId = instrument,
             particulars = "",
             amount = amount,
-            currency = currency,
             fxRate = fx
         )
+
+    private var nextId = 1L
 
     @Test
     fun monthlyAndYearlyTables() {
@@ -130,16 +138,16 @@ class SavingsTest {
                 TransactionKind.INVEST,
                 100.0,
                 instrument = 20,
-                from = 10,
+                from = 12,
                 currency = "USD",
                 fx = 85.0
-            ),
+            ),  // from the dollar account at a pinned rate: 8,500 rupees
         )
         val monthly = Savings.build(
             rows,
             listOf(embassy, fd, familyFd),
             listOf(fds, stocks, reit),
-            listOf(bank, epf),
+            listOf(bank, epf, usd),
             monthly = true
         )
         assertEquals(listOf("2026-02", "2026-01", "2025-12"), monthly.map { it.key })
@@ -163,7 +171,7 @@ class SavingsTest {
             rows,
             listOf(embassy, fd, familyFd),
             listOf(fds, stocks, reit),
-            listOf(bank, epf),
+            listOf(bank, epf, usd),
             monthly = false
         )
         assertEquals(listOf("2026", "2025"), yearly.map { it.key })
@@ -202,7 +210,7 @@ class SavingsTest {
             rows,
             listOf(embassy, fd),
             listOf(stocks, reit, fds),
-            listOf(bank, epf),
+            listOf(bank, epf, usd),
             monthly = true
         )
         val april = monthly.single { it.key == "2026-04" }

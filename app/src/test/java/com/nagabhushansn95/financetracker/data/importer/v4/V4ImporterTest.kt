@@ -3,9 +3,11 @@ package com.nagabhushansn95.financetracker.data.importer.v4
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -25,7 +27,7 @@ class V4ImporterTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = AppDatabase.inMemory(context)
+        db = TestDb.inMemory(context)
     }
 
     @After
@@ -124,11 +126,15 @@ class V4ImporterTest {
             75000.0
         )
 
-        val report = V4Importer(db).import(src)
+        val now = java.time.LocalDateTime.of(2026, 11, 5, 9, 58, 58)
+        val report = V4Importer(db).import(src, now)
 
         // accounts: 3 wallets + 4 banks (minus Investments) + Demat USD + EPF + PPF
         val accounts = db.accountDao().getAll()
-        assertEquals(10, accounts.size)
+        // Wallet USD was deleted in 4.x with nothing in it and no transaction: not carried over at all.
+        assertEquals(9, accounts.size)
+        assertTrue(accounts.none { it.name == "Wallet USD" })
+        assertTrue(report.notes.any { it.startsWith("Deleted account 'Wallet USD'") })
         assertEquals(
             AccountType.CREDIT_CARD,
             accounts.single { it.name == "HDFC Millenia Credit Card" }.accountType
@@ -138,12 +144,12 @@ class V4ImporterTest {
             accounts.single { it.name == "Zerodha Demat INR" }.accountType
         )
         assertEquals("USD", accounts.single { it.name == "Zerodha Demat USD" }.currency)
-        assertEquals("USD", accounts.single { it.name == "Wallet USD" }.currency)
-        assertTrue(accounts.single { it.name == "Wallet USD" }.deleted)
         assertNull(accounts.firstOrNull { it.name == "Investments" })
         assertEquals(4800.0, accounts.single { it.name == "EPF" }.balance, 1e-9)
         assertEquals(12500.0, accounts.single { it.name == "PPF" }.balance, 1e-9)
-        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), accounts.map { it.displayOrder })
+        assertEquals(
+            listOf(1, 2, 4, 5, 6, 7, 8, 9, 10),
+            accounts.map { it.displayOrder }) // 3 was Wallet USD
 
         // categories keep v4 ids, plus one income category for interest and dividends
         val categories = db.categoryDao().getAll()
@@ -163,7 +169,10 @@ class V4ImporterTest {
                 "Amma's KVGB Account"
             ), instruments.map { it.name }.toSet()
         )
-        assertEquals("NSE", instruments.single { it.name == "MON100" }.exchange)
+        assertEquals(
+            "NSE",
+            db.instrumentDao().getSecurity(instruments.single { it.name == "MON100" }.id)!!.exchange
+        )
         val policy = db.instrumentDao()
             .getInsurancePolicy(instruments.single { it.instrumentType == InstrumentType.INSURANCE }.id)!!
         assertEquals("HDFC Life", policy.provider)
@@ -189,6 +198,15 @@ class V4ImporterTest {
         suspend fun tx(v4: V4Transaction) = dao.getById(v4.id.toLong())!!
         fun acc(name: String) = accounts.single { it.name == name }.id
         fun inst(name: String) = instruments.single { it.name == name }.id
+        // A ported account is dated to its first transaction, not to the import; one without any keeps the import time.
+        val amazonPay = accounts.single { it.name == "Amazon Pay" }
+        assertEquals(java.time.LocalDate.of(2026, 11, 1).atStartOfDay(), amazonPay.createdTime)
+        assertEquals(now, accounts.single { it.name == "Zerodha Demat USD" }.createdTime)
+        // Instruments the same: SILVERBEES starts with its 27 Oct buy.
+        assertEquals(
+            java.time.LocalDate.of(2026, 10, 27).atStartOfDay(),
+            instruments.single { it.name == "SILVERBEES" }.createdTime
+        )
 
         tx(expense).let {
             assertEquals(
@@ -319,7 +337,7 @@ class V4ImporterTest {
         }
 
         // templates: the profit template is dropped
-        val templates = dao.getAllTemplates()
+        val templates = dao.observeTemplates().first()
         assertEquals(3, templates.size)
         assertEquals(
             TransactionKind.INVEST,

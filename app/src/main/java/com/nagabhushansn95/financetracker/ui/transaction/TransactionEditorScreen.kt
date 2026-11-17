@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -80,6 +81,7 @@ fun TransactionEditorScreen(
     var sheet by remember { mutableStateOf<Sheet?>(null) }
     var showDate by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var blocked by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(event) {
         when (val e = event) {
@@ -91,21 +93,29 @@ fun TransactionEditorScreen(
                 snackbar.showSnackbar(e.message); viewModel.eventHandled()
             }
 
+            is EditorEvent.Blocked -> {
+                blocked = e.message; viewModel.eventHandled()
+            }
+
             null -> Unit
         }
     }
 
+    blocked?.let { message ->
+        AlertDialog(
+            onDismissRequest = onDone,
+            title = { Text("Restore the account first") },
+            text = { Text(message) },
+            confirmButton = { TextButton(onClick = onDone) { Text("OK") } },
+        )
+    }
+
     val lookups = data.lookups
-    // Invest and Redeem are recorded only from the instrument's screen under Investments, so the editor offers the
-    // cash kinds. An investment row that still reaches it (a deposit's, say) keeps its kind and shows all five.
-    val investmentKinds = setOf(TransactionKind.INVEST, TransactionKind.REDEEM)
-    val kinds =
-        if (form.kind in investmentKinds) TransactionKind.entries
-        else TransactionKind.entries.filter { it !in investmentKinds }
 
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(if (form.isEdit) "Edit transaction" else "Add transaction") },
                 navigationIcon = {
                     IconButton(onClick = onDone) {
@@ -140,7 +150,8 @@ fun TransactionEditorScreen(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                kinds.forEach { kind ->
+                // Invest and Redeem are recorded from the instrument's screen under Investments, never here.
+                com.nagabhushansn95.financetracker.ui.edit.CASH_KINDS.forEach { kind ->
                     FilterChip(
                         selected = form.kind == kind,
                         onClick = { viewModel.setKind(kind) },
@@ -155,12 +166,12 @@ fun TransactionEditorScreen(
                 onClick = { showDate = true })
 
             if (form.showsFrom) FieldRow(
-                label = if (form.kind == TransactionKind.INVEST) "Paid from" else "From",
+                label = "From",
                 value = form.fromAccountId?.let { lookups.accountName(it) } ?: "Choose account",
                 onClick = { sheet = Sheet.FROM },
             )
             if (form.showsTo) FieldRow(
-                label = if (form.kind == TransactionKind.REDEEM) "Credited to" else "To",
+                label = "To",
                 value = form.toAccountId?.let { lookups.accountName(it) } ?: "Choose account",
                 onClick = { sheet = Sheet.TO },
             )
@@ -197,10 +208,43 @@ fun TransactionEditorScreen(
                     modifier = Modifier.weight(1f),
                 )
             }
+            val (fromCurrency, toCurrency) = form.currencies(data.accountsById)
+            val crossing = form.crossesCurrencies(data.accountsById)
             OutlinedTextField(
                 value = form.amount,
                 onValueChange = viewModel::setAmount,
-                label = { Text("Amount") },
+                label = { Text(if (crossing) "Amount leaving ($fromCurrency)" else "Amount") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            // A load of a forex card or a foreign demat account: the two sides are in different currencies.
+            if (crossing) {
+                OutlinedTextField(
+                    value = form.toAmount,
+                    onValueChange = viewModel::setToAmount,
+                    label = { Text("Amount arriving ($toCurrency)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                val a = form.amountValue
+                val b = form.toAmountValue
+                if (a != null && b != null && a > 0 && b > 0) Text(
+                    if (fromCurrency == "INR") "%.2f ₹ per $toCurrency".format(a / b)
+                    else if (toCurrency == "INR") "%.2f ₹ per $fromCurrency".format(b / a)
+                    else "%.4f $toCurrency per $fromCurrency".format(b / a),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            // Money credited into a foreign account with no load behind it (cash back, money paid back): the rate it
+            // counts at in statistics, optional.
+            if (form.intoForeign(data.accountsById)) OutlinedTextField(
+                value = form.fxRate,
+                onValueChange = viewModel::setFxRate,
+                label = { Text("Rupees per $toCurrency (optional)") },
+                supportingText = { Text("For statistics; left empty, the account's average cost applies.") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),

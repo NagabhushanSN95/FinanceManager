@@ -27,8 +27,8 @@ data class OtherView(
     val instrument: Instrument,
     val rows: List<TransactionEntity>,
 ) {
-    val putIn: Double = rows.filter { it.kind == TransactionKind.INVEST }.sumOf { it.amountInr }
-    val takenBack: Double = rows.filter { it.kind == TransactionKind.REDEEM }.sumOf { it.amountInr }
+    val putIn: Double = rows.filter { it.kind == TransactionKind.INVEST }.sumOf { it.amount }
+    val takenBack: Double = rows.filter { it.kind == TransactionKind.REDEEM }.sumOf { it.amount }
     val outstanding: Double get() = putIn - takenBack
     val firstDate: LocalDate? get() = rows.minOfOrNull { it.date }
     val lastDate: LocalDate? get() = rows.maxOfOrNull { it.date }
@@ -61,7 +61,7 @@ object Others {
     fun build(instruments: List<Instrument>, ledger: List<TransactionEntity>): List<OtherView> {
         val byInstrument = ledger.filter { it.instrumentId != null }.groupBy { it.instrumentId!! }
         return instruments.filter { it.instrumentType == InstrumentType.OTHER }
-            .sortedWith(compareBy({ it.displayOrder }, { it.id }))
+            .sortedWith(compareBy<Instrument, String>(String.CASE_INSENSITIVE_ORDER) { it.name }.thenBy { it.id })
             .map {
                 OtherView(
                     it,
@@ -125,7 +125,6 @@ object Others {
         quantity = null,
         rate = null,
         amount = amount,
-        currency = view.instrument.currency,
         modifiedTime = now,
     )
 }

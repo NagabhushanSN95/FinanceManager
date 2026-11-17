@@ -3,7 +3,6 @@ package com.nagabhushansn95.financetracker.data.investments
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
-import com.nagabhushansn95.financetracker.data.db.entity.Setting
 import com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup
 
 /**
@@ -26,8 +25,6 @@ sealed class GroupMember {
 }
 
 object SummaryGroups {
-    const val SEEDED_KEY = "summary_groups.seeded"
-
     /** The kinds a group may name, with their labels; Others stays out (it is outside the summary). */
     val TYPES: List<Pair<GroupMember, String>> = listOf(
         GroupMember.Type(InstrumentType.FIXED_DEPOSIT) to "Fixed deposits",
@@ -111,7 +108,8 @@ object SummaryGroups {
     fun describe(
         group: SummaryGroup,
         categoriesById: Map<Long, InvestmentCategory>,
-        instrumentsById: Map<Long, com.nagabhushansn95.financetracker.data.db.entity.Instrument> = emptyMap()
+        instrumentsById: Map<Long, com.nagabhushansn95.financetracker.data.db.entity.Instrument> = emptyMap(),
+        securitiesById: Map<Long, com.nagabhushansn95.financetracker.data.db.entity.Security> = emptyMap(),
     ): String {
         val members = parse(group.members)
         val kinds = TYPES.filter { (m, _) -> m in members }.map { it.second }
@@ -121,17 +119,17 @@ object SummaryGroups {
             }
         }
         val instruments = members.filterIsInstance<GroupMember.Instrument>().mapNotNull { m ->
-            instrumentsById[m.id]?.let {
-                it.symbol?.takeIf { s -> s.isNotBlank() && !s.all(Char::isDigit) } ?: it.name
-            }
+            instrumentsById[m.id]?.let { securitiesById[it.id]?.tickerOrNull ?: it.name }
         }
         return (kinds + categories + instruments).joinToString(", ").ifEmpty { "Nothing yet" }
     }
 
-    /** Seeds "Liquid" and "In Zerodha" once per database; a user who deletes them is not given them again. */
+    /**
+     * Seeds "Liquid" and "In Zerodha" into a database that has no groups and no instruments yet (a fresh one); a user
+     * who deletes them later is not given them again, since by then something is invested.
+     */
     suspend fun seedIfEmpty(db: AppDatabase) {
-        if (db.settingsDao().get(SEEDED_KEY) != null) return
-        if (db.summaryGroupDao().count() == 0) DEFAULTS.forEach { db.summaryGroupDao().insert(it) }
-        db.settingsDao().set(Setting(SEEDED_KEY, "1"))
+        if (db.summaryGroupDao().count() > 0 || db.instrumentDao().getAll().isNotEmpty()) return
+        DEFAULTS.forEach { db.summaryGroupDao().insert(it) }
     }
 }

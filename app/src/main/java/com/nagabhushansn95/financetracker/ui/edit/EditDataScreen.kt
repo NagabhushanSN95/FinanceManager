@@ -23,7 +23,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -49,13 +48,10 @@ import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.data.investments.InvestmentOrder
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.investments.FdTemplateSheet
 import com.nagabhushansn95.financetracker.ui.investments.summary
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
-import com.nagabhushansn95.financetracker.ui.transaction.typeTitle
 import kotlinx.coroutines.launch
 
 /** Tab titles, in order; the drawer's Manage sub-entries use the same list. */
@@ -63,14 +59,13 @@ val MANAGE_TABS =
     listOf(
         "Accounts",
         "Categories",
-        "Instruments",
         "Investment categories",
         "Risk levels",
         "Summary groups",
         "Templates"
     )
 
-/** The tabs that stay while the investments are locked: nothing about instruments, categories or their groups. */
+/** The tabs that stay while the investments are locked: nothing about investment categories or their groups. */
 private val CASH_TABS = listOf("Accounts", "Categories", "Templates")
 
 /** The tabs to show: all of them once the investments are unlocked, else the cash-side ones. */
@@ -78,8 +73,9 @@ fun manageTabs(investmentsUnlocked: Boolean): List<String> =
     if (investmentsUnlocked) MANAGE_TABS else MANAGE_TABS.filter { it in CASH_TABS }
 
 /**
- * Manage: accounts, categories, instruments, investment categories and templates with add / edit / delete /
- * restore and drag-handle reorder. The tabs are swiped as well as tapped.
+ * Manage: accounts, categories, investment categories, risk levels, summary groups and templates with add / edit /
+ * delete / restore and drag-handle reorder. The tabs are swiped as well as tapped. Instruments are not here: each
+ * kind is added, edited and deleted on its own screen under Investments.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -115,7 +111,6 @@ fun EditDataScreen(
             when (TABS.getOrNull(page)) {
                 "Accounts" -> AccountsTab(viewModel)
                 "Categories" -> CategoriesTab(viewModel)
-                "Instruments" -> InstrumentsTab(viewModel)
                 "Investment categories" -> InvestmentCategoriesTab(viewModel)
                 "Risk levels" -> RiskLevelsTab(viewModel)
                 "Summary groups" -> SummaryGroupsTab(viewModel)
@@ -143,7 +138,9 @@ private fun ShowDeletedRow(label: String, checked: Boolean, onChange: (Boolean) 
 
 @Composable
 private fun AccountsTab(viewModel: EditDataViewModel) {
-    val all by viewModel.accounts.collectAsStateWithLifecycle()
+    // Provident funds are investments: added, edited and deleted on their own screen under Investments, never here.
+    val everyAccount by viewModel.accounts.collectAsStateWithLifecycle()
+    val all = everyAccount.filter { it.accountType != AccountType.PROVIDENT_FUND }
     var showDeleted by rememberSaveable { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Account?>(null) }
     var adding by remember { mutableStateOf<AccountType?>(null) }
@@ -212,9 +209,14 @@ private fun AccountsTab(viewModel: EditDataViewModel) {
             onSave = { viewModel.saveAccount(it); editing = null; adding = null },
             onDelete = editing?.let { a -> { viewModel.deleteAccount(a.id); editing = null } },
             onDismiss = { editing = null; adding = null },
+            types = CASH_ACCOUNT_TYPES,
         )
     }
 }
+
+/** The account types Manage › Accounts handles; provident funds live under Investments. */
+val CASH_ACCOUNT_TYPES: List<AccountType> =
+    SummaryViewModel.SECTION_ORDER.filter { it != AccountType.PROVIDENT_FUND }
 
 // ---------------------------------------------------------------------------------------------------- categories
 
@@ -318,133 +320,6 @@ private fun CategoriesTab(viewModel: EditDataViewModel) {
     }
 }
 
-// ---------------------------------------------------------------------------------------------------- instruments
-
-@Composable
-private fun InstrumentsTab(viewModel: EditDataViewModel) {
-    val all by viewModel.instruments.collectAsStateWithLifecycle()
-    val investmentCategories by viewModel.investmentCategories.collectAsStateWithLifecycle()
-    var showInactive by rememberSaveable { mutableStateOf(false) }
-    var query by rememberSaveable { mutableStateOf("") }
-    var collapsed by rememberSaveable { mutableStateOf(setOf<String>()) }
-    var editing by remember { mutableStateOf<Instrument?>(null) }
-    var adding by remember { mutableStateOf(false) }
-    var txCount by remember { mutableStateOf<Int?>(null) }
-    LaunchedEffect(editing) {
-        txCount = editing?.let { viewModel.instrumentTransactionCount(it.id) }
-    }
-
-    // Fixed deposits are managed entirely from Investments › Fixed deposits; nothing about them lives here.
-    val managed = all.filter { it.instrumentType != InstrumentType.FIXED_DEPOSIT }
-    // A search looks through everything, inactive included, by name, symbol or ISIN.
-    val q = query.trim()
-    fun matches(i: Instrument) =
-        q.isEmpty() || listOfNotNull(i.name, i.shortName, i.symbol, i.isin).any {
-            it.contains(
-                q,
-                ignoreCase = true
-            )
-        }
-
-    val active = managed.filter { it.active && matches(it) }
-    val inactive = managed.filter { !it.active && matches(it) }
-    val sections =
-        InvestmentOrder.types(InvestmentOrder.names(investmentCategories)).mapNotNull { type ->
-        val ofType = active.filter { it.instrumentType == type }
-            // Only the Others screen lists in hand order; stocks, funds and policies sort by category and name.
-            if (ofType.isEmpty()) null else Section(
-                type.name,
-                typeTitle(type),
-                ofType,
-                reorderable = type == InstrumentType.OTHER && q.isEmpty()
-            )
-        } + if ((showInactive || q.isNotEmpty()) && inactive.isNotEmpty()) listOf(
-        Section(
-            "inactive",
-            "Inactive",
-            inactive,
-            reorderable = false
-        )
-    ) else emptyList()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column {
-            androidx.compose.material3.OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                label = { Text("Search instruments") },
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                trailingIcon = if (query.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { query = "" }) {
-                            Icon(
-                                Icons.Filled.Close,
-                                contentDescription = "Clear"
-                            )
-                        }
-                    }
-                } else null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-            if (q.isEmpty()) ShowDeletedRow(
-                "Show inactive instruments (${managed.count { !it.active }})",
-                showInactive
-            ) { showInactive = it }
-            ReorderableSections(
-                sections = sections,
-                id = { it.id },
-                onReordered = { _, ids -> viewModel.reorderInstruments(ids) },
-                collapsed = collapsed,
-                onToggleSection = { key ->
-                    collapsed = if (key in collapsed) collapsed - key else collapsed + key
-                },
-                row = { instrument, handle ->
-                    EditRow(
-                        instrument.name,
-                        subtitle = listOfNotNull(
-                            instrument.symbol,
-                            instrument.isin,
-                            instrument.owner.takeIf { it != Instrument.OWNER_SELF }).joinToString(" · ")
-                            .ifEmpty { null },
-                        muted = !instrument.active,
-                        onLongPress = { editing = instrument },
-                    ) {
-                        if (!instrument.active) TextButton(onClick = {
-                            viewModel.setInstrumentActive(
-                                instrument.id,
-                                true
-                            )
-                        }) { Text("Reactivate") }
-                        else handle()
-                    }
-                },
-            )
-        }
-        FloatingActionButton(
-            onClick = { adding = true },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Filled.Add, contentDescription = "Add instrument")
-        }
-    }
-
-    if (editing != null || adding) {
-        InstrumentSheet(
-            existing = editing,
-            initialType = InstrumentType.STOCK,
-            transactionCount = txCount,
-            categories = investmentCategories,
-            onSave = { viewModel.saveInstrument(it); editing = null; adding = false },
-            onDismiss = { editing = null; adding = false },
-        )
-    }
-}
-
 // ---------------------------------------------------------------------------------------------------- summary groups
 
 /**
@@ -457,8 +332,10 @@ private fun SummaryGroupsTab(viewModel: EditDataViewModel) {
     val groups by viewModel.summaryGroups.collectAsStateWithLifecycle()
     val categories by viewModel.investmentCategories.collectAsStateWithLifecycle()
     val instruments by viewModel.instruments.collectAsStateWithLifecycle()
+    val securities by viewModel.securities.collectAsStateWithLifecycle()
     val byId = categories.associateBy { it.id }
     val instrumentsById = instruments.associateBy { it.id }
+    val securitiesById = securities.associateBy { it.instrumentId }
     var editing by remember {
         mutableStateOf<com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup?>(
             null
@@ -484,7 +361,8 @@ private fun SummaryGroupsTab(viewModel: EditDataViewModel) {
                         subtitle = com.nagabhushansn95.financetracker.data.investments.SummaryGroups.describe(
                             g,
                             byId,
-                            instrumentsById
+                            instrumentsById,
+                            securitiesById,
                         ),
                         onLongPress = { editing = g },
                         handle = handle,
@@ -505,6 +383,7 @@ private fun SummaryGroupsTab(viewModel: EditDataViewModel) {
             existing = existing,
             categories = categories,
             instruments = instruments,
+            securities = securitiesById,
             onSave = { name, members ->
                 if (existing == null) viewModel.addSummaryGroup(name, members)
                 else viewModel.updateSummaryGroup(existing.copy(name = name, members = members))
@@ -531,6 +410,7 @@ private fun SummaryGroupSheet(
     existing: com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup?,
     categories: List<com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory>,
     instruments: List<Instrument>,
+    securities: Map<Long, com.nagabhushansn95.financetracker.data.db.entity.Security>,
     onSave: (String, String) -> Unit,
     onDelete: (() -> Unit)?,
     onDismiss: () -> Unit,
@@ -543,7 +423,13 @@ private fun SummaryGroupSheet(
         )
     }
     var expanded by remember { mutableStateOf(setOf<String>()) }
-    val tree = remember(categories, instruments) { GroupTree.build(categories, instruments) }
+    val tree = remember(categories, instruments, securities) {
+        GroupTree.build(
+            categories,
+            instruments,
+            securities
+        )
+    }
     com.nagabhushansn95.financetracker.ui.common.FormSheet(
         title = if (existing == null) "New group" else "Edit group",
         onDismiss = onDismiss
@@ -604,6 +490,7 @@ private object GroupTree {
     fun build(
         categories: List<com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory>,
         instruments: List<Instrument>,
+        securities: Map<Long, com.nagabhushansn95.financetracker.data.db.entity.Security> = emptyMap(),
     ): List<GroupNode> {
         val own = instruments.filter { it.owner == OWN }
         return com.nagabhushansn95.financetracker.data.investments.SummaryGroups.TYPES.map { (member, label) ->
@@ -622,8 +509,7 @@ private object GroupTree {
 
             fun leaf(i: Instrument) = GroupNode(
                 com.nagabhushansn95.financetracker.data.investments.GroupMember.Instrument(i.id),
-                (i.symbol?.takeIf { s -> s.isNotBlank() && !s.all(Char::isDigit) }
-                    ?.let { "${i.name} ($it)" } ?: i.name) +
+                (securities[i.id]?.tickerOrNull?.let { "${i.name} ($it)" } ?: i.name) +
                         if (i.active) "" else " · inactive",
             )
 
@@ -823,7 +709,6 @@ private fun TemplatesTab(viewModel: EditDataViewModel, showDeposits: Boolean = t
             t.fromAccountId?.let { "from " + lookups.accountName(it) },
             t.toAccountId?.let { "to " + lookups.accountName(it) },
             lookups.categoryPath(t.categoryId),
-            lookups.instrumentName(t.instrumentId),
             t.rate?.let { r ->
                 t.quantity?.let { q ->
                     "${MoneyFormat.amount(r)} × ${
@@ -995,7 +880,6 @@ private fun TemplatesTab(viewModel: EditDataViewModel, showDeposits: Boolean = t
             existing = editing,
             accounts = accounts.filter { !it.deleted },
             categories = categories.filter { !it.deleted },
-            instruments = instruments.filter { it.active },
             onSave = { viewModel.saveTemplate(it); editing = null; adding = false },
             onDelete = editing?.let { t -> { editing = null; confirmDelete = t } },
             onDismiss = { editing = null; adding = false },

@@ -25,7 +25,6 @@ class AlertsTest {
             name = name,
             instrumentType = type,
             active = active,
-            displayOrder = 1,
             createdTime = now,
             modifiedTime = now
         )
@@ -88,7 +87,6 @@ class AlertsTest {
                 row(1, 1, TransactionKind.INVEST, LocalDate.of(2025, 11, 4), 100000.0),
                 row(2, 2, TransactionKind.INVEST, LocalDate.of(2026, 11, 4), 100000.0),
             ),
-            emptyList(),
             today
         )
         val monthly = PolicyView(
@@ -142,8 +140,8 @@ class AlertsTest {
             today
         ) // two-year cover ending in 23 days: within the 30-day run-up
         val vehicle = PolicyView(
-            instrument(6, "Activa", InstrumentType.INSURANCE),
-            InsurancePolicy(6, InsuranceType.MOTOR, vehicleNumber = "KA01AB1234"),
+            instrument(6, "Activa", InstrumentType.VEHICLE),
+            null,
             listOf(
                 row(6, 6, TransactionKind.EXPENSE, LocalDate.of(2025, 11, 1), 1200.0),
                 row(7, 6, TransactionKind.EXPENSE, LocalDate.of(2026, 5, 1), 800.0),
@@ -174,11 +172,12 @@ class AlertsTest {
                     7
                 ),
             ),
-            today
+            today,
+            vehicle = com.nagabhushansn95.financetracker.data.db.entity.Vehicle(6, "KA01AB1234"),
         ) // third-party cover ended a week ago, service due in 8 days, own damage fine
         val sold = PolicyView(
-            instrument(7, "Old car", InstrumentType.INSURANCE, active = false),
-            InsurancePolicy(7, InsuranceType.MOTOR),
+            instrument(7, "Old car", InstrumentType.VEHICLE, active = false),
+            null,
             emptyList(),
             listOf(
                 ValidityPeriod(

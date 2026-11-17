@@ -3,11 +3,14 @@ package com.nagabhushansn95.financetracker.data.prices
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.PriceSource
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
-import com.nagabhushansn95.financetracker.data.db.entity.ValuationSource
+import com.nagabhushansn95.financetracker.data.db.insertListed
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -47,7 +50,7 @@ class PriceRefresherTest {
 
     @Before
     fun setUp() {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
     }
 
     @After
@@ -62,17 +65,13 @@ class PriceRefresherTest {
         units: Double = 10.0,
         cost: Double = 1000.0
     ): Long {
-        val id = db.instrumentDao().insert(
+        val id = db.insertListed(
             Instrument(
                 name = name,
                 instrumentType = type,
-                symbol = symbol,
-                exchange = exchange,
-                currency = currency,
-                displayOrder = 1,
                 createdTime = now,
                 modifiedTime = now
-            )
+            ), Security(symbol = symbol, exchange = exchange, currency = currency)
         )
         if (units > 0) db.transactionDao().insert(
             TransactionEntity(
@@ -85,7 +84,6 @@ class PriceRefresherTest {
                 quantity = units,
                 rate = cost / units,
                 amount = cost,
-                currency = currency,
                 fxRate = if (currency == "INR") null else 85.0
             )
         )
@@ -118,31 +116,36 @@ class PriceRefresherTest {
         assertEquals(listOf("Parag Parikh Flexi Cap Fund"), result.linked)
         assertTrue(requests.none { it.contains("SOLD") })
 
-        val goldPrice = db.instrumentDao().latestValuation(gold)!!
-        assertEquals(112.69, goldPrice.unitPrice!!, 1e-9)
-        assertEquals(ValuationSource.YAHOO, goldPrice.source)
-        assertEquals(LocalDate.of(2026, 11, 3), goldPrice.date)
-        assertEquals(ValuationSource.AMFI, db.instrumentDao().latestValuation(ppfas)!!.source)
-        assertEquals(90.7043, db.instrumentDao().latestValuation(ppfas)!!.unitPrice!!, 1e-9)
-        val linked = db.instrumentDao().getById(ppfas)!!
+        val goldPrice = db.instrumentDao().getSecurity(gold)!!
+        assertEquals(112.69, goldPrice.lastPrice!!, 1e-9)
+        assertEquals(PriceSource.YAHOO, goldPrice.lastPriceSource)
+        assertEquals(LocalDate.of(2026, 11, 3), goldPrice.lastPriceDate)
+        assertEquals(now, goldPrice.lastPriceFetchedAt)
+        val linked = db.instrumentDao().getSecurity(ppfas)!!
+        assertEquals(PriceSource.AMFI, linked.lastPriceSource)
+        assertEquals(90.7043, linked.lastPrice!!, 1e-9)
         assertEquals("122639", linked.symbol)
         assertEquals("AMFI", linked.exchange)
         assertEquals("INF879O01027", linked.isin)
-        assertEquals(null, db.instrumentDao().latestValuation(unknown))
-        assertEquals(null, db.instrumentDao().latestValuation(other))
-        assertEquals(94.73, db.instrumentDao().latestFxRate("USD", "INR")!!.rate, 1e-9)
+        assertEquals(null, db.instrumentDao().getSecurity(unknown)!!.lastPrice)
+        assertEquals(null, db.instrumentDao().getSecurity(other)!!.lastPrice)
+        assertEquals(
+            94.73,
+            db.instrumentDao().getAllFxRates().last { it.base == "USD" && it.quote == "INR" }.rate,
+            1e-9
+        )
 
-        // A second refresh on the same day adds no duplicate rows.
-        val before = db.instrumentDao().valuationHistory(gold).size
+        // A second refresh replaces the price in place.
         PriceRefresher(db, YahooQuotes(http), AmfiNav(http)).refresh(now.plusMinutes(5))
-        assertEquals(before, db.instrumentDao().valuationHistory(gold).size)
+        assertEquals(now.plusMinutes(5), db.instrumentDao().getSecurity(gold)!!.lastPriceFetchedAt)
+        assertEquals(112.69, db.instrumentDao().getSecurity(gold)!!.lastPrice!!, 1e-9)
 
         // The summary values the US holding in INR at the stored rate: 2 × 331.9 × 94.73.
         val summary = InvestmentSummaryBuilder.build(
             db.instrumentDao().getAll(),
             db.instrumentDao().getAllCategories(),
             db.transactionDao().getAllWithInstrument(),
-            db.instrumentDao().latestValuations(),
+            db.instrumentDao().getAllSecurities(),
             db.accountDao().getAll(),
             db.transactionDao().getAllWithInstrument(),
             asOf = LocalDate.of(2026, 11, 4),
@@ -150,7 +153,8 @@ class PriceRefresherTest {
         )
         val appleRow = summary.rows.first { it.instrument.id == apple }
         assertEquals(2 * 331.9 * 94.73, appleRow.currentValue, 0.01)
-        assertEquals(500.0 * 85.0, appleRow.position.costHeld, 0.01)
+        // Costs stay in the holding's own currency; only the current value is brought to rupees.
+        assertEquals(500.0, appleRow.position.costHeld, 0.01)
         assertEquals(331.9, appleRow.unitPrice!!, 1e-9)
     }
 }

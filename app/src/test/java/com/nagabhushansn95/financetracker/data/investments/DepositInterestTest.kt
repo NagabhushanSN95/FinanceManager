@@ -17,7 +17,6 @@ class DepositInterestTest {
             id = id,
             name = "I$id",
             instrumentType = type,
-            displayOrder = id.toInt(),
             createdTime = now,
             modifiedTime = now
         )

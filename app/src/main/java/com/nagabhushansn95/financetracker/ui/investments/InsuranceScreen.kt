@@ -8,13 +8,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -33,8 +34,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +42,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -77,11 +77,12 @@ import com.nagabhushansn95.financetracker.data.repository.InsuranceRepository
 import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
-import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
+import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -129,11 +130,21 @@ class InsuranceViewModel(application: Application) : AndroidViewModel(applicatio
         db.instrumentDao().observeAll(),
         db.instrumentDao().observeInsurancePolicies(),
         db.transactionDao().observeWithInstrument(),
-        db.instrumentDao().observeValidityPeriods(),
+        combine(
+            com.nagabhushansn95.financetracker.data.investments.Validity.observeAll(db),
+            db.vehicleDao().observeVehicles(),
+        ) { p, v -> p to v },
         combine(db.accountDao().observeAll(), db.categoryDao().observeAll()) { a, c -> a to c },
-    ) { instruments, policies, ledger, periods, (accounts, categories) ->
+    ) { instruments, policies, ledger, (periods, vehicles), (accounts, categories) ->
         InsuranceState(
-            policies = Insurance.build(instruments, policies, ledger, periods, LocalDate.now()),
+            policies = Insurance.build(
+                instruments,
+                policies,
+                ledger,
+                periods,
+                LocalDate.now(),
+                vehicles
+            ),
             lookups = LedgerLookups(accounts, categories, instruments),
             banks = accounts.filter { it.accountType != AccountType.PROVIDENT_FUND && !it.deleted },
             expenseCategoryIds = categories.filter { !it.deleted && it.appliesTo != CategoryScope.INCOME }
@@ -144,11 +155,12 @@ class InsuranceViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun savePolicy(
         instrument: Instrument,
-        policy: InsurancePolicy,
+        policy: InsurancePolicy?,
+        vehicle: com.nagabhushansn95.financetracker.data.db.entity.Vehicle?,
         manual: Map<ValidityKind, LocalDate?>
     ) {
         viewModelScope.launch {
-            runCatching { repository.savePolicy(instrument, policy, manual) }
+            runCatching { repository.savePolicy(instrument, policy, manual, vehicle = vehicle) }
                 .onFailure { message.value = it.message ?: it.toString() }
         }
     }
@@ -233,7 +245,8 @@ private fun rowLines(v: PolicyView): List<String> {
 
         InsuranceType.MOTOR -> listOf(
             listOfNotNull(
-                p?.vehicleNumber,
+                v.vehicle?.registrationNo,
+                v.vehicle?.makeModel,
                 v.current(ValidityKind.THIRD_PARTY)?.provider
                     ?: v.current(ValidityKind.OWN_DAMAGE)?.provider,
                 v.instrument.owner.takeIf { it != Instrument.OWNER_SELF }?.let { "owner $it" },
@@ -324,6 +337,7 @@ fun InsuranceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text("Insurance") },
                 navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) },
             )
@@ -414,7 +428,7 @@ fun InsuranceScreen(
     }
     if (creating) PolicySheet(
         existing = null,
-        onSave = { i, p, m -> viewModel.savePolicy(i, p, m); creating = false },
+        onSave = { i, p, veh, m -> viewModel.savePolicy(i, p, veh, m); creating = false },
         onDismiss = { creating = false })
 }
 
@@ -433,6 +447,7 @@ fun InsuranceTypeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(type.heading()) },
                 navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) },
             )
@@ -481,7 +496,7 @@ fun InsuranceTypeScreen(
     if (creating) PolicySheet(
         existing = null,
         initialType = type,
-        onSave = { i, p, m -> viewModel.savePolicy(i, p, m); creating = false },
+        onSave = { i, p, veh, m -> viewModel.savePolicy(i, p, veh, m); creating = false },
         onDismiss = { creating = false })
 }
 
@@ -558,6 +573,7 @@ fun InsurancePolicyScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(v?.title ?: "Policy") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -744,8 +760,15 @@ fun InsurancePolicyScreen(
                                     StatCell("Policy no", cover?.reference ?: "—")
                                 }
                                 Row {
-                                    StatCell("Vehicle no", p?.vehicleNumber ?: "—")
+                                    StatCell("Vehicle no", v.vehicle?.registrationNo ?: "—")
                                     StatCell("Premiums", "${v.premiums.size}")
+                                }
+                                if (v.vehicle?.makeModel != null || v.vehicle?.boughtOn != null) Row {
+                                    StatCell("Make and model", v.vehicle?.makeModel ?: "—")
+                                    StatCell(
+                                        "Bought on",
+                                        v.vehicle?.boughtOn?.format(SHORT_DATE) ?: "—"
+                                    )
                                 }
                             }
                         }
@@ -819,7 +842,7 @@ fun InsurancePolicyScreen(
                     Text(
                         (if (v.entryKindOf(t) == InsuranceEntryKind.PAYOUT) "−" else "") + MoneyFormat.amount(
                             t.amount,
-                            t.currency
+                            state.lookups?.currencyOf(t) ?: "INR"
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
@@ -855,7 +878,7 @@ fun InsurancePolicyScreen(
     }
     if (editingPolicy && v != null) PolicySheet(
         existing = v,
-        onSave = { i, p, m -> viewModel.savePolicy(i, p, m); editingPolicy = false },
+        onSave = { i, p, veh, m -> viewModel.savePolicy(i, p, veh, m); editingPolicy = false },
         onDismiss = { editingPolicy = false })
     val sheetKind = adding ?: editing?.let { v?.entryKindOf(it) }
     if (v != null && sheetKind != null) InsuranceEntrySheet(
@@ -891,19 +914,20 @@ fun InsurancePolicyScreen(
 @Composable
 fun PolicySheet(
     existing: PolicyView?,
-    onSave: (Instrument, InsurancePolicy, Map<ValidityKind, LocalDate?>) -> Unit,
+    onSave: (Instrument, InsurancePolicy?, com.nagabhushansn95.financetracker.data.db.entity.Vehicle?, Map<ValidityKind, LocalDate?>) -> Unit,
     onDismiss: () -> Unit,
     initialType: InsuranceType = InsuranceType.LIFE,
 ) {
     val p = existing?.policy
-    var type by remember { mutableStateOf(p?.insuranceType ?: initialType) }
+    var type by remember { mutableStateOf(existing?.type ?: initialType) }
     var provider by remember { mutableStateOf(p?.provider ?: "") }
     var policyName by remember { mutableStateOf(p?.policyName ?: "") }
     var vehicleName by remember {
-        mutableStateOf(existing?.instrument?.name?.takeIf { p?.insuranceType == InsuranceType.MOTOR }
-            ?: "")
+        mutableStateOf(existing?.instrument?.name?.takeIf { existing.isVehicle } ?: "")
     }
-    var vehicleNumber by remember { mutableStateOf(p?.vehicleNumber ?: "") }
+    var vehicleNumber by remember { mutableStateOf(existing?.vehicle?.registrationNo ?: "") }
+    var makeModel by remember { mutableStateOf(existing?.vehicle?.makeModel ?: "") }
+    var boughtOn by remember { mutableStateOf(existing?.vehicle?.boughtOn) }
     var number by remember { mutableStateOf(p?.policyNumber ?: "") }
     var sumAssured by remember { mutableStateOf(p?.sumAssured?.let(FdMath::plain) ?: "") }
     var premium by remember { mutableStateOf(p?.premiumAmount?.let(FdMath::plain) ?: "") }
@@ -952,6 +976,22 @@ fun PolicySheet(
                     label = { Text("Vehicle number") },
                     singleLine = true,
                     modifier = Modifier.weight(1f)
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = makeModel,
+                    onValueChange = { makeModel = it },
+                    label = { Text("Make and model (optional)") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                DateField(
+                    "Bought on",
+                    boughtOn,
+                    { boughtOn = it },
+                    Modifier.weight(1f),
+                    clearable = true
                 )
             }
             Text(
@@ -1080,36 +1120,41 @@ fun PolicySheet(
         )
         Button(enabled = name.isNotBlank() && dayOk, modifier = Modifier.fillMaxWidth(), onClick = {
             val now = java.time.LocalDateTime.now()
+            val motor = type == InsuranceType.MOTOR
             val instrument = (existing?.instrument ?: Instrument(
                 name = name,
-                instrumentType = InstrumentType.INSURANCE,
-                displayOrder = 0,
+                instrumentType = if (motor) InstrumentType.VEHICLE else InstrumentType.INSURANCE,
                 createdTime = now,
                 modifiedTime = now
             )).copy(
                 name = name,
+                instrumentType = if (motor) InstrumentType.VEHICLE else InstrumentType.INSURANCE,
                 owner = owner.trim().ifBlank { Instrument.OWNER_SELF },
                 categoryId = null,
                 active = active,
                 notes = notes.ifBlank { null })
-            val motor = type == InsuranceType.MOTOR
             onSave(
                 instrument,
-                InsurancePolicy(
+                if (motor) null else InsurancePolicy(
                     instrumentId = instrument.id,
                     insuranceType = type,
-                    provider = provider.trim().ifBlank { null }.takeIf { !motor },
-                    policyName = policyName.trim().ifBlank { null }.takeIf { !motor },
-                    policyNumber = number.trim().ifBlank { null }.takeIf { !motor },
-                    vehicleNumber = vehicleNumber.trim().ifBlank { null }.takeIf { motor },
-                    sumAssured = sumAssured.toDoubleOrNull().takeIf { !motor },
-                    premiumAmount = premium.toDoubleOrNull().takeIf { !motor },
+                    provider = provider.trim().ifBlank { null },
+                    policyName = policyName.trim().ifBlank { null },
+                    policyNumber = number.trim().ifBlank { null },
+                    sumAssured = sumAssured.toDoubleOrNull(),
+                    premiumAmount = premium.toDoubleOrNull(),
                     premiumFrequencyMonths = frequency.takeIf { type.scheduled },
                     dueDay = day.takeIf { type.scheduled },
                     dueMonth = dueMonth.takeIf { type.scheduled && frequency > 1 },
-                    startDate = start.takeIf { !motor },
+                    startDate = start,
                     maturityDate = maturity.takeIf { type.scheduled },
                 ),
+                if (motor) com.nagabhushansn95.financetracker.data.db.entity.Vehicle(
+                    instrumentId = instrument.id,
+                    registrationNo = vehicleNumber.trim().ifBlank { null },
+                    makeModel = makeModel.trim().ifBlank { null },
+                    boughtOn = boughtOn,
+                ) else null,
                 manualKinds.associateWith { manual[it] },
             )
         }) { Text("Save") }

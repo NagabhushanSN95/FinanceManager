@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.data.repository
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
@@ -30,7 +31,7 @@ class InstrumentMaintenanceTest {
 
     @Before
     fun setUp() = runTest {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
         bank = db.accountDao().insert(
             Account(
                 name = "Bank",
@@ -50,7 +51,6 @@ class InstrumentMaintenanceTest {
             Instrument(
                 name = name,
                 instrumentType = type,
-                displayOrder = 1,
                 createdTime = now,
                 modifiedTime = now
             )
@@ -101,13 +101,16 @@ class InstrumentMaintenanceTest {
         200
     )
         val bonusThenSold = instrument("BONUS")
-        tx(TransactionKind.INVEST, bonusThenSold, 10.0, 400); tx(
-        TransactionKind.INCOME,
-        bonusThenSold,
-        5.0,
-        300,
-        amount = 0.0
-    ); tx(TransactionKind.REDEEM, bonusThenSold, 15.0, 200)
+        tx(TransactionKind.INVEST, bonusThenSold, 10.0, 400)
+        db.holdingEventDao().insert(
+            com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent(
+                instrumentId = bonusThenSold,
+                date = today.minusDays(300),
+                kind = com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind.BONUS,
+                units = 5.0,
+            )
+        )
+        tx(TransactionKind.REDEEM, bonusThenSold, 15.0, 200)
         val noUnits = instrument("SIP-NO-UNITS", InstrumentType.MUTUAL_FUND)
         tx(TransactionKind.INVEST, noUnits, null, 400); tx(
         TransactionKind.REDEEM,

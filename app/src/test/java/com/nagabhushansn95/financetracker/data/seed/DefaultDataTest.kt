@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.data.seed
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import kotlinx.coroutines.test.runTest
@@ -22,7 +23,7 @@ class DefaultDataTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = AppDatabase.inMemory(context)
+        db = TestDb.inMemory(context)
     }
 
     @After

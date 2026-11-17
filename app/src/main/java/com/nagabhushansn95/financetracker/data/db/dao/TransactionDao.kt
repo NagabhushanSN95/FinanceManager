@@ -59,9 +59,6 @@ interface TransactionDao {
     @Query("UPDATE transactions SET instrument_id = :into, modified_time = :modifiedTime WHERE instrument_id = :from")
     suspend fun reassignInstrument(from: Long, into: Long, modifiedTime: String)
 
-    @Query("UPDATE templates SET instrument_id = :into WHERE instrument_id = :from")
-    suspend fun reassignTemplateInstrument(from: Long, into: Long)
-
     // --- templates
     @Insert
     suspend fun insertTemplate(template: Template): Long
@@ -72,14 +69,8 @@ interface TransactionDao {
     @Delete
     suspend fun deleteTemplate(template: Template)
 
-    @Query("DELETE FROM templates WHERE kind IN ('INVEST', 'REDEEM')")
-    suspend fun deleteInvestmentTemplates(): Int
-
     @Query("SELECT * FROM templates WHERE hidden = 0 ORDER BY particulars")
     suspend fun getVisibleTemplates(): List<Template>
-
-    @Query("SELECT * FROM templates ORDER BY particulars")
-    suspend fun getAllTemplates(): List<Template>
 
     @Query("SELECT * FROM templates ORDER BY kind, particulars")
     fun observeTemplates(): Flow<List<Template>>

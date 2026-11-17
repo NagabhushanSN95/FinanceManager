@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.data.investments
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -20,7 +21,7 @@ class SummaryGroupRepositoryTest {
 
     @Before
     fun setUp() {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
         repo = EditDataRepository(db)
     }
 
@@ -45,8 +46,16 @@ class SummaryGroupRepositoryTest {
         all = db.summaryGroupDao().getAll()
         assertEquals(listOf("Nifty 50 ETFs", "Liquid"), all.map { it.name })
         assertTrue(runCatching { repo.addSummaryGroup(" ", "pf") }.isFailure)
-        // Seeding does not come back after the user has been given the defaults once.
+        // Seeding does not come back once something is invested: a user who deletes them meant it.
         all.forEach { db.summaryGroupDao().delete(it.id) }
+        db.instrumentDao().insert(
+            com.nagabhushansn95.financetracker.data.db.entity.Instrument(
+                name = "FD #1",
+                instrumentType = com.nagabhushansn95.financetracker.data.db.entity.InstrumentType.FIXED_DEPOSIT,
+                createdTime = java.time.LocalDateTime.of(2026, 1, 1, 0, 0),
+                modifiedTime = java.time.LocalDateTime.of(2026, 1, 1, 0, 0),
+            )
+        )
         SummaryGroups.seedIfEmpty(db)
         assertEquals(0, db.summaryGroupDao().count())
     }

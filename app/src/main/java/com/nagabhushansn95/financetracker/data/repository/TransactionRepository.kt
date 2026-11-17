@@ -106,6 +106,7 @@ class TransactionRepository(private val db: AppDatabase) {
 
     private fun validate(t: TransactionEntity) {
         require(t.amount >= 0) { "Amount cannot be negative" }
+        require(t.kind == TransactionKind.TRANSFER || t.toAmount == null) { "Only a transfer has a second amount" }
         when (t.kind) {
             TransactionKind.INCOME -> require(t.fromAccountId == null) { "Income has no source account" }
             TransactionKind.EXPENSE -> {
@@ -117,6 +118,7 @@ class TransactionRepository(private val db: AppDatabase) {
             TransactionKind.TRANSFER -> {
                 require(t.fromAccountId != null && t.toAccountId != null) { "Transfer needs both accounts" }
                 require(t.fromAccountId != t.toAccountId) { "Transfer needs two different accounts" }
+                require(t.toAmount == null || t.toAmount >= 0) { "The amount arriving cannot be negative" }
             }
 
             TransactionKind.INVEST -> {
@@ -134,10 +136,9 @@ class TransactionRepository(private val db: AppDatabase) {
     private suspend fun applyBalances(t: TransactionEntity, sign: Int, stamp: LocalDateTime) {
         val dao = db.accountDao()
         val stampText = Converters().localDateTimeToString(stamp)!!
-        // Balances are kept in the account's own currency, so the native amount is used, not the INR equivalent.
-        val delta = t.amount * sign
-        t.fromAccountId?.let { dao.adjustBalance(it, -delta, stampText) }
-        t.toAccountId?.let { dao.adjustBalance(it, +delta, stampText) }
+        // Balances are kept in each account's own currency: what left the from-account, what arrived in the to-account.
+        t.fromAccountId?.let { dao.adjustBalance(it, -t.amount * sign, stampText) }
+        t.toAccountId?.let { dao.adjustBalance(it, +t.arriving * sign, stampText) }
     }
 
     private fun TransactionEntity.toTemplate() = Template(
@@ -146,7 +147,6 @@ class TransactionRepository(private val db: AppDatabase) {
         fromAccountId = fromAccountId,
         toAccountId = toAccountId,
         categoryId = categoryId,
-        instrumentId = instrumentId,
         rate = rate ?: amount,
         quantity = quantity?.takeIf { it != 1.0 },
     )

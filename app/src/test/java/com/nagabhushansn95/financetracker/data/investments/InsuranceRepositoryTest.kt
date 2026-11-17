@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.data.investments
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Category
@@ -14,6 +15,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.InsuranceType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.db.entity.ValidityKind
+import com.nagabhushansn95.financetracker.data.db.entity.Vehicle
 import com.nagabhushansn95.financetracker.data.repository.InsuranceRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -37,7 +39,7 @@ class InsuranceRepositoryTest {
 
     @Before
     fun setUp() = runTest {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
         repo = InsuranceRepository(db)
         bank = db.accountDao().insert(
             Account(
@@ -58,14 +60,17 @@ class InsuranceRepositoryTest {
         db.instrumentDao().getAll(),
         db.instrumentDao().getAllInsurancePolicies(),
         db.transactionDao().getAllWithInstrument(),
-        db.instrumentDao().getAllValidityPeriods(),
-        today
+        Validity.getAll(db),
+        today,
+        db.vehicleDao().getAllVehicles(),
     ).single { it.instrument.id == id }
+
+    private fun vehicle(name: String) =
+        instrument(name).copy(instrumentType = InstrumentType.VEHICLE)
 
     private fun instrument(name: String) = Instrument(
         name = name,
         instrumentType = InstrumentType.INSURANCE,
-        displayOrder = 0,
         createdTime = now,
         modifiedTime = now
     )
@@ -78,11 +83,14 @@ class InsuranceRepositoryTest {
         assertEquals(CategoryScope.EXPENSE, insurance.appliesTo)
 
         val id = repo.savePolicy(
-            instrument("Activa"),
-            InsurancePolicy(0, InsuranceType.MOTOR, vehicleNumber = "KA01AB1234"),
+            vehicle("Activa"),
+            null,
             manual = mapOf(ValidityKind.SERVICE to LocalDate.of(2026, 12, 1)),
-            now = now
+            now = now,
+            vehicle = Vehicle(registrationNo = "KA01AB1234"),
         )
+        assertEquals("KA01AB1234", view(id).reference)
+        assertEquals(InsuranceType.MOTOR, view(id).type)
         var v = view(id)
         assertEquals(LocalDate.of(2026, 12, 1), v.validUntil(ValidityKind.SERVICE))
         assertNull(v.current(ValidityKind.SERVICE)!!.transactionId)
@@ -165,13 +173,14 @@ class InsuranceRepositoryTest {
         // The policy sheet clears the hand-set service date without touching the entry's.
         repo.savePolicy(
             v.instrument,
-            v.policy!!,
+            null,
+            vehicle = v.vehicle,
             manual = mapOf(ValidityKind.SERVICE to null),
             now = now
         )
         v = view(id)
         assertEquals(LocalDate.of(2027, 5, 6), v.validUntil(ValidityKind.SERVICE))
-        assertTrue(db.instrumentDao().getValidityPeriods(id).all { it.transactionId != null })
+        assertTrue(Validity.getFor(db, id).all { it.transactionId != null })
     }
 
     @Test
@@ -258,10 +267,11 @@ class InsuranceRepositoryTest {
         val vehicleCat = Insurance.fileCategories(db, now).let { db.categoryDao().getAll() }
             .single { it.name == Insurance.VEHICLE_CATEGORY }
         val id = repo.savePolicy(
-            instrument("Test car"),
-            InsurancePolicy(0, InsuranceType.MOTOR, vehicleNumber = "KA25AB1234"),
+            vehicle("Test car"),
+            null,
             manual = mapOf(ValidityKind.THIRD_PARTY to LocalDate.of(2026, 12, 25)),
-            now = now
+            now = now,
+            vehicle = Vehicle(registrationNo = "KA25AB1234"),
         )
         repo.saveEntry(
             view(id),
@@ -277,12 +287,12 @@ class InsuranceRepositoryTest {
             categoryId = vehicleCat.id, now = now
         )
         assertEquals(98500.0, db.accountDao().getById(bank)!!.balance, 1e-9)
-        assertEquals(2, db.instrumentDao().getValidityPeriods(id).size)
+        assertEquals(2, Validity.getFor(db, id).size)
 
         repo.deletePolicy(id, now)
         assertNull(db.instrumentDao().getById(id))
-        assertNull(db.instrumentDao().getInsurancePolicy(id))
-        assertTrue(db.instrumentDao().getValidityPeriods(id).isEmpty())
+        assertNull(db.vehicleDao().getVehicle(id))
+        assertTrue(Validity.getFor(db, id).isEmpty())
         assertTrue(db.transactionDao().getForInstrument(id).isEmpty())
         assertEquals(100000.0, db.accountDao().getById(bank)!!.balance, 1e-9)
     }

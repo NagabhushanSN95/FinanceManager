@@ -29,12 +29,16 @@ class SummaryGroupsTest {
             id = id,
             name = name,
             instrumentType = type,
-            symbol = symbol,
             categoryId = category,
-            displayOrder = 1,
             createdTime = now,
             modifiedTime = now
-        )
+        ).also {
+            if (symbol != null) securities[id] =
+                com.nagabhushansn95.financetracker.data.db.entity.Security(id, symbol = symbol)
+        }
+
+    private val securities =
+        HashMap<Long, com.nagabhushansn95.financetracker.data.db.entity.Security>()
 
     private val nifty =
         instrument(4, "Nippon India ETF Nifty 50 BeES", InstrumentType.STOCK, 14, "NIFTYBEES")
@@ -89,7 +93,12 @@ class SummaryGroupsTest {
         )
         assertEquals(
             "NIFTYBEES, SETFNIF50",
-            SummaryGroups.describe(nifty50, byId, listOf(nifty, sbiNifty).associateBy { it.id })
+            SummaryGroups.describe(
+                nifty50,
+                byId,
+                listOf(nifty, sbiNifty).associateBy { it.id },
+                securities
+            )
         )
         assertEquals(
             "Stocks & ETFs, Stocks › REIT",

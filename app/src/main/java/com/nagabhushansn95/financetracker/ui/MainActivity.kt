@@ -1,6 +1,7 @@
 package com.nagabhushansn95.financetracker.ui
 
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -32,12 +33,23 @@ class MainActivity : FragmentActivity() {
         val prefs = AppPreferences(this)
         setContent {
             val themeMode by prefs.themeModeFlow.collectAsStateWithLifecycle(initialValue = prefs.themeMode)
+            val classic = themeMode == AppPreferences.THEME_CLASSIC
             val dark = when (themeMode) {
-                AppPreferences.THEME_LIGHT -> false
+                AppPreferences.THEME_LIGHT, AppPreferences.THEME_CLASSIC -> false
                 AppPreferences.THEME_DARK -> true
                 else -> isSystemInDarkTheme()
             }
-            FinanceTrackerTheme(darkTheme = dark) {
+            // Classic draws a dark bar under the status bar, so its icons must be light there
+            LaunchedEffect(classic) {
+                val transparent = android.graphics.Color.TRANSPARENT
+                enableEdgeToEdge(
+                    statusBarStyle = if (classic) SystemBarStyle.dark(transparent) else SystemBarStyle.auto(
+                        transparent,
+                        transparent
+                    )
+                )
+            }
+            FinanceTrackerTheme(darkTheme = dark, classic = classic) {
                 Surface { FinanceTrackerApp() }
             }
         }

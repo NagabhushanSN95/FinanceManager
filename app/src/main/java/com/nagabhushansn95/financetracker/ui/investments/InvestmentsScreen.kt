@@ -64,7 +64,7 @@ object InvestmentRoutes {
         InstrumentType.STOCK -> STOCKS
         InstrumentType.MUTUAL_FUND -> FUNDS
         InstrumentType.FIXED_DEPOSIT -> FIXED_DEPOSITS
-        InstrumentType.INSURANCE -> INSURANCE
+        InstrumentType.INSURANCE, InstrumentType.VEHICLE -> INSURANCE
         InstrumentType.OTHER -> OTHERS
     }
     fun isInvestmentRoute(route: String?) = route?.startsWith("investments/") == true

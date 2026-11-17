@@ -7,13 +7,14 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.dao.PeriodTotals
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.investments.FixedDeposits
+import com.nagabhushansn95.financetracker.data.investments.Statistics
 import com.nagabhushansn95.financetracker.ui.common.LedgerFilter
 import com.nagabhushansn95.financetracker.ui.common.Period
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 enum class Grouping(val label: String, val periodLength: Int) {
     MONTHS(
@@ -70,20 +71,13 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
 
     private suspend fun recompute() {
         val s = _state.value
-        val earliest = db.statisticsDao().earliestDate()?.let { LocalDate.parse(it) }
+        val statistics = Statistics(db)
+        val earliest = statistics.earliestDate()
         val (from, to) = s.filter.range(earliest = earliest)
-        val dao = db.statisticsDao()
         val accountIds = s.filter.accountIds.toList()
         val categoryIds = s.filter.categoryIds.toList()
-        val queried = dao.periodTotals(
-            from.toString(),
-            to.toString(),
-            s.grouping.periodLength,
-            accountIds.isNotEmpty(),
-            accountIds,
-            categoryIds.isNotEmpty(),
-            categoryIds
-        )
+        val queried =
+            statistics.periodTotals(from, to, s.grouping.periodLength, accountIds, categoryIds)
         // Interest a regular deposit paid out inside its payout counts as income on that day, as a sweep-in
         // deposit's own interest credits already do through the query.
         val interest = if (categoryIds.isNotEmpty()) emptyList() else FixedDeposits.depositInterest(
@@ -104,12 +98,11 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
             rows.sumOf { it.savings },
             rows.sumOf { it.withdrawals })
         val categories = db.categoryDao().getAll().associateBy { it.id }
-        suspend fun breakdown(kind: String): List<CategoryLine> {
-            val totals = if (rows.isEmpty()) emptyList() else dao.categoryTotals(
+        suspend fun breakdown(kind: TransactionKind): List<CategoryLine> {
+            val totals = if (rows.isEmpty()) emptyList() else statistics.categoryTotals(
                 kind,
-                from.toString(),
-                to.toString(),
-                accountIds.isNotEmpty(),
+                from,
+                to,
                 accountIds
             )
             val filtered =
@@ -137,7 +130,7 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
             }.sortedByDescending { it.total }
         }
         val depositInterest = interest.sumOf { it.amount }
-        var incomeByCategory = breakdown("INCOME")
+        var incomeByCategory = breakdown(TransactionKind.INCOME)
         if (depositInterest > 0.005) {
             val grand = incomeByCategory.sumOf { it.total } + depositInterest
             fun reshare(line: CategoryLine): CategoryLine =
@@ -153,7 +146,8 @@ class StatisticsViewModel(application: Application) : AndroidViewModel(applicati
         }
         _state.value = s.copy(
             rows = rows, total = total,
-            expenseByCategory = breakdown("EXPENSE"), incomeByCategory = incomeByCategory,
+            expenseByCategory = breakdown(TransactionKind.EXPENSE),
+            incomeByCategory = incomeByCategory,
             loaded = true,
         )
     }

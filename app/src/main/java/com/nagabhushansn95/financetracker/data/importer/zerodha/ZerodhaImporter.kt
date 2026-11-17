@@ -8,8 +8,10 @@ import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.PendingDividend
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.repository.HoldingsRepository
 import com.nagabhushansn95.financetracker.data.repository.TransactionRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -34,7 +36,17 @@ data class NewInstrument(
     val name: String,
     val type: InstrumentType,
     val symbol: String?,
-    val isin: String?
+    val isin: String?,
+    val exchange: String? = null,
+    val series: String? = null,
+    val folio: String? = null,
+)
+
+/** A dividend the statement announced, to wait for its bank credit. [instrument] is set when the stock is new. */
+data class PlannedDividend(
+    val dividend: PendingDividend,
+    val instrument: NewInstrument? = null,
+    val label: String,
 )
 
 /** One row the import will write. [instrument] is set when the row needs an instrument that does not exist yet. */
@@ -47,9 +59,13 @@ data class PlannedTransaction(
 data class ImportPlan(
     val type: StatementType,
     val toInsert: List<PlannedTransaction>,
+    /** Dividends that go to the pending list rather than the ledger (a dividends statement only). */
+    val toHold: List<PlannedDividend> = emptyList(),
     val newInstruments: List<NewInstrument>,
     /** Existing instruments that gain an ISIN from the statement. */
     val isinUpdates: Map<Long, String>,
+    /** Existing stocks that gain their series (and exchange) from a tradebook. */
+    val detailUpdates: Map<Long, Pair<String?, String?>> = emptyMap(),
     /** Rows already present by broker reference. */
     val duplicates: Int,
     /** Rows present without a reference (recorded by hand or imported by 4.x); they receive the reference on commit. */
@@ -72,10 +88,12 @@ data class ImportResult(
     val inserted: Int,
     val instrumentsCreated: Int,
     val referencesStamped: Int,
-    val duplicates: Int
+    val duplicates: Int,
+    val held: Int = 0,
 ) {
     fun summary(type: StatementType) = buildString {
-        append("${type.title}: $inserted new row${if (inserted == 1) "" else "s"}")
+        if (type == StatementType.DIVIDENDS) append("${type.title}: $held awaiting credit")
+        else append("${type.title}: $inserted new row${if (inserted == 1) "" else "s"}")
         if (instrumentsCreated > 0) append(", $instrumentsCreated new instrument${if (instrumentsCreated == 1) "" else "s"}")
         if (duplicates > 0) append(", $duplicates already present")
         if (referencesStamped > 0) append(" ($referencesStamped matched rows recorded earlier)")
@@ -122,12 +140,13 @@ class ZerodhaImporter(private val db: AppDatabase) {
     ): ImportPlan {
         val demat = settings.dematAccountId ?: ImportPlan.DEMAT_PLACEHOLDER
         val bank = settings.bankAccountId ?: ImportPlan.BANK_PLACEHOLDER
-        val instruments = db.instrumentDao().getAll()
-        val byIsin = instruments.filter { it.isin != null }.associateBy { it.isin!! }
+        val instruments = db.instrumentDao().getListed()
+        val byIsin =
+            instruments.filter { it.security.isin != null }.associateBy { it.security.isin!! }
         val bySymbol =
-            instruments.filter { it.instrumentType == InstrumentType.STOCK && it.symbol != null }
-                .associateBy { it.symbol!!.uppercase() }
-        val byName = instruments.groupBy { it.instrumentType }
+            instruments.filter { it.instrument.instrumentType == InstrumentType.STOCK && it.security.symbol != null }
+                .associateBy { it.security.symbol!!.uppercase() }
+        val byName = instruments.groupBy { it.instrument.instrumentType }
             .mapValues { (_, list) -> list.associateBy { it.name.lowercase() } }
         val trading = categoryId("Trading", CategoryScope.EXPENSE)
         val dividends = categoryId(DIVIDEND_CATEGORY, CategoryScope.INCOME)
@@ -147,7 +166,7 @@ class ZerodhaImporter(private val db: AppDatabase) {
                 ?: byName[type]?.get(name.lowercase())
                 ?: symbol?.let { byName[type]?.get(it.lowercase()) }
             if (existing != null) {
-                if (existing.isin == null && isin != null) isinUpdates[existing.id] = isin
+                if (existing.security.isin == null && isin != null) isinUpdates[existing.id] = isin
                 return existing.id to null
             }
             val key = isin ?: "${type}:${(symbol ?: name).lowercase()}"
@@ -155,13 +174,31 @@ class ZerodhaImporter(private val db: AppDatabase) {
             return 0L to created
         }
 
+        /** Series and exchange reach the stock when it is created, or a known stock that lacks them. */
+        val detailUpdates = LinkedHashMap<Long, Pair<String?, String?>>()
+
         val planned = ArrayList<PlannedTransaction>()
         val dpSeen = HashSet<String>()
         val sorted = statement.rows.sortedBy { it.date }
         for (row in sorted) when (row) {
             is TradeRow -> {
                 val type = if (row.mutualFund) InstrumentType.MUTUAL_FUND else InstrumentType.STOCK
-                val (id, created) = resolve(type, row.name, row.symbol, row.isin)
+                var (id, created) = resolve(type, row.name, row.symbol, row.isin)
+                if (created != null) {
+                    val richer = created.copy(
+                        exchange = created.exchange ?: row.exchange,
+                        series = created.series ?: row.series,
+                        folio = created.folio ?: row.folio,
+                    )
+                    if (richer != created) {
+                        newInstruments.entries.first { it.value == created }
+                            .setValue(richer); created = richer
+                    }
+                } else if (!row.mutualFund && row.series != null) {
+                    val known = instruments.first { it.id == id }
+                    if (known.security.series == null && row.series != "EQ") detailUpdates[id] =
+                        row.series to row.exchange
+                }
                 val buy = row.side == Side.BUY
                 val particulars = when {
                     !row.mutualFund && buy -> "Bought Stocks - ${row.name}"
@@ -175,7 +212,7 @@ class ZerodhaImporter(private val db: AppDatabase) {
                     TransactionEntity(
                         createdTime = now,
                         modifiedTime = now,
-                        date = row.date,
+                        date = row.cashDate,
                         kind = if (buy) TransactionKind.INVEST else TransactionKind.REDEEM,
                         fromAccountId = if (buy) cash else null,
                         toAccountId = if (buy) null else cash,
@@ -279,12 +316,39 @@ class ZerodhaImporter(private val db: AppDatabase) {
             }
             toInsert += p
         }
-        val usedNew = toInsert.mapNotNull { it.instrument }.distinct()
+        // A dividends statement feeds the pending list, not the ledger: the credit date and the net amount come later.
+        val toHold = ArrayList<PlannedDividend>()
+        val inserts = ArrayList<PlannedTransaction>()
+        for (p in toInsert) {
+            val t = p.transaction
+            if (statement.type != StatementType.DIVIDENDS || t.exDate == null) {
+                inserts += p; continue
+            }
+            if (db.pendingDividendDao().existsByBrokerRef(t.brokerRef!!)) {
+                duplicates++; continue
+            }
+            toHold += PlannedDividend(
+                PendingDividend(
+                    instrumentId = t.instrumentId ?: 0L,
+                    exDate = t.exDate,
+                    quantity = t.quantity ?: 0.0,
+                    perShare = t.rate ?: 0.0,
+                    gross = t.amount,
+                    brokerRef = t.brokerRef,
+                    importedAt = now,
+                ),
+                p.instrument, p.label,
+            )
+        }
+        val usedNew =
+            (inserts.mapNotNull { it.instrument } + toHold.mapNotNull { it.instrument }).distinct()
         return ImportPlan(
             type = statement.type,
-            toInsert = toInsert,
+            toInsert = inserts,
+            toHold = toHold,
             newInstruments = usedNew,
             isinUpdates = isinUpdates,
+            detailUpdates = detailUpdates,
             duplicates = duplicates,
             legacyMatches = legacy,
             skipped = statement.skipped,
@@ -301,24 +365,42 @@ class ZerodhaImporter(private val db: AppDatabase) {
         return db.useWriterConnection { transactor ->
             transactor.immediateTransaction {
                 val dao = db.instrumentDao()
-                var order = dao.maxDisplayOrder()
+                val holdings = HoldingsRepository(db)
                 val ids = HashMap<NewInstrument, Long>()
+                // The same path as the + on the Stocks & ETFs and Mutual funds screens: default category, NSE for a stock.
                 for (n in plan.newInstruments) {
-                    ids[n] = dao.insert(
-                        Instrument(
-                            name = n.name,
-                            instrumentType = n.type,
-                            symbol = n.symbol,
-                            isin = n.isin,
-                            exchange = if (n.type == InstrumentType.STOCK) "NSE" else null,
-                            displayOrder = ++order,
-                            createdTime = now,
-                            modifiedTime = now,
+                    ids[n] = holdings.add(
+                        name = n.name,
+                        type = n.type,
+                        symbol = n.symbol,
+                        exchange = n.exchange,
+                        isin = n.isin,
+                        currency = "INR",
+                        categoryId = null,
+                        owner = Instrument.OWNER_SELF,
+                        notes = null,
+                        now = now,
+                        series = n.series?.takeIf { it != "EQ" },
+                    )
+                    n.folio?.let { folio ->
+                        dao.getSecurity(ids.getValue(n))
+                            ?.let { dao.upsertSecurity(it.copy(folio = folio)) }
+                    }
+                }
+                for ((id, isin) in plan.isinUpdates) dao.getSecurity(id)
+                    ?.let { dao.upsertSecurity(it.copy(isin = isin)) }
+                for ((id, detail) in plan.detailUpdates) dao.getSecurity(id)?.let {
+                    dao.upsertSecurity(
+                        it.copy(
+                            series = detail.first,
+                            exchange = it.exchange ?: detail.second
                         )
                     )
                 }
-                for ((id, isin) in plan.isinUpdates) dao.getById(id)
-                    ?.let { dao.update(it.copy(isin = isin, modifiedTime = now)) }
+                val held = plan.toHold.map { p ->
+                    if (p.instrument != null) p.dividend.copy(instrumentId = ids.getValue(p.instrument)) else p.dividend
+                }
+                if (held.isNotEmpty()) db.pendingDividendDao().insertAll(held)
                 for ((id, ref) in plan.legacyMatches) db.transactionDao().setBrokerRef(id, ref)
                 val rows = plan.toInsert.map { p ->
                     val t = p.transaction
@@ -329,7 +411,8 @@ class ZerodhaImporter(private val db: AppDatabase) {
                     inserted = rows.size,
                     instrumentsCreated = ids.size,
                     referencesStamped = plan.legacyMatches.size,
-                    duplicates = plan.duplicates
+                    duplicates = plan.duplicates,
+                    held = held.size,
                 )
             }
         }

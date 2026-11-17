@@ -3,19 +3,21 @@ package com.nagabhushansn95.financetracker.data.repository
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
-import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
-import com.nagabhushansn95.financetracker.data.db.entity.FdEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.FdStatus
 import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FdType
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.investments.FdLedgerEntry
 import com.nagabhushansn95.financetracker.data.investments.FdTax
 import com.nagabhushansn95.financetracker.data.investments.FixedDeposits
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -38,7 +40,7 @@ class FixedDepositRepositoryTest {
 
     @Before
     fun setUp() = runTest {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
         repo = FixedDepositRepository(db)
         bank = db.accountDao().insert(
             Account(
@@ -61,7 +63,6 @@ class FixedDepositRepositoryTest {
             bankName = "SBI",
             periodMonths = months,
             rate = rate,
-            tdsRate = 0.1
         )
 
     @Test
@@ -80,7 +81,6 @@ class FixedDepositRepositoryTest {
             db.instrumentDao().getAll(),
             db.instrumentDao().getAllFixedDeposits(),
             db.transactionDao().getAllWithInstrument(),
-            emptyList(),
             LocalDate.of(2026, 7, 6)
         )
         val v = views.single()
@@ -124,7 +124,6 @@ class FixedDepositRepositoryTest {
             db.instrumentDao().getAll(),
             db.instrumentDao().getAllFixedDeposits(),
             db.transactionDao().getAllWithInstrument(),
-            emptyList(),
             LocalDate.of(2027, 3, 1)
         ).single()
         assertEquals(FdStatus.CLOSED_AT_MATURITY, closed.status)
@@ -155,7 +154,6 @@ class FixedDepositRepositoryTest {
         assertEquals(new, oldTerms.nextFdId)
         assertEquals(old, newTerms.previousFdId)
         assertEquals("SBI", newTerms.bankName)
-        assertEquals(0.1, newTerms.tdsRate!!, 0.001)
         assertEquals(LocalDate.of(2027, 8, 3), newTerms.maturityDate)
         assertEquals("FD #2", db.instrumentDao().getById(new)!!.name)
         assertFalse(db.instrumentDao().getById(old)!!.active)
@@ -176,7 +174,6 @@ class FixedDepositRepositoryTest {
             db.instrumentDao().getAll(),
             db.instrumentDao().getAllFixedDeposits(),
             rows,
-            emptyList(),
             LocalDate.of(2026, 3, 1)
         )
         val oldView = views.first { it.instrument.id == old }
@@ -219,7 +216,7 @@ class FixedDepositRepositoryTest {
         )
         val views = FixedDeposits.build(
             db.instrumentDao().getAll(), db.instrumentDao().getAllFixedDeposits(),
-            db.transactionDao().getAllWithInstrument(), emptyList(), LocalDate.of(2026, 3, 1)
+            db.transactionDao().getAllWithInstrument(), LocalDate.of(2026, 3, 1)
         )
         val byId = views.associateBy { it.instrument.id }
         assertEquals(
@@ -253,7 +250,7 @@ class FixedDepositRepositoryTest {
         )
         val views = FixedDeposits.build(
             db.instrumentDao().getAll(), db.instrumentDao().getAllFixedDeposits(),
-            db.transactionDao().getAllWithInstrument(), emptyList(), LocalDate.of(2025, 3, 1)
+            db.transactionDao().getAllWithInstrument(), LocalDate.of(2025, 3, 1)
         )
         val chain = FixedDeposits.chain(first, views.associateBy { it.instrument.id })
         val ledger = FixedDeposits.ledger(chain)
@@ -302,18 +299,18 @@ class FixedDepositRepositoryTest {
             now
         )
         repo.saveEvent(
-            FdEvent(
+            HoldingEvent(
                 instrumentId = id,
                 date = LocalDate.of(2024, 3, 31),
-                kind = FdEventKind.INTEREST,
+                kind = HoldingEventKind.INTEREST_CREDITED,
                 amount = 1000.0
             )
         )
         val tds = repo.saveEvent(
-            FdEvent(
+            HoldingEvent(
                 instrumentId = id,
                 date = LocalDate.of(2024, 3, 31),
-                kind = FdEventKind.TDS,
+                kind = HoldingEventKind.TDS_DEDUCTED,
                 amount = 100.0,
                 notes = "FY 23-24"
             )
@@ -331,9 +328,8 @@ class FixedDepositRepositoryTest {
             db.instrumentDao().getAll(),
             db.instrumentDao().getAllFixedDeposits(),
             db.transactionDao().getAllWithInstrument(),
-            emptyList(),
             LocalDate.of(2025, 3, 1),
-            db.instrumentDao().getAllFdEvents()
+            db.holdingEventDao().observeAll().first()
         ).single()
         assertEquals(2, view.events.size)
         val ledger = FixedDeposits.ledger(listOf(view))
@@ -358,7 +354,7 @@ class FixedDepositRepositoryTest {
         // Account rows are untouched by events.
         assertEquals(2, db.transactionDao().count())
         repo.deleteEvent(tds)
-        assertEquals(1, db.instrumentDao().getAllFdEvents().size)
+        assertEquals(1, db.holdingEventDao().observeAll().first().size)
     }
 
     @Test
@@ -377,7 +373,7 @@ class FixedDepositRepositoryTest {
         )
         var views = FixedDeposits.build(
             db.instrumentDao().getAll(), db.instrumentDao().getAllFixedDeposits(),
-            db.transactionDao().getAllWithInstrument(), emptyList(), LocalDate.of(2026, 3, 1)
+            db.transactionDao().getAllWithInstrument(), LocalDate.of(2026, 3, 1)
         )
         val v = views.single()
         val fy1 = FdTax.interestInYear(
@@ -414,7 +410,7 @@ class FixedDepositRepositoryTest {
         )
         views = FixedDeposits.build(
             db.instrumentDao().getAll(), db.instrumentDao().getAllFixedDeposits(),
-            db.transactionDao().getAllWithInstrument(), emptyList(), LocalDate.of(2026, 3, 1)
+            db.transactionDao().getAllWithInstrument(), LocalDate.of(2026, 3, 1)
         )
         assertEquals(
             (fy1 + fy2) * 0.10,
@@ -426,7 +422,7 @@ class FixedDepositRepositoryTest {
         db.instrumentDao().upsertFixedDeposit(other.terms!!.copy(bankName = "HDFC"))
         views = FixedDeposits.build(
             db.instrumentDao().getAll(), db.instrumentDao().getAllFixedDeposits(),
-            db.transactionDao().getAllWithInstrument(), emptyList(), LocalDate.of(2026, 3, 1)
+            db.transactionDao().getAllWithInstrument(), LocalDate.of(2026, 3, 1)
         )
         assertEquals(fy2 * 0.10, views.first { it.instrument.id == big }.tdsAtMaturity, 0.01)
     }
@@ -460,10 +456,10 @@ class FixedDepositRepositoryTest {
             now
         )
         repo.saveEvent(
-            FdEvent(
+            HoldingEvent(
                 instrumentId = id,
                 date = LocalDate.of(2026, 3, 31),
-                kind = FdEventKind.INTEREST,
+                kind = HoldingEventKind.INTEREST_CREDITED,
                 amount = 900.0
             )
         )
@@ -474,7 +470,7 @@ class FixedDepositRepositoryTest {
         assertNull(db.instrumentDao().getById(id))
         assertNull(db.instrumentDao().getFixedDeposit(id))
         assertEquals(0, db.transactionDao().count())
-        assertTrue(db.instrumentDao().getAllFdEvents().isEmpty())
+        assertTrue(db.holdingEventDao().observeAll().first().isEmpty())
         assertEquals(500000.0, db.accountDao().getById(bank)!!.balance, 0.001)
     }
 
@@ -593,7 +589,6 @@ class FixedDepositRepositoryTest {
             db.instrumentDao().getAll(),
             db.instrumentDao().getAllFixedDeposits(),
             db.transactionDao().getAllWithInstrument(),
-            emptyList(),
             LocalDate.of(2026, 11, 5)
         ).first()
         assertEquals(FdType.SWEEP_IN, view.terms!!.depositType)

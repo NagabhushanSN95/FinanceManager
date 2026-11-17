@@ -3,14 +3,15 @@ package com.nagabhushansn95.financetracker.data.investments
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
+import com.nagabhushansn95.financetracker.data.db.entity.PriceSource
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
-import com.nagabhushansn95.financetracker.data.db.entity.ValuationSource
+import com.nagabhushansn95.financetracker.data.db.insertListed
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -30,30 +31,11 @@ class InvestmentSummaryTest {
 
     @Before
     fun setUp() {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
     }
 
     @After
     fun tearDown() = db.close()
-
-    @Test
-    fun theOldEtfCategoryIsRenamedOnceAndOnlyWhenTheNewNameIsFree() = runTest {
-        InvestmentCategories.seedIfEmpty(db)
-        val dao = db.instrumentDao()
-        val fresh =
-            dao.getAllCategories().first { it.name == InvestmentCategories.EQUITY_INDEX_ETF }
-        // A tree seeded by an older build: the child was called "ETF".
-        dao.updateCategory(fresh.copy(name = "ETF"))
-        InvestmentCategories.renameLegacy(db)
-        assertEquals(
-            InvestmentCategories.EQUITY_INDEX_ETF,
-            dao.getAllCategories().first { it.id == fresh.id }.name
-        )
-        // Done once: a later "ETF" the user adds on purpose is left alone.
-        dao.updateCategory(fresh.copy(name = "ETF"))
-        InvestmentCategories.renameLegacy(db)
-        assertEquals("ETF", dao.getAllCategories().first { it.id == fresh.id }.name)
-    }
 
     @Test
     fun seedsTheTreeOnceAndRollsHoldingsUp() = runTest {
@@ -83,21 +65,19 @@ class InvestmentSummaryTest {
                 modifiedTime = now
             )
         )
-        val embassy = db.instrumentDao().insert(
+        val embassy = db.insertListed(
             Instrument(
                 name = "EMBASSY",
                 instrumentType = InstrumentType.STOCK,
                 categoryId = reit.id,
-                displayOrder = 1,
                 createdTime = now,
                 modifiedTime = now
             )
         )
-        val goldNoCat = db.instrumentDao().insert(
+        val goldNoCat = db.insertListed(
             Instrument(
                 name = "GOLDBEES",
                 instrumentType = InstrumentType.STOCK,
-                displayOrder = 2,
                 createdTime = now,
                 modifiedTime = now
             )
@@ -106,7 +86,6 @@ class InvestmentSummaryTest {
             Instrument(
                 name = "FD 1",
                 instrumentType = InstrumentType.FIXED_DEPOSIT,
-                displayOrder = 3,
                 createdTime = now,
                 modifiedTime = now
             )
@@ -116,7 +95,6 @@ class InvestmentSummaryTest {
                 name = "Amma FD",
                 instrumentType = InstrumentType.FIXED_DEPOSIT,
                 owner = "Amma",
-                displayOrder = 4,
                 createdTime = now,
                 modifiedTime = now
             )
@@ -125,7 +103,6 @@ class InvestmentSummaryTest {
             Instrument(
                 name = "Loan to a cousin",
                 instrumentType = InstrumentType.OTHER,
-                displayOrder = 5,
                 createdTime = now,
                 modifiedTime = now
             )
@@ -195,14 +172,12 @@ class InvestmentSummaryTest {
             to = epf,
             contributor = "Interest"
         )  // interest: not a contribution
-        db.instrumentDao().insertValuation(
-            InstrumentValuation(
-                instrumentId = embassy,
-                date = today,
-                unitPrice = 120.0,
-                source = ValuationSource.MANUAL,
-                fetchedAt = now
-            )
+        db.instrumentDao().setPrice(
+            embassy,
+            120.0,
+            today.toString(),
+            PriceSource.MANUAL,
+            "2026-11-04T09:00:00.000"
         )
 
         // Targets: FD takes the whole goal corpus; REIT half of the wealth corpus. Goal 50,000 of a 120,300 total.
@@ -220,7 +195,7 @@ class InvestmentSummaryTest {
             db.instrumentDao().getAll(),
             db.instrumentDao().getAllCategories(),
             db.transactionDao().getAllWithInstrument(),
-            db.instrumentDao().latestValuations(),
+            db.instrumentDao().getAllSecurities(),
             db.accountDao().getAll(),
             db.transactionDao().getBetween("2000-01-01", "2099-12-31"),
             db.instrumentDao().getAllRiskLevels(),
@@ -316,7 +291,6 @@ class InvestmentSummaryTest {
             Instrument(
                 name = "FD 1",
                 instrumentType = InstrumentType.FIXED_DEPOSIT,
-                displayOrder = 1,
                 createdTime = now,
                 modifiedTime = now
             )

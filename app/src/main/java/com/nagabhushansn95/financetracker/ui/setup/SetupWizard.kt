@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.nagabhushansn95.financetracker.data.seed.DefaultData
 import com.nagabhushansn95.financetracker.data.seed.NewAccount
 import com.nagabhushansn95.financetracker.data.seed.SetupChoices
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 
 private class AccountDraft(name: String = "") {
     var name by mutableStateOf(name)
@@ -107,6 +108,7 @@ fun SetupWizard(onFinish: (SetupChoices) -> Unit, onCancel: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text("Set up · ${step.title}") },
                 navigationIcon = { TextButton(onClick = onCancel) { Text("Cancel") } },
             )

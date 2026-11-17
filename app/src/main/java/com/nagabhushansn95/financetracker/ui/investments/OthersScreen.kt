@@ -74,6 +74,7 @@ import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -198,6 +199,7 @@ fun OthersScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text("Others") },
                 navigationIcon = { BackAndMenu(onBack) },
                 actions = {
@@ -359,6 +361,7 @@ fun OtherScreen(instrumentId: Long, onBack: () -> Unit, viewModel: OthersViewMod
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(v?.instrument?.name ?: "Others") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -471,7 +474,7 @@ fun OtherScreen(instrumentId: Long, onBack: () -> Unit, viewModel: OthersViewMod
                         )
                     }
                     Text(
-                        MoneyFormat.amount(t.amount, t.currency),
+                        MoneyFormat.amount(t.amount),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = if (incoming) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
@@ -559,7 +562,7 @@ fun OtherSheet(existing: Instrument?, onSave: (String, String?) -> Unit, onDismi
         )
         Text(
             "Name a loan \"Loan To <person>\": its entries then read as loaned and paid back. Anything else (an account kept for someone, money parked) reads as put in and taken back. " +
-                    "Category, owner and currency are under Manage › Instruments.",
+                    "The list is in name order.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 9,
-    "identityHash": "09686c762cd5a4a8ca9573a155e0536d",
+    "version": 11,
+    "identityHash": "9f2fa7401bd5a3952863c7104d8bad79",
     "entities": [
       {
         "tableName": "accounts",
@@ -361,7 +361,7 @@
       },
       {
         "tableName": "instruments",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `short_name` TEXT, `instrument_type` TEXT NOT NULL, `isin` TEXT, `symbol` TEXT, `exchange` TEXT, `currency` TEXT NOT NULL, `category_id` INTEGER, `owner` TEXT NOT NULL, `active` INTEGER NOT NULL, `display_order` INTEGER NOT NULL, `notes` TEXT, `created_time` TEXT NOT NULL, `modified_time` TEXT NOT NULL, FOREIGN KEY(`category_id`) REFERENCES `investment_categories`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `kind` TEXT NOT NULL, `category_id` INTEGER, `owner` TEXT NOT NULL, `active` INTEGER NOT NULL, `notes` TEXT, `created_time` TEXT NOT NULL, `modified_time` TEXT NOT NULL, FOREIGN KEY(`category_id`) REFERENCES `investment_categories`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
             "fieldPath": "id",
@@ -376,34 +376,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "shortName",
-            "columnName": "short_name",
-            "affinity": "TEXT"
-          },
-          {
             "fieldPath": "instrumentType",
-            "columnName": "instrument_type",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "isin",
-            "columnName": "isin",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "symbol",
-            "columnName": "symbol",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "exchange",
-            "columnName": "exchange",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "currency",
-            "columnName": "currency",
+            "columnName": "kind",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -421,12 +395,6 @@
           {
             "fieldPath": "active",
             "columnName": "active",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "displayOrder",
-            "columnName": "display_order",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -456,13 +424,13 @@
         },
         "indices": [
           {
-            "name": "index_instruments_instrument_type",
+            "name": "index_instruments_kind",
             "unique": false,
             "columnNames": [
-              "instrument_type"
+              "kind"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_instruments_instrument_type` ON `${TABLE_NAME}` (`instrument_type`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_instruments_kind` ON `${TABLE_NAME}` (`kind`)"
           },
           {
             "name": "index_instruments_category_id",
@@ -472,33 +440,6 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_instruments_category_id` ON `${TABLE_NAME}` (`category_id`)"
-          },
-          {
-            "name": "index_instruments_isin",
-            "unique": false,
-            "columnNames": [
-              "isin"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_instruments_isin` ON `${TABLE_NAME}` (`isin`)"
-          },
-          {
-            "name": "index_instruments_symbol",
-            "unique": false,
-            "columnNames": [
-              "symbol"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_instruments_symbol` ON `${TABLE_NAME}` (`symbol`)"
-          },
-          {
-            "name": "index_instruments_display_order",
-            "unique": false,
-            "columnNames": [
-              "display_order"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_instruments_display_order` ON `${TABLE_NAME}` (`display_order`)"
           }
         ],
         "foreignKeys": [
@@ -516,8 +457,115 @@
         ]
       },
       {
+        "tableName": "securities",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`instrument_id` INTEGER NOT NULL, `short_name` TEXT, `isin` TEXT, `symbol` TEXT, `exchange` TEXT, `series` TEXT, `folio` TEXT, `currency` TEXT NOT NULL, `last_price` REAL, `last_price_date` TEXT, `last_price_source` TEXT, `last_price_fetched_at` TEXT, PRIMARY KEY(`instrument_id`), FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "instrumentId",
+            "columnName": "instrument_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shortName",
+            "columnName": "short_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isin",
+            "columnName": "isin",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "symbol",
+            "columnName": "symbol",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "exchange",
+            "columnName": "exchange",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "series",
+            "columnName": "series",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "folio",
+            "columnName": "folio",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastPrice",
+            "columnName": "last_price",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lastPriceDate",
+            "columnName": "last_price_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastPriceSource",
+            "columnName": "last_price_source",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastPriceFetchedAt",
+            "columnName": "last_price_fetched_at",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "instrument_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_securities_isin",
+            "unique": false,
+            "columnNames": [
+              "isin"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_securities_isin` ON `${TABLE_NAME}` (`isin`)"
+          },
+          {
+            "name": "index_securities_symbol",
+            "unique": false,
+            "columnNames": [
+              "symbol"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_securities_symbol` ON `${TABLE_NAME}` (`symbol`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "instruments",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "instrument_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
         "tableName": "fixed_deposits",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`instrument_id` INTEGER NOT NULL, `certificate_no` TEXT, `holder_name` TEXT, `bank_name` TEXT, `branch` TEXT, `bank_account_no` TEXT, `cust_id` TEXT, `period_months` INTEGER, `period_days` INTEGER, `rate` REAL, `compounding_months` INTEGER, `maturity_date` TEXT, `maturity_amount_printed` REAL, `tds_rate` REAL, `tds_reported` REAL, `tds_yearly` INTEGER, `status` TEXT NOT NULL, `deposit_type` TEXT NOT NULL DEFAULT 'REGULAR', `sweep_in_date` TEXT, `previous_fd_id` INTEGER, `next_fd_id` INTEGER, `notes` TEXT, PRIMARY KEY(`instrument_id`), FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`previous_fd_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`next_fd_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`instrument_id` INTEGER NOT NULL, `certificate_no` TEXT, `holder_name` TEXT, `bank_name` TEXT, `branch` TEXT, `bank_account_no` TEXT, `cust_id` TEXT, `period_months` INTEGER, `period_days` INTEGER, `rate` REAL, `compounding_months` INTEGER, `maturity_date` TEXT, `maturity_amount_printed` REAL, `tds_reported` REAL, `is_tds_yearly` INTEGER, `status` TEXT NOT NULL, `deposit_type` TEXT NOT NULL DEFAULT 'REGULAR', `sweep_in_date` TEXT, `previous_fd_id` INTEGER, `next_fd_id` INTEGER, `notes` TEXT, PRIMARY KEY(`instrument_id`), FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`previous_fd_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`next_fd_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "instrumentId",
@@ -586,18 +634,13 @@
             "affinity": "REAL"
           },
           {
-            "fieldPath": "tdsRate",
-            "columnName": "tds_rate",
-            "affinity": "REAL"
-          },
-          {
             "fieldPath": "tdsReported",
             "columnName": "tds_reported",
             "affinity": "REAL"
           },
           {
             "fieldPath": "tdsYearly",
-            "columnName": "tds_yearly",
+            "columnName": "is_tds_yearly",
             "affinity": "INTEGER"
           },
           {
@@ -805,80 +848,8 @@
         }
       },
       {
-        "tableName": "fd_events",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, `date` TEXT NOT NULL, `kind` TEXT NOT NULL, `amount` REAL NOT NULL, `notes` TEXT, FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "instrumentId",
-            "columnName": "instrument_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "date",
-            "columnName": "date",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "kind",
-            "columnName": "kind",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "amount",
-            "columnName": "amount",
-            "affinity": "REAL",
-            "notNull": true
-          },
-          {
-            "fieldPath": "notes",
-            "columnName": "notes",
-            "affinity": "TEXT"
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": true,
-          "columnNames": [
-            "id"
-          ]
-        },
-        "indices": [
-          {
-            "name": "index_fd_events_instrument_id_date",
-            "unique": false,
-            "columnNames": [
-              "instrument_id",
-              "date"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_fd_events_instrument_id_date` ON `${TABLE_NAME}` (`instrument_id`, `date`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "instruments",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "instrument_id"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          }
-        ]
-      },
-      {
         "tableName": "insurance_policies",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`instrument_id` INTEGER NOT NULL, `insurance_type` TEXT NOT NULL, `provider` TEXT, `policy_name` TEXT, `policy_number` TEXT, `vehicle_number` TEXT, `sum_assured` REAL, `premium_amount` REAL, `premium_frequency_months` INTEGER, `due_day` INTEGER, `due_month` INTEGER, `start_date` TEXT, `maturity_date` TEXT, PRIMARY KEY(`instrument_id`), FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`instrument_id` INTEGER NOT NULL, `insurance_type` TEXT NOT NULL, `provider` TEXT, `policy_name` TEXT, `policy_number` TEXT, `sum_assured` REAL, `premium_amount` REAL, `premium_frequency_months` INTEGER, `due_day` INTEGER, `due_month` INTEGER, `start_date` TEXT, `maturity_date` TEXT, PRIMARY KEY(`instrument_id`), FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "instrumentId",
@@ -905,11 +876,6 @@
           {
             "fieldPath": "policyNumber",
             "columnName": "policy_number",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "vehicleNumber",
-            "columnName": "vehicle_number",
             "affinity": "TEXT"
           },
           {
@@ -969,8 +935,153 @@
         ]
       },
       {
-        "tableName": "validity_periods",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, `kind` TEXT NOT NULL, `start_date` TEXT, `end_date` TEXT NOT NULL, `transaction_id` INTEGER, `provider` TEXT, `reference` TEXT, `sum_insured` REAL, FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`transaction_id`) REFERENCES `transactions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "health_covers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, `start_date` TEXT, `end_date` TEXT NOT NULL, `provider` TEXT, `reference` TEXT, `sum_insured` REAL, `transaction_id` INTEGER, FOREIGN KEY(`instrument_id`) REFERENCES `insurance_policies`(`instrument_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`transaction_id`) REFERENCES `transactions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "instrumentId",
+            "columnName": "instrument_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startDate",
+            "columnName": "start_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "endDate",
+            "columnName": "end_date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "provider",
+            "columnName": "provider",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reference",
+            "columnName": "reference",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sumInsured",
+            "columnName": "sum_insured",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "transactionId",
+            "columnName": "transaction_id",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_health_covers_instrument_id",
+            "unique": false,
+            "columnNames": [
+              "instrument_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_health_covers_instrument_id` ON `${TABLE_NAME}` (`instrument_id`)"
+          },
+          {
+            "name": "index_health_covers_transaction_id",
+            "unique": false,
+            "columnNames": [
+              "transaction_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_health_covers_transaction_id` ON `${TABLE_NAME}` (`transaction_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "insurance_policies",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "instrument_id"
+            ],
+            "referencedColumns": [
+              "instrument_id"
+            ]
+          },
+          {
+            "table": "transactions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "transaction_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "vehicles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`instrument_id` INTEGER NOT NULL, `registration_no` TEXT, `make_model` TEXT, `bought_on` TEXT, PRIMARY KEY(`instrument_id`), FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "instrumentId",
+            "columnName": "instrument_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "registrationNo",
+            "columnName": "registration_no",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "makeModel",
+            "columnName": "make_model",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "boughtOn",
+            "columnName": "bought_on",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "instrument_id"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "instruments",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "instrument_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "vehicle_records",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, `kind` TEXT NOT NULL, `start_date` TEXT, `end_date` TEXT NOT NULL, `provider` TEXT, `reference` TEXT, `transaction_id` INTEGER, FOREIGN KEY(`instrument_id`) REFERENCES `vehicles`(`instrument_id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`transaction_id`) REFERENCES `transactions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1002,11 +1113,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "transactionId",
-            "columnName": "transaction_id",
-            "affinity": "INTEGER"
-          },
-          {
             "fieldPath": "provider",
             "columnName": "provider",
             "affinity": "TEXT"
@@ -1017,9 +1123,9 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "sumInsured",
-            "columnName": "sum_insured",
-            "affinity": "REAL"
+            "fieldPath": "transactionId",
+            "columnName": "transaction_id",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -1030,35 +1136,35 @@
         },
         "indices": [
           {
-            "name": "index_validity_periods_instrument_id_kind",
+            "name": "index_vehicle_records_instrument_id_kind",
             "unique": false,
             "columnNames": [
               "instrument_id",
               "kind"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_validity_periods_instrument_id_kind` ON `${TABLE_NAME}` (`instrument_id`, `kind`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vehicle_records_instrument_id_kind` ON `${TABLE_NAME}` (`instrument_id`, `kind`)"
           },
           {
-            "name": "index_validity_periods_transaction_id",
+            "name": "index_vehicle_records_transaction_id",
             "unique": false,
             "columnNames": [
               "transaction_id"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_validity_periods_transaction_id` ON `${TABLE_NAME}` (`transaction_id`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vehicle_records_transaction_id` ON `${TABLE_NAME}` (`transaction_id`)"
           }
         ],
         "foreignKeys": [
           {
-            "table": "instruments",
+            "table": "vehicles",
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
               "instrument_id"
             ],
             "referencedColumns": [
-              "id"
+              "instrument_id"
             ]
           },
           {
@@ -1075,8 +1181,8 @@
         ]
       },
       {
-        "tableName": "instrument_valuations",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, `date` TEXT NOT NULL, `unit_price` REAL, `total_value` REAL, `source` TEXT NOT NULL, `fetched_at` TEXT NOT NULL, FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "holding_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, `date` TEXT NOT NULL, `kind` TEXT NOT NULL, `units` REAL, `amount` REAL, `ratio` TEXT, `notes` TEXT, FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1097,26 +1203,30 @@
             "notNull": true
           },
           {
-            "fieldPath": "unitPrice",
-            "columnName": "unit_price",
-            "affinity": "REAL"
-          },
-          {
-            "fieldPath": "totalValue",
-            "columnName": "total_value",
-            "affinity": "REAL"
-          },
-          {
-            "fieldPath": "source",
-            "columnName": "source",
+            "fieldPath": "kind",
+            "columnName": "kind",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "fetchedAt",
-            "columnName": "fetched_at",
-            "affinity": "TEXT",
-            "notNull": true
+            "fieldPath": "units",
+            "columnName": "units",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "ratio",
+            "columnName": "ratio",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -1127,14 +1237,14 @@
         },
         "indices": [
           {
-            "name": "index_instrument_valuations_instrument_id_date",
+            "name": "index_holding_events_instrument_id_date",
             "unique": false,
             "columnNames": [
               "instrument_id",
               "date"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_instrument_valuations_instrument_id_date` ON `${TABLE_NAME}` (`instrument_id`, `date`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_holding_events_instrument_id_date` ON `${TABLE_NAME}` (`instrument_id`, `date`)"
           }
         ],
         "foreignKeys": [
@@ -1214,7 +1324,7 @@
       },
       {
         "tableName": "transactions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_time` TEXT NOT NULL, `modified_time` TEXT NOT NULL, `date` TEXT NOT NULL, `kind` TEXT NOT NULL, `from_account_id` INTEGER, `to_account_id` INTEGER, `category_id` INTEGER, `instrument_id` INTEGER, `particulars` TEXT NOT NULL, `quantity` REAL, `rate` REAL, `amount` REAL NOT NULL, `currency` TEXT NOT NULL, `fx_rate` REAL, `ex_date` TEXT, `contributor` TEXT, `broker_ref` TEXT, `hidden` INTEGER NOT NULL, `include_in_statistics` INTEGER NOT NULL, FOREIGN KEY(`from_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`to_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`category_id`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_time` TEXT NOT NULL, `modified_time` TEXT NOT NULL, `date` TEXT NOT NULL, `kind` TEXT NOT NULL, `from_account_id` INTEGER, `to_account_id` INTEGER, `category_id` INTEGER, `instrument_id` INTEGER, `particulars` TEXT NOT NULL, `quantity` REAL, `rate` REAL, `amount` REAL NOT NULL, `to_amount` REAL, `fx_rate` REAL, `ex_date` TEXT, `contributor` TEXT, `broker_ref` TEXT, `hidden` INTEGER NOT NULL, `include_in_statistics` INTEGER NOT NULL, FOREIGN KEY(`from_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`to_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`category_id`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1289,10 +1399,9 @@
             "notNull": true
           },
           {
-            "fieldPath": "currency",
-            "columnName": "currency",
-            "affinity": "TEXT",
-            "notNull": true
+            "fieldPath": "toAmount",
+            "columnName": "to_amount",
+            "affinity": "REAL"
           },
           {
             "fieldPath": "fxRate",
@@ -1442,7 +1551,7 @@
       },
       {
         "tableName": "templates",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `particulars` TEXT NOT NULL, `kind` TEXT NOT NULL, `from_account_id` INTEGER, `to_account_id` INTEGER, `category_id` INTEGER, `instrument_id` INTEGER, `rate` REAL, `quantity` REAL, `hidden` INTEGER NOT NULL, FOREIGN KEY(`from_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`to_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`category_id`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `particulars` TEXT NOT NULL, `kind` TEXT NOT NULL, `from_account_id` INTEGER, `to_account_id` INTEGER, `category_id` INTEGER, `rate` REAL, `quantity` REAL, `hidden` INTEGER NOT NULL, FOREIGN KEY(`from_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`to_account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`category_id`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1475,11 +1584,6 @@
           {
             "fieldPath": "categoryId",
             "columnName": "category_id",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "instrumentId",
-            "columnName": "instrument_id",
             "affinity": "INTEGER"
           },
           {
@@ -1532,15 +1636,6 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_templates_category_id` ON `${TABLE_NAME}` (`category_id`)"
-          },
-          {
-            "name": "index_templates_instrument_id",
-            "unique": false,
-            "columnNames": [
-              "instrument_id"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_templates_instrument_id` ON `${TABLE_NAME}` (`instrument_id`)"
           }
         ],
         "foreignKeys": [
@@ -1572,17 +1667,6 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "category_id"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          },
-          {
-            "table": "instruments",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "instrument_id"
             ],
             "referencedColumns": [
               "id"
@@ -1660,11 +1744,104 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_summary_groups_display_order` ON `${TABLE_NAME}` (`display_order`)"
           }
         ]
+      },
+      {
+        "tableName": "pending_dividends",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `instrument_id` INTEGER NOT NULL, `ex_date` TEXT NOT NULL, `quantity` REAL NOT NULL, `per_share` REAL NOT NULL, `gross` REAL NOT NULL, `broker_ref` TEXT NOT NULL, `imported_at` TEXT NOT NULL, FOREIGN KEY(`instrument_id`) REFERENCES `instruments`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "instrumentId",
+            "columnName": "instrument_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exDate",
+            "columnName": "ex_date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quantity",
+            "columnName": "quantity",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "perShare",
+            "columnName": "per_share",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gross",
+            "columnName": "gross",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "brokerRef",
+            "columnName": "broker_ref",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "importedAt",
+            "columnName": "imported_at",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pending_dividends_instrument_id",
+            "unique": false,
+            "columnNames": [
+              "instrument_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pending_dividends_instrument_id` ON `${TABLE_NAME}` (`instrument_id`)"
+          },
+          {
+            "name": "index_pending_dividends_broker_ref",
+            "unique": true,
+            "columnNames": [
+              "broker_ref"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_pending_dividends_broker_ref` ON `${TABLE_NAME}` (`broker_ref`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "instruments",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "instrument_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '09686c762cd5a4a8ca9573a155e0536d')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9f2fa7401bd5a3952863c7104d8bad79')"
     ]
   }
 }

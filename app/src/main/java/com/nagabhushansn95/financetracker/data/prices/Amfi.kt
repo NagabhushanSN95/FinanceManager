@@ -1,6 +1,6 @@
 package com.nagabhushansn95.financetracker.data.prices
 
-import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -28,7 +28,7 @@ data class AmfiScheme(
 
 /**
  * AMFI's daily NAV list (every scheme, one file). Funds are matched by ISIN, then by the scheme code kept in
- * [Instrument.symbol] (exchange AMFI), then by name when exactly one Direct-Growth plan has that name, or has every
+ * [Security.symbol] (exchange AMFI), then by name when exactly one Direct-Growth plan has that name, or has every
  * word of it (a renamed scheme keeps the old name in brackets).
  */
 class AmfiNav(private val http: HttpClient) {
@@ -62,17 +62,17 @@ class AmfiNav(private val http: HttpClient) {
         private fun norm(s: String) =
             s.lowercase().replace("&", "and").replace(Regex("[^a-z0-9]+"), " ").trim()
 
-        /** The scheme for an instrument, or null when none is certain. */
-        fun match(instrument: Instrument, schemes: List<AmfiScheme>): AmfiScheme? {
-            instrument.isin?.trim()?.takeIf { it.isNotEmpty() }?.let { isin ->
+        /** The scheme for a fund, or null when none is certain. */
+        fun match(fund: Listed, schemes: List<AmfiScheme>): AmfiScheme? {
+            fund.security.isin?.trim()?.takeIf { it.isNotEmpty() }?.let { isin ->
                 schemes.firstOrNull { it.isinGrowth == isin || it.isinReinvestment == isin }
                     ?.let { return it }
             }
-            instrument.symbol?.trim()?.takeIf { it.isNotEmpty() && it.all { c -> c.isDigit() } }
+            fund.security.symbol?.trim()?.takeIf { it.isNotEmpty() && it.all { c -> c.isDigit() } }
                 ?.let { code ->
                     schemes.firstOrNull { it.code == code }?.let { return it }
                 }
-            val wanted = norm(instrument.name)
+            val wanted = norm(fund.name)
             val sameName = schemes.filter { norm(it.name) == wanted }
             val directGrowth = sameName.filter { it.isDirect && it.isGrowth }
             (directGrowth.singleOrNull() ?: sameName.singleOrNull())?.let { return it }

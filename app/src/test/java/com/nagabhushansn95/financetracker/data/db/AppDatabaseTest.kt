@@ -25,7 +25,7 @@ class AppDatabaseTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = AppDatabase.inMemory(context)
+        db = TestDb.inMemory(context)
     }
 
     @After
@@ -58,8 +58,11 @@ class AppDatabaseTest {
         assertEquals(TransactionKind.EXPENSE, tx!!.kind)
         assertEquals(LocalDate.of(2026, 11, 1), tx.date)
         assertEquals(now, tx.createdTime)
-        assertEquals(385.19, tx.amountInr, 1e-9)
+        assertEquals(385.19, tx.amount, 1e-9)
         assertEquals(1, db.transactionDao().count())
-        assertEquals("Wallet", db.accountDao().getVisibleByType(AccountType.WALLET).single().name)
+        assertEquals("Wallet",
+            db.accountDao().getVisible().filter { it.accountType == AccountType.WALLET }
+                .single().name
+        )
     }
 }

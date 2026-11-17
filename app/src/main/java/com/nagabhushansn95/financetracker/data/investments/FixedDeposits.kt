@@ -1,12 +1,11 @@
 package com.nagabhushansn95.financetracker.data.investments
 
-import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
-import com.nagabhushansn95.financetracker.data.db.entity.FdEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.FdStatus
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import java.time.LocalDate
@@ -23,7 +22,7 @@ data class FdView(
     val principal: Double,
     val depositDate: LocalDate?,
     val maturityDate: LocalDate?,
-    /** Value today: a manual valuation if one exists, else the formula, else the principal. */
+    /** Value today: the bank formula, else the principal. */
     val estimated: Double,
     val maturityAmount: Double?,
     /** Estimated by [FdTax] from the holder's interest with the bank, not from a stored rate. */
@@ -31,7 +30,7 @@ data class FdView(
     val daysLeft: Long?,
     val rows: List<TransactionEntity>,
     /** Interest credited into the deposit and tax deducted from it, as recorded by hand. */
-    val events: List<FdEvent> = emptyList(),
+    val events: List<HoldingEvent> = emptyList(),
 ) {
     val status: FdStatus
         get() = terms?.status
@@ -96,9 +95,10 @@ sealed class FdLedgerEntry {
     data class SweepIn(override val date: LocalDate, override val deposit: FdView) : FdLedgerEntry()
 
     /** A recorded interest credit or TDS deduction; press and hold edits or deletes it. */
-    data class Event(val event: FdEvent, override val deposit: FdView) : FdLedgerEntry() {
+    data class Event(val event: HoldingEvent, override val deposit: FdView) : FdLedgerEntry() {
         override val date: LocalDate get() = event.date
-        val tax: Boolean get() = event.kind == FdEventKind.TDS
+        val tax: Boolean get() = event.kind == HoldingEventKind.TDS_DEDUCTED
+        val amount: Double get() = event.amount ?: 0.0
     }
 
     /** Derived from the payout, not stored: the gross interest the bank credited, or the tax it deducted. */
@@ -144,9 +144,11 @@ object FixedDeposits {
                 val closedOn =
                     d.rows.filter { it.kind == TransactionKind.REDEEM }.maxOfOrNull { it.date }
                 val tdsReported = d.terms?.tdsReported?.takeIf { it > 0 } ?: 0.0
-                val tdsRecorded = d.events.filter { it.kind == FdEventKind.TDS }.sumOf { it.amount }
+                val tdsRecorded = d.events.filter { it.kind == HoldingEventKind.TDS_DEDUCTED }
+                    .sumOf { it.amount ?: 0.0 }
                 val interestRecorded =
-                    d.events.filter { it.kind == FdEventKind.INTEREST }.sumOf { it.amount }
+                    d.events.filter { it.kind == HoldingEventKind.INTEREST_CREDITED }
+                        .sumOf { it.amount ?: 0.0 }
                 val remaining = d.position.realised + tdsReported + tdsRecorded - interestRecorded
                 if (closedOn != null) {
                     if (remaining > 0.005) entries += FdLedgerEntry.Derived(
@@ -197,8 +199,8 @@ object FixedDeposits {
                 val last = payouts.maxWithOrNull(compareBy({ it.date }, { it.id }))
                     ?: return@mapNotNull null
                 val interest =
-                    payouts.sumOf { it.amountInr } - own.filter { it.kind == TransactionKind.INVEST }
-                        .sumOf { it.amountInr }
+                    payouts.sumOf { it.amount } - own.filter { it.kind == TransactionKind.INVEST }
+                        .sumOf { it.amount }
                 if (interest > 0.005) DepositInterest(
                     id,
                     last.date,
@@ -247,15 +249,12 @@ object FixedDeposits {
         instruments: List<Instrument>,
         terms: List<FixedDeposit>,
         ledgerWithInstrument: List<TransactionEntity>,
-        valuations: List<InstrumentValuation>,
         asOf: LocalDate,
-        events: List<FdEvent> = emptyList(),
+        events: List<HoldingEvent> = emptyList(),
     ): List<FdView> {
         val termsById = terms.associateBy { it.instrumentId }
-        val eventsById = events.groupBy { it.instrumentId }
+        val eventsById = events.filter { !it.kind.addsUnits }.groupBy { it.instrumentId }
         val rowsById = ledgerWithInstrument.groupBy { it.instrumentId }
-        val latest = valuations.groupBy { it.instrumentId }
-            .mapValues { (_, v) -> v.maxWith(compareBy({ it.date }, { it.id })) }
         val views = instruments.filter { it.instrumentType == InstrumentType.FIXED_DEPOSIT }
             .map { instrument ->
                 val rows =
@@ -274,7 +273,6 @@ object FixedDeposits {
                         )
                     }
                 }
-                val valuation = latest[instrument.id]
                 val formula =
                     if (fd != null && depositDate != null && principal > 0) FdMath.estimate(
                         fd,
@@ -284,10 +282,6 @@ object FixedDeposits {
                     ) else null
                 val estimated = when {
                     principal <= Position.UNIT_EPSILON -> 0.0
-                    valuation?.totalValue != null && (formula == null || !valuation.date.isBefore(
-                        asOf.minusDays(7)
-                    )) -> valuation.totalValue
-
                     formula != null -> formula
                     else -> principal
                 }

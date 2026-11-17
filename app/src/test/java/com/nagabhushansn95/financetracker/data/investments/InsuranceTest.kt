@@ -23,7 +23,6 @@ class InsuranceTest {
         id = id,
         name = name,
         instrumentType = InstrumentType.INSURANCE,
-        displayOrder = 1,
         createdTime = now,
         modifiedTime = now
     )
@@ -97,8 +96,8 @@ class InsuranceTest {
         today
     )
     private val vehicle = PolicyView(
-        instrument(60, "Activa"),
-        InsurancePolicy(60, InsuranceType.MOTOR, vehicleNumber = "KA01AB1234"),
+        instrument(60, "Activa").copy(instrumentType = InstrumentType.VEHICLE),
+        null,
         listOf(
             row(
                 4,
@@ -138,7 +137,8 @@ class InsuranceTest {
                 6
             ),
         ),
-        today
+        today,
+        vehicle = com.nagabhushansn95.financetracker.data.db.entity.Vehicle(60, "KA01AB1234"),
     )
 
     @Test

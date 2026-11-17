@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.data.importer.v4
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -31,7 +32,7 @@ class V4ImporterRealDbTest {
     fun setUp() {
         assumeTrue("v4 database not found at $v4File", v4File.isFile)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = AppDatabase.inMemory(context)
+        db = TestDb.inMemory(context)
     }
 
     @After

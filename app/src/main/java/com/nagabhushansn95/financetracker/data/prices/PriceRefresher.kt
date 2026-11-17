@@ -1,11 +1,11 @@
 package com.nagabhushansn95.financetracker.data.prices
 
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.Converters
 import com.nagabhushansn95.financetracker.data.db.entity.FxRate
-import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
-import com.nagabhushansn95.financetracker.data.db.entity.InstrumentValuation
-import com.nagabhushansn95.financetracker.data.db.entity.ValuationSource
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
+import com.nagabhushansn95.financetracker.data.db.entity.PriceSource
 import com.nagabhushansn95.financetracker.data.investments.Holdings
 import com.nagabhushansn95.financetracker.data.investments.Position
 import kotlinx.coroutines.async
@@ -13,7 +13,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import java.time.LocalDateTime
-import kotlin.math.abs
 
 /** What a refresh did, for the hub and the log line under "Prices as of". */
 data class RefreshResult(
@@ -42,9 +41,9 @@ data class RefreshResult(
 }
 
 /**
- * Pulls today's prices into `instrument_valuations` (source YAHOO / AMFI) and the USD/INR rate into `fx_rates`.
- * Only active, held stocks and funds are fetched. A fund matched by name has its AMFI scheme code (symbol,
- * exchange AMFI) and ISIN written back so the next refresh matches directly.
+ * Pulls today's prices onto the securities (last price, date and source YAHOO / AMFI) and the USD/INR rate into
+ * `fx_rates`. Only active, held stocks and funds are fetched. A fund matched by name has its AMFI scheme code
+ * (symbol, exchange AMFI) and ISIN written back so the next refresh matches directly.
  */
 class PriceRefresher(
     private val db: AppDatabase,
@@ -53,15 +52,20 @@ class PriceRefresher(
     private val parallel: Int = 4,
 ) {
     suspend fun refresh(now: LocalDateTime = LocalDateTime.now()): RefreshResult = coroutineScope {
-        val instruments = db.instrumentDao().getAll().filter { it.active }
+        val instruments = db.instrumentDao().getListed().filter { it.instrument.active }
         val ledger = db.transactionDao().getAllWithInstrument()
-        val positions = Holdings.positions(ledger)
-        fun held(i: Instrument) = (positions[i.id]?.units ?: 0.0) > Position.UNIT_EPSILON
+        val positions = Holdings.positions(ledger, events = db.holdingEventDao().getAll())
+        fun held(i: Listed) = (positions[i.id]?.units ?: 0.0) > Position.UNIT_EPSILON
         val stocks = instruments.filter {
-            it.instrumentType == InstrumentType.STOCK && held(it) && yahoo.tickers(it).isNotEmpty()
+            it.instrument.instrumentType == InstrumentType.STOCK && held(it) && yahoo.tickers(it.security)
+                .isNotEmpty()
         }
         val funds =
-            instruments.filter { it.instrumentType == InstrumentType.MUTUAL_FUND && held(it) }
+            instruments.filter {
+                it.instrument.instrumentType == InstrumentType.MUTUAL_FUND && held(
+                    it
+                )
+            }
         val failed = ArrayList<String>()
         val linked = ArrayList<String>()
         val stale = ArrayList<String>()
@@ -71,17 +75,19 @@ class PriceRefresher(
         val stockJobs = stocks.map { instrument ->
             async {
                 gate.withPermit {
-                    runCatching { yahoo.quoteAny(yahoo.tickers(instrument), staleBefore) }
+                    runCatching { yahoo.quoteAny(yahoo.tickers(instrument.security), staleBefore) }
                         .onSuccess { q ->
-                            store(instrument.id, q.price, q.date, ValuationSource.YAHOO, now)
-                            if (q.date.isBefore(staleBefore)) synchronized(stale) { stale += "${instrument.symbol ?: instrument.name} (${q.date})" }
+                            store(instrument.id, q.price, q.date, PriceSource.YAHOO, now)
+                            if (q.date.isBefore(staleBefore)) synchronized(stale) { stale += "${instrument.security.symbol ?: instrument.name} (${q.date})" }
                         }
                         .onFailure {
                             android.util.Log.w(
                                 "PriceRefresher",
-                                "Quote failed for ${instrument.symbol}: ${it.message}"
+                                "Quote failed for ${instrument.security.symbol}: ${it.message}"
                             )
-                            synchronized(failed) { failed += instrument.symbol ?: instrument.name }
+                            synchronized(failed) {
+                                failed += instrument.security.symbol ?: instrument.name
+                            }
                         }
                         .isSuccess
                 }
@@ -117,20 +123,21 @@ class PriceRefresher(
                     failed += instrument.name
                     continue
                 }
-                store(instrument.id, scheme.nav, scheme.date, ValuationSource.AMFI, now)
-                fundCount++
-                val isin = instrument.isin ?: scheme.isinGrowth ?: scheme.isinReinvestment
-                if (instrument.symbol != scheme.code || instrument.exchange != AmfiNav.EXCHANGE || instrument.isin != isin) {
-                    db.instrumentDao().update(
-                        instrument.copy(
+                // The link first (it rewrites the row), then the price.
+                val s = instrument.security
+                val isin = s.isin ?: scheme.isinGrowth ?: scheme.isinReinvestment
+                if (s.symbol != scheme.code || s.exchange != AmfiNav.EXCHANGE || s.isin != isin) {
+                    db.instrumentDao().upsertSecurity(
+                        s.copy(
                             symbol = scheme.code,
                             exchange = AmfiNav.EXCHANGE,
-                            isin = isin,
-                            modifiedTime = now
+                            isin = isin
                         )
                     )
                     linked += instrument.name
                 }
+                store(instrument.id, scheme.nav, scheme.date, PriceSource.AMFI, now)
+                fundCount++
             }
         }
         RefreshResult(
@@ -143,27 +150,21 @@ class PriceRefresher(
         )
     }
 
-    /** One valuation row per instrument, source and date; a changed price on the same day replaces nothing older. */
+    /** The security's last price, date and source. */
     private suspend fun store(
         instrumentId: Long,
         price: Double,
         date: java.time.LocalDate,
-        source: ValuationSource,
+        source: PriceSource,
         now: LocalDateTime
     ) {
-        val latest = db.instrumentDao().latestValuation(instrumentId)
-        if (latest != null && latest.source == source && latest.date == date && latest.unitPrice != null && abs(
-                latest.unitPrice - price
-            ) < 1e-9
-        ) return
-        db.instrumentDao().insertValuation(
-            InstrumentValuation(
-                instrumentId = instrumentId,
-                date = date,
-                unitPrice = price,
-                source = source,
-                fetchedAt = now
-            )
+        val c = Converters()
+        db.instrumentDao().setPrice(
+            instrumentId,
+            price,
+            c.localDateToString(date)!!,
+            source,
+            c.localDateTimeToString(now)!!
         )
     }
 }

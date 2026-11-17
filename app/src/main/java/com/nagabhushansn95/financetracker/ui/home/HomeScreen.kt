@@ -92,6 +92,7 @@ import com.nagabhushansn95.financetracker.ui.investments.TargetsScreen
 import com.nagabhushansn95.financetracker.ui.settings.SettingsScreen
 import com.nagabhushansn95.financetracker.ui.statistics.StatisticsScreen
 import com.nagabhushansn95.financetracker.ui.summary.SummaryScreen
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import com.nagabhushansn95.financetracker.ui.transaction.TransactionEditorScreen
 import com.nagabhushansn95.financetracker.ui.transactions.TransactionsScreen
 import kotlinx.coroutines.flow.SharingStarted
@@ -118,7 +119,7 @@ private fun manageRoute(tab: Int) = "manage?tab=$tab"
 
 /** Non-drawer routes. */
 private const val ROUTE_EDITOR =
-    "transaction?id={id}&kind={kind}&account={account}&instrument={instrument}"
+    "transaction?id={id}&kind={kind}&account={account}"
 
 /** Drawer entries under Investments, one per group, in the order of the categories under Manage. */
 private fun investmentScreens(categoryNames: List<String>): List<Pair<String, String>> =
@@ -154,7 +155,7 @@ private const val SLIDE_MILLIS = 300
 /** The screen for an instrument's own ledger. */
 private fun instrumentRoute(type: InstrumentType, id: Long) = when (type) {
     InstrumentType.FIXED_DEPOSIT -> InvestmentRoutes.fixedDeposit(id)
-    InstrumentType.INSURANCE -> InvestmentRoutes.policy(id)
+    InstrumentType.INSURANCE, InstrumentType.VEHICLE -> InvestmentRoutes.policy(id)
     InstrumentType.OTHER -> InvestmentRoutes.other(id)
     InstrumentType.STOCK, InstrumentType.MUTUAL_FUND -> InvestmentRoutes.holding(id)
 }
@@ -169,9 +170,8 @@ private fun editorRoute(
     id: Long? = null,
     kind: TransactionKind? = null,
     accountId: Long? = null,
-    instrumentId: Long? = null
 ) =
-    "transaction?id=${id ?: -1}&kind=${kind?.name ?: ""}&account=${accountId ?: -1}&instrument=${instrumentId ?: -1}"
+    "transaction?id=${id ?: -1}&kind=${kind?.name ?: ""}&account=${accountId ?: -1}"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -332,6 +332,7 @@ fun HomeScreen() {
         Scaffold(
             topBar = {
                 if (!inEditor) TopAppBar(
+                    colors = appTopBarColors(),
                     title = { Text(current.title) },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
@@ -514,7 +515,6 @@ fun HomeScreen() {
                         navArgument("id") { type = NavType.LongType; defaultValue = -1L },
                         navArgument("kind") { type = NavType.StringType; defaultValue = "" },
                         navArgument("account") { type = NavType.LongType; defaultValue = -1L },
-                        navArgument("instrument") { type = NavType.LongType; defaultValue = -1L },
                     ),
                 ) { entry ->
                     val id = entry.arguments?.getLong("id")?.takeIf { it > 0 }

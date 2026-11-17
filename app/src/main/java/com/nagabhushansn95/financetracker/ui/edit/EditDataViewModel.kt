@@ -34,6 +34,9 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val instruments: StateFlow<List<Instrument>> = db.instrumentDao().observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val securities: StateFlow<List<com.nagabhushansn95.financetracker.data.db.entity.Security>> =
+        db.instrumentDao().observeSecurities()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val investmentCategories: StateFlow<List<InvestmentCategory>> =
         db.instrumentDao().observeCategories()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -89,17 +92,6 @@ class EditDataViewModel(application: Application) : AndroidViewModel(application
     fun restoreCategory(id: Long) = run { repository.restoreCategory(id) }
     fun reorderCategories(ids: List<Long>) = run { repository.reorderCategories(ids) }
     suspend fun categoryTransactionCount(id: Long) = repository.categoryTransactionCount(id)
-
-    fun saveInstrument(instrument: Instrument) = run {
-        if (instrument.id == 0L) repository.addInstrument(instrument) else repository.updateInstrument(
-            instrument
-        )
-    }
-
-    fun setInstrumentActive(id: Long, active: Boolean) =
-        run { repository.setInstrumentActive(id, active) }
-    fun reorderInstruments(ids: List<Long>) = run { repository.reorderInstruments(ids) }
-    suspend fun instrumentTransactionCount(id: Long) = repository.instrumentTransactionCount(id)
 
     fun saveInvestmentCategory(c: InvestmentCategory) = run {
         if (c.id == 0L) repository.addInvestmentCategory(c) else repository.updateInvestmentCategory(

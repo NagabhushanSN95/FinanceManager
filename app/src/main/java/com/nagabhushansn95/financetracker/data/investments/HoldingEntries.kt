@@ -1,7 +1,11 @@
 package com.nagabhushansn95.financetracker.data.investments
 
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEventKind
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import java.time.LocalDate
@@ -47,15 +51,37 @@ enum class HoldingEntryKind(val transactionKind: TransactionKind) {
     val incoming: Boolean get() = this == SELL || this == DIVIDEND
 }
 
-/** One stock or fund with its ledger (oldest first) and the position the ledger adds up to. */
+/** One line of a holding's ledger as its screen shows it: a cash entry, or units that arrived without cash. */
+sealed class HoldingLine {
+    abstract val date: LocalDate
+
+    data class Cash(val row: TransactionEntity) : HoldingLine() {
+        override val date: LocalDate get() = row.date
+    }
+
+    data class Units(val event: HoldingEvent) : HoldingLine() {
+        override val date: LocalDate get() = event.date
+    }
+}
+
+/** One stock or fund with its ledger (oldest first), its unit events, and the position they add up to. */
 data class HoldingView(
     val instrument: Instrument,
+    val security: Security,
     val rows: List<TransactionEntity>,
     val position: Position,
+    /** Bonus and split units, oldest first. */
+    val events: List<HoldingEvent> = emptyList(),
 ) {
+    val listed: Listed get() = Listed(instrument, security)
     val type: InstrumentType get() = instrument.instrumentType
     val own: Boolean get() = instrument.owner == Instrument.OWNER_SELF
+    val displayName: String get() = listed.displayName
     fun rowsOf(kind: HoldingEntryKind) = rows.filter { HoldingEntries.kindOf(it) == kind }
+
+    /** Rows and unit events together, oldest first (rows before events on the same day). */
+    val ledger: List<HoldingLine>
+        get() = (rows.map { HoldingLine.Cash(it) } + events.map { HoldingLine.Units(it) }).sortedBy { it.date }
 
     /** The account the last buy, sell or charge went through (the demat account, usually). */
     val lastTradeAccount: Long?
@@ -87,41 +113,56 @@ object HoldingEntries {
     fun kindOf(t: TransactionEntity): HoldingEntryKind? = when (t.kind) {
         TransactionKind.INVEST -> HoldingEntryKind.BUY
         TransactionKind.REDEEM -> HoldingEntryKind.SELL
-        TransactionKind.INCOME ->
-            if (t.quantity != null && t.amount == 0.0) {
-                if (Holdings.isSplit(t.particulars)) HoldingEntryKind.SPLIT else HoldingEntryKind.BONUS
-            } else HoldingEntryKind.DIVIDEND
-
+        TransactionKind.INCOME -> HoldingEntryKind.DIVIDEND
         TransactionKind.EXPENSE -> HoldingEntryKind.CHARGES
         TransactionKind.TRANSFER -> null
     }
 
-    /** The view of every stock and fund in [instruments], from the ledger rows tagged with them. */
-    fun build(instruments: List<Instrument>, ledger: List<TransactionEntity>): List<HoldingView> {
+    /** Which entry a unit event is; null for a deposit's events, which never sit on a stock. */
+    fun kindOf(e: HoldingEvent): HoldingEntryKind? = when (e.kind) {
+        HoldingEventKind.BONUS -> HoldingEntryKind.BONUS
+        HoldingEventKind.SPLIT -> HoldingEntryKind.SPLIT
+        else -> null
+    }
+
+    /** The view of every stock and fund in [listed], from the ledger rows and events tagged with them. */
+    fun build(
+        listed: List<Listed>,
+        ledger: List<TransactionEntity>,
+        events: List<HoldingEvent> = emptyList(),
+    ): List<HoldingView> {
         val byInstrument = ledger.filter { it.instrumentId != null }.groupBy { it.instrumentId!! }
-        return instruments
-            .filter { it.instrumentType == InstrumentType.STOCK || it.instrumentType == InstrumentType.MUTUAL_FUND }
-            .map { i ->
+        val eventsById = events.filter { it.kind.addsUnits }.groupBy { it.instrumentId }
+        return listed
+            .filter { it.instrument.instrumentType == InstrumentType.STOCK || it.instrument.instrumentType == InstrumentType.MUTUAL_FUND }
+            .map { l ->
                 val rows =
-                    byInstrument[i.id].orEmpty().sortedWith(compareBy({ it.date }, { it.id }))
-                HoldingView(i, rows, Holdings.position(i.id, rows, unitBased = true))
+                    byInstrument[l.id].orEmpty().sortedWith(compareBy({ it.date }, { it.id }))
+                val ev = eventsById[l.id].orEmpty().sortedWith(compareBy({ it.date }, { it.id }))
+                HoldingView(
+                    l.instrument,
+                    l.security,
+                    rows,
+                    Holdings.position(l.id, rows, unitBased = true, events = ev),
+                    ev
+                )
             }
     }
 
     /** How the particulars name the holding: a stock by its symbol, a fund by its name (the 4.x wording). */
-    fun label(instrument: Instrument): String =
-        if (instrument.instrumentType == InstrumentType.STOCK) instrument.symbol?.takeIf { it.isNotBlank() }
-            ?: instrument.name
-        else instrument.name
+    fun label(listed: Listed): String =
+        if (listed.instrument.instrumentType == InstrumentType.STOCK) listed.security.symbol?.takeIf { it.isNotBlank() }
+            ?: listed.name
+        else listed.name
 
     /** The house-style particulars for an entry; [ratio] is "a:b" for bonus and split rows. */
     fun defaultParticulars(
         kind: HoldingEntryKind,
-        instrument: Instrument,
+        listed: Listed,
         ratio: String? = null
     ): String {
-        val name = label(instrument)
-        val fund = instrument.instrumentType == InstrumentType.MUTUAL_FUND
+        val name = label(listed)
+        val fund = listed.instrument.instrumentType == InstrumentType.MUTUAL_FUND
         return when (kind) {
             HoldingEntryKind.BUY -> if (fund) "Invested In Mutual Funds - $name" else "Bought Stocks - $name"
             HoldingEntryKind.SELL -> if (fund) "Redeemed Mutual Funds - $name" else "Sold Stocks - $name"
@@ -142,9 +183,9 @@ object HoldingEntries {
         view: HoldingView,
         ratio: String? = null
     ): String {
-        if (kind.isUnitsOnly) return defaultParticulars(kind, view.instrument, ratio)
+        if (kind.isUnitsOnly) return defaultParticulars(kind, view.listed, ratio)
         val last = view.rowsOf(kind).lastOrNull()?.particulars?.let(::stripExDate)
-        return last?.takeIf { it.isNotBlank() } ?: defaultParticulars(kind, view.instrument)
+        return last?.takeIf { it.isNotBlank() } ?: defaultParticulars(kind, view.listed)
     }
 
     fun stripExDate(particulars: String): String = particulars.replace(EX_DATE_SUFFIX, "").trim()
@@ -164,10 +205,32 @@ object HoldingEntries {
         views.flatMap { it.rowsOf(HoldingEntryKind.CHARGES) }
             .maxWithOrNull(compareBy({ it.date }, { it.id }))?.amount
 
+    /** The event for bonus shares or a split: the units added and the ratio, on the record date. */
+    fun toEvent(
+        view: HoldingView,
+        kind: HoldingEntryKind,
+        date: LocalDate,
+        units: Double,
+        ratio: String?,
+        existing: HoldingEvent? = null,
+    ): HoldingEvent {
+        require(kind.isUnitsOnly) { "${kind.name} moves cash" }
+        return HoldingEvent(
+            id = existing?.id ?: 0,
+            instrumentId = view.instrument.id,
+            date = date,
+            kind = if (kind == HoldingEntryKind.SPLIT) HoldingEventKind.SPLIT else HoldingEventKind.BONUS,
+            units = units,
+            ratio = ratio?.trim()?.ifBlank { null } ?: existing?.ratio,
+            notes = existing?.notes,
+        )
+    }
+
     /**
-     * The ledger row for an entry. Buys and sells carry units and the rate and move cash through [accountId]; a
-     * dividend lands in [accountId] with the ex-date and its category; bonus and split rows carry only units; charges
-     * leave [accountId] under their category. Editing [existing] keeps its identity and broker reference.
+     * The ledger row for a cash entry. Buys and sells carry units and the rate and move cash through [accountId]; a
+     * dividend lands in [accountId] with the ex-date and its category; charges leave [accountId] under their
+     * category. Editing [existing] keeps its identity and broker reference. Bonus and split units are events, see
+     * [toEvent].
      */
     fun toTransaction(
         view: HoldingView,
@@ -182,14 +245,11 @@ object HoldingEntries {
         categoryId: Long?,
         existing: TransactionEntity? = null,
         now: LocalDateTime = LocalDateTime.now(),
+        /** The statement reference for a dividend recorded from the pending list. */
+        brokerRef: String? = null,
     ): TransactionEntity {
-        val text = particulars.trim().ifBlank {
-            defaultParticulars(
-                kind,
-                view.instrument,
-                units?.let { ratioOf(existing?.particulars ?: "") }
-                    ?.let { "${it.first}:${it.second}" })
-        }
+        require(!kind.isUnitsOnly) { "${kind.name} is an event, not a ledger row" }
+        val text = particulars.trim().ifBlank { defaultParticulars(kind, view.listed) }
         val out = kind == HoldingEntryKind.BUY || kind == HoldingEntryKind.CHARGES
         val into = kind == HoldingEntryKind.SELL || kind == HoldingEntryKind.DIVIDEND
         return TransactionEntity(
@@ -205,11 +265,9 @@ object HoldingEntries {
             particulars = text,
             quantity = units,
             rate = rate,
-            amount = if (kind.isUnitsOnly) 0.0 else amount,
-            currency = view.instrument.currency,
-            fxRate = existing?.fxRate,
+            amount = amount,
             exDate = exDate.takeIf { kind == HoldingEntryKind.DIVIDEND },
-            brokerRef = existing?.brokerRef,
+            brokerRef = existing?.brokerRef ?: brokerRef,
             hidden = existing?.hidden ?: false,
             includeInStatistics = existing?.includeInStatistics ?: true,
         )

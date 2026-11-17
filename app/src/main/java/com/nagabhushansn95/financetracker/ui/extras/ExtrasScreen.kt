@@ -35,7 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.backup.DatabaseBackup
 import com.nagabhushansn95.financetracker.ui.common.DatabaseFilePickers
 
-/** Backup and restore, the summary workbook export and the Zerodha statement import. */
+/** Backup and restore and the summary workbook export. Zerodha statements are imported under Investments. */
 @Composable
 fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -66,15 +66,6 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
                 viewModel.rememberRestorePick(uri); confirmRestore = uri
             }
         }
-
-    val pickStatement = rememberLauncherForActivityResult(
-        DatabaseFilePickers.OpenAny(
-            "Download",
-            viewModel::lastZerodhaStatementUri
-        )
-    ) { uri ->
-        if (uri != null) viewModel.previewZerodha(uri)
-    }
 
     // Android 9 and below need the legacy storage permission for the Documents folder.
     val storagePermission =
@@ -119,15 +110,6 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
         state.lastExport?.let {
             Text("Last export: $it", style = MaterialTheme.typography.bodySmall)
         }
-        ActionCard(
-            title = "Import Zerodha statement",
-            description = "A Coin order history, Kite tradebook, dividends or transaction-charges CSV. Rows already recorded are skipped.",
-            enabled = !state.busy,
-            onClick = { pickStatement.launch(arrayOf("*/*")) },
-        )
-        state.lastZerodhaImport?.let {
-            Text("Last Zerodha import: $it", style = MaterialTheme.typography.bodySmall)
-        }
         state.lastImportSummary?.let {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
@@ -164,15 +146,6 @@ fun ExtrasScreen(snackbarHostState: SnackbarHostState, viewModel: ExtrasViewMode
         )
     }
 
-    state.zerodha?.let { preview ->
-        ZerodhaImportSheet(
-            preview = preview,
-            busy = state.busy,
-            onSettings = viewModel::updateZerodhaSettings,
-            onImport = viewModel::commitZerodha,
-            onDismiss = viewModel::dismissZerodha,
-        )
-    }
 }
 
 @Composable

@@ -31,7 +31,10 @@ class SummaryWorkbook(private val db: AppDatabase) {
         val categories = db.instrumentDao().getAllCategories()
         val transactions = db.transactionDao().getAll()
         val withInstrument = transactions.filter { it.instrumentId != null }
-        val valuations = db.instrumentDao().getAllValuationsLatestFirst()
+        val securities = db.instrumentDao().getAllSecurities()
+        val securityById = securities.associateBy { it.instrumentId }
+        val vehicles = db.vehicleDao().getAllVehicles().associateBy { it.instrumentId }
+        val holdingEvents = db.holdingEventDao().getAll()
         val accounts = db.accountDao().getAll()
         val riskLevels = db.instrumentDao().getAllRiskLevels()
         val goal = db.settingsDao().get(Settings.GOAL_AMOUNT)?.toDoubleOrNull()
@@ -41,14 +44,15 @@ class SummaryWorkbook(private val db: AppDatabase) {
             instruments,
             categories,
             withInstrument,
-            valuations,
+            securities,
             accounts,
             transactions,
             riskLevels,
             goal,
             asOf,
             fixedDeposits,
-            fx
+            fx,
+            holdingEvents = holdingEvents,
         )
         val instrumentById = instruments.associateBy { it.id }
         val accountById = accounts.associateBy { it.id }
@@ -145,7 +149,6 @@ class SummaryWorkbook(private val db: AppDatabase) {
                 "Maturity Date",
                 "Current Amount (Estimated)",
                 "Maturity Amount (Calculated)",
-                "TDS Rate",
                 "TDS (Calculated)",
                 "Maturity Amount (After TDS)",
                 "Maturity Amount (Printed)",
@@ -159,7 +162,7 @@ class SummaryWorkbook(private val db: AppDatabase) {
                 "Notes"
             ),
         ).also { sheet ->
-            FixedDeposits.build(instruments, fixedDeposits, withInstrument, valuations, asOf)
+            FixedDeposits.build(instruments, fixedDeposits, withInstrument, asOf, holdingEvents)
                 .sortedBy { it.instrument.id }.forEach { d ->
                 val t = d.terms
                 sheet.row(
@@ -180,7 +183,6 @@ class SummaryWorkbook(private val db: AppDatabase) {
                     d.maturityDate,
                     if (d.isOpen) d.estimated else null,
                     d.maturityAmount,
-                    t?.tdsRate?.let { if (it > 1) it / 100 else it },
                     d.tdsAtMaturity.takeIf { it > 0 },
                     d.maturityAfterTds,
                     t?.maturityAmountPrinted,
@@ -218,7 +220,7 @@ class SummaryWorkbook(private val db: AppDatabase) {
                     accountById[if (credit) t.toAccountId else t.fromAccountId]?.name,
                     t.contributor ?: if (t.kind == TransactionKind.TRANSFER) "Self" else null,
                     if (credit) "Credit" else "Debit",
-                    t.amountInr,
+                    t.amount,
                     t.particulars
                 )
             }
@@ -249,7 +251,7 @@ class SummaryWorkbook(private val db: AppDatabase) {
                     p?.policyName ?: instrumentById[t.instrumentId]?.name,
                     p?.policyNumber,
                     if (t.kind == TransactionKind.INVEST || t.kind == TransactionKind.EXPENSE) "Premium" else "Payout",
-                    t.amountInr,
+                    t.amount,
                     t.particulars,
                 )
             }
@@ -275,16 +277,17 @@ class SummaryWorkbook(private val db: AppDatabase) {
                 "Owner"
             )
         ).also { sheet ->
-            instruments.filter { it.instrumentType == InstrumentType.INSURANCE }.sortedBy { it.id }
+            instruments.filter { it.instrumentType == InstrumentType.INSURANCE || it.instrumentType == InstrumentType.VEHICLE }
+                .sortedBy { it.id }
                 .forEach { i ->
                     val p = policies[i.id]
                     sheet.row(
                         i.name,
-                        p?.insuranceType?.name,
+                        if (i.instrumentType == InstrumentType.VEHICLE) "MOTOR" else p?.insuranceType?.name,
                         p?.provider,
                         p?.policyName,
                         p?.policyNumber,
-                        p?.vehicleNumber,
+                        vehicles[i.id]?.registrationNo,
                         p?.sumAssured,
                         p?.premiumAmount,
                         p?.premiumFrequencyMonths,
@@ -361,10 +364,10 @@ class SummaryWorkbook(private val db: AppDatabase) {
                     val p = h.position
                     sheet.row(
                         h.instrument.name,
-                        h.instrument.symbol,
-                        h.instrument.isin,
+                        h.security?.symbol,
+                        h.security?.isin,
                         h.categoryName,
-                        h.instrument.currency,
+                        h.security?.currency ?: "INR",
                         p.units.takeIf { p.hasUnits },
                         p.averageCost,
                         h.unitPrice,
@@ -397,7 +400,7 @@ class SummaryWorkbook(private val db: AppDatabase) {
                     t.date,
                     instrumentById[t.instrumentId]?.name,
                     t.kind.name,
-                    t.amountInr,
+                    t.amount,
                     accountById[t.fromAccountId ?: t.toAccountId]?.name,
                     t.particulars
                 )
@@ -406,18 +409,18 @@ class SummaryWorkbook(private val db: AppDatabase) {
 
         xlsx.sheet(
             "Prices",
-            listOf("Instrument", "Symbol", "Date", "Unit Price", "Total Value", "Source", "Fetched")
+            listOf("Instrument", "Symbol", "Date", "Unit Price", "Source", "Fetched")
         ).also { sheet ->
-            valuations.sortedWith(compareBy({ instrumentById[it.instrumentId]?.name }, { it.date }))
-                .forEach { v ->
+            securities.filter { it.lastPrice != null }
+                .sortedWith(compareBy { instrumentById[it.instrumentId]?.name })
+                .forEach { s ->
                     sheet.row(
-                        instrumentById[v.instrumentId]?.name,
-                        instrumentById[v.instrumentId]?.symbol,
-                        v.date,
-                        v.unitPrice,
-                        v.totalValue,
-                        v.source.name,
-                        v.fetchedAt.toLocalDate()
+                        instrumentById[s.instrumentId]?.name,
+                        s.symbol,
+                        s.lastPriceDate,
+                        s.lastPrice,
+                        s.lastPriceSource?.name,
+                        s.lastPriceFetchedAt?.toLocalDate()
                     )
                 }
         }

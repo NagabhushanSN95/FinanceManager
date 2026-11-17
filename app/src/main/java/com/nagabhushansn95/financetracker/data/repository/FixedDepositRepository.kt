@@ -3,10 +3,10 @@ package com.nagabhushansn95.financetracker.data.repository
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
-import com.nagabhushansn95.financetracker.data.db.entity.FdEvent
 import com.nagabhushansn95.financetracker.data.db.entity.FdStatus
 import com.nagabhushansn95.financetracker.data.db.entity.FdTemplate
 import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
 import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
@@ -148,7 +148,6 @@ class FixedDepositRepository(private val db: AppDatabase) {
                 branch = newTerms.branch ?: oldTerms.branch,
                 bankAccountNo = newTerms.bankAccountNo ?: oldTerms.bankAccountNo,
                 custId = newTerms.custId ?: oldTerms.custId,
-                tdsRate = newTerms.tdsRate ?: oldTerms.tdsRate,
             ), date
         )
         db.instrumentDao().upsertFixedDeposit(terms)
@@ -187,14 +186,15 @@ class FixedDepositRepository(private val db: AppDatabase) {
     }
 
     /** Records interest credited into the deposit or TDS deducted from it; neither moves cash of ours. */
-    suspend fun saveEvent(event: FdEvent): Long = write {
-        require(event.amount > 0) { "Amount must be positive" }
-        if (event.id == 0L) db.instrumentDao().insertFdEvent(event) else {
-            db.instrumentDao().updateFdEvent(event); event.id
+    suspend fun saveEvent(event: HoldingEvent): Long = write {
+        require(!event.kind.addsUnits) { "Not a deposit event" }
+        require((event.amount ?: 0.0) > 0) { "Amount must be positive" }
+        if (event.id == 0L) db.holdingEventDao().insert(event) else {
+            db.holdingEventDao().update(event); event.id
         }
     }
 
-    suspend fun deleteEvent(id: Long) = write { db.instrumentDao().deleteFdEvent(id) }
+    suspend fun deleteEvent(id: Long) = write { db.holdingEventDao().delete(id) }
 
     /**
      * Removes a deposit opened by mistake: the instrument, its terms, ledger entries and every transaction tagged to
@@ -257,7 +257,6 @@ class FixedDepositRepository(private val db: AppDatabase) {
                 instrumentType = InstrumentType.FIXED_DEPOSIT,
                 categoryId = categoryId,
                 owner = owner,
-                displayOrder = db.instrumentDao().maxDisplayOrder() + 1,
                 notes = notes?.takeIf { it.isNotBlank() },
                 createdTime = now,
                 modifiedTime = now,

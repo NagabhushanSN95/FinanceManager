@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.data.investments
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
@@ -31,7 +32,7 @@ class HoldingsRepositoryTest {
 
     @Before
     fun setUp() = runTest {
-        db = AppDatabase.inMemory(ApplicationProvider.getApplicationContext<Context>())
+        db = TestDb.inMemory(ApplicationProvider.getApplicationContext<Context>())
         repo = HoldingsRepository(db)
         demat = db.accountDao().insert(
             Account(
@@ -70,8 +71,9 @@ class HoldingsRepositoryTest {
 
     private suspend fun view(id: Long): HoldingView =
         HoldingEntries.build(
-            db.instrumentDao().getAll(),
-            db.transactionDao().getAllWithInstrument()
+            db.instrumentDao().getListed(),
+            db.transactionDao().getAllWithInstrument(),
+            db.holdingEventDao().getAll(),
         ).single { it.instrument.id == id }
 
     private suspend fun balance(id: Long) = db.accountDao().getById(id)!!.balance
@@ -90,7 +92,7 @@ class HoldingsRepositoryTest {
             null,
             now
         )
-        val i = db.instrumentDao().getById(id)!!
+        val i = db.instrumentDao().getSecurity(id)!!
         assertEquals("NSE", i.exchange)
         assertEquals("NIFTYBEES", i.symbol)
 
@@ -195,21 +197,15 @@ class HoldingsRepositoryTest {
         )
         assertEquals(49484.66, balance(ammaDemat), 1e-6)
 
-        val bonusId = repo.saveEntry(
-            view(id),
-            HoldingEntryKind.BONUS,
-            LocalDate.of(2026, 5, 1),
-            100.0,
-            null,
-            0.0,
-            null,
-            "Bonus Shares 1:1 - NIFTYBEES",
-            now = now
-        )
+        val bonusId =
+            repo.saveEvent(view(id), HoldingEntryKind.BONUS, LocalDate.of(2026, 5, 1), 100.0, "1:1")
         v = view(id)
         assertEquals(200.0, v.position.units, 1e-9)
         assertEquals(125.0, v.position.averageCost!!, 1e-9)
-        assertEquals(0.0, db.transactionDao().getById(bonusId)!!.amount, 1e-9)
+        val bonus = db.holdingEventDao().getById(bonusId)!!
+        assertEquals(100.0, bonus.units!!, 1e-9)
+        assertEquals("1:1", bonus.ratio)
+        assertEquals(listOf(HoldingEntryKind.BONUS), v.events.map { HoldingEntries.kindOf(it) })
 
         // Editing the sale moves it to the main demat: the older lot at 250 is consumed instead.
         repo.saveEntry(
@@ -250,7 +246,7 @@ class HoldingsRepositoryTest {
             null,
             now
         )
-        assertEquals("AMFI", db.instrumentDao().getById(id)!!.exchange)
+        assertEquals("AMFI", db.instrumentDao().getSecurity(id)!!.exchange)
         repo.saveEntry(
             view(id),
             HoldingEntryKind.BUY,

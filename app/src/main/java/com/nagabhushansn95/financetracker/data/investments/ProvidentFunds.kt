@@ -236,8 +236,6 @@ object ProvidentFunds {
             quantity = null,
             rate = null,
             amount = amount,
-            currency = account.currency,
-            fxRate = null,
             contributor = kind.contributor,
         )
     }

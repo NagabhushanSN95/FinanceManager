@@ -19,7 +19,6 @@ class OthersTest {
         id = id,
         name = name,
         instrumentType = InstrumentType.OTHER,
-        displayOrder = id.toInt(),
         active = active,
         createdTime = now,
         modifiedTime = now
@@ -71,8 +70,9 @@ class OthersTest {
                 row(5, 2, TransactionKind.REDEEM, "2023-01-30", 6000.0, "Lakshmi Tejas Paid Back"),
             )
         )
-        assertEquals(listOf(1L, 2L, 3L), views.map { it.instrument.id })
-        val mahadeva = views[0]
+        // Listed in name order: Amma's Account, Loan To Lakshmi Tejas, Loan To Mahadeva Anna.
+        assertEquals(listOf(3L, 2L, 1L), views.map { it.instrument.id })
+        val mahadeva = views.single { it.instrument.id == 1L }
         assertEquals(190000.0, mahadeva.outstanding, 1e-9)
         assertFalse(mahadeva.settled)
         assertTrue(mahadeva.isLoan)
@@ -88,13 +88,13 @@ class OthersTest {
             Others.suggestedParticulars(OtherEntryKind.IN, mahadeva)
         )
 
-        val lakshmi = views[1]
+        val lakshmi = views.single { it.instrument.id == 2L }
         assertTrue(lakshmi.settled)
         assertEquals(0.0, lakshmi.outstanding, 1e-9)
         assertEquals(LocalDate.of(2023, 1, 30), lakshmi.lastDate)
         assertEquals(OtherEntryKind.OUT, Others.likelyNext(lakshmi))
 
-        val amma = views[2]
+        val amma = views.single { it.instrument.id == 3L }
         assertFalse(amma.isLoan)
         assertFalse(amma.settled) // nothing recorded yet is not settled
         assertEquals("Put in" to "Taken back", amma.outLabel to amma.inLabel)

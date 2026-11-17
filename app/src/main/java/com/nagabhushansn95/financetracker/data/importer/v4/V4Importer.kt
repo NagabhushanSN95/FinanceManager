@@ -14,6 +14,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
 import com.nagabhushansn95.financetracker.data.db.entity.InsuranceType
+import com.nagabhushansn95.financetracker.data.db.entity.Security
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -84,7 +85,6 @@ class V4Importer(private val db: AppDatabase) {
         private var pseudoBankKey: String? = null                 // "B16"
         private val instrumentIds = HashMap<InstrumentKey, Long>()
         private var nextAccountOrder = 0
-        private var nextInstrumentOrder = 0
         private var epfId = 0L
         private var ppfId = 0L
         private var investmentIncomeCategoryId = 0L
@@ -101,13 +101,14 @@ class V4Importer(private val db: AppDatabase) {
             importCategories()
             val txCount = importTransactions()
             val templateCount = importTemplates()
+            val droppedAccounts = dropEmptyDeletedAccounts()
             finalisePfBalances()
             if (fdPlaceholderRows > 0) {
                 notes += "$fdPlaceholderRows fixed-deposit rows were attached to the placeholder instrument " +
-                        "'${InstrumentKey.FD_UNMAPPED.name}'; split them into real FDs with the sheet backfill."
+                        "'${InstrumentKey.FD_UNMAPPED.name}'; split them into real deposits under Investments."
             }
             return V4ImportReport(
-                accounts = accountIds.size + 3,
+                accounts = accountIds.size + 3 - droppedAccounts,
                 categories = categoryIds.size,
                 instruments = instrumentIds.size,
                 transactionsByKind = kindCounts,
@@ -246,15 +247,16 @@ class V4Importer(private val db: AppDatabase) {
                 Instrument(
                     name = key.name,
                     instrumentType = key.type,
-                    symbol = key.symbol,
-                    exchange = key.exchange,
-                    displayOrder = ++nextInstrumentOrder,
                     createdTime = now,
                     modifiedTime = now,
                     notes = if (key == InstrumentKey.FD_UNMAPPED) "Placeholder created by the v4 import. Split into real FDs." else null,
                 )
             )
             when (key.type) {
+                InstrumentType.STOCK, InstrumentType.MUTUAL_FUND -> dao.upsertSecurity(
+                    Security(instrumentId = id, symbol = key.symbol, exchange = key.exchange)
+                )
+
                 InstrumentType.FIXED_DEPOSIT -> dao.upsertFixedDeposit(
                     FixedDeposit(
                         instrumentId = id,
@@ -297,7 +299,54 @@ class V4Importer(private val db: AppDatabase) {
                 }
             }
             out.chunked(1000).forEach { db.transactionDao().insertAll(it) }
+            dateFromFirstTransaction(out)
             return out.size
+        }
+
+        /**
+         * 4.x never recorded when an account was opened or a holding started, so a ported account or instrument is
+         * dated to the day of its first transaction (at midnight) rather than to the import; one without transactions
+         * keeps the import time.
+         */
+        private suspend fun dateFromFirstTransaction(rows: List<TransactionEntity>) {
+            val firstAccount = HashMap<Long, LocalDate>()
+            val firstInstrument = HashMap<Long, LocalDate>()
+            fun note(map: HashMap<Long, LocalDate>, id: Long, date: LocalDate) {
+                val d = map[id]
+                if (d == null || date < d) map[id] = date
+            }
+            for (t in rows) {
+                for (id in listOfNotNull(t.fromAccountId, t.toAccountId)) note(
+                    firstAccount,
+                    id,
+                    t.date
+                )
+                t.instrumentId?.let { note(firstInstrument, it, t.date) }
+            }
+            for ((id, date) in firstAccount) {
+                val account = db.accountDao().getById(id) ?: continue
+                db.accountDao().update(account.copy(createdTime = date.atStartOfDay()))
+            }
+            for ((id, date) in firstInstrument) {
+                val instrument = db.instrumentDao().getById(id) ?: continue
+                db.instrumentDao().update(instrument.copy(createdTime = date.atStartOfDay()))
+            }
+        }
+
+        /**
+         * A wallet or bank that 4.x had already deleted, with nothing in it and no transaction ever, is left out as if
+         * it had never existed (its templates go with it). Returns how many were dropped.
+         */
+        private suspend fun dropEmptyDeletedAccounts(): Int {
+            val dao = db.accountDao()
+            var dropped = 0
+            for (account in dao.getAll()) {
+                if (!account.deleted || account.balance != 0.0 || dao.transactionCount(account.id) > 0) continue
+                dao.delete(account.id)
+                notes += "Deleted account '${account.name}' had no balance and no transactions; not carried over."
+                dropped++
+            }
+            return dropped
         }
 
         private fun accountId(ep: V4Endpoint, v4Id: Int): Long =
@@ -550,7 +599,6 @@ class V4Importer(private val db: AppDatabase) {
 
                         is InvestmentEvent.ReinvestedIncome -> base.copy(
                             kind = TransactionKind.INCOME,
-                            instrumentId = instr(ev.instrument),
                             categoryId = investmentIncomeCategoryId
                         )
 
@@ -573,7 +621,6 @@ class V4Importer(private val db: AppDatabase) {
                         is InvestmentEvent.Invest -> base.copy(
                             kind = TransactionKind.INVEST,
                             fromAccountId = accountIds[type.from.key] ?: return null,
-                            instrumentId = instrumentIds[ev.instrument]
                         )
 
                         is InvestmentEvent.ProvidentFundIn -> base.copy(
@@ -590,7 +637,6 @@ class V4Importer(private val db: AppDatabase) {
                         is InvestmentEvent.Redeem -> base.copy(
                             kind = TransactionKind.REDEEM,
                             toAccountId = accountIds[type.to.key] ?: return null,
-                            instrumentId = instrumentIds[ev.instrument]
                         )
 
                         is InvestmentEvent.ProvidentFundOut -> base.copy(

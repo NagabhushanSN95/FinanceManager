@@ -83,38 +83,15 @@ class EditDataRepository(private val db: AppDatabase) {
         instrument: Instrument,
         now: LocalDateTime = LocalDateTime.now()
     ): Long =
-        db.instrumentDao().insert(
-            instrument.copy(
-                displayOrder = db.instrumentDao().maxDisplayOrder() + 1,
-                createdTime = now,
-                modifiedTime = now
-            )
-        )
+        db.instrumentDao().insert(instrument.copy(createdTime = now, modifiedTime = now))
 
     suspend fun updateInstrument(instrument: Instrument, now: LocalDateTime = LocalDateTime.now()) =
         db.instrumentDao().update(instrument.copy(modifiedTime = now))
 
-    suspend fun setInstrumentActive(
-        id: Long,
-        active: Boolean,
-        now: LocalDateTime = LocalDateTime.now()
-    ) = write {
-        if (active) db.instrumentDao().setDisplayOrder(id, db.instrumentDao().maxDisplayOrder() + 1)
-        db.instrumentDao().setActive(id, active, stamp(now))
-    }
-
-    suspend fun reorderInstruments(orderedIds: List<Long>) = write {
-        val current = db.instrumentDao().getAll().filter { it.id in orderedIds }
-        val base = current.minOfOrNull { it.displayOrder } ?: 1
-        orderedIds.forEachIndexed { i, id -> db.instrumentDao().setDisplayOrder(id, base + i) }
-    }
-
-    suspend fun instrumentTransactionCount(id: Long) = db.instrumentDao().transactionCount(id)
-
     /**
-     * Moves every transaction and template of [fromId] onto [intoId] and deletes [fromId] (its price history and
-     * deposit/policy details go with it). For a renamed stock: merge the old symbol into the new one, so the
-     * position carries over and the sale of the new symbol closes the purchase of the old. Same type required.
+     * Moves every transaction, event and pending dividend of [fromId] onto [intoId] and deletes [fromId] (its
+     * listing and deposit/policy details go with it). For a renamed stock: merge the old symbol into the new one, so
+     * the position carries over and the sale of the new symbol closes the purchase of the old. Same type required.
      */
     suspend fun mergeInstruments(
         fromId: Long,
@@ -127,46 +104,23 @@ class EditDataRepository(private val db: AppDatabase) {
         require(from.instrumentType == into.instrumentType) { "Both must be the same type" }
         val stamp = stamp(now)
         db.transactionDao().reassignInstrument(fromId, intoId, stamp)
-        db.transactionDao().reassignTemplateInstrument(fromId, intoId)
+        db.holdingEventDao().reassignInstrument(fromId, intoId)
+        db.pendingDividendDao().reassignInstrument(fromId, intoId)
         db.instrumentDao().reassignPreviousFd(fromId, intoId)
         db.instrumentDao().reassignNextFd(fromId, intoId)
+        val fromSecurity = db.instrumentDao().getSecurity(fromId)
+        val intoSecurity = db.instrumentDao().getSecurity(intoId)
+        if (fromSecurity != null && intoSecurity != null && intoSecurity.isin == null && fromSecurity.isin != null)
+            db.instrumentDao().upsertSecurity(intoSecurity.copy(isin = fromSecurity.isin))
         db.instrumentDao().delete(fromId)
-        val note = "Merged from ${from.name}" + (from.symbol?.let { " ($it)" } ?: "")
+        val note = "Merged from ${from.name}" + (fromSecurity?.symbol?.let { " ($it)" } ?: "")
         db.instrumentDao().update(
             into.copy(
-                isin = into.isin ?: from.isin,
                 categoryId = into.categoryId ?: from.categoryId,
                 active = true,
                 notes = listOfNotNull(into.notes, note).joinToString("\n"),
                 modifiedTime = now,
             )
-        )
-    }
-
-    /**
-     * Bonus shares or a split: [extraUnits] more units at no cost, as an INCOME row tagged with the stock and no
-     * account. Bonus units form a zero-cost lot; a split (particulars starting "Stock split") spreads the open lots.
-     */
-    suspend fun addBonusUnits(
-        instrumentId: Long,
-        extraUnits: Double,
-        date: java.time.LocalDate,
-        particulars: String,
-        now: LocalDateTime = LocalDateTime.now()
-    ): Long {
-        require(extraUnits > 0) { "Units must be positive" }
-        return TransactionRepository(db).add(
-            com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity(
-                createdTime = now,
-                modifiedTime = now,
-                date = date,
-                kind = com.nagabhushansn95.financetracker.data.db.entity.TransactionKind.INCOME,
-                instrumentId = instrumentId,
-                particulars = particulars,
-                quantity = extraUnits,
-                amount = 0.0,
-            ),
-            now = now,
         )
     }
 

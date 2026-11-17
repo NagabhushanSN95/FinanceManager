@@ -26,7 +26,6 @@ class OthersRepository(private val db: AppDatabase) {
                 name = name.trim(),
                 instrumentType = InstrumentType.OTHER,
                 categoryId = category?.id,
-                displayOrder = 0,
                 notes = notes?.trim()?.ifBlank { null },
                 createdTime = now,
                 modifiedTime = now,

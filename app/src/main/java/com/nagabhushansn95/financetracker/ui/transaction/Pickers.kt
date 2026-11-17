@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
-import com.nagabhushansn95.financetracker.data.db.entity.Instrument
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.Listed
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel
@@ -190,7 +190,7 @@ fun CategoryPickerSheet(
 /** Instruments grouped by type, with a "+ New" entry. */
 @Composable
 fun InstrumentPickerSheet(
-    instruments: List<Instrument>,
+    instruments: List<Listed>,
     recent: List<Long>,
     optional: Boolean,
     onPick: (Long?) -> Unit,
@@ -199,16 +199,18 @@ fun InstrumentPickerSheet(
     typeOrder: List<InstrumentType> = com.nagabhushansn95.financetracker.data.investments.InvestmentOrder.DEFAULT_TYPES,
 ) {
     val byId = instruments.associateBy { it.id }
-    fun row(i: Instrument) = PickRow(
+    fun row(i: Listed) = PickRow(
         i.id,
         i.name,
-        subtitle = listOfNotNull(i.symbol, i.isin).joinToString(" · ").ifEmpty { null })
-    val active = instruments.filter { it.active }
-    val inactive = instruments.filter { !it.active }
+        subtitle = listOfNotNull(i.security.symbol, i.security.isin).joinToString(" · ")
+            .ifEmpty { null })
+
+    val active = instruments.filter { it.instrument.active }
+    val inactive = instruments.filter { !it.instrument.active }
     PickerSheet(
         title = "Instrument",
         sections = typeOrder.mapNotNull { type ->
-            val ofType = active.filter { it.instrumentType == type }
+            val ofType = active.filter { it.instrument.instrumentType == type }
             if (ofType.isEmpty()) null else typeTitle(type) to ofType.map(::row)
         } + if (inactive.isEmpty()) emptyList() else listOf(
             "Inactive (sold out or retired)" to inactive.map(
@@ -228,6 +230,7 @@ fun typeTitle(type: InstrumentType): String = when (type) {
     InstrumentType.MUTUAL_FUND -> "Mutual funds"
     InstrumentType.FIXED_DEPOSIT -> "Fixed deposits"
     InstrumentType.INSURANCE -> "Insurance"
+    InstrumentType.VEHICLE -> "Vehicles"
     InstrumentType.OTHER -> "Others"
 }
 

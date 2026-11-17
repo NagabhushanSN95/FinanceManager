@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -52,10 +53,13 @@ import com.nagabhushansn95.financetracker.data.investments.CashFlow
 import com.nagabhushansn95.financetracker.data.investments.Holdings
 import com.nagabhushansn95.financetracker.data.investments.PfEntryKind
 import com.nagabhushansn95.financetracker.data.investments.ProvidentFunds
+import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import com.nagabhushansn95.financetracker.data.repository.TransactionRepository
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
+import com.nagabhushansn95.financetracker.ui.edit.AccountSheet
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -158,6 +162,27 @@ class ProvidentFundAccountViewModel(application: Application, private val accoun
         }
     }
 
+    private val accounts = EditDataRepository(db)
+
+    /** The account's own details (name, balance, number, notes), edited from this screen like any other investment. */
+    fun saveAccount(account: Account) {
+        viewModelScope.launch {
+            runCatching { accounts.updateAccount(account) }
+                .onFailure { message.value = it.message ?: it.toString() }
+        }
+    }
+
+    /** Marks the account deleted (its rows stay); the caller leaves the screen. */
+    fun deleteAccount(onDone: () -> Unit) {
+        viewModelScope.launch {
+            runCatching { accounts.deleteAccount(accountId) }
+                .onSuccess { onDone() }
+                .onFailure { message.value = it.message ?: it.toString() }
+        }
+    }
+
+    suspend fun transactionCount(): Int = db.accountDao().transactionCount(accountId)
+
     val state: StateFlow<PfAccountState> = combine(
         db.accountDao().observeAll(),
         db.transactionDao().observeAll(),
@@ -178,25 +203,25 @@ class ProvidentFundAccountViewModel(application: Application, private val accoun
         val outRows = rows.filter { it.fromAccountId == accountId }
         val order = listOf("Employer", "Employee", "Self", "Interest")
         val contributors = inRows.groupBy { label(it) }
-            .map { (k, v) -> PfBucket(k, v.sumOf { it.amountInr }, v.size) }
+            .map { (k, v) -> PfBucket(k, v.sumOf { it.amount }, v.size) }
             .sortedWith(compareBy({
                 order.indexOf(it.name).let { i -> if (i < 0) order.size else i }
             }, { it.name })) +
                 outRows.takeIf { it.isNotEmpty() }
-                    ?.let { listOf(PfBucket("Withdrawn", -it.sumOf { r -> r.amountInr }, it.size)) }
+                    ?.let { listOf(PfBucket("Withdrawn", -it.sumOf { r -> r.amount }, it.size)) }
                     .orEmpty()
         val years = rows.groupBy { financialYear(it.date) }.map { (fy, v) ->
             PfYear(
                 fy,
                 v.groupBy { label(it) }
-                    .mapValues { (_, l) -> l.sumOf { if (it.fromAccountId == accountId) -it.amountInr else it.amountInr } })
+                    .mapValues { (_, l) -> l.sumOf { if (it.fromAccountId == accountId) -it.amount else it.amount } })
         }.sortedByDescending { it.label }
         // Interest is a return on the account, not money paid in, so it stays out of the contributions and the XIRR flows.
         val isInterest = { t: TransactionEntity -> t.contributor == "Interest" }
         val flows = rows.filterNot(isInterest).map {
             CashFlow(
                 it.date,
-                if (it.toAccountId == accountId) -it.amountInr else it.amountInr
+                if (it.toAccountId == accountId) -it.amount else it.amount
             )
         }
         PfAccountState(
@@ -204,9 +229,9 @@ class ProvidentFundAccountViewModel(application: Application, private val accoun
             rows = rows.sortedWith(compareByDescending<TransactionEntity> { it.date }.thenByDescending { it.id }),
             contributors = contributors,
             years = years,
-            contributed = inRows.filterNot(isInterest).sumOf { it.amountInr },
-            interest = inRows.filter(isInterest).sumOf { it.amountInr },
-            withdrawn = outRows.sumOf { it.amountInr },
+            contributed = inRows.filterNot(isInterest).sumOf { it.amount },
+            interest = inRows.filter(isInterest).sumOf { it.amount },
+            withdrawn = outRows.sumOf { it.amount },
             xirr = Holdings.xirr(flows, account.balance, LocalDate.now()),
             lookups = LedgerLookups(accounts, categories, instruments),
             banks = accounts.filter { it.accountType != AccountType.PROVIDENT_FUND && !it.deleted },
@@ -254,6 +279,9 @@ fun ProvidentFundAccountScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf<PfEntryKind?>(null) }
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
+    var editingAccount by remember { mutableStateOf(false) }
+    var txCount by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(editingAccount) { if (editingAccount) txCount = viewModel.transactionCount() }
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); viewModel.messageShown() }
     }
@@ -275,6 +303,7 @@ fun ProvidentFundAccountScreen(
         },
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(account?.name ?: "Provident fund") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -284,9 +313,25 @@ fun ProvidentFundAccountScreen(
                         )
                     }
                 },
+                actions = {
+                    if (account != null) IconButton(onClick = { editingAccount = true }) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Edit account")
+                    }
+                },
             )
         },
     ) { padding ->
+        if (account != null && editingAccount) {
+            AccountSheet(
+                existing = account,
+                initialType = AccountType.PROVIDENT_FUND,
+                transactionCount = txCount,
+                onSave = { viewModel.saveAccount(it); editingAccount = false },
+                onDelete = { editingAccount = false; viewModel.deleteAccount(onBack) },
+                onDismiss = { editingAccount = false },
+                types = listOf(AccountType.PROVIDENT_FUND),
+            )
+        }
         if (account == null) {
             Text(
                 if (state.loaded) "Account not found." else "Loading…",
@@ -427,7 +472,7 @@ fun ProvidentFundAccountScreen(
                     Text(
                         (if (t.fromAccountId == accountId) "−" else "") + MoneyFormat.amount(
                             t.amount,
-                            t.currency
+                            account.currency
                         ),
                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
                     )

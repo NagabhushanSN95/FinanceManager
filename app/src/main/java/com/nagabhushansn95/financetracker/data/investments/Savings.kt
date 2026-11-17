@@ -25,7 +25,7 @@ data class SavingsPeriod(val key: String, val lines: List<SavingsLine>) {
  * top-level category and every REDEEM row a debit (renewals count on both sides, as in the sheet); provident-fund
  * contributions and transfers in are credits to "Provident Funds", transfers out are debits. Interest credited to a
  * provident fund is growth, not saving, and is left out (as in the sheet). Family-owned instruments are left out.
- * Amounts are in INR.
+ * Rows on a foreign-currency account count at the rupee cost of the money they moved ([ForeignCurrency]).
  */
 object Savings {
     /** Contributor tag of provident-fund interest rows (see the PF account screen). */
@@ -43,6 +43,9 @@ object Savings {
         val pfIds =
             accounts.filter { it.accountType == AccountType.PROVIDENT_FUND }.map { it.id }.toSet()
         val keyLength = if (monthly) 7 else 4
+        // Rows on a foreign-currency account count at the rupee cost of the money they moved.
+        val rupees = ForeignCurrency.rupeeValues(accounts, transactions)
+        fun TransactionEntity.inr() = rupees[id] ?: amount
         val order = LinkedHashMap<String, Int>()
         categories.filter { it.parentId == null }.forEachIndexed { i, c -> order[c.name] = i }
         fun columnOf(instrument: Instrument): String {
@@ -62,16 +65,16 @@ object Savings {
                     val cell = key to columnOf(instrument)
                     if (t.kind == TransactionKind.INVEST) credits.merge(
                         cell,
-                        t.amountInr,
+                        t.inr(),
                         Double::plus
                     )
-                    else debits.merge(cell, t.amountInr, Double::plus)
+                    else debits.merge(cell, t.amount, Double::plus)
                 }
 
                 TransactionKind.INCOME -> {
                     if (t.toAccountId in pfIds && t.contributor != PF_INTEREST) credits.merge(
                         key to InvestmentCategories.PROVIDENT_FUNDS,
-                        t.amountInr,
+                        t.inr(),
                         Double::plus
                     )
                     // Deposit interest credited to a cash account as its own row (sweep-in deposits) is money
@@ -79,18 +82,18 @@ object Savings {
                     val deposit = t.instrumentId?.let { instrumentById[it] }
                         ?.takeIf { it.instrumentType == InstrumentType.FIXED_DEPOSIT && it.owner == Instrument.OWNER_SELF }
                     if (deposit != null && t.toAccountId != null && t.toAccountId !in pfIds)
-                        debits.merge(key to columnOf(deposit), t.amountInr, Double::plus)
+                        debits.merge(key to columnOf(deposit), t.amount, Double::plus)
                 }
 
                 TransactionKind.TRANSFER -> {
                     if (t.toAccountId in pfIds) credits.merge(
                         key to InvestmentCategories.PROVIDENT_FUNDS,
-                        t.amountInr,
+                        t.inr(),
                         Double::plus
                     )
                     if (t.fromAccountId in pfIds) debits.merge(
                         key to InvestmentCategories.PROVIDENT_FUNDS,
-                        t.amountInr,
+                        t.inr(),
                         Double::plus
                     )
                 }
@@ -101,7 +104,7 @@ object Savings {
                     val deposit = t.instrumentId?.let { instrumentById[it] }
                         ?.takeIf { it.instrumentType == InstrumentType.FIXED_DEPOSIT && it.owner == Instrument.OWNER_SELF }
                     if (deposit != null && t.fromAccountId != null)
-                        debits.merge(key to columnOf(deposit), -t.amountInr, Double::plus)
+                        debits.merge(key to columnOf(deposit), -t.inr(), Double::plus)
                 }
             }
         }

@@ -67,10 +67,18 @@ data class TransactionEntity(
     val particulars: String,
     val quantity: Double? = null,
     val rate: Double? = null,
-    /** In [currency]. */
+    /** In the currency of the account the money leaves (or, for an income, arrives in). */
     val amount: Double,
-    val currency: String = "INR",
-    /** native -> INR, set when [currency] != INR (also for INR<->USD transfers). */
+    /**
+     * For a transfer between accounts of different currencies: what arrives in the to-account, in its currency, while
+     * [amount] is what left the from-account (16953 INR out, 300 AUD in). Null when both sides are the same.
+     */
+    @ColumnInfo(name = "to_amount") val toAmount: Double? = null,
+    /**
+     * Rupees per unit of the row's foreign currency, when the row itself knows it: computed on a load from [amount]
+     * and [toAmount], typed on a credit into a foreign account with no load behind it, null on a spend (statistics then
+     * take the account's average cost). Never set on a rupee row.
+     */
     @ColumnInfo(name = "fx_rate") val fxRate: Double? = null,
     @ColumnInfo(name = "ex_date") val exDate: LocalDate? = null,
     /** PF: Employer | Employee | Self | Interest */
@@ -80,8 +88,8 @@ data class TransactionEntity(
     val hidden: Boolean = false,
     @ColumnInfo(name = "include_in_statistics") val includeInStatistics: Boolean = true,
 ) {
-    val amountInr: Double
-        get() = if (currency == "INR") amount else amount * (fxRate ?: 1.0)
+    /** What lands in the to-account: [toAmount] on a cross-currency transfer, else [amount]. */
+    val arriving: Double get() = toAmount ?: amount
 }
 
 @Entity(
@@ -105,14 +113,8 @@ data class TransactionEntity(
             childColumns = ["category_id"],
             onDelete = ForeignKey.CASCADE
         ),
-        ForeignKey(
-            entity = Instrument::class,
-            parentColumns = ["id"],
-            childColumns = ["instrument_id"],
-            onDelete = ForeignKey.CASCADE
-        ),
     ],
-    indices = [Index("from_account_id"), Index("to_account_id"), Index("category_id"), Index("instrument_id")]
+    indices = [Index("from_account_id"), Index("to_account_id"), Index("category_id")]
 )
 data class Template(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -121,7 +123,6 @@ data class Template(
     @ColumnInfo(name = "from_account_id") val fromAccountId: Long? = null,
     @ColumnInfo(name = "to_account_id") val toAccountId: Long? = null,
     @ColumnInfo(name = "category_id") val categoryId: Long? = null,
-    @ColumnInfo(name = "instrument_id") val instrumentId: Long? = null,
     /** What the editor fills in when the template is picked: the rate and, when it is not one, the quantity. */
     val rate: Double? = null,
     val quantity: Double? = null,

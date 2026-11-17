@@ -44,6 +44,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
 import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
+import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -161,6 +162,7 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text("Targets") },
                 navigationIcon = { com.nagabhushansn95.financetracker.ui.common.BackAndMenu(onBack) },
                 actions = {

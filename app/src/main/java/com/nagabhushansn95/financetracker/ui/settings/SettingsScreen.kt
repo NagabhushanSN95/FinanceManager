@@ -103,7 +103,8 @@ fun SettingsScreen() {
                     listOf(
                         AppPreferences.THEME_SYSTEM to "System",
                         AppPreferences.THEME_LIGHT to "Light",
-                        AppPreferences.THEME_DARK to "Dark"
+                        AppPreferences.THEME_DARK to "Dark",
+                        AppPreferences.THEME_CLASSIC to "Classic",
                     ).forEach { (mode, label) ->
                         FilterChip(
                             selected = theme == mode,
