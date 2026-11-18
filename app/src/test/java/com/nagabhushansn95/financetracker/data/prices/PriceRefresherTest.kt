@@ -35,6 +35,13 @@ class PriceRefresherTest {
             return when {
                 url.contains("GOLDBEES.NS") -> chart("GOLDBEES.NS", 112.69, "INR")
                 url.contains("AAPL") -> chart("AAPL", 331.9, "USD")
+                // A symbol the exchange renamed: Yahoo still answers, with a quote from 19 days ago.
+                url.contains("SETFNIF50.NS") -> chart(
+                    "SETFNIF50.NS",
+                    247.34,
+                    "INR",
+                    time = 1793700000 - 19 * 86400
+                )
                 url.contains("USDINR") -> chart("INR=X", 94.73, "INR")
                 url.contains("NAVAll") -> "Scheme Code;ISIN Div Payout/ ISIN Growth;ISIN Div Reinvestment;Scheme Name;Plan;Option;Net Asset Value;Date\n" +
                         "122639;INF879O01027;-;Parag Parikh Flexi Cap Fund;Direct Plan;Growth;90.7043;03-Nov-2026\n" +
@@ -45,8 +52,8 @@ class PriceRefresherTest {
         }
     }
 
-    private fun chart(symbol: String, price: Double, currency: String) =
-        """{"chart":{"result":[{"meta":{"currency":"$currency","symbol":"$symbol","exchangeTimezoneName":"Asia/Kolkata","regularMarketTime":1793700000,"regularMarketPrice":$price}}],"error":null}}"""
+    private fun chart(symbol: String, price: Double, currency: String, time: Long = 1793700000) =
+        """{"chart":{"result":[{"meta":{"currency":"$currency","symbol":"$symbol","exchangeTimezoneName":"Asia/Kolkata","regularMarketTime":$time,"regularMarketPrice":$price}}],"error":null}}"""
 
     @Before
     fun setUp() {
@@ -104,15 +111,30 @@ class PriceRefresherTest {
             cost = 500.0
         )
         val unknown = instrument("Nowhere", InstrumentType.STOCK, symbol = "NOPE", exchange = "NSE")
+        val renamed = instrument(
+            "SBI Nifty 50 ETF",
+            InstrumentType.STOCK,
+            symbol = "SETFNIF50",
+            exchange = "NSE"
+        )
         instrument("Sold out", InstrumentType.STOCK, symbol = "SOLD", exchange = "NSE", units = 0.0)
         val ppfas = instrument("Parag Parikh Flexi Cap Fund", InstrumentType.MUTUAL_FUND)
         val other = instrument("Some Other Fund", InstrumentType.MUTUAL_FUND)
 
         val result = PriceRefresher(db, YahooQuotes(http), AmfiNav(http)).refresh(now)
-        assertEquals(2, result.stocks)
+        assertEquals(3, result.stocks)
         assertEquals(1, result.funds)
         assertEquals(94.73, result.usdInr!!, 1e-9)
         assertEquals(listOf("NOPE", "Some Other Fund"), result.failed)
+        // The old quote is kept (it is the best there is) but the holding is called out as a week-old price.
+        assertEquals(listOf("SETFNIF50 (2026-10-15)"), result.stale)
+        assertTrue(
+            result.summary().contains("over a week, check the symbol: SETFNIF50 (2026-10-15)")
+        )
+        assertEquals(
+            LocalDate.of(2026, 10, 15),
+            db.instrumentDao().getSecurity(renamed)!!.lastPriceDate
+        )
         assertEquals(listOf("Parag Parikh Flexi Cap Fund"), result.linked)
         assertTrue(requests.none { it.contains("SOLD") })
 

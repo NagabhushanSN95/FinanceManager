@@ -21,7 +21,7 @@ data class RefreshResult(
     val usdInr: Double? = null,
     val linked: List<String> = emptyList(),
     val failed: List<String> = emptyList(),
-    /** Symbols whose latest quote is more than a month old on every ticker tried (renamed or delisted). */
+    /** Held holdings whose latest quote or NAV is over [PriceRefresher.STALE_DAYS] old: renamed, merged or delisted. */
     val stale: List<String> = emptyList(),
     val skipped: Boolean = false,
 ) {
@@ -35,7 +35,8 @@ data class RefreshResult(
         return listOfNotNull(
             head,
             failed.takeIf { it.isNotEmpty() }?.let { "not found: ${it.joinToString(", ")}" },
-            stale.takeIf { it.isNotEmpty() }?.let { "stale on Yahoo: ${it.joinToString(", ")}" },
+            stale.takeIf { it.isNotEmpty() }
+                ?.let { "no new price for over a week, check the symbol: ${it.joinToString(", ")}" },
         ).joinToString(" · ")
     }
 }
@@ -69,7 +70,7 @@ class PriceRefresher(
         val failed = ArrayList<String>()
         val linked = ArrayList<String>()
         val stale = ArrayList<String>()
-        val staleBefore = now.toLocalDate().minusDays(31)
+        val staleBefore = now.toLocalDate().minusDays(STALE_DAYS)
         val gate = Semaphore(parallel)
 
         val stockJobs = stocks.map { instrument ->
@@ -137,6 +138,7 @@ class PriceRefresher(
                     linked += instrument.name
                 }
                 store(instrument.id, scheme.nav, scheme.date, PriceSource.AMFI, now)
+                if (scheme.date.isBefore(staleBefore)) stale += "${instrument.name} (${scheme.date})"
                 fundCount++
             }
         }
@@ -148,6 +150,15 @@ class PriceRefresher(
             failed = failed.sorted(),
             stale = stale.sorted(),
         )
+    }
+
+    companion object {
+        /**
+         * A held holding whose newest price is older than this is reported, so a symbol renamed on the exchange
+         * (SETFNIF50 became SBINIFTY50) or a merged fund does not sit on an old price unnoticed. A week clears the
+         * longest run of market holidays.
+         */
+        const val STALE_DAYS = 7L
     }
 
     /** The security's last price, date and source. */

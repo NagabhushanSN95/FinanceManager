@@ -75,6 +75,7 @@ import com.nagabhushansn95.financetracker.data.investments.InsuranceEntryKind
 import com.nagabhushansn95.financetracker.data.investments.PolicyView
 import com.nagabhushansn95.financetracker.data.repository.InsuranceRepository
 import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
+import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteEntryDialog
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
@@ -566,6 +567,7 @@ fun InsurancePolicyScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf<InsuranceEntryKind?>(null) }
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
+    var confirmDeleteEntry by remember { mutableStateOf<TransactionEntity?>(null) }
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); viewModel.messageShown() }
     }
@@ -892,9 +894,18 @@ fun InsurancePolicyScreen(
         initialKind = sheetKind,
         existing = editing,
         onSave = { entry -> viewModel.saveEntry(v, entry, editing); adding = null; editing = null },
-        onDelete = editing?.let { row -> { viewModel.deleteEntry(row.id); editing = null } },
+        onDelete = editing?.let { row -> { confirmDeleteEntry = row } },
         onDismiss = { adding = null; editing = null },
     )
+    confirmDeleteEntry?.let { row ->
+        ConfirmDeleteEntryDialog(
+            row,
+            onConfirm = {
+                viewModel.deleteEntry(row.id); editing = null; confirmDeleteEntry = null
+            },
+            onDismiss = { confirmDeleteEntry = null },
+        )
+    }
     // A row the sheet cannot describe (an old import, say) is left alone rather than edited blind.
     LaunchedEffect(editing) {
         val row = editing ?: return@LaunchedEffect

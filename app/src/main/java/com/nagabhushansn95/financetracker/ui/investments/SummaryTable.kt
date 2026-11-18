@@ -1,12 +1,14 @@
 package com.nagabhushansn95.financetracker.ui.investments
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -235,7 +237,11 @@ private fun signedColour(signed: Double?) = when {
     else -> MaterialTheme.colorScheme.tertiary
 }
 
-/** Current share as a bar, the target as a marker with its tolerance band shaded around it. Scaled to the larger of the two. */
+/**
+ * Current share as a solid bar from the left, the target as a dark tick, and the tolerance as an outlined box around
+ * the tick (a faint fill, so it reads as a range and never as a second bar). Scaled to the larger of the share and the
+ * top of the band. Without a tolerance there is no box, only the tick.
+ */
 @Composable
 fun AllocationBar(
     share: Double,
@@ -244,35 +250,59 @@ fun AllocationBar(
     modifier: Modifier = Modifier
 ) {
     val scale = maxOf(share, target + (tolerance ?: 0.0), 0.01) * 1.1
+    val primary = MaterialTheme.colorScheme.primary
+    val ink = MaterialTheme.colorScheme.onSurface
+    val band = tolerance?.takeIf { it > 0 }?.let {
+        ((target - it) / scale).coerceIn(0.0, 1.0)
+            .toFloat() to ((target + it) / scale).coerceIn(0.0, 1.0).toFloat()
+    }
+
+    @Composable
+    fun Span(from: Float, to: Float, content: @Composable () -> Unit) = Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
+        if (from > 0f) Box(modifier = Modifier.weight(from)) {}
+        Box(
+            modifier = Modifier
+                .weight((to - from).coerceAtLeast(0.001f))
+                .fillMaxHeight()
+        ) { content() }
+        if (to < 1f) Box(modifier = Modifier.weight(1f - to)) {}
+    }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(6.dp)
-            .clip(RoundedCornerShape(3.dp))
+            .height(8.dp)
+            .clip(RoundedCornerShape(2.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        if (tolerance != null && tolerance > 0) {
-            val from = ((target - tolerance) / scale).coerceIn(0.0, 1.0).toFloat()
-            val to = ((target + tolerance) / scale).coerceIn(0.0, 1.0).toFloat()
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()) {
-                if (from > 0f) Box(modifier = Modifier.weight(from)) {}
+        // The box's fill sits under the bar; its outline goes over the bar, so the range stays visible across it.
+        band?.let { (from, to) ->
+            Span(from, to) {
                 Box(
-                    modifier = Modifier
-                        .weight((to - from).coerceAtLeast(0.001f))
-                        .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                    Modifier
+                        .fillMaxSize()
+                        .background(primary.copy(alpha = 0.15f))
                 ) {}
-                if (to < 1f) Box(modifier = Modifier.weight(1f - to)) {}
             }
         }
         Box(
             modifier = Modifier
                 .fillMaxWidth((share / scale).coerceIn(0.0, 1.0).toFloat())
                 .fillMaxHeight()
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.75f))
+                .background(primary)
         ) {}
+        band?.let { (from, to) ->
+            Span(from, to) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .border(1.dp, ink.copy(alpha = 0.6f))
+                ) {}
+            }
+        }
         val t = (target / scale).coerceIn(0.0, 1.0).toFloat()
         Row(modifier = Modifier
             .fillMaxWidth()
@@ -282,7 +312,7 @@ fun AllocationBar(
                 modifier = Modifier
                     .width(2.dp)
                     .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.onSurface)
+                    .background(ink)
             ) {}
             if (t < 1f) Box(modifier = Modifier.weight(1f - t)) {}
         }

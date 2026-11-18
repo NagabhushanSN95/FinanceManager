@@ -189,7 +189,7 @@ class InvestmentSummaryTest {
                 tolerancePct = 0.02
             )
         )
-        db.instrumentDao().updateCategory(reit.copy(targetWealthPct = 0.5))
+        db.instrumentDao().updateCategory(reit.copy(targetWealthPct = 0.5, tolerancePct = 0.03))
 
         val summary = InvestmentSummaryBuilder.build(
             db.instrumentDao().getAll(),
@@ -279,6 +279,14 @@ class InvestmentSummaryTest {
         assertTrue(fdLine.offTarget(total))                            // 83% held vs 33% target, tolerance 2%
         assertEquals(1.0, summary.total.targetPct!!, 1e-9)
         assertEquals(InvestmentCategories.NO_RISK, fdLine.riskLevel)
+        // Tolerance rolls up as the widest among the members: the Stocks parent takes REIT's 3%, the medium-risk
+        // line (REIT alone) 3%, Liquid (FD 2% and REIT 3%) 3%, and In Zerodha (REIT) 3%.
+        assertEquals(0.03, stocksLine.tolerancePct!!, 1e-9)
+        assertEquals(0.03, medium.tolerancePct!!, 1e-9)
+        assertEquals(0.02, noRisk.tolerancePct!!, 1e-9)
+        assertEquals(0.03, summary.groups[0].tolerancePct!!, 1e-9)
+        assertEquals(0.03, summary.groups[1].tolerancePct!!, 1e-9)
+        assertTrue(stocksLine.offTarget(total))                        // 14% held vs 29% target, tolerance 3%
     }
 
     @Test

@@ -66,6 +66,7 @@ import com.nagabhushansn95.financetracker.data.investments.FdView
 import com.nagabhushansn95.financetracker.data.investments.FixedDeposits
 import com.nagabhushansn95.financetracker.ui.common.AccountDropdown
 import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
+import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteDialog
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.DigitsField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
@@ -104,6 +105,7 @@ fun FixedDepositDetailScreen(
     var renewalToEdit by remember { mutableStateOf<FdLedgerEntry.Renewal?>(null) }
     var addingEvent by remember { mutableStateOf(false) }
     var eventToEdit by remember { mutableStateOf<HoldingEvent?>(null) }
+    var confirmDeleteEvent by remember { mutableStateOf<HoldingEvent?>(null) }
     var confirmingDelete by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -348,9 +350,19 @@ fun FixedDepositDetailScreen(
         deposit = d,
         existing = eventToEdit,
         onSave = { viewModel.saveEvent(it); addingEvent = false; eventToEdit = null },
-        onDelete = eventToEdit?.let { ev -> { viewModel.deleteEvent(ev.id); eventToEdit = null } },
+        onDelete = eventToEdit?.let { ev -> { confirmDeleteEvent = ev } },
         onDismiss = { addingEvent = false; eventToEdit = null },
     )
+    confirmDeleteEvent?.let { ev ->
+        ConfirmDeleteDialog(
+            title = "Delete this ${ev.kind.name.lowercase().replace('_', ' ')}?",
+            text = "${ev.date.format(SHORT_DATE)}\nThe deposit's figures are recomputed without it.",
+            onConfirm = {
+                viewModel.deleteEvent(ev.id); eventToEdit = null; confirmDeleteEvent = null
+            },
+            onDismiss = { confirmDeleteEvent = null },
+        )
+    }
     if (editing && d != null) FixedDepositSheet(
         existing = d,
         defaultName = d.instrument.name,

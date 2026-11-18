@@ -35,6 +35,13 @@ data class HoldingRow(
 ) {
     val isDeposit: Boolean get() = instrument.instrumentType == InstrumentType.FIXED_DEPOSIT
     val heldProfit get() = currentValue - position.costHeld
+
+    /** Held profit over the cost of what is held, or null when nothing is held. */
+    val heldProfitPct: Double?
+        get() = if (position.units > Position.UNIT_EPSILON && position.costHeld > 0) heldProfit / position.costHeld else null
+
+    /** What the list rows show: the short name when there is one, else the instrument's name. */
+    val shownName: String get() = security?.shortName?.takeIf { it.isNotBlank() } ?: instrument.name
 }
 
 /**
@@ -362,13 +369,17 @@ object InvestmentSummaryBuilder {
             val uncategorised = rows.filter { childOf(it) == null }
             val children = if (childLines.isNotEmpty() && uncategorised.isNotEmpty())
                 childLines + lineFor(null, "Unassigned", uncategorised, null) else childLines
-            // Targets entered on the children roll up to the parent; a childless parent carries its own.
+            // Targets entered on the children roll up to the parent (shares added, the tolerance the widest of
+            // theirs); a childless parent carries its own.
             val line = lineFor(top.id, top.name, rows, top, children).let { l ->
                 val typed = childLines.filter { it.id != null }
                 if (typed.any { it.goalPct != null || it.wealthPct != null })
                     l.copy(
                         goalPct = typed.sumOf { it.goalPct ?: 0.0 },
-                        wealthPct = typed.sumOf { it.wealthPct ?: 0.0 }) else l
+                        wealthPct = typed.sumOf { it.wealthPct ?: 0.0 },
+                        tolerancePct = typed.mapNotNull { it.tolerancePct }.maxOrNull()
+                            ?: l.tolerancePct,
+                    ) else l
             }
             if (line.invested != 0.0 || line.current != 0.0 || line.realised != 0.0) categoryLines += line
         }
@@ -401,12 +412,14 @@ object InvestmentSummaryBuilder {
             totalRaw.copy(targetPct = if (totalCurrent > 0) 1.0 else null, children = emptyList())
 
         // Targets for a line made of parts of several categories (a risk level, a group): each leaf category's goal
-        // and wealth shares count by the share of its value the line holds; the provident funds count whole.
+        // and wealth shares count by the share of its value the line holds; the provident funds count whole. The
+        // line's tolerance is the widest among the leaves that contribute.
         class Leaf(
             val ids: Set<Long>,
             val current: Double,
             val goalPct: Double?,
             val wealthPct: Double?,
+            val tolerancePct: Double?,
             val pf: Boolean = false
         )
 
@@ -420,7 +433,8 @@ object InvestmentSummaryBuilder {
                     rows.map { it.instrument.id }.toSet(),
                     rows.sumOf { it.currentValue },
                     top.targetGoalPct,
-                    top.targetWealthPct
+                    top.targetWealthPct,
+                    top.tolerancePct,
                 )
             } else kids.forEach { child ->
                 val rows = counted.filter { childOf(it)?.id == child.id }
@@ -428,7 +442,8 @@ object InvestmentSummaryBuilder {
                     rows.map { it.instrument.id }.toSet(),
                     rows.sumOf { it.currentValue },
                     child.targetGoalPct,
-                    child.targetWealthPct
+                    child.targetWealthPct,
+                    child.tolerancePct,
                 )
             }
         }
@@ -437,12 +452,17 @@ object InvestmentSummaryBuilder {
             pfLine.current,
             pfCategory?.targetGoalPct,
             pfCategory?.targetWealthPct,
+            pfCategory?.tolerancePct,
             pf = true
         )
-        fun targetsOf(rows: List<HoldingRow>, includesPf: Boolean): Pair<Double?, Double?> {
+        fun targetsOf(
+            rows: List<HoldingRow>,
+            includesPf: Boolean
+        ): Triple<Double?, Double?, Double?> {
             val ids = rows.map { it.instrument.id }.toSet()
             var goalSum = 0.0
             var wealthSum = 0.0
+            var tolerance: Double? = null
             var any = false
             for (leaf in leaves) {
                 if (leaf.goalPct == null && leaf.wealthPct == null) continue
@@ -458,8 +478,9 @@ object InvestmentSummaryBuilder {
                 any = true
                 goalSum += share * (leaf.goalPct ?: 0.0)
                 wealthSum += share * (leaf.wealthPct ?: 0.0)
+                leaf.tolerancePct?.let { tolerance = maxOf(tolerance ?: 0.0, it) }
             }
-            return if (any) goalSum to wealthSum else null to null
+            return if (any) Triple(goalSum, wealthSum, tolerance) else Triple(null, null, null)
         }
 
         fun composite(name: String, rows: List<HoldingRow>, pf: SummaryLine?): SummaryLine {
@@ -471,11 +492,12 @@ object InvestmentSummaryBuilder {
                     null
                 ).takeIf { rows.isNotEmpty() || pf == null }, pf
             )
-            val (goalPct, wealthPct) = targetsOf(rows, pf != null)
+            val (goalPct, wealthPct, tolerancePct) = targetsOf(rows, pf != null)
             return withTargets(
                 group(name, parts).copy(
                     goalPct = goalPct,
-                    wealthPct = wealthPct
+                    wealthPct = wealthPct,
+                    tolerancePct = tolerancePct,
                 )
             ).copy(children = emptyList())
         }

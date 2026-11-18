@@ -237,7 +237,7 @@ internal fun ProfitLine(h: HoldingRow) {
     Row {
         val held = h.heldProfit
         Text(
-            "Held ${MoneyFormat.amount(held)}",
+            "Held ${MoneyFormat.amount(held)}" + (h.heldProfitPct?.let { " (${pct(it)})" } ?: ""),
             style = MaterialTheme.typography.bodySmall,
             color = if (held < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
         )

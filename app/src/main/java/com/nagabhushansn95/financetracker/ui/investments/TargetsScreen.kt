@@ -351,7 +351,12 @@ fun TargetsScreen(onBack: () -> Unit, viewModel: TargetsViewModel = viewModel())
                             entries = edits + (parent.id to it)
                         }
                         else Text(
-                            "goal ${pct(share(parent) { it.goal })} · wealth ${pct(share(parent) { it.wealth })} from the sub-categories",
+                            "goal ${pct(share(parent) { it.goal })} · wealth ${pct(share(parent) { it.wealth })} from the sub-categories" +
+                                    (kids.mapNotNull {
+                                        edits[it.id]?.tolerance?.trim()?.toDoubleOrNull()
+                                    }.maxOrNull()
+                                        ?.let { " · tolerance ±${fmt(it / 100)}% (the widest of theirs)" }
+                                        ?: ""),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

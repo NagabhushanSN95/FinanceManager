@@ -106,6 +106,11 @@ data class ImportResult(
  * transaction charges are Trading expenses from the Demat account. Rows carry `broker_ref`, so a statement can be
  * imported twice without doubling anything; rows recorded before references existed are matched by instrument,
  * date, quantity and amount and stamped with the reference.
+ *
+ * The Console ledger, imported with the tradebook, adds the bank movements and the DP and account charges as they
+ * are, and the day's transaction charges as the equity settlement less the day's trades. Zerodha keeps six decimals,
+ * so the charges are booked to the paisa with the remainder carried to the next day, and a day whose trades the app
+ * does not have is left out with a note rather than booked as charges.
  */
 class ZerodhaImporter(private val db: AppDatabase) {
 
@@ -180,6 +185,12 @@ class ZerodhaImporter(private val db: AppDatabase) {
         val planned = ArrayList<PlannedTransaction>()
         val dpSeen = HashSet<String>()
         val sorted = statement.rows.sortedBy { it.date }
+        val ledgerRows = sorted.filterIsInstance<LedgerRow>()
+        val hasLedger = ledgerRows.isNotEmpty()
+        val notes = ArrayList<String>()
+
+        /** Settlements and brokerage reversals by day, six decimals, to turn into charges once the trades are known. */
+        val settlements = java.util.TreeMap<LocalDate, MutableList<LedgerRow>>()
         for (row in sorted) when (row) {
             is TradeRow -> {
                 val type = if (row.mutualFund) InstrumentType.MUTUAL_FUND else InstrumentType.STOCK
@@ -225,7 +236,8 @@ class ZerodhaImporter(private val db: AppDatabase) {
                     ),
                     created, particulars,
                 )
-                if (!buy && !row.mutualFund && settings.addDpCharges && dpSeen.add("${row.date}:${row.name}")) {
+                // With a ledger the DP charges come from it, at their real amounts.
+                if (!buy && !row.mutualFund && settings.addDpCharges && !hasLedger && dpSeen.add("${row.date}:${row.name}")) {
                     planned += PlannedTransaction(
                         TransactionEntity(
                             createdTime = now,
@@ -267,54 +279,141 @@ class ZerodhaImporter(private val db: AppDatabase) {
                 )
             }
 
-            is ChargeRow -> planned += PlannedTransaction(
-                TransactionEntity(
-                    createdTime = now,
-                    modifiedTime = now,
-                    date = row.date,
-                    kind = TransactionKind.EXPENSE,
-                    fromAccountId = demat,
-                    categoryId = trading,
-                    particulars = "Zerodha Transaction Charges",
-                    amount = row.amount,
-                    brokerRef = "charges:${row.date}:${row.amount}",
-                ),
-                null, "Charges",
-            )
+            is LedgerRow -> when {
+                row.settlement || row.brokerageReversal -> settlements.getOrPut(row.date) { ArrayList() }
+                    .add(row)
+
+                row.bankIn -> planned += PlannedTransaction(
+                    TransactionEntity(
+                        createdTime = now,
+                        modifiedTime = now,
+                        date = row.date,
+                        kind = TransactionKind.TRANSFER,
+                        fromAccountId = bank,
+                        toAccountId = demat,
+                        particulars = if (row.autopay) "Zerodha Kite Weekly SIP Auto Debit" else "",
+                        amount = round2(-row.amount),
+                        brokerRef = "ledger:in:${row.reference ?: "${row.date}:${round2(-row.amount)}"}",
+                    ),
+                    null, if (row.autopay) "Funds added by autopay" else "Funds added",
+                )
+
+                row.bankOut -> planned += PlannedTransaction(
+                    TransactionEntity(
+                        createdTime = now,
+                        modifiedTime = now,
+                        date = row.date,
+                        kind = TransactionKind.TRANSFER,
+                        fromAccountId = demat,
+                        toAccountId = bank,
+                        particulars = if (row.quarterlySettlement) "Zerodha Quarterly Settlement" else "",
+                        amount = round2(row.amount),
+                        brokerRef = "ledger:out:${row.reference ?: "${row.date}:${round2(row.amount)}"}",
+                    ),
+                    null, if (row.quarterlySettlement) "Quarterly settlement" else "Payout",
+                )
+
+                else -> ledgerCharge(row, demat, trading, bySymbol.mapValues { it.value.id }, now)
+                    ?.let { planned += it }
+                    ?: run { notes += "${row.date}: ${row.particulars} (${money(-row.amount)}) not imported; record it by hand if it matters" }
+            }
         }
 
         // De-duplicate: by reference first, then against reference-less rows of the same instrument, date, quantity and amount.
-        val refs = planned.map { it.transaction.brokerRef!! }
-        val existingRefs = refs.filter { db.transactionDao().existsByBrokerRef(it) }.toSet()
         val from = sorted.firstOrNull()?.date
         val to = sorted.lastOrNull()?.date
         // Dividends are recorded on the day the bank credits them, weeks after the ex-date, so the window reaches past the statement.
-        val candidates: MutableList<TransactionEntity> =
-            if (from == null || to == null) ArrayList()
+        val window: List<TransactionEntity> =
+            if (from == null || to == null) emptyList()
             else db.transactionDao().getBetween(from.toString(), to.plusDays(90).toString())
-                .filter { it.brokerRef == null }.toMutableList()
+        val candidates = window.filter { it.brokerRef == null }.toMutableList()
         val legacy = LinkedHashMap<Long, String>()
         var duplicates = 0
-        val toInsert = ArrayList<PlannedTransaction>()
         val seenRefs = HashSet<String>()
-        for (p in planned) {
-            val t = p.transaction
-            val ref = t.brokerRef!!
-            if (ref in existingRefs || !seenRefs.add(ref)) {
-                duplicates++; continue
+        suspend fun dedupe(rows: List<PlannedTransaction>): List<PlannedTransaction> {
+            val kept = ArrayList<PlannedTransaction>()
+            for (p in rows) {
+                val t = p.transaction
+                val ref = t.brokerRef!!
+                if (!seenRefs.add(ref) || db.transactionDao().existsByBrokerRef(ref)) {
+                    duplicates++; continue
+                }
+                val match = candidates.firstOrNull { e ->
+                    // A dividend is identified by the stock and its ex-date: the credited amount may be net of tax and dated later.
+                    if (t.exDate != null) return@firstOrNull e.kind == t.kind && e.exDate == t.exDate && e.instrumentId == t.instrumentId && t.instrumentId != 0L
+                    // A transfer is identified by its two accounts; its particulars are free text.
+                    if (t.kind == TransactionKind.TRANSFER) return@firstOrNull e.kind == t.kind && e.date == t.date && closeTo(
+                        e.amount,
+                        t.amount
+                    ) &&
+                            e.fromAccountId == t.fromAccountId && e.toAccountId == t.toAccountId
+                    e.kind == t.kind && e.date == t.date && closeTo(e.amount, t.amount) &&
+                            (t.instrumentId == 0L && p.instrument != null && e.instrumentId == null || e.instrumentId == t.instrumentId) &&
+                            (t.quantity == null || e.quantity == null || abs(e.quantity - t.quantity) < 1e-3) &&
+                            (t.instrumentId != null || e.particulars == t.particulars)
+                }
+                if (match != null) {
+                    candidates.remove(match); legacy[match.id] = ref; duplicates++; continue
+                }
+                kept += p
             }
-            val match = candidates.firstOrNull { e ->
-                // A dividend is identified by the stock and its ex-date: the credited amount may be net of tax and dated later.
-                if (t.exDate != null) return@firstOrNull e.kind == t.kind && e.exDate == t.exDate && e.instrumentId == t.instrumentId && t.instrumentId != 0L
-                e.kind == t.kind && e.date == t.date && closeTo(e.amount, t.amount) &&
-                        (t.instrumentId == 0L && p.instrument != null && e.instrumentId == null || e.instrumentId == t.instrumentId) &&
-                        (t.quantity == null || e.quantity == null || abs(e.quantity - t.quantity) < 1e-3) &&
-                        (t.instrumentId != null || e.particulars == t.particulars)
+            return kept
+        }
+
+        val toInsert = dedupe(planned).toMutableList()
+
+        // The ledger's settlements become the day's charges once the trades of the day (in the app already, or about to be) are known.
+        if (settlements.isNotEmpty()) {
+            val stockIds =
+                instruments.filter { it.instrument.instrumentType == InstrumentType.STOCK }
+                    .map { it.id }.toSet()
+            val inApp = window.filter {
+                (it.kind == TransactionKind.INVEST || it.kind == TransactionKind.REDEEM) && it.instrumentId in stockIds &&
+                        (it.fromAccountId == demat || it.toAccountId == demat)
             }
-            if (match != null) {
-                candidates.remove(match); legacy[match.id] = ref; duplicates++; continue
+            val incoming = toInsert.filter { it.transaction.brokerRef!!.startsWith("zerodha:") }
+                .map { it.transaction }
+            var carried = 0.0
+            val charges = ArrayList<PlannedTransaction>()
+            for ((day, rows) in settlements) {
+                val trades = (inApp + incoming).filter { it.date == day }
+                val net =
+                    trades.sumOf { if (it.kind == TransactionKind.INVEST) it.amount else -it.amount }
+                val turnover = trades.sumOf { it.amount }
+                val settled = rows.sumOf { it.amount }
+                if (trades.isEmpty()) {
+                    notes += "$day: settlement of ${money(settled)} but no trades of the day in the app; left out, import the tradebook that covers it"
+                    continue
+                }
+                val exact = settled - net
+                if (exact < -0.01 || exact > maxOf(20.0, turnover * 0.02)) {
+                    notes += "$day: charges would be ${money(exact)} on trades of ${money(turnover)}; left out, check the day's trades"
+                    continue
+                }
+                // Six decimals in the ledger, paise in the app: book what brings the booked total up to the exact total.
+                carried += exact
+                val book = round2(carried)
+                carried -= book
+                if (book == 0.0) continue
+                val buyback =
+                    rows.all { it.buyback || it.brokerageReversal } && rows.any { it.buyback }
+                charges += PlannedTransaction(
+                    TransactionEntity(
+                        createdTime = now,
+                        modifiedTime = now,
+                        date = day,
+                        kind = TransactionKind.EXPENSE,
+                        fromAccountId = demat,
+                        categoryId = trading,
+                        particulars = if (buyback) "Zerodha Buyback Transaction Charges" else "Zerodha Transaction Charges",
+                        amount = book,
+                        brokerRef = "ledger:charges:$day",
+                    ),
+                    null, if (buyback) "Buyback charges" else "Charges",
+                )
             }
-            toInsert += p
+            toInsert += dedupe(charges)
+            toInsert.sortBy { it.transaction.date }
         }
         // A dividends statement feeds the pending list, not the ledger: the credit date and the net amount come later.
         val toHold = ArrayList<PlannedDividend>()
@@ -351,7 +450,7 @@ class ZerodhaImporter(private val db: AppDatabase) {
             detailUpdates = detailUpdates,
             duplicates = duplicates,
             legacyMatches = legacy,
-            skipped = statement.skipped,
+            skipped = statement.skipped + notes,
             from = from,
             to = to,
         )
@@ -442,6 +541,92 @@ class ZerodhaImporter(private val db: AppDatabase) {
     }
 
     private fun closeTo(a: Double, b: Double) = abs(a - b) <= maxOf(0.01, abs(b) * 0.005)
+
+    private fun round2(v: Double) = Math.round(v * 100.0) / 100.0
+
+    private fun money(v: Double) = "₹" + String.format(java.util.Locale.ENGLISH, "%,.2f", v)
+
+    /**
+     * A journal entry of the ledger as a Trading expense: DP charges keyed like the tradebook's own DP rows so the two
+     * never double up, account maintenance, DDPI, buyback placement and gateway fees under the 4.x wordings. A credit,
+     * such as a dividend paid into the trading account, is not a charge and returns null for a note.
+     */
+    private fun ledgerCharge(
+        row: LedgerRow,
+        demat: Long,
+        trading: Long,
+        stockBySymbol: Map<String, Long>,
+        now: LocalDateTime,
+    ): PlannedTransaction? {
+        val amount = round2(row.amount)
+        if (amount <= 0.0) return null
+        val p = row.particulars
+        val dp = row.dpCharge
+        val (particulars, ref, label, instrument) = when {
+            dp != null -> Quad(
+                "Depository Participant Charges For Selling Stocks - ${dp.first}",
+                "kite:dp:${dp.second}:${dp.first}",
+                "DP charge · ${dp.first}",
+                stockBySymbol[dp.first.uppercase()],
+            )
+
+            p.startsWith("AMC for", ignoreCase = true) ->
+                Quad(
+                    "Zerodha Charges - Quarterly Account Maintenance Charges",
+                    "ledger:amc:${row.date}",
+                    "Account maintenance",
+                    null
+                )
+
+            p.contains("DDPI", ignoreCase = true) ->
+                Quad("Zerodha Charges - Enabling DDPI", "ledger:ddpi:${row.date}", "DDPI", null)
+
+            p.contains("Buyback Order Placement", ignoreCase = true) ->
+                Quad(
+                    "Zerodha Charges - Buyback Order Placement Charge",
+                    "ledger:buyback:${row.date}",
+                    "Buyback placement",
+                    null
+                )
+
+            p.contains("payment gateway", ignoreCase = true) ->
+                Quad(
+                    "Zerodha Charges - Netbanking",
+                    "ledger:gateway:${row.date}",
+                    "Payment gateway",
+                    null
+                )
+
+            else -> Quad(
+                "Zerodha Charges - ${p.trim().trimEnd('.')}",
+                "ledger:je:${row.date}:${p.trim().lowercase()}",
+                "Charges",
+                null
+            )
+        }
+        return PlannedTransaction(
+            TransactionEntity(
+                createdTime = now,
+                modifiedTime = now,
+                date = dp?.second ?: row.date,
+                kind = TransactionKind.EXPENSE,
+                fromAccountId = demat,
+                categoryId = trading,
+                instrumentId = instrument,
+                particulars = particulars,
+                amount = amount,
+                brokerRef = ref,
+            ),
+            null, label,
+        )
+    }
+
+    private data class Quad(
+        val particulars: String,
+        val ref: String,
+        val label: String,
+        val instrument: Long?
+    )
 
     companion object {
         const val DIVIDEND_CATEGORY = "Interest & Dividends"

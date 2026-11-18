@@ -55,6 +55,7 @@ import com.nagabhushansn95.financetracker.data.investments.PfEntryKind
 import com.nagabhushansn95.financetracker.data.investments.ProvidentFunds
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import com.nagabhushansn95.financetracker.data.repository.TransactionRepository
+import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteEntryDialog
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
@@ -279,6 +280,7 @@ fun ProvidentFundAccountScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf<PfEntryKind?>(null) }
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
+    var confirmDeleteEntry by remember { mutableStateOf<TransactionEntity?>(null) }
     var editingAccount by remember { mutableStateOf(false) }
     var txCount by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(editingAccount) { if (editingAccount) txCount = viewModel.transactionCount() }
@@ -495,9 +497,16 @@ fun ProvidentFundAccountScreen(
             viewModel.save(kind, date, amount, particulars, bank, editing); adding = null; editing =
             null
         },
-        onDelete = editing?.let { row -> { viewModel.delete(row.id); editing = null } },
+        onDelete = editing?.let { row -> { confirmDeleteEntry = row } },
         onDismiss = { adding = null; editing = null },
     )
+    confirmDeleteEntry?.let { row ->
+        ConfirmDeleteEntryDialog(
+            row,
+            onConfirm = { viewModel.delete(row.id); editing = null; confirmDeleteEntry = null },
+            onDismiss = { confirmDeleteEntry = null },
+        )
+    }
     // A row the sheet cannot describe (an old import, say) is left alone rather than edited blind.
     LaunchedEffect(editing) {
         val row = editing ?: return@LaunchedEffect

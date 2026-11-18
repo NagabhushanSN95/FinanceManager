@@ -345,29 +345,127 @@ class ZerodhaImporterTest {
     }
 
     @Test
-    fun chargesAreTradingExpensesFromTheDematAccount() = runTest {
-        val plan = importer.plan(
-            ZerodhaStatements.parse("date,amount\n2026/10/06,10.87\n2026/10/13,10.89\n"),
-            ZerodhaImportSettings(demat, bank),
-            now
-        )
-        importer.commit(plan, now)
-        val rows = db.transactionDao().getBetween("2026-10-01", "2026-10-31")
-            .filter { it.particulars == "Zerodha Transaction Charges" }
-        assertEquals(2, rows.size)
-        assertTrue(rows.all { it.kind == TransactionKind.EXPENSE && it.fromAccountId == demat && it.categoryId == trading })
-        assertNull(rows.first().instrumentId)
-        assertEquals(100000.0 - 21.76, db.accountDao().getById(demat)!!.balance, 1e-9)
-    }
-
-    @Test
     fun refusesToCommitWithoutTheAccounts() = runTest {
         val plan = importer.plan(
-            ZerodhaStatements.parse("date,amount\n2026/10/06,10.87\n"),
+            ZerodhaStatements.parse(
+                "symbol,isin,trade_date,exchange,segment,series,trade_type,auction,quantity,price,trade_id,order_id,order_execution_time\n" +
+                        "GOLDBEES,INF204KB17I5,2026-10-06,NSE,EQ,EQ,buy,false,10,120.0,1,1,2026-10-06T10:00:00\n"
+            ),
             ZerodhaImportSettings(dematAccountId = null, bankAccountId = null),
             now
         )
         assertTrue(plan.needsDemat)
         assertTrue(runCatching { importer.commit(plan, now) }.isFailure)
+    }
+
+    private val ledgerHeader =
+        "particulars,posting_date,cost_center,voucher_type,debit,credit,net_balance"
+    private val tradebookHeader =
+        "symbol,isin,trade_date,exchange,segment,series,trade_type,auction,quantity,price,trade_id,order_id,order_execution_time"
+
+    private suspend fun planLedger(tradebook: String, ledger: String): ImportPlan {
+        val merged = ZerodhaStatements.mergeTradebookWithLedger(
+            ZerodhaStatements.parse(tradebookHeader + "\n" + tradebook.trimIndent()),
+            ZerodhaStatements.parse(ledgerHeader + "\n" + ledger.trimIndent()),
+        )
+        return importer.plan(
+            merged,
+            ZerodhaImportSettings(dematAccountId = demat, bankAccountId = bank),
+            now
+        )
+    }
+
+    @Test
+    fun ledgerChargesAreTheSettlementLessTheTradesBookedToThePaisaWithTheRemainderCarried() =
+        runTest {
+            // Day 1: a buy of 12,000 settles at 12,007.2175, so the charges are 7.2175 → 7.22 booked, −0.0025 carried.
+            // Day 2: a sale of 5,000 settles as a credit of 4,991.8869, so the charges are 8.1131; the carried total
+            // 15.3306 rounds to 15.33, so 8.11 is booked (8.1131 alone would have rounded to 8.11 too; the carry is what
+            // keeps the booked total on the ledger's running figure).
+            val plan = planLedger(
+                """
+            GOLDBEES,INF204KB17I5,2026-11-02,NSE,EQ,EQ,buy,false,100,120.0,100001,200001,2026-11-02T10:00:00
+            GOLDBEES,INF204KB17I5,2026-11-03,NSE,EQ,EQ,sell,false,40,125.0,100002,200002,2026-11-03T10:00:00
+            """,
+                """
+            Funds added using UPI autopay from RYU781 with UPI reference number 668699710073,2026-11-02,NSE-EQ - Z,Bank Receipts,0.000000,25000.000000,25000.000000
+            Net settlement for Equity with settlement number: 2026210,2026-11-02,NSE-EQ - Z,Book Voucher,12007.217500,0.000000,12992.782500
+            DP Charges for Sale of GOLDBEES on 03/11/2026,2026-11-03,NSE-EQ - Z,Journal Entry,15.340000,0.000000,12977.442500
+            Net settlement for Equity with settlement number: 2026211,2026-11-03,NSE-EQ - Z,Book Voucher,0.000000,4991.886900,17969.329400
+            Payout of 10000.0/- to HDFC BANK LTD 5010 A/C number as per withdrawal request made on 2026-11-03 with reference number abc123,2026-11-04,NSE-EQ - Z,Bank Payments,10000.000000,0.000000,7969.329400
+            """,
+            )
+            assertEquals(StatementType.TRADEBOOK_AND_LEDGER, plan.type)
+            val rows = plan.toInsert.map { it.transaction }
+            val byRef = rows.associateBy { it.brokerRef }
+            assertEquals(7, rows.size)
+            val funds = byRef.getValue("ledger:in:668699710073")
+            assertEquals(TransactionKind.TRANSFER, funds.kind)
+            assertEquals(bank, funds.fromAccountId); assertEquals(demat, funds.toAccountId)
+            assertEquals(25000.0, funds.amount, 1e-9)
+            assertEquals("Zerodha Kite Weekly SIP Auto Debit", funds.particulars)
+            val payout = byRef.getValue("ledger:out:abc123")
+            assertEquals(demat, payout.fromAccountId); assertEquals(bank, payout.toAccountId)
+            assertEquals(LocalDate.of(2026, 11, 4), payout.date)
+            assertEquals(7.22, byRef.getValue("ledger:charges:2026-11-02").amount, 1e-9)
+            assertEquals(8.11, byRef.getValue("ledger:charges:2026-11-03").amount, 1e-9)
+            assertEquals(
+                "Zerodha Transaction Charges",
+                byRef.getValue("ledger:charges:2026-11-03").particulars
+            )
+            // The DP charge comes from the ledger under the tradebook's own key, linked to the stock; none is synthesised.
+            val dp = byRef.getValue("kite:dp:2026-11-03:GOLDBEES")
+            assertEquals(15.34, dp.amount, 1e-9)
+            assertEquals(goldbees, dp.instrumentId)
+            assertEquals(trading, dp.categoryId)
+            assertEquals(1, rows.count { it.particulars.startsWith("Depository") })
+
+            val result = importer.commit(plan, now)
+            assertEquals(7, result.inserted)
+            // 100000 + 25000 − 12000 − 7.22 − 15.34 + 5000 − 8.11 − 10000
+            assertEquals(107969.33, db.accountDao().getById(demat)!!.balance, 1e-6)
+            // Imported again: everything is already there.
+            assertEquals(
+                0, planLedger(
+                    "GOLDBEES,INF204KB17I5,2026-11-02,NSE,EQ,EQ,buy,false,100,120.0,100001,200001,2026-11-02T10:00:00",
+                    "Net settlement for Equity with settlement number: 2026210,2026-11-02,NSE-EQ - Z,Book Voucher,12007.217500,0.000000,12992.782500"
+                ).toInsert.size
+            )
+        }
+
+    @Test
+    fun aSettlementDayWithoutTradesIsLeftOutAndHandEnteredTransfersAreMatched() = runTest {
+        // A transfer recorded by hand on the ledger's date is the same movement; it gets the reference instead of a twin.
+        db.transactionDao().insert(
+            TransactionEntity(
+                createdTime = now,
+                modifiedTime = now,
+                date = LocalDate.of(2026, 11, 2),
+                kind = TransactionKind.TRANSFER,
+                fromAccountId = bank,
+                toAccountId = demat,
+                particulars = "",
+                amount = 25000.0,
+            )
+        )
+        val plan = planLedger(
+            "GOLDBEES,INF204KB17I5,2026-11-02,NSE,EQ,EQ,buy,false,100,120.0,100001,200001,2026-11-02T10:00:00",
+            """
+            Funds added using UPI from RYU781 with reference number 93534936262,2026-11-02,NSE-EQ - Z,Bank Receipts,0.000000,25000.000000,25000.000000
+            Net settlement for Equity with settlement number: 2026210,2026-11-02,NSE-EQ - Z,Book Voucher,12007.217500,0.000000,12992.782500
+            Net settlement for Equity with settlement number: 2026211,2026-11-03,NSE-EQ - Z,Book Voucher,3000.500000,0.000000,9992.282500
+            AMC for Demat Account for 2026-07-16 to 2026-10-15,2026-11-03,NSE-EQ - Z,Journal Entry,88.500000,0.000000,9903.782500
+            """,
+        )
+        val refs = plan.toInsert.map { it.transaction.brokerRef }
+        assertTrue("ledger:charges:2026-11-02" in refs)
+        assertTrue("ledger:charges:2026-11-03" !in refs)       // no trades on the 3rd in the app or the tradebook
+        assertTrue(plan.skipped.any { it.startsWith("2026-11-03") && it.contains("no trades") })
+        assertEquals(1, plan.legacyMatches.size)
+        assertEquals("ledger:in:93534936262", plan.legacyMatches.values.first())
+        val amc =
+            plan.toInsert.first { it.transaction.brokerRef == "ledger:amc:2026-11-03" }.transaction
+        assertEquals("Zerodha Charges - Quarterly Account Maintenance Charges", amc.particulars)
+        assertEquals(88.5, amc.amount, 1e-9)
     }
 }

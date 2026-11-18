@@ -17,6 +17,13 @@ data class FdListPrefs(
     val owners: Set<String> = emptySet(),
 )
 
+/** Grouping and sort of a Stocks or Mutual funds list; the sort is an enum name, blank meaning the default. */
+data class HoldingListPrefs(
+    val grouped: Boolean = true,
+    val sort: String = "",
+    val descending: Boolean = false,
+)
+
 /**
  * The v5 app's own preferences file. Nothing here is shared with the 4.x app's "AllPreferences" file.
  */
@@ -217,6 +224,19 @@ class AppPreferences(context: Context) {
             .putString(KEY_FD_OWNERS, value.owners.joinToString(SET_SEPARATOR))
             .apply()
 
+    /** How the Stocks or Mutual funds list ([type]: the instrument type's name) was last grouped and sorted. */
+    fun holdingList(type: String): HoldingListPrefs = HoldingListPrefs(
+        grouped = prefs.getBoolean(KEY_HOLDING_PREFIX + type + "_grouped", true),
+        sort = prefs.getString(KEY_HOLDING_PREFIX + type + "_sort", "") ?: "",
+        descending = prefs.getBoolean(KEY_HOLDING_PREFIX + type + "_sort_desc", false),
+    )
+
+    fun setHoldingList(type: String, value: HoldingListPrefs) = prefs.edit()
+        .putBoolean(KEY_HOLDING_PREFIX + type + "_grouped", value.grouped)
+        .putString(KEY_HOLDING_PREFIX + type + "_sort", value.sort)
+        .putBoolean(KEY_HOLDING_PREFIX + type + "_sort_desc", value.descending)
+        .apply()
+
     private fun set(key: String): Set<String> =
         prefs.getString(key, null)?.split(SET_SEPARATOR)?.filter { it.isNotEmpty() }?.toSet()
             ?: emptySet()
@@ -238,6 +258,7 @@ class AppPreferences(context: Context) {
         private const val KEY_FD_HOLDERS = "fd_holders"
         private const val KEY_FD_BRANCHES = "fd_branches"
         private const val KEY_FD_OWNERS = "fd_owners"
+        private const val KEY_HOLDING_PREFIX = "holdings_"
 
         /** Sets are stored joined by a character no bank or holder name contains, so [export] keeps them as strings. */
         private const val SET_SEPARATOR = "\u001F"

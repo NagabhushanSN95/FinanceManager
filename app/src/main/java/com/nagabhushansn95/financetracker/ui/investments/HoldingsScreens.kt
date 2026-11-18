@@ -9,12 +9,14 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -34,6 +37,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -86,17 +90,23 @@ import com.nagabhushansn95.financetracker.data.investments.Holdings
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
 import com.nagabhushansn95.financetracker.data.investments.Position
+import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
+import com.nagabhushansn95.financetracker.data.prefs.HoldingListPrefs
 import com.nagabhushansn95.financetracker.data.prices.AmfiNav
 import com.nagabhushansn95.financetracker.data.prices.AmfiScheme
 import com.nagabhushansn95.financetracker.data.repository.HoldingsRepository
 import com.nagabhushansn95.financetracker.ui.common.AccountField
 import com.nagabhushansn95.financetracker.ui.common.BackAndMenu
+import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteDialog
+import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteEntryDialog
 import com.nagabhushansn95.financetracker.ui.common.DatabaseFilePickers
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
+import com.nagabhushansn95.financetracker.ui.common.NaturalOrder
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
+import com.nagabhushansn95.financetracker.ui.common.SortChip
 import com.nagabhushansn95.financetracker.ui.common.StatCell
 import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import com.nagabhushansn95.financetracker.ui.transaction.InstrumentPickerSheet
@@ -109,6 +119,41 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+
+/**
+ * Sort keys of the Stocks and Mutual funds lists. [defaultDescending]: the direction a key starts in (largest
+ * amounts first). Ties fall back to the shown name.
+ */
+enum class HoldingSort(val title: String, val defaultDescending: Boolean = false) {
+    NAME("Name"), DATE("Date"), INVESTED("Invested", true), VALUE("Current value", true),
+    PROFIT("Profit", true), PROFIT_PCT("Profit %", true), XIRR("XIRR", true);
+
+    /**
+     * The order for the direction. Rows without the figure (no units held, no XIRR) come last either way. [DATE]
+     * reads differently by direction: oldest first goes by the first entry, newest first by the last.
+     */
+    fun comparator(descending: Boolean): Comparator<HoldingRow> {
+        fun <K : Comparable<K>> by(key: (HoldingRow) -> K?): Comparator<HoldingRow> =
+            compareBy(nullsLast(if (descending) reverseOrder<K>() else naturalOrder()), key)
+
+        val main: Comparator<HoldingRow> = when (this) {
+            NAME -> compareBy(if (descending) NaturalOrder.reversed() else NaturalOrder) { it.shownName }
+            DATE -> by { dateOf(it, descending) }
+            INVESTED -> by { it.position.costHeld.takeIf { c -> c > 0 } }
+            VALUE -> by { it.currentValue.takeIf { v -> v > 0 } }
+            PROFIT -> by { it.heldProfit.takeIf { _ -> it.position.units > Position.UNIT_EPSILON } }
+            PROFIT_PCT -> by { it.heldProfitPct }
+            XIRR -> by { it.xirr?.takeIf { x -> x.isFinite() } }
+        }
+        return main.thenBy(NaturalOrder) { it.shownName }
+    }
+
+    companion object {
+        /** The date the [DATE] key sorts a row by: its first entry when ascending, its last when descending. */
+        fun dateOf(row: HoldingRow, descending: Boolean): LocalDate? =
+            if (descending) row.position.lastDate else row.position.firstDate
+    }
+}
 
 data class HoldingsState(
     val views: List<HoldingView> = emptyList(),
@@ -160,6 +205,19 @@ data class HoldingsState(
 class HoldingsViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getInstance(application)
     private val repository = HoldingsRepository(db)
+    private val prefs = AppPreferences(application)
+    private val listPrefs = mutableMapOf<InstrumentType, MutableStateFlow<HoldingListPrefs>>()
+
+    /** Grouping and sort of the list of [type], remembered across openings. */
+    fun listPrefs(type: InstrumentType): StateFlow<HoldingListPrefs> = listPrefsOf(type)
+
+    fun updateList(type: InstrumentType, change: (HoldingListPrefs) -> HoldingListPrefs) {
+        val flow = listPrefsOf(type)
+        flow.value = change(flow.value).also { prefs.setHoldingList(type.name, it) }
+    }
+
+    private fun listPrefsOf(type: InstrumentType) =
+        listPrefs.getOrPut(type) { MutableStateFlow(prefs.holdingList(type.name)) }
 
     /** One-off outcome of a save or delete, shown in a snackbar. */
     val message = MutableStateFlow<String?>(null)
@@ -353,7 +411,10 @@ class HoldingsViewModel(application: Application) : AndroidViewModel(application
  * in the ⋮ menu, which also holds the Zerodha imports. The + buys: pick the holding (or add a new one) and the buy
  * sheet opens for it.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    androidx.compose.foundation.layout.ExperimentalLayoutApi::class
+)
 @Composable
 fun HoldingsListScreen(
     type: InstrumentType,
@@ -368,6 +429,10 @@ fun HoldingsListScreen(
     var searching by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     val q = query.trim()
+    val listPrefs by viewModel.listPrefs(type).collectAsStateWithLifecycle()
+    val sort = HoldingSort.entries.firstOrNull { it.name == listPrefs.sort } ?: HoldingSort.NAME
+    val descending = if (listPrefs.sort.isEmpty()) sort.defaultDescending else listPrefs.descending
+    val grouped = listPrefs.grouped
     // Collapsed groups, as their keys joined by newlines (a saveable form of a set).
     var collapsedKeys by rememberSaveable { mutableStateOf("") }
     val collapsed = collapsedKeys.split('\n').filter { it.isNotEmpty() }.toSet()
@@ -401,7 +466,9 @@ fun HoldingsListScreen(
         if (uri != null && kind != null) importVm.preview(kind, uri)
     }
     var coinDialog by remember { mutableStateOf(false) }
+    var ledgerDialog by remember { mutableStateOf(false) }
     var coinUri by remember { mutableStateOf<Uri?>(null) }
+    var ledgerUri by remember { mutableStateOf<Uri?>(null) }
     var tradebookUri by remember { mutableStateOf<Uri?>(null) }
     val pickCoin = rememberLauncherForActivityResult(
         DatabaseFilePickers.OpenAny("Download", importVm::lastStatementUri)
@@ -409,6 +476,9 @@ fun HoldingsListScreen(
     val pickTradebook = rememberLauncherForActivityResult(
         DatabaseFilePickers.OpenAny("Download", importVm::lastStatementUri)
     ) { if (it != null) tradebookUri = it }
+    val pickLedger = rememberLauncherForActivityResult(
+        DatabaseFilePickers.OpenAny("Download", importVm::lastStatementUri)
+    ) { if (it != null) ledgerUri = it }
     var pendingSheet by remember { mutableStateOf(false) }
     val pendingHere = state.pending.filter { p -> own.any { it.instrument.id == p.instrumentId } }
 
@@ -452,19 +522,21 @@ fun HoldingsListScreen(
                                 onClick = { menu = false; showSoldOut = !showSoldOut })
                             HorizontalDivider()
                         }
-                        if (type == InstrumentType.STOCK) listOf(
-                            ZerodhaImportKind.TRADEBOOK,
-                            ZerodhaImportKind.DIVIDENDS,
-                            ZerodhaImportKind.CHARGES
-                        ).forEach { kind ->
+                        if (type == InstrumentType.STOCK) {
                             DropdownMenuItem(
-                                text = { Text("Import ${kind.title}…") },
-                                onClick = {
-                                    menu = false; importKind = kind; pickStatement.launch(
-                                    arrayOf("*/*")
-                                )
-                                })
-                        } else DropdownMenuItem(
+                                text = { Text("Import Kite tradebook and ledger…") },
+                                onClick = { menu = false; ledgerDialog = true })
+                            listOf(ZerodhaImportKind.DIVIDENDS).forEach { kind ->
+                                DropdownMenuItem(
+                                    text = { Text("Import ${kind.title}…") },
+                                    onClick = {
+                                        menu = false; importKind = kind; pickStatement.launch(
+                                        arrayOf("*/*")
+                                    )
+                                    })
+                            }
+                        }
+                        if (type == InstrumentType.MUTUAL_FUND) DropdownMenuItem(
                             text = { Text("Import Coin orders…") },
                             onClick = { menu = false; coinDialog = true })
                         importState.lastImport?.let { last ->
@@ -511,6 +583,50 @@ fun HoldingsListScreen(
                         .focusRequester(focus),
                 )
             } else item { TypeHeader(listOfNotNull(summary?.byType?.get(type))) }
+            item {
+                // Sort key with its direction, and whether the rows sit under their category headers.
+                FlowRow(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    SortChip(
+                        options = HoldingSort.entries,
+                        selected = sort,
+                        descending = descending,
+                        titleOf = { it.title },
+                        onPick = { s ->
+                            if (s != sort) viewModel.updateList(type) {
+                                it.copy(
+                                    sort = s.name,
+                                    descending = s.defaultDescending
+                                )
+                            }
+                        },
+                        onFlip = {
+                            viewModel.updateList(type) {
+                                it.copy(
+                                    sort = sort.name,
+                                    descending = !descending
+                                )
+                            }
+                        },
+                    )
+                    FilterChip(
+                        selected = grouped,
+                        onClick = { viewModel.updateList(type) { it.copy(grouped = !grouped) } },
+                        label = { Text("Group by category") },
+                        leadingIcon = if (grouped) {
+                            {
+                                Icon(
+                                    Icons.Filled.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        } else null,
+                    )
+                }
+            }
             if (!searching && pendingHere.isNotEmpty()) item {
                 Text(
                     "${pendingHere.size} dividend${if (pendingHere.size == 1) "" else "s"} awaiting credit",
@@ -531,6 +647,22 @@ fun HoldingsListScreen(
                     modifier = Modifier.padding(16.dp)
                 )
             }
+            // When sorted by date, each row says which date placed it ("since" the first entry, "last" the last).
+            val dateNote: (HoldingRow) -> String? = { h ->
+                if (sort != HoldingSort.DATE) null
+                else HoldingSort.dateOf(h, descending)
+                    ?.let { d -> "${if (descending) "last" else "since"} ${d.format(SHORT_DATE)}" }
+            }
+
+            fun rows(prefix: String, rows: List<HoldingRow>) = items(
+                rows,
+                key = { "$prefix:${it.instrument.id}" }) { h ->
+                HoldingListRow(
+                    h,
+                    dateNote(h)
+                ) { onOpen(h.instrument.id) }
+            }
+
             // Every group collapses from its header; sold-out holdings keep their categories under their own title.
             fun group(prefix: String, category: String, rows: List<HoldingRow>) {
                 val key = "$prefix:$category"
@@ -541,29 +673,26 @@ fun HoldingsListScreen(
                         key in collapsed
                     ) { toggle(key) }
                 }
-                if (key !in collapsed) items(
-                    rows,
-                    key = { it.instrument.id }) { h -> HoldingListRow(h) { onOpen(h.instrument.id) } }
+                if (key !in collapsed) rows(prefix, rows)
             }
 
-            // Sorted by what the row shows: the short name when there is one.
-            val heldRows = held.map(state::rowFor)
-                .sortedBy {
-                    (it.security?.shortName?.takeIf { n -> n.isNotBlank() }
-                        ?: it.instrument.name).lowercase()
-                }
-            heldRows.groupBy { it.categoryName }.toSortedMap()
-                .forEach { (category, rows) -> group("held", category, rows) }
+            // A section's rows in the chosen order: under category headers, or as one flat list.
+            val order = sort.comparator(descending)
+            fun section(prefix: String, views: List<HoldingView>) {
+                val sorted = views.map(state::rowFor).sortedWith(order)
+                if (grouped) sorted.groupBy { it.categoryName }.toSortedMap()
+                    .forEach { (category, rows) -> group(prefix, category, rows) }
+                else rows(prefix, sorted)
+            }
+
+            section("held", held)
             if ((showSoldOut || q.isNotEmpty()) && soldOut.isNotEmpty()) {
                 item(key = "s:sold") { SectionTitle("Sold out") }
-                soldOut.map(state::rowFor).sortedByDescending { it.position.lastDate }
-                    .groupBy { it.categoryName }.toSortedMap()
-                    .forEach { (category, rows) -> group("sold", category, rows) }
+                section("sold", soldOut)
             }
             if (family.isNotEmpty()) {
                 item(key = "s:family") { SectionTitle("Family (not in the totals)") }
-                family.map(state::rowFor).groupBy { it.categoryName }.toSortedMap()
-                    .forEach { (category, rows) -> group("family", category, rows) }
+                section("family", family)
             }
         }
     }
@@ -576,6 +705,19 @@ fun HoldingsListScreen(
             onDismiss = importVm::dismiss,
         )
     }
+    if (ledgerDialog) TradebookLedgerImportDialog(
+        tradebookName = tradebookUri?.let(importVm::fileName),
+        ledgerName = ledgerUri?.let(importVm::fileName),
+        onPickTradebook = { pickTradebook.launch(arrayOf("*/*")) },
+        onPickLedger = { pickLedger.launch(arrayOf("*/*")) },
+        onImport = {
+            ledgerDialog = false; importVm.previewTradebookAndLedger(
+            tradebookUri!!,
+            ledgerUri!!
+        )
+        },
+        onDismiss = { ledgerDialog = false },
+    )
     if (coinDialog) CoinImportDialog(
         coinName = coinUri?.let(importVm::fileName),
         tradebookName = tradebookUri?.let(importVm::fileName),
@@ -718,9 +860,12 @@ private fun GroupHeader(title: String, count: Int, collapsed: Boolean, onToggle:
     HorizontalDivider()
 }
 
-/** Name with the value on the right; below, the symbol, units, average cost, price and cost; then the profit line. */
+/**
+ * Name with the value on the right; below, the symbol, units, average cost, price and cost (and [dateNote] when
+ * the list is sorted by date); then the profit line.
+ */
 @Composable
-private fun HoldingListRow(h: HoldingRow, onClick: () -> Unit) {
+private fun HoldingListRow(h: HoldingRow, dateNote: String?, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -730,7 +875,7 @@ private fun HoldingListRow(h: HoldingRow, onClick: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 // The short name when there is one; the holding's own screen shows the full name.
-                h.security?.shortName?.takeIf { it.isNotBlank() } ?: h.instrument.name,
+                h.shownName,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
@@ -749,6 +894,7 @@ private fun HoldingListRow(h: HoldingRow, onClick: () -> Unit) {
                 ?: if (units != null && units > Position.UNIT_EPSILON) "no price" else null,
             if (h.position.units > Position.UNIT_EPSILON) "invested ${MoneyFormat.amount(h.position.costHeld)}" else null,
             h.instrument.owner.takeIf { it != Instrument.OWNER_SELF }?.let { "owner $it" },
+            dateNote,
         ).joinToString(" · ").ifEmpty { "No entries yet" }
         Text(
             line,
@@ -779,6 +925,8 @@ fun HoldingScreen(
     var adding by remember { mutableStateOf<HoldingEntryKind?>(null) }
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
     var editingEvent by remember { mutableStateOf<HoldingEvent?>(null) }
+    var confirmDeleteEntry by remember { mutableStateOf<TransactionEntity?>(null) }
+    var confirmDeleteEvent by remember { mutableStateOf<HoldingEvent?>(null) }
     var fabMenu by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     var editingHolding by remember { mutableStateOf(false) }
@@ -1138,10 +1286,29 @@ fun HoldingScreen(
             )
             adding = null; editing = null; editingEvent = null
         },
-        onDelete = editing?.let { row -> { viewModel.deleteEntry(row.id); editing = null } }
-            ?: editingEvent?.let { ev -> { viewModel.deleteEvent(ev.id); editingEvent = null } },
+        onDelete = editing?.let { row -> { confirmDeleteEntry = row } }
+            ?: editingEvent?.let { ev -> { confirmDeleteEvent = ev } },
         onDismiss = { adding = null; editing = null; editingEvent = null },
     )
+    confirmDeleteEntry?.let { row ->
+        ConfirmDeleteEntryDialog(
+            row,
+            onConfirm = {
+                viewModel.deleteEntry(row.id); editing = null; confirmDeleteEntry = null
+            },
+            onDismiss = { confirmDeleteEntry = null },
+        )
+    }
+    confirmDeleteEvent?.let { ev ->
+        ConfirmDeleteDialog(
+            title = "Delete this ${ev.kind.name.lowercase()}?",
+            text = "${ev.date.format(SHORT_DATE)}\nThe holding's units are recomputed without it.",
+            onConfirm = {
+                viewModel.deleteEvent(ev.id); editingEvent = null; confirmDeleteEvent = null
+            },
+            onDismiss = { confirmDeleteEvent = null },
+        )
+    }
     // A dividend from the awaiting list: the sheet opens filled in, with today's date and the gross amount to correct.
     recording?.let { p ->
         if (v != null) HoldingEntrySheet(

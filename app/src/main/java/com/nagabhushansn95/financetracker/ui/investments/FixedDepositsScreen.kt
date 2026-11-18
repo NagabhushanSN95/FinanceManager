@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
@@ -28,7 +27,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -46,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
@@ -81,6 +78,7 @@ import com.nagabhushansn95.financetracker.ui.common.NaturalOrder
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.PickDateDialog
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
+import com.nagabhushansn95.financetracker.ui.common.SortChip
 import com.nagabhushansn95.financetracker.ui.common.StatCell
 import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
@@ -405,9 +403,10 @@ fun FixedDepositsScreen(
                             owners
                         ) { v -> viewModel.updateList { it.copy(owners = v) } }
                         SortChip(
-                            sort,
-                            descending,
-                            filter,
+                            options = FdSort.entries,
+                            selected = sort,
+                            descending = descending,
+                            titleOf = { it.titleFor(filter) },
                             onPick = { s ->
                                 if (s != sort) viewModel.updateList {
                                     it.copy(
@@ -477,53 +476,6 @@ private fun PickChip(
                     onClick = { onPick(o); open = false },
                 )
             }
-        }
-    }
-}
-
-/**
- * "Sort: Maturity date" with the keys in a menu, and beside it an arrow button that flips the direction (up:
- * ascending, down: descending). A new key starts in its own natural direction.
- */
-@Composable
-private fun SortChip(
-    sort: FdSort,
-    descending: Boolean,
-    filter: FdFilter,
-    onPick: (FdSort) -> Unit,
-    onFlip: () -> Unit,
-) {
-    var open by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box {
-            FilterChip(
-                selected = false,
-                onClick = { open = true },
-                label = { Text("Sort: ${sort.titleFor(filter)}") },
-                trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
-            )
-            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                FdSort.entries.forEach { s ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                if (s == sort) "✓ ${s.titleFor(filter)}" else s.titleFor(
-                                    filter
-                                )
-                            )
-                        },
-                        onClick = { onPick(s); open = false },
-                    )
-                }
-            }
-        }
-        IconButton(onClick = onFlip) {
-            // A real arrow (not a chevron, which reads as fold/unfold): the back arrow turned up or down.
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = if (descending) "Descending; tap for ascending" else "Ascending; tap for descending",
-                modifier = Modifier.rotate(if (descending) -90f else 90f),
-            )
         }
     }
 }

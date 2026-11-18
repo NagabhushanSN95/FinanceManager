@@ -9,7 +9,12 @@ enum class StatementType(val title: String) {
     COIN_ORDERS("Coin order history"),
     KITE_TRADEBOOK("Kite tradebook"),
     DIVIDENDS("Dividends"),
-    CHARGES("Transaction charges"),
+
+    /** Console › Funds › Statement: every rupee in and out of the trading account. */
+    LEDGER("Console ledger"),
+
+    /** The equity tradebook with the ledger of the same period, imported together. */
+    TRADEBOOK_AND_LEDGER("Kite tradebook and ledger"),
 }
 
 enum class Side { BUY, SELL }
@@ -56,7 +61,52 @@ data class DividendRow(
     val total: Double,
 ) : ZerodhaRow
 
-data class ChargeRow(override val date: LocalDate, val amount: Double) : ZerodhaRow
+/**
+ * One line of the Console ledger. [amount] is the money out of the trading account (debit less credit) with the six
+ * decimals Zerodha keeps; [reference] is the number the text carries (UPI, payout or settlement), the stable handle
+ * for the row across exports.
+ */
+data class LedgerRow(
+    override val date: LocalDate,
+    val particulars: String,
+    val voucherType: String,
+    val amount: Double,
+    val reference: String?,
+) : ZerodhaRow {
+    /** "Net settlement for Equity …": the day's trades and their charges in one figure. */
+    val settlement: Boolean get() = particulars.startsWith("Net settlement for", ignoreCase = true)
+    val buyback: Boolean get() = settlement && particulars.contains("buyback", ignoreCase = true)
+
+    /** A brokerage refund posted beside the settlement; it belongs to the day's charges. */
+    val brokerageReversal: Boolean
+        get() = particulars.contains(
+            "Reversal of Brokerage",
+            ignoreCase = true
+        )
+    val bankIn: Boolean get() = voucherType.equals("Bank Receipts", ignoreCase = true)
+    val bankOut: Boolean get() = voucherType.equals("Bank Payments", ignoreCase = true)
+    val quarterlySettlement: Boolean
+        get() = bankOut && (particulars.contains("quarterly settlement", ignoreCase = true) ||
+                particulars.contains("auto-settled", ignoreCase = true))
+    val autopay: Boolean get() = bankIn && particulars.contains("autopay", ignoreCase = true)
+
+    /** The stock and the sale date of a "DP Charges for Sale of X on dd/mm/yyyy" line. */
+    val dpCharge: Pair<String, LocalDate>?
+        get() = DP.find(particulars)?.let { m ->
+            m.groupValues[1] to LocalDate.of(
+                m.groupValues[4].toInt(),
+                m.groupValues[3].toInt(),
+                m.groupValues[2].toInt()
+            )
+        }
+
+    companion object {
+        private val DP = Regex(
+            "DP Charges for Sale of (\\S+) on (\\d\\d)/(\\d\\d)/(\\d{4})",
+            RegexOption.IGNORE_CASE
+        )
+    }
+}
 
 data class ParsedStatement(
     val type: StatementType,
@@ -67,9 +117,8 @@ data class ParsedStatement(
 class ZerodhaParseException(message: String) : Exception(message)
 
 /**
- * Parses the four CSV statements Zerodha hands out, recognised by their header row:
- * Coin order history, Kite tradebook (equity or mutual-fund segment), a dividends list, and the transaction
- * charges list the user keeps by hand (`date,amount`).
+ * Parses the CSV statements Zerodha hands out, recognised by their header row: Coin order history, Kite tradebook
+ * (equity or mutual-fund segment), a dividends list and the Console ledger (Funds › Statement).
  */
 object ZerodhaStatements {
     private val COIN_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -108,7 +157,8 @@ object ZerodhaStatements {
                     StatementType.COIN_ORDERS -> coin(row, ::col)
                     StatementType.KITE_TRADEBOOK -> tradebook(row, ::col)
                     StatementType.DIVIDENDS -> dividend(row, ::col)
-                    StatementType.CHARGES -> charge(row, ::col)
+                    StatementType.LEDGER -> ledger(row, ::col)
+                    StatementType.TRADEBOOK_AND_LEDGER -> throw ZerodhaParseException("not a file")
                 }
             } catch (e: Exception) {
                 skipped += "Line ${n + 2}: ${e.message ?: e.toString()}"
@@ -124,7 +174,7 @@ object ZerodhaStatements {
             "scheme_name" in h && "transaction_mode" in h -> StatementType.COIN_ORDERS
             "trade_type" in h && "trade_id" in h -> StatementType.KITE_TRADEBOOK
             "symbol" in h && h.any { it.startsWith("dividend per share") } -> StatementType.DIVIDENDS
-            h == setOf("date", "amount") -> StatementType.CHARGES
+            "posting_date" in h && "voucher_type" in h && "net_balance" in h -> StatementType.LEDGER
             else -> null
         }
     }
@@ -226,13 +276,26 @@ object ZerodhaStatements {
         )
     }
 
-    private fun charge(
+    private val REFERENCE =
+        Regex("(?:reference number|settlement number):?\\s+(\\S+)", RegexOption.IGNORE_CASE)
+
+    /** Opening and closing balance lines have no date and are not rows. */
+    private fun ledger(
         row: List<String>,
         col: (List<String>, Array<out String>) -> String
-    ): ChargeRow? {
+    ): LedgerRow? {
         fun c(vararg n: String) = col(row, n)
-        if (c("date").isBlank() || c("amount").isBlank()) return null
-        return ChargeRow(anyDate(c("date")), round2(c("amount").toDouble()))
+        val date = c("posting_date").ifBlank { return null }
+        val particulars = c("particulars").trim()
+        val debit = c("debit").toDoubleOrNull() ?: 0.0
+        val credit = c("credit").toDoubleOrNull() ?: 0.0
+        return LedgerRow(
+            date = anyDate(date),
+            particulars = particulars,
+            voucherType = c("voucher_type").trim(),
+            amount = debit - credit,
+            reference = REFERENCE.find(particulars)?.groupValues?.get(1)?.trimEnd('.', ','),
+        )
     }
 
     fun anyDate(text: String): LocalDate {
@@ -277,6 +340,35 @@ object ZerodhaStatements {
             StatementType.COIN_ORDERS,
             merged,
             coin.skipped + tradebook.skipped + notes
+        )
+    }
+
+    /**
+     * The equity rows of a Kite tradebook with the Console ledger of the same period. Fund rows are left to the Coin
+     * import; the ledger supplies the bank movements, the DP and account charges, and the settlements from which the
+     * day's transaction charges follow. Trades outside the ledger's days are left out, so a trade never comes in
+     * without the settlement that carries its charges; a settlement without its trades is left out by the planner.
+     */
+    fun mergeTradebookWithLedger(
+        tradebook: ParsedStatement,
+        ledger: ParsedStatement
+    ): ParsedStatement {
+        require(tradebook.type == StatementType.KITE_TRADEBOOK) { "The first file is not a Kite tradebook" }
+        require(ledger.type == StatementType.LEDGER) { "The second file is not a Console ledger" }
+        require(ledger.rows.isNotEmpty()) { "The ledger has no rows" }
+        val first = ledger.rows.minOf { it.date }
+        val last = ledger.rows.maxOf { it.date }
+        val equity = tradebook.rows.filterNot { it is TradeRow && it.mutualFund }
+        val funds = tradebook.rows.size - equity.size
+        val inPeriod = equity.filter { it.date in first..last }
+        val outside = equity.size - inPeriod.size
+        val notes = ArrayList<String>()
+        if (funds > 0) notes += "$funds fund row${if (funds == 1) "" else "s"} left out: fund orders come in with the Coin import under Mutual funds"
+        if (outside > 0) notes += "$outside trade${if (outside == 1) "" else "s"} outside the ledger's days ($first to $last) left out"
+        return ParsedStatement(
+            StatementType.TRADEBOOK_AND_LEDGER,
+            inPeriod + ledger.rows,
+            tradebook.skipped + ledger.skipped + notes
         )
     }
 

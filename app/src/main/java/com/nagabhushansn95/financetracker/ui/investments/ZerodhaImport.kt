@@ -33,6 +33,7 @@ import androidx.lifecycle.viewModelScope
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.importer.zerodha.ImportPlan
+import com.nagabhushansn95.financetracker.data.importer.zerodha.LedgerRow
 import com.nagabhushansn95.financetracker.data.importer.zerodha.ParsedStatement
 import com.nagabhushansn95.financetracker.data.importer.zerodha.Side
 import com.nagabhushansn95.financetracker.data.importer.zerodha.StatementType
@@ -52,11 +53,11 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-/** The statements the menus of the Stocks & ETFs and Mutual funds screens import, each from its own entry. */
+/** The statements the menus of the Stocks & ETFs and Mutual funds screens import; the tradebook and the ledger come in together. */
 enum class ZerodhaImportKind(val title: String, val type: StatementType) {
     TRADEBOOK("Kite tradebook", StatementType.KITE_TRADEBOOK),
     DIVIDENDS("Dividends", StatementType.DIVIDENDS),
-    CHARGES("Transaction charges", StatementType.CHARGES),
+    LEDGER("Console ledger", StatementType.LEDGER),
     COIN("Coin orders", StatementType.COIN_ORDERS);
 
     /** Where the statement is imported from, for the message when a file lands on the wrong screen. */
@@ -117,10 +118,11 @@ class ZerodhaImportViewModel(application: Application) : AndroidViewModel(applic
             ?.use { it.readText() }
             ?: throw IllegalStateException("Cannot open ${fileName(uri)}")
 
-    /** One file: a tradebook, a dividends list or the charges CSV, checked against the menu entry it came from. */
+    /** One file: a dividends list (or a tradebook on its own), checked against the menu entry it came from. */
     fun preview(kind: ZerodhaImportKind, uri: Uri) = start(fileName(uri), uri) {
         val parsed = ZerodhaStatements.parse(read(uri))
         if (parsed.type != kind.type) {
+            if (parsed.type == StatementType.LEDGER) throw IllegalArgumentException("this is a Console ledger; import it with the Kite tradebook under Stocks & ETFs")
             val of = ZerodhaImportKind.entries.first { it.type == parsed.type }
             throw IllegalArgumentException("this is a ${parsed.type.title}; import it as ${of.title} under ${of.screen}")
         }
@@ -139,6 +141,14 @@ class ZerodhaImportViewModel(application: Application) : AndroidViewModel(applic
         val tradebook = ZerodhaStatements.parse(read(tradebookUri))
         ZerodhaStatements.mergeCoinWithTradebook(coin, tradebook)
     }
+
+    /** The equity tradebook with the Console ledger of the same period: trades, bank movements and every charge. */
+    fun previewTradebookAndLedger(tradebookUri: Uri, ledgerUri: Uri) =
+        start("${fileName(tradebookUri)} + ${fileName(ledgerUri)}", ledgerUri) {
+            val tradebook = ZerodhaStatements.parse(read(tradebookUri))
+            val ledger = ZerodhaStatements.parse(read(ledgerUri))
+            ZerodhaStatements.mergeTradebookWithLedger(tradebook, ledger)
+        }
 
     private fun start(name: String, uri: Uri, parse: suspend () -> ParsedStatement) {
         if (_state.value.busy) return
@@ -241,9 +251,11 @@ fun ZerodhaImportSheet(
     val rows = preview.statement.rows
     val hasStocks = rows.any { it is TradeRow && !it.mutualFund }
     val hasStockSales = rows.any { it is TradeRow && !it.mutualFund && it.side == Side.SELL }
-    val needsDemat = hasStocks || plan.type == StatementType.CHARGES
+    val hasLedger = rows.any { it is LedgerRow }
+    val needsDemat = hasStocks || hasLedger
     // A dividend waits for its credit, so no bank is chosen here; the entry sheet asks when it is recorded.
-    val needsBank = rows.any { it is TradeRow && it.mutualFund }
+    val needsBank =
+        rows.any { it is TradeRow && it.mutualFund } || rows.any { it is LedgerRow && (it.bankIn || it.bankOut) }
     val ready =
         (!needsDemat || preview.settings.dematAccountId != null) && (!needsBank || preview.settings.bankAccountId != null)
     val count = plan.toInsert.size + plan.toHold.size
@@ -275,8 +287,8 @@ fun ZerodhaImportSheet(
             style = MaterialTheme.typography.bodySmall,
         )
         if (plan.skipped.isNotEmpty()) Text(
-            "Notes: " + plan.skipped.take(3)
-                .joinToString("; ") + if (plan.skipped.size > 3) " …" else "",
+            "Notes: " + plan.skipped.take(if (hasLedger) 6 else 3)
+                .joinToString("; ") + if (plan.skipped.size > (if (hasLedger) 6 else 3)) " …" else "",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
         )
         if (needsDemat) AccountChoice(
@@ -293,7 +305,8 @@ fun ZerodhaImportSheet(
         ) {
             onSettings(preview.settings.copy(bankAccountId = it))
         }
-        if (hasStockSales) Row(
+        // The ledger carries the DP charges itself, so the switch is for a tradebook on its own.
+        if (hasStockSales && !hasLedger) Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -421,6 +434,45 @@ fun CoinImportDialog(
             TextButton(
                 onClick = onImport,
                 enabled = coinName != null && tradebookName != null
+            ) { Text("Preview") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
+
+/** The two files the stocks import takes: the equity tradebook (trades) and the Console ledger (money and charges). */
+@Composable
+fun TradebookLedgerImportDialog(
+    tradebookName: String?,
+    ledgerName: String?,
+    onPickTradebook: () -> Unit,
+    onPickLedger: () -> Unit,
+    onImport: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Import Kite tradebook and ledger") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "The tradebook gives the trades. The ledger (Console › Funds › Statement) gives funds added, payouts, DP and account charges, and the day's transaction charges as the settlement less the trades. A day whose trades are missing is left out.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedButton(onClick = onPickTradebook, modifier = Modifier.fillMaxWidth()) {
+                    Text(tradebookName?.let { "Tradebook: $it" } ?: "Choose the Kite tradebook…")
+                }
+                OutlinedButton(onClick = onPickLedger, modifier = Modifier.fillMaxWidth()) {
+                    Text(ledgerName?.let { "Ledger: $it" } ?: "Choose the Console ledger…")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onImport,
+                enabled = tradebookName != null && ledgerName != null
             ) { Text("Preview") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },

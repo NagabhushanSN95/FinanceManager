@@ -504,3 +504,51 @@ Removed with it: the Room migrations 1→11 and schema files 1–10 (the version
 no migration path from older files), their tests, the Extras › Merge forex loads path, and
 `tools/backfill`. Fresh installs take the Setup screen's 4.x import; existing data moves by restore
 only.
+
+## Zerodha ledger import (2026-11-17)
+
+Contract-note charges and the Console ledger were compared for every trading day since 2024-10-01:
+they agree to within
+2 paise on all 253 days (217 exact), with a cumulative drift of ₹0.18 that the hand-made "Equalizing
+Difference" rows
+had been absorbing. The ledger therefore replaces the hand-made charges CSV: Stocks & ETFs › Import
+Kite tradebook and
+ledger takes the equity tradebook and the Console › Funds › Statement export together. The ledger
+supplies funds added,
+payouts (on the ledger date), DP and account charges at their real amounts, and the day's
+transaction charges as the
+settlement less the trades, booked to the paisa with the remainder carried. A settlement day whose
+trades are in
+neither the app nor the tradebook is left out with a note. Rows carry `broker_ref`, so a re-import
+after a date edit
+never doubles anything. The import is used from 1 November 2026 on; no code reconciles the account
+balance with the
+ledger, by choice.
+
+## Holdings list sorting and grouping (2026-11-17)
+
+Stocks & ETFs and Mutual funds carry a chip row under the header: a sort key (Name, Date, Invested,
+Current value,
+Profit, Profit %, XIRR) with a direction arrow, and a "Group by category" toggle. Profit means held
+profit only. Date
+sorts by the first entry when oldest first and by the last entry when newest first, and the row says
+which date placed
+it. Rows without the figure (nothing held, no XIRR) sit last either way. The choice is remembered
+per list in the app's
+preferences. The sold-out and family sections follow the same order. The profit line now shows the
+held percentage.
+
+The Investments overview tiles show, under the current value, the invested amount, the held P/L with
+its percentage
+and the XIRR. The price refresher reports any held stock or fund whose newest quote is over a week
+old (a symbol
+renamed on the exchange, as SETFNIF50 became SBINIFTY50, or a merged fund); the stale quote is still
+stored.
+
+Tolerance rolls up like the target shares: a parent category's is the widest among its
+sub-categories, and a risk
+level's or a summary group's the widest among the leaf categories that contribute to it. Parents,
+risk levels and
+groups therefore get the box on their allocation bars and the "!" flag; a parent's own stored
+tolerance only applies
+while it has no sub-categories.

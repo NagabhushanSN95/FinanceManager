@@ -116,7 +116,7 @@ fun InvestmentsScreen(onNavigate: (String) -> Unit, viewModel: InvestmentsViewMo
                     )
                     if (view == MetricView.ALLOCATION) Text(
                         if (summary.goalAmount == null) "No goal amount set: targets follow the wealth shares. Set it under Targets."
-                        else "Targets: goal ${MoneyFormat.compact(summary.goalAmount)} by the goal shares, the rest by the wealth shares. \"!\" marks a drift beyond the tolerance.",
+                        else "Targets: goal ${MoneyFormat.compact(summary.goalAmount)} by the goal shares, the rest by the wealth shares. Bar: current share; tick: target; box: tolerance. \"!\" marks a drift beyond it.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 8.dp),
@@ -231,11 +231,36 @@ private fun androidx.compose.foundation.layout.RowScope.Stat(
     StatCell(label, value, signed)
 }
 
+/** Under a tile's value, one short line each: the invested amount, the held P/L with its percentage in colour, the XIRR. */
+@Composable
+private fun TileFigures(line: com.nagabhushansn95.financetracker.data.investments.SummaryLine) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val small = MaterialTheme.typography.bodySmall
+    Text(
+        "Invested ${MoneyFormat.compact(line.invested)}",
+        style = small,
+        color = muted,
+        maxLines = 1
+    )
+    val held = line.held
+    val heldPct = if (line.invested > 0) held / line.invested else null
+    Text(
+        (if (held >= 0) "+" else "") + MoneyFormat.compact(held) + (heldPct?.let { " (${pct(it)})" }
+            ?: ""),
+        style = small,
+        color = if (held < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+        maxLines = 1,
+    )
+    line.xirr?.let { Text("XIRR ${pct(it)}", style = small, color = muted, maxLines = 1) }
+}
+
 private data class Tile(
     val title: String,
     val value: String,
     val route: String,
-    val note: String? = null
+    val note: String? = null,
+    /** The group's line, for the invested amount, held P/L and XIRR under the value. */
+    val line: com.nagabhushansn95.financetracker.data.investments.SummaryLine? = null,
 )
 
 /**
@@ -245,38 +270,38 @@ private data class Tile(
  */
 @Composable
 private fun Tiles(s: InvestmentSummary, savings: SavingsGlance?, onNavigate: (String) -> Unit) {
-    fun xirrNote(line: com.nagabhushansn95.financetracker.data.investments.SummaryLine?) =
-        line?.xirr?.let { "XIRR ${pct(it)}" }
+    // A group's tile: the current value, with the invested amount, held P/L and XIRR under it.
+    fun tile(
+        title: String,
+        line: com.nagabhushansn95.financetracker.data.investments.SummaryLine?,
+        route: String
+    ) =
+        Tile(title, MoneyFormat.compact(line?.current ?: 0.0), route, line = line)
     val byGroup = mapOf(
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.FIXED_DEPOSITS to Tile(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.FIXED_DEPOSITS to tile(
             "Fixed deposits",
-            MoneyFormat.compact(s.byType[InstrumentType.FIXED_DEPOSIT]?.current ?: 0.0),
-            InvestmentRoutes.type(InstrumentType.FIXED_DEPOSIT),
-            note = xirrNote(s.byType[InstrumentType.FIXED_DEPOSIT]),
+            s.byType[InstrumentType.FIXED_DEPOSIT],
+            InvestmentRoutes.type(InstrumentType.FIXED_DEPOSIT)
         ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.PROVIDENT_FUNDS to Tile(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.PROVIDENT_FUNDS to tile(
             "Provident funds",
-            MoneyFormat.compact(s.providentFunds?.current ?: 0.0),
-            InvestmentRoutes.PROVIDENT_FUNDS,
-            note = xirrNote(s.providentFunds),
+            s.providentFunds,
+            InvestmentRoutes.PROVIDENT_FUNDS
         ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.INSURANCE to Tile(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.INSURANCE to tile(
             "Insurance",
-            MoneyFormat.compact(s.byType[InstrumentType.INSURANCE]?.current ?: 0.0),
-            InvestmentRoutes.type(InstrumentType.INSURANCE),
-            note = xirrNote(s.byType[InstrumentType.INSURANCE]),
+            s.byType[InstrumentType.INSURANCE],
+            InvestmentRoutes.type(InstrumentType.INSURANCE)
         ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.STOCKS to Tile(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.STOCKS to tile(
             "Stocks & ETFs",
-            MoneyFormat.compact(s.byType[InstrumentType.STOCK]?.current ?: 0.0),
-            InvestmentRoutes.STOCKS,
-            note = xirrNote(s.byType[InstrumentType.STOCK]),
+            s.byType[InstrumentType.STOCK],
+            InvestmentRoutes.STOCKS
         ),
-        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.MUTUAL_FUNDS to Tile(
+        com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.MUTUAL_FUNDS to tile(
             "Mutual funds",
-            MoneyFormat.compact(s.byType[InstrumentType.MUTUAL_FUND]?.current ?: 0.0),
-            InvestmentRoutes.FUNDS,
-            note = xirrNote(s.byType[InstrumentType.MUTUAL_FUND]),
+            s.byType[InstrumentType.MUTUAL_FUND],
+            InvestmentRoutes.FUNDS
         ),
         com.nagabhushansn95.financetracker.data.investments.InvestmentGroup.OTHERS to Tile(
             "Others",
@@ -317,6 +342,7 @@ private fun Tiles(s: InvestmentSummary, savings: SavingsGlance?, onNavigate: (St
                                 fontWeight = FontWeight.SemiBold,
                                 maxLines = 1
                             )
+                            tile.line?.let { line -> TileFigures(line) }
                             tile.note?.let {
                                 Text(
                                     it,

@@ -68,6 +68,7 @@ import com.nagabhushansn95.financetracker.data.investments.Others
 import com.nagabhushansn95.financetracker.data.repository.OthersRepository
 import com.nagabhushansn95.financetracker.ui.common.AccountField
 import com.nagabhushansn95.financetracker.ui.common.BackAndMenu
+import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteEntryDialog
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
@@ -352,6 +353,7 @@ fun OtherScreen(instrumentId: Long, onBack: () -> Unit, viewModel: OthersViewMod
     val v = state.views.firstOrNull { it.instrument.id == instrumentId }
     var adding by remember { mutableStateOf<OtherEntryKind?>(null) }
     var editing by remember { mutableStateOf<TransactionEntity?>(null) }
+    var confirmDeleteEntry by remember { mutableStateOf<TransactionEntity?>(null) }
     var renaming by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
     LaunchedEffect(message) {
@@ -498,9 +500,18 @@ fun OtherScreen(instrumentId: Long, onBack: () -> Unit, viewModel: OthersViewMod
             viewModel.saveEntry(v, kind, date, amount, particulars, bank, editing); adding =
             null; editing = null
         },
-        onDelete = editing?.let { row -> { viewModel.deleteEntry(row.id); editing = null } },
+        onDelete = editing?.let { row -> { confirmDeleteEntry = row } },
         onDismiss = { adding = null; editing = null },
     )
+    confirmDeleteEntry?.let { row ->
+        ConfirmDeleteEntryDialog(
+            row,
+            onConfirm = {
+                viewModel.deleteEntry(row.id); editing = null; confirmDeleteEntry = null
+            },
+            onDismiss = { confirmDeleteEntry = null },
+        )
+    }
     // A row the sheet cannot describe (an income tagged with it, say) is left alone rather than edited blind.
     LaunchedEffect(editing) {
         val row = editing ?: return@LaunchedEffect

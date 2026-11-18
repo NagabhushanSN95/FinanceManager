@@ -62,7 +62,7 @@ class ZerodhaStatementsTest {
     }
 
     @Test
-    fun parsesDividendsAndCharges() {
+    fun parsesDividends() {
         val dividends =
             ZerodhaStatements.parse("Symbol,Ex-date,Qty,Dividend per share,Total dividend\nEMBASSY,2026-08-04,454,6.31,2864.74\n")
         assertEquals(StatementType.DIVIDENDS, dividends.type)
@@ -71,19 +71,16 @@ class ZerodhaStatementsTest {
         assertEquals(LocalDate.of(2026, 8, 4), d.exDate)
         assertEquals(d.exDate, d.date)
         assertEquals(2864.74, d.total, 1e-9)
-
-        val charges = ZerodhaStatements.parse("date,amount\n2026/10/06,10.87\n2026/10/13,10.89\n\n")
-        assertEquals(StatementType.CHARGES, charges.type)
-        assertEquals(
-            listOf(LocalDate.of(2026, 10, 6), LocalDate.of(2026, 10, 13)),
-            charges.rows.map { it.date })
-        assertEquals(10.89, (charges.rows[1] as ChargeRow).amount, 1e-9)
     }
 
     @Test
     fun rejectsUnknownFilesAndReportsBadLines() {
         assertTrue(runCatching { ZerodhaStatements.parse("a,b,c\n1,2,3\n") }.exceptionOrNull() is ZerodhaParseException)
-        val parsed = ZerodhaStatements.parse("date,amount\n2026/10/06,10.87\nnot-a-date,5\n")
+        val parsed = ZerodhaStatements.parse(
+            "particulars,posting_date,cost_center,voucher_type,debit,credit,net_balance\n" +
+                    "AMC for Demat Account for 2026-07-16 to 2026-10-15,2026-10-15,NSE-EQ - Z,Journal Entry,88.5,0,100\n" +
+                    "Broken line,not-a-date,NSE-EQ - Z,Journal Entry,1,0,99\n"
+        )
         assertEquals(1, parsed.rows.size)
         assertEquals(1, parsed.skipped.size)
     }
@@ -102,5 +99,51 @@ class ZerodhaStatementsTest {
             "Nippon India Large Cap Fund",
             ZerodhaStatements.schemeName("Nippon India Large Cap Fund")
         )
+    }
+
+    @Test
+    fun parsesTheConsoleLedgerAndMergesItWithTheTradebook() {
+        val ledger = """
+            particulars,posting_date,cost_center,voucher_type,debit,credit,net_balance
+            Opening Balance,,,,,,21448.032182
+            Funds added using UPI from RYU781 with reference number 93534936262,2026-11-16,NSE-EQ - Z,Bank Receipts,0.000000,15000.000000,36448.032182
+            DP Charges for Sale of GOLDBEES on 16/11/2026,2026-11-16,NSE-EQ - Z,Journal Entry,15.340000,0.000000,36432.692182
+            Net settlement for Equity with settlement number: 2026216,2026-11-16,NSE-EQ - Z,Book Voucher,34907.004913,0.000000,1525.687269
+            Payout of 50000.0/- to HDFC BANK LTD 5010 A/C number as per withdrawal request made on 2026-11-01 with reference number 202611015a199c4e4e,2026-11-17,NSE-EQ - Z,Bank Payments,50000.000000,0.000000,-48474.312731
+            Closing Balance,,,,,,-48474.312731
+        """.trimIndent()
+        val parsed = ZerodhaStatements.parse(ledger)
+        assertEquals(StatementType.LEDGER, parsed.type)
+        assertEquals(4, parsed.rows.size)                        // the balance lines are not rows
+        val funds = parsed.rows[0] as LedgerRow
+        assertTrue(funds.bankIn && !funds.autopay)
+        assertEquals(-15000.0, funds.amount, 1e-9)
+        assertEquals("93534936262", funds.reference)
+        val dp = parsed.rows[1] as LedgerRow
+        assertEquals("GOLDBEES" to LocalDate.of(2026, 11, 16), dp.dpCharge)
+        val settlement = parsed.rows[2] as LedgerRow
+        assertTrue(settlement.settlement && !settlement.buyback)
+        assertEquals(34907.004913, settlement.amount, 1e-9)
+        assertEquals("2026216", settlement.reference)
+        val payout = parsed.rows[3] as LedgerRow
+        assertTrue(payout.bankOut && !payout.quarterlySettlement)
+        assertEquals("202611015a199c4e4e", payout.reference)
+
+        val tradebook = ZerodhaStatements.parse(
+            """
+            symbol,isin,trade_date,exchange,segment,series,trade_type,auction,quantity,price,trade_id,order_id,order_execution_time
+            GOLDBEES,INF204KB17I5,2026-11-16,NSE,EQ,EQ,buy,false,100,120.0,100001,200001,2026-11-16T10:00:00
+            GOLDBEES,INF204KB17I5,2026-11-20,NSE,EQ,EQ,buy,false,100,120.0,100003,200003,2026-11-20T10:00:00
+            PARAG PARIKH FLEXI CAP FUND - DIRECT PLAN,INF879O01027,2026-11-16,MF,MF,MF,buy,false,10,88.0,100002,200002,2026-11-16T10:00:00
+            """.trimIndent()
+        )
+        val merged = ZerodhaStatements.mergeTradebookWithLedger(tradebook, parsed)
+        assertEquals(StatementType.TRADEBOOK_AND_LEDGER, merged.type)
+        assertEquals(
+            5,
+            merged.rows.size
+        )                        // one equity trade within the ledger's days and the four ledger rows
+        assertTrue(merged.skipped.any { it.contains("fund row") })
+        assertTrue(merged.skipped.any { it.contains("1 trade outside the ledger's days") })
     }
 }
