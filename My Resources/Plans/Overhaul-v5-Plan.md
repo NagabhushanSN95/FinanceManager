@@ -552,3 +552,29 @@ risk levels and
 groups therefore get the box on their allocation bars and the "!" flag; a parent's own stored
 tolerance only applies
 while it has no sub-categories.
+
+## Transaction editor: 4.x habits restored (2026-11-20)
+
+- The rate, quantity and amount fields stay exactly as typed. On save the blanks are filled by the
+  4.x rule (`EditorForm.resolvedMoney`): rate or amount alone is one unit; rate and amount give a
+  whole quantity (at least one); rate and quantity give the amount; amount and quantity give the
+  rate; all three typed are kept as typed, so rate × quantity need not equal the amount. The saved
+  row always carries all three.
+- A template fills exactly the fields it holds (kind, particulars, accounts, category, rate,
+  quantity), over what is typed; empty template fields leave the form alone. A template never
+  carries an amount, and a one-unit row saves a template without a quantity, so picking it never
+  forces the quantity.
+- "Save as template" is offered while editing too. Saving replaces the template of the same kind and
+  particulars (ignoring case), keeping its id and hidden flag, so a picked template can be updated
+  with new figures, and an existing row can be turned into a template.
+- Leaving the editor (arrow or system back) with anything changed asks "Discard this transaction?" /
+  "Discard the changes?"; an untouched form closes at once.
+- The "+" floating button is replaced by a three-button bar at the foot of Home and Transactions:
+  Income, Expense, Transfer, in 4.x's order, one tap each (`AddTransactionBar`). Classic theme
+  paints it like the top bar.
+- Changing the kind carries the one chosen account as 4.x did (`EditorForm.withKind`): income "to" →
+  expense "from" / transfer "to"; expense "from" → income "to" / transfer "from"; a transfer hands
+  its "to" to income and its "from" to expense; the other side of a transfer starts empty; the
+  category stays only when it applies to the new kind too (one for both), else it is to be chosen
+  again. No account is chosen by default any more (the picker lists the recent ones first; saving
+  without one errors); only a press and hold on an account on Home opens the editor with it.

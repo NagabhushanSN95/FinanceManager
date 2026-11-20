@@ -449,8 +449,8 @@ val CASH_KINDS = listOf(TransactionKind.EXPENSE, TransactionKind.INCOME, Transac
 
 /**
  * Add or edit a template: what the editor fills in when the template is picked. Every field but the particulars
- * and kind is optional. A template carries a rate and a quantity, never an amount: a rate alone fills only the
- * rate, rate and quantity together fill the amount as well.
+ * and kind is optional. A template carries a rate and a quantity, never an amount: picking it fills exactly
+ * the fields it holds, over what is typed, and the amount follows on save.
  */
 @Composable
 fun TemplateSheet(
@@ -539,7 +539,7 @@ fun TemplateSheet(
         }
         Text(
             "Picking the template in the editor fills these in; fields left \"Not set\" or empty keep what is already typed. " +
-                    "With only a rate the quantity is yours to type (one if left empty); with both, the amount is filled too.",
+                    "Picking the template fills the fields it holds; the quantity is one if left empty, and the amount follows on save.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -28,7 +28,7 @@ class TransactionRepository(private val db: AppDatabase) {
                 val id = db.transactionDao().insert(stamped)
                 applyBalances(stamped, sign = +1, stamp = now)
                 reactivateIfNeeded(stamped, now)
-                if (saveAsTemplate) db.transactionDao().insertTemplate(stamped.toTemplate())
+                if (saveAsTemplate) saveTemplate(stamped)
                 id
             }
         }
@@ -69,10 +69,17 @@ class TransactionRepository(private val db: AppDatabase) {
         }
     }
 
-    /** Reverses the stored row's balance effect, then applies the new one. */
-    suspend fun update(transaction: TransactionEntity, now: LocalDateTime = LocalDateTime.now()) =
+    /** Reverses the stored row's balance effect, then applies the new one; optionally saves the row as a template too. */
+    suspend fun update(
+        transaction: TransactionEntity,
+        saveAsTemplate: Boolean = false,
+        now: LocalDateTime = LocalDateTime.now()
+    ) =
         db.useWriterConnection { transactor ->
-            transactor.immediateTransaction { updateInTransaction(transaction, now) }
+            transactor.immediateTransaction {
+                updateInTransaction(transaction, now)
+                if (saveAsTemplate) saveTemplate(transaction)
+            }
         }
 
     /** For callers that already hold a write transaction: [update] without a transaction of its own. */
@@ -141,6 +148,20 @@ class TransactionRepository(private val db: AppDatabase) {
         t.toAccountId?.let { dao.adjustBalance(it, +t.arriving * sign, stampText) }
     }
 
+    /**
+     * The row as a template. The template of the same kind and particulars (ignoring case) is replaced, keeping its
+     * place and whether it is hidden, so that picking a template, changing its figures and saving with the box
+     * ticked updates it rather than adding a twin.
+     */
+    private suspend fun saveTemplate(t: TransactionEntity) {
+        val dao = db.transactionDao()
+        val fresh = t.toTemplate()
+        val existing = dao.findTemplate(t.kind, t.particulars)
+        if (existing == null) dao.insertTemplate(fresh)
+        else dao.updateTemplate(fresh.copy(id = existing.id, hidden = existing.hidden))
+    }
+
+    /** A rate alone when the row is one unit: a template never forces a quantity of one over what is typed. */
     private fun TransactionEntity.toTemplate() = Template(
         particulars = particulars,
         kind = kind,

@@ -155,7 +155,7 @@ class HoldingsRepository(private val db: AppDatabase) {
         )
         return if (existing == null) transactions.add(row, now = now)
         else {
-            transactions.update(row, now); row.id
+            transactions.update(row, now = now); row.id
         }
     }
 

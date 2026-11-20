@@ -8,6 +8,7 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Category
+import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.math.roundToLong
 
 /** Everything the editor form shows. Amount fields are kept as text so the user can type freely. */
 data class EditorForm(
@@ -72,10 +74,93 @@ data class EditorForm(
     val showsTo get() = kind == TransactionKind.INCOME || kind == TransactionKind.TRANSFER
     val showsCategory get() = kind == TransactionKind.EXPENSE || kind == TransactionKind.INCOME
 
+    /** The three money figures of a row as they are saved. */
+    data class Money(val rate: Double, val quantity: Double, val amount: Double)
+
+    /**
+     * The money fields filled in from what was typed, by 4.x's rule, applied on save and never while typing: a rate
+     * or an amount alone is one unit; rate and amount give the quantity, rounded to whole units (at least one); rate
+     * and quantity give the amount; amount and quantity give the rate. All three typed are kept exactly as typed.
+     * Null when neither a rate nor an amount was typed, or a typed field is not a number.
+     */
+    fun resolvedMoney(): Money? {
+        val r = rateValue
+        val q = quantityValue
+        val a = amountValue
+        if (rate.isNotBlank() && r == null || quantity.isNotBlank() && q == null || amount.isNotBlank() && a == null) return null
+        return when {
+            r == null && a == null -> null
+            q == null && a == null -> Money(r!!, 1.0, r)
+            q == null && r == null -> Money(a!!, 1.0, a)
+            q == null -> Money(
+                r!!,
+                if (r > 0) (a!! / r).roundToLong().toDouble().coerceAtLeast(1.0) else 1.0,
+                a!!
+            )
+
+            a == null -> Money(r!!, q, r * q)
+            r == null -> Money(if (q > 0) a / q else a, q, a)
+            else -> Money(r, q, a)
+        }
+    }
+
+    /**
+     * The form with a template copied in: its kind and particulars, and every other field it holds a value for,
+     * over whatever is there; a field the template leaves empty stays as typed. A template carries a rate and a
+     * quantity, never an amount: the amount follows on save. Fields the new kind has no use for are cleared.
+     */
+    fun applying(t: Template): EditorForm = copy(
+        kind = t.kind,
+        particulars = t.particulars,
+        fromAccountId = (t.fromAccountId
+            ?: fromAccountId).takeIf { t.kind != TransactionKind.INCOME },
+        toAccountId = (t.toAccountId ?: toAccountId).takeIf { t.kind != TransactionKind.EXPENSE },
+        categoryId = (t.categoryId ?: categoryId).takeIf { t.kind != TransactionKind.TRANSFER },
+        rate = t.rate?.let { TransactionEditorViewModel.plain(it) } ?: rate,
+        quantity = t.quantity?.let { TransactionEditorViewModel.plain(it) } ?: quantity,
+    )
+
+    /**
+     * The form switched to another kind. The one account chosen so far follows the money, as Finance Manager did:
+     * an income's "to" becomes an expense's "from" and a transfer's "to"; an expense's "from" becomes an income's
+     * "to" and a transfer's "from"; a transfer hands its "to" to an income and its "from" to an expense. The other
+     * side of a transfer starts empty. The category stays only if it applies to the new kind too (one for both), else
+     * it is to be chosen again; [categories] tells what each applies to, and an unknown one is dropped.
+     */
+    fun withKind(
+        newKind: TransactionKind,
+        categories: Map<Long, Category> = emptyMap()
+    ): EditorForm {
+        if (newKind == kind) return this
+        val scope = when (newKind) {
+            TransactionKind.EXPENSE -> CategoryScope.EXPENSE
+            TransactionKind.INCOME -> CategoryScope.INCOME
+            else -> null
+        }
+        val category = categoryId?.takeIf { id ->
+            scope != null && categories[id]?.appliesTo.let { it == scope || it == CategoryScope.BOTH }
+        }
+        val (from, to) = when (newKind) {
+            TransactionKind.INCOME -> null to (if (kind == TransactionKind.EXPENSE) fromAccountId else toAccountId)
+            TransactionKind.EXPENSE -> (if (kind == TransactionKind.INCOME) toAccountId else fromAccountId) to null
+            TransactionKind.TRANSFER -> if (kind == TransactionKind.INCOME) null to toAccountId else fromAccountId to null
+            else -> fromAccountId to toAccountId
+        }
+        return copy(
+            kind = newKind,
+            fromAccountId = from,
+            toAccountId = to,
+            categoryId = category,
+        )
+    }
+
     /** Why the form cannot be saved yet, or null. A transfer may go without particulars, as in 4.x. */
     fun problem(accounts: Map<Long, Account>): String? = when {
         particulars.isBlank() && kind != TransactionKind.TRANSFER -> "Enter the particulars"
-        amountValue == null || amountValue!! < 0 -> "Enter a valid amount"
+        rate.isBlank() && amount.isBlank() -> "Enter the rate or the amount"
+        rate.isNotBlank() && (rateValue == null || rateValue!! < 0) -> "Enter a valid rate"
+        quantity.isNotBlank() && (quantityValue == null || quantityValue!! <= 0) -> "Enter a quantity above zero"
+        amount.isNotBlank() && (amountValue == null || amountValue!! < 0) -> "Enter a valid amount"
         kind == TransactionKind.EXPENSE && fromAccountId == null -> "Choose the account"
         kind == TransactionKind.EXPENSE && categoryId == null -> "Choose a category"
         kind == TransactionKind.INCOME && toAccountId == null -> "Choose the account"
@@ -83,8 +168,6 @@ data class EditorForm(
         kind == TransactionKind.TRANSFER && fromAccountId == toAccountId -> "Choose two different accounts"
         crossesCurrencies(accounts) && (toAmountValue == null || toAmountValue!! < 0) -> "Enter the amount arriving"
         fxRate.isNotBlank() && fxRateValue == null -> "Rate is not a number"
-        quantity.isNotBlank() && quantityValue == null -> "Quantity is not a number"
-        rate.isNotBlank() && rateValue == null -> "Rate is not a number"
         else -> null
     }
 }
@@ -123,6 +206,11 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     private val _event = MutableStateFlow<EditorEvent?>(null)
     val event: StateFlow<EditorEvent?> = _event
     private var initialised = false
+
+    /** The form as it was opened; leaving with anything changed asks first. */
+    private var opened = EditorForm()
+
+    fun isDirty(): Boolean = _form.value != opened
 
     /** Loads lookups and either the transaction to edit or a new form with defaults. Safe to call again. */
     fun start(
@@ -178,30 +266,24 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                         includeInStatistics = t.includeInStatistics,
                         createdTime = t.createdTime,
                     )
+                    opened = _form.value
                     return@launch
                 }
             }
+            // No account is chosen for the user (the picker lists the recent ones first); only a press and hold on an
+            // account on Home opens the editor with that account, as asked.
             val k = kind ?: TransactionKind.EXPENSE
-            val data = _data.value
             _form.value = EditorForm(
                 kind = k,
-                fromAccountId = accountId.takeIf { k != TransactionKind.INCOME }
-                    ?: data.recentFrom.firstOrNull { id -> data.accountsById.containsKey(id) },
-                toAccountId = accountId.takeIf { k == TransactionKind.INCOME }
-                    ?: data.recentTo.firstOrNull { id -> data.accountsById.containsKey(id) },
+                fromAccountId = accountId.takeIf { k != TransactionKind.INCOME },
+                toAccountId = accountId.takeIf { k == TransactionKind.INCOME },
             )
+            opened = _form.value
         }
     }
 
-    fun setKind(kind: TransactionKind) = _form.update { f ->
-        f.copy(
-            kind = kind,
-            // Keep what still applies, clear what does not.
-            fromAccountId = if (kind == TransactionKind.INCOME) null else f.fromAccountId,
-            toAccountId = if (kind == TransactionKind.EXPENSE) null else f.toAccountId,
-            categoryId = if (kind == TransactionKind.EXPENSE || kind == TransactionKind.INCOME) f.categoryId else null,
-        )
-    }
+    fun setKind(kind: TransactionKind) =
+        _form.update { it.withKind(kind, _data.value.categories.associateBy { c -> c.id }) }
 
     fun setDate(date: LocalDate) = _form.update { it.copy(date = date) }
     fun setFrom(id: Long?) = _form.update { it.copy(fromAccountId = id) }
@@ -214,78 +296,29 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     fun setHidden(b: Boolean) = _form.update { it.copy(hidden = b) }
     fun setIncludeInStatistics(b: Boolean) = _form.update { it.copy(includeInStatistics = b) }
 
-    /**
-     * The three money fields fill each other in, as Finance Manager did: typing a rate with no quantity means one
-     * unit; rate × quantity gives the amount; an amount with a quantity gives the rate; an amount alone is one
-     * unit at that rate.
-     */
-    fun setAmount(text: String) = _form.update { f ->
-        val amount = text.trim().toDoubleOrNull()
-        val q = f.quantityValue
-        when {
-            amount == null -> f.copy(amount = text)
-            q != null && q > 0 && q != 1.0 -> f.copy(amount = text, rate = plain(amount / q))
-            else -> f.copy(amount = text, quantity = "1", rate = text.trim())
-        }
-    }
+    // The money fields are kept exactly as typed; they fill each other in on save (see EditorForm.resolvedMoney).
+    fun setAmount(text: String) = _form.update { it.copy(amount = text) }
+    fun setQuantity(text: String) = _form.update { it.copy(quantity = text) }
+    fun setRate(text: String) = _form.update { it.copy(rate = text) }
 
-    fun setQuantity(text: String) = _form.update { f ->
-        val q = text.trim().toDoubleOrNull()
-        val r = f.rateValue
-        val a = f.amountValue
-        when {
-            q == null -> f.copy(quantity = text)
-            r != null -> f.copy(quantity = text, amount = plain(q * r))
-            a != null && q > 0 -> f.copy(quantity = text, rate = plain(a / q))
-            else -> f.copy(quantity = text)
-        }
-    }
-
-    fun setRate(text: String) = _form.update { f ->
-        val r = text.trim().toDoubleOrNull()
-        if (r == null) return@update f.copy(rate = text)
-        val quantity = if (f.quantity.isBlank()) "1" else f.quantity
-        val q = quantity.trim().toDoubleOrNull()
-        f.copy(rate = text, quantity = quantity, amount = if (q != null) plain(q * r) else f.amount)
-    }
-
-    /**
-     * Copies a saved template into the form: particulars, endpoints, and exactly the money fields it holds. A rate
-     * alone fills only the rate (the quantity is typed, or defaults to one when the row is added); rate and
-     * quantity together give the amount.
-     */
-    fun applyTemplate(t: Template) = _form.update { f ->
-        val rate = t.rate?.let { plain(it) } ?: f.rate
-        val quantity = t.quantity?.let { plain(it) } ?: f.quantity
-        val r = rate.trim().toDoubleOrNull()
-        val q = quantity.trim().toDoubleOrNull()
-        f.copy(
-            kind = t.kind,
-            particulars = t.particulars,
-            fromAccountId = t.fromAccountId,
-            toAccountId = t.toAccountId,
-            categoryId = t.categoryId,
-            rate = rate,
-            quantity = quantity,
-            amount = if (t.rate != null && r != null && q != null) plain(r * q) else f.amount,
-        )
-    }
-
+    /** Copies a saved template into the form, see [EditorForm.applying]. */
+    fun applyTemplate(t: Template) = _form.update { it.applying(t) }
 
     fun save() {
-        // A rate with no amount means one unit (or the typed quantity) at that rate.
-        _form.update { f ->
-            val r = f.rateValue
-            if (f.amount.isNotBlank() || r == null) f
-            else {
-                val quantity = if (f.quantity.isBlank()) "1" else f.quantity
-                val q = quantity.trim().toDoubleOrNull() ?: return@update f
-                f.copy(quantity = quantity, amount = plain(q * r))
-            }
-        }
         val f = _form.value
         val data = _data.value
         f.problem(data.accountsById)?.let { _event.value = EditorEvent.Error(it); return }
+        val money = f.resolvedMoney() ?: run {
+            _event.value = EditorEvent.Error("Enter the rate or the amount"); return
+        }
+        // Shown filled in, as they are saved.
+        _form.update {
+            it.copy(
+                rate = plain(money.rate),
+                quantity = plain(money.quantity),
+                amount = plain(money.amount)
+            )
+        }
         val entity = TransactionEntity(
             id = f.id,
             createdTime = f.createdTime ?: LocalDateTime.now(),
@@ -298,9 +331,9 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
             // Kept as it was: rows on an instrument are edited on the instrument's screen, never retagged here.
             instrumentId = f.instrumentId,
             particulars = f.particulars.trim(),
-            quantity = f.quantityValue,
-            rate = f.rateValue,
-            amount = f.amountValue!!,
+            quantity = money.quantity,
+            rate = money.rate,
+            amount = money.amount,
             // A load of a foreign card: the rupees out, the foreign money in, and the rate the two imply. A credit into
             // a foreign account keeps the rate typed, if any; everything else carries neither.
             toAmount = f.toAmountValue.takeIf { f.crossesCurrencies(data.accountsById) },
@@ -308,8 +341,8 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                 f.crossesCurrencies(data.accountsById) -> {
                     val (from, to) = f.currencies(data.accountsById)
                     val toValue = f.toAmountValue
-                    if (from == "INR" && toValue != null && toValue > 0) f.amountValue!! / toValue
-                    else if (to == "INR" && f.amountValue!! > 0 && toValue != null) toValue / f.amountValue!!
+                    if (from == "INR" && toValue != null && toValue > 0) money.amount / toValue
+                    else if (to == "INR" && money.amount > 0 && toValue != null) toValue / money.amount
                     else null
                 }
 
@@ -322,10 +355,10 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         )
         viewModelScope.launch {
             val result = runCatching {
-                if (f.isEdit) repository.update(entity) else repository.add(
+                if (f.isEdit) repository.update(
                     entity,
                     f.saveAsTemplate
-                )
+                ) else repository.add(entity, f.saveAsTemplate)
             }
             result.onSuccess {
                 entity.fromAccountId?.let { prefs.pushRecentId(RECENT_FROM, it) }

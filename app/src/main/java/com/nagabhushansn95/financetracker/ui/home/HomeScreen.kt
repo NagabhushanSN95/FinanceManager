@@ -17,14 +17,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -349,11 +347,10 @@ fun HomeScreen() {
                     },
                 )
             },
-            floatingActionButton = {
+            // Income, Expense and Transfer at the foot of Home and Transactions, as Finance Manager had them.
+            bottomBar = {
                 if (!inEditor && (current == Destination.SUMMARY || current == Destination.TRANSACTIONS)) {
-                    FloatingActionButton(onClick = { navController.navigate(editorRoute()) }) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add transaction")
-                    }
+                    AddTransactionBar(onAdd = { kind -> navController.navigate(editorRoute(kind = kind)) })
                 }
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },

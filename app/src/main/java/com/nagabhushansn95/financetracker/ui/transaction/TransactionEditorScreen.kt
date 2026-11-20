@@ -1,5 +1,6 @@
 package com.nagabhushansn95.financetracker.ui.transaction
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -81,7 +82,11 @@ fun TransactionEditorScreen(
     var sheet by remember { mutableStateOf<Sheet?>(null) }
     var showDate by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var confirmDiscard by remember { mutableStateOf(false) }
     var blocked by remember { mutableStateOf<String?>(null) }
+    // Back (the arrow or the system's) asks before losing anything typed, as Finance Manager did; untouched, it just closes.
+    val close = { if (viewModel.isDirty()) confirmDiscard = true else onDone() }
+    BackHandler(onBack = close)
 
     LaunchedEffect(event) {
         when (val e = event) {
@@ -118,7 +123,7 @@ fun TransactionEditorScreen(
                 colors = appTopBarColors(),
                 title = { Text(if (form.isEdit) "Edit transaction" else "Add transaction") },
                 navigationIcon = {
-                    IconButton(onClick = onDone) {
+                    IconButton(onClick = close) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -188,8 +193,8 @@ fun TransactionEditorScreen(
                 onPickTemplate = viewModel::applyTemplate,
             )
 
-            // Rate, quantity and amount fill each other in as Finance Manager did: a rate alone means one unit;
-            // rate × quantity gives the amount; amount ÷ quantity gives the rate.
+            // Rate, quantity and amount stay as typed; whatever is left empty is filled in on save, as Finance Manager
+            // did (see EditorForm.resolvedMoney).
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = form.rate,
@@ -250,7 +255,9 @@ fun TransactionEditorScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            if (!form.isEdit) CheckRow(
+            // Also while editing, as in 4.x: an existing row becomes a template, or a picked template is updated with
+            // the changed figures. The template with the same kind and particulars is replaced.
+            CheckRow(
                 "Save as template",
                 form.saveAsTemplate,
                 viewModel::setSaveAsTemplate
@@ -316,6 +323,24 @@ fun TransactionEditorScreen(
             },
             dismissButton = { TextButton(onClick = { showDate = false }) { Text("Cancel") } },
         ) { DatePicker(state = state) }
+    }
+
+    if (confirmDiscard) {
+        AlertDialog(
+            onDismissRequest = { confirmDiscard = false },
+            title = { Text(if (form.isEdit) "Discard the changes?" else "Discard this transaction?") },
+            text = { Text("What you entered here will be lost.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDiscard = false; onDone()
+                }) { Text("Discard") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    confirmDiscard = false
+                }) { Text("Keep editing") }
+            },
+        )
     }
 
     if (confirmDelete) {

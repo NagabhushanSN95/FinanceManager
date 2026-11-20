@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -71,6 +72,9 @@ interface TransactionDao {
 
     @Query("SELECT * FROM templates WHERE hidden = 0 ORDER BY particulars")
     suspend fun getVisibleTemplates(): List<Template>
+
+    @Query("SELECT * FROM templates WHERE kind = :kind AND particulars = :particulars COLLATE NOCASE LIMIT 1")
+    suspend fun findTemplate(kind: TransactionKind, particulars: String): Template?
 
     @Query("SELECT * FROM templates ORDER BY kind, particulars")
     fun observeTemplates(): Flow<List<Template>>

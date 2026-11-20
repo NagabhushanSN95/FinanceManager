@@ -185,6 +185,46 @@ class TransactionRepositoryTest {
     }
 
     @Test
+    fun savingATemplateAgainReplacesTheOneWithTheSameParticulars() = runTest {
+        repo.add(
+            tx(
+                TransactionKind.EXPENSE,
+                60.0,
+                from = wallet,
+                category = food,
+                particulars = "Lunch"
+            ), saveAsTemplate = true
+        )
+        val first = db.transactionDao().observeTemplates().first().single()
+        db.transactionDao().updateTemplate(first.copy(hidden = true))
+        // Same particulars in another case, a new rate and quantity: the one template is updated in place.
+        val id = repo.add(
+            tx(
+                TransactionKind.EXPENSE,
+                150.0,
+                from = bank,
+                category = food,
+                particulars = "lunch"
+            ).copy(rate = 75.0, quantity = 2.0),
+            saveAsTemplate = true
+        )
+        val templates = db.transactionDao().observeTemplates().first()
+        assertEquals(1, templates.size)
+        assertEquals(first.id, templates.single().id)
+        assertEquals(bank, templates.single().fromAccountId)
+        assertEquals(75.0, templates.single().rate)
+        assertEquals(2.0, templates.single().quantity)
+        assertTrue(templates.single().hidden)
+        // An edit can save a template too; a different kind is a different template.
+        repo.update(
+            db.transactionDao().getById(id)!!
+                .copy(kind = TransactionKind.INCOME, fromAccountId = null, toAccountId = bank),
+            saveAsTemplate = true
+        )
+        assertEquals(2, db.transactionDao().observeTemplates().first().size)
+    }
+
+    @Test
     fun rejectsInconsistentRowsWithoutTouchingBalances() = runTest {
         val bad = listOf(
             tx(TransactionKind.EXPENSE, 10.0, from = wallet),                     // no category
