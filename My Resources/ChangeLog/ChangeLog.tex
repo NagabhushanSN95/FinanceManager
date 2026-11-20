@@ -302,4 +302,36 @@ linkcolor = black
         \item Zerodha Coin import: the trade date of SELL (redemption) orders is now parsed from the "Funds credited ... on DD MMM YYYY" remark.
         \item Added "Back-up Database File" in Extras, which copies the raw SQLite database to the Backups folder. This is the hand-over format for migrating data to v5.0.0.
     \end{itemize}
+
+
+    \section{v5.0.0 (145)}\label{sec:145}
+    Complete rewrite of the app. Every screen, the database and the importers are new; the data model now covers investments as well as spending.
+    \begin{itemize}
+        \item App renamed to \textit{Finance Tracker} (package \texttt{com.nagabhushansn95.financetracker}) with a new launcher icon.
+        \item Whole codebase in Kotlin with Room and Jetpack Compose; the Java UI, Bank SMS reading and counters are gone.
+        Built on AGP 9.5 / Gradle 9.8; compileSdk 37, minSdk 26.
+        \item First-run set-up: restore a backup, import a 4.5.x database file, or start empty.
+        Data moves from 4.x by restore or import only; the old \texttt{.snb} backup format is not read.
+        \item One ledger with five kinds of transaction: Income, Expense, Transfer, Invest and Redeem.
+        Accounts (wallets, banks, credit cards, demat, PF) and categories replace wallets/banks and expenditure types; account balances are kept by the app.
+        \item Home: alerts (matured deposits, premiums due, covers ending, vehicle service and emission tests), cash and bank total, collapsible Wallets / Banks / Credit Cards groups with subtotals, and an Investments card with the current value of each category.
+        Investment figures stay hidden until the device is unlocked.
+        \item Transaction editor: Income / Expense / Transfer buttons at the foot of Home and Transactions, bottom-sheet pickers with search and recents, templates that fill only the fields they hold, Save as template while editing, rate / quantity / amount resolved on save as in 4.x, and a confirmation before discarding.
+        \item Transactions list with period, kind, account and particulars filters; press-and-hold to edit or delete, every delete confirmed.
+        \item Manage: accounts, categories, investment categories, risk levels, summary groups and templates with drag reorder, soft delete and restore; sold-out stocks and funds retire on their own.
+        \item Investments hub: Investment Summary table with Value / Returns / Allocation views, risk levels, allocation targets with goal and wealth shares and tolerance, and savings tables with a chart.
+        \item Fixed deposits: bank-style compounding, estimated value, TDS estimate, renewal chain; renewal, maturity and early closure recorded from the deposit's screen.
+        \item Provident funds (EPF, PPF) with contributor breakdown and financial-year table.
+        \item Insurance policies (life, term, health, motor) with premium ledger, per-renewal health cover and next due date; vehicles with own-damage and third-party cover, service and emission test dates; Others for loans and parked money.
+        \item Stocks \& ETFs and Mutual funds: FIFO holdings with average cost, price, P/L, dividends and XIRR; sorting and grouping; instrument detail with ledger, dividends with TDS, bonus and splits; US holdings in USD with INR equivalent.
+        \item Live prices: stocks from Yahoo Finance, fund NAVs from AMFI with scheme linking, USD/INR rate; refreshed hourly/daily or on demand; manual prices still override.
+        \item Zerodha import: Coin orders, Kite tradebook, dividends, and the Console ledger for funds added, payouts and exact charges; statement type recognised from the file, preview before writing, re-imports never duplicate.
+        \item Statistics from the ledger: income and expenses by category, by month or by year.
+        \item Export of a values-only summary workbook (savings, investment summary, FDs, PFs, insurance, stocks, funds, others, prices) written by the app itself.
+        \item Backup is a copy of the database file to \textit{Documents/Finance Tracker}; daily automatic backup, and automatic upload to Google Drive.
+        \item Settings: Light, Dark, System and Classic themes (Classic is the 4.5.x look), price refresh interval, alert run-up days, daily backup and Drive upload.
+        Help and About screens.
+        \item Database schema 11 with the 4.x importer; no migration path from earlier 5.0.0 pre-release files.
+    \end{itemize}
+
 \end{document}
