@@ -32,8 +32,7 @@ android {
     defaultConfig {
         applicationId "com.nagabhushansn95.financetracker"
         minSdk 26
-        // targetSdk is raised to 36 before the 5.0.0 release (see plan, section 0b).
-        targetSdk 33
+        targetSdk 36
         versionCode 145
         versionName "5.0.0"
     }

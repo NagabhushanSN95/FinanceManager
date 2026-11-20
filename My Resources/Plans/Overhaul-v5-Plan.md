@@ -35,15 +35,12 @@ the phone.
 
 ## 0b. Items to close before the 5.0.0 commit
 
-- **"App was built for an older version of Android" install warning.** Cause: `targetSdk 33` on a
-  phone running a newer Android. Fix in milestone E/F: raise `compileSdk` and `targetSdk` to 35 (36
-  if the SDK is installed), then walk the behaviour changes that apply to this app: scoped storage
-  (replace `WRITE_EXTERNAL_STORAGE` + raw
-  `File` paths in Documents with `MediaStore`/SAF for backups and exports), foreground-service type
-  for the daily backup service (or move it to WorkManager, already planned), notification permission
-  if reminders are added, edge-to-edge enforcement on 35 (Compose handles it; XML screens need
-  insets), and `PendingIntent` flags. Run the Android Studio "Android API Upgrade Assistant" as a
-  checklist.
+- ~~**"App was built for an older version of Android" install warning.**~~ DONE 2026-11-20:
+  `targetSdk 36` (compileSdk 37). The behaviour changes were already covered: backups and exports go
+  through `MediaStore`, there is no service (WorkManager runs the daily backup), edge-to-edge is on,
+  back is handled in Compose. Robolectric cannot emulate API 36 on the current JDK, so the unit
+  tests
+  run on API 35 (`app/src/test/resources/robolectric.properties`).
 - Rename the root folder and GitHub repo to FinanceTracker (user will do; needs reopening the
   project).
 - Database file: still named `expenditureManager` inside the new app's private storage; Room will
@@ -578,3 +575,11 @@ while it has no sub-categories.
   category stays only when it applies to the new kind too (one for both), else it is to be chosen
   again. No account is chosen by default any more (the picker lists the recent ones first; saving
   without one errors); only a press and hold on an account on Home opens the editor with it.
+
+## Manage roll-up (2026-11-20)
+
+- Classic theme keeps its plain rows: the 4.x magenta/blue row tints and coloured particulars were
+  tried and reverted the same day; the current look was preferred.
+- Manage › Investment categories: a parent with sub-categories shows the rolled-up targets (goal and
+  wealth summed, tolerance the widest) instead of the figure stored on it before it was split, so it
+  matches the Investment Summary and the Targets screen. The stored value is left alone.

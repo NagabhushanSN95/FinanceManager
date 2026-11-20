@@ -936,6 +936,34 @@ private fun TemplatesTab(viewModel: EditDataViewModel, showDeposits: Boolean = t
 // ---------------------------------------------------------------------------------------------------- investment categories
 
 /** The Investment Summary's category tree (groups and their members) and the risk levels, all reorderable. */
+/**
+ * The goal, wealth and tolerance shown on a Manage row. A category with sub-categories has no targets of its own:
+ * its shares are the sum of its sub-categories' and its tolerance the widest among them, as the Investment
+ * Summary and the Targets screen show it, so the figure stored on the parent (from before it was split) never shows.
+ */
+private fun rolledUpTargets(
+    category: com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory,
+    children: List<com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory>,
+): Array<String> {
+    val goal: Double?
+    val wealth: Double?
+    val tolerance: Double?
+    if (children.isEmpty()) {
+        goal = category.targetGoalPct
+        wealth = category.targetWealthPct
+        tolerance = category.tolerancePct
+    } else {
+        goal = children.mapNotNull { it.targetGoalPct }.takeIf { it.isNotEmpty() }?.sum()
+        wealth = children.mapNotNull { it.targetWealthPct }.takeIf { it.isNotEmpty() }?.sum()
+        tolerance = children.mapNotNull { it.tolerancePct }.maxOrNull()
+    }
+    return listOfNotNull(
+        goal?.let { "goal %.0f%%".format(it * 100) },
+        wealth?.let { "wealth %.0f%%".format(it * 100) },
+        tolerance?.let { "±%.0f%%".format(it * 100) },
+    ).toTypedArray()
+}
+
 @Composable
 private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
     val all by viewModel.investmentCategories.collectAsStateWithLifecycle()
@@ -981,9 +1009,7 @@ private fun InvestmentCategoriesTab(viewModel: EditDataViewModel) {
                             item.name,
                             subtitle = listOfNotNull(
                                 item.riskLevelId?.let { riskName[it] } ?: "no risk level",
-                                item.targetGoalPct?.let { "goal %.0f%%".format(it * 100) },
-                                item.targetWealthPct?.let { "wealth %.0f%%".format(it * 100) },
-                                item.tolerancePct?.let { "±%.0f%%".format(it * 100) },
+                                *rolledUpTargets(item, all.filter { it.parentId == item.id }),
                             ).joinToString(" · "),
                             onLongPress = { editing = item },
                             handle = handle,
