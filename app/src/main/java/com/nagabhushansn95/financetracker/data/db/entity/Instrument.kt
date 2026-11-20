@@ -1,0 +1,298 @@
+package com.nagabhushansn95.financetracker.data.db.entity
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+/** The kinds of instrument; each has its own screen and, where it needs more than a name, its own detail table. */
+enum class InstrumentType { STOCK, MUTUAL_FUND, FIXED_DEPOSIT, INSURANCE, VEHICLE, OTHER }
+
+/** A user-defined risk level ("No risk", "Low risk", ...); every investment category sits in one. Ordered least to most risky. */
+@Entity(tableName = "risk_levels", indices = [Index("display_order")])
+data class RiskLevel(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    @ColumnInfo(name = "display_order") val displayOrder: Int,
+)
+
+/** Small key-value store for settings that belong in the database (and its backups), such as the goal amount. */
+@Entity(tableName = "settings")
+data class Setting(
+    @PrimaryKey val key: String,
+    val value: String,
+)
+
+/**
+ * Equity, ETF, Gold ETF, REIT, Arbitrage, Flexi Cap, Life Insurance, ... the rows of the sheet's Investment Summary.
+ * Targets: [targetGoalPct] and [targetWealthPct] are the category's share of the goal corpus and of the wealth corpus;
+ * the overall target is derived from the two and the current total (see InvestmentSummaryBuilder).
+ */
+@Entity(
+    tableName = "investment_categories",
+    foreignKeys = [
+        ForeignKey(
+            entity = InvestmentCategory::class,
+            parentColumns = ["id"],
+            childColumns = ["parent_id"],
+            onDelete = ForeignKey.RESTRICT
+        ),
+        ForeignKey(
+            entity = RiskLevel::class,
+            parentColumns = ["id"],
+            childColumns = ["risk_level_id"],
+            onDelete = ForeignKey.RESTRICT
+        ),
+    ],
+    indices = [Index("parent_id"), Index("risk_level_id"), Index("display_order")]
+)
+data class InvestmentCategory(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    @ColumnInfo(name = "parent_id") val parentId: Long? = null,
+    @ColumnInfo(name = "risk_level_id") val riskLevelId: Long? = null,
+    @ColumnInfo(name = "tolerance_pct") val tolerancePct: Double? = null,
+    @ColumnInfo(name = "target_goal_pct") val targetGoalPct: Double? = null,
+    @ColumnInfo(name = "target_wealth_pct") val targetWealthPct: Double? = null,
+    @ColumnInfo(name = "rebalance_notes") val rebalanceNotes: String? = null,
+    @ColumnInfo(name = "display_order") val displayOrder: Int,
+)
+
+/**
+ * The things you invest in: the row every ledger entry, pending dividend and summary group points at. Only what every
+ * kind shares lives here; a stock's listing is in [Security], a deposit's terms in [FixedDeposit], a policy's in
+ * [InsurancePolicy], a vehicle's in [Vehicle]. Never has a stored balance: units, cost basis and P/L are computed
+ * from the ledger.
+ */
+@Entity(
+    tableName = "instruments",
+    foreignKeys = [ForeignKey(
+        entity = InvestmentCategory::class,
+        parentColumns = ["id"],
+        childColumns = ["category_id"],
+        onDelete = ForeignKey.RESTRICT
+    )],
+    indices = [Index("kind"), Index("category_id")]
+)
+data class Instrument(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    @ColumnInfo(name = "kind") val instrumentType: InstrumentType,
+    @ColumnInfo(name = "category_id") val categoryId: Long? = null,
+    /**
+     * Whose money it is: "Self" for own investments; a family member's name keeps the instrument out of own totals.
+     * Distinct from a deposit's holder, which is whose name the bank has on it.
+     */
+    val owner: String = OWNER_SELF,
+    val active: Boolean = true,
+    val notes: String? = null,
+    @ColumnInfo(name = "created_time") val createdTime: LocalDateTime,
+    @ColumnInfo(name = "modified_time") val modifiedTime: LocalDateTime,
+) {
+    companion object {
+        const val OWNER_SELF = "Self"
+    }
+}
+
+enum class FdStatus { ACTIVE, CLOSED_AT_MATURITY, RENEWED, CLOSED_PREMATURELY }
+
+/** A regular deposit, or one linked to a savings account that the bank breaks in parts to cover debits (sweep-in). */
+enum class FdType(val title: String) { REGULAR("Regular"), SWEEP_IN("Sweep-in") }
+
+/** Static terms of a fixed deposit. The deposit amount and date are the INVEST transaction, not stored here. */
+@Entity(
+    tableName = "fixed_deposits",
+    foreignKeys = [
+        ForeignKey(
+            entity = Instrument::class,
+            parentColumns = ["id"],
+            childColumns = ["instrument_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Instrument::class,
+            parentColumns = ["id"],
+            childColumns = ["previous_fd_id"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = Instrument::class,
+            parentColumns = ["id"],
+            childColumns = ["next_fd_id"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+    ],
+    indices = [Index("status"), Index("maturity_date"), Index("previous_fd_id"), Index("next_fd_id")]
+)
+data class FixedDeposit(
+    @PrimaryKey @ColumnInfo(name = "instrument_id") val instrumentId: Long,
+    @ColumnInfo(name = "certificate_no") val certificateNo: String? = null,
+    @ColumnInfo(name = "holder_name") val holderName: String? = null,
+    @ColumnInfo(name = "bank_name") val bankName: String? = null,
+    val branch: String? = null,
+    @ColumnInfo(name = "bank_account_no") val bankAccountNo: String? = null,
+    @ColumnInfo(name = "cust_id") val custId: String? = null,
+    @ColumnInfo(name = "period_months") val periodMonths: Int? = null,
+    @ColumnInfo(name = "period_days") val periodDays: Int? = null,
+    /** Annual interest rate in percent, e.g. 7.25 */
+    val rate: Double? = null,
+    @ColumnInfo(name = "compounding_months") val compoundingMonths: Int? = null,
+    @ColumnInfo(name = "maturity_date") val maturityDate: LocalDate? = null,
+    @ColumnInfo(name = "maturity_amount_printed") val maturityAmountPrinted: Double? = null,
+    /** The TDS the bank reported at closing (the sheet's "TDS Reported by Bank"); the screens estimate the rest. */
+    @ColumnInfo(name = "tds_reported") val tdsReported: Double? = null,
+    /**
+     * True when the bank deducts TDS at the end of every financial year as well as at maturity, false when only at
+     * maturity, null when not known. Stored for later; no screen asks for it yet.
+     */
+    @ColumnInfo(name = "is_tds_yearly") val tdsYearly: Boolean? = null,
+    val status: FdStatus = FdStatus.ACTIVE,
+    @ColumnInfo(
+        name = "deposit_type",
+        defaultValue = "REGULAR"
+    ) val depositType: FdType = FdType.REGULAR,
+    /** For a sweep-in deposit: the day it was linked to the account (usually the first partial liquidation). */
+    @ColumnInfo(name = "sweep_in_date") val sweepInDate: LocalDate? = null,
+    @ColumnInfo(name = "previous_fd_id") val previousFdId: Long? = null,
+    @ColumnInfo(name = "next_fd_id") val nextFdId: Long? = null,
+    val notes: String? = null,
+)
+
+/**
+ * A named preset for "New fixed deposit": everything that repeats from one deposit to the next. Every field is
+ * optional; picking the template fills the fields it has and leaves the rest alone. The dates, the name, the
+ * certificate and the deposit account number always belong to the one deposit and are never part of a template.
+ */
+@Entity(tableName = "fd_templates")
+data class FdTemplate(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    @ColumnInfo(name = "bank_name") val bankName: String? = null,
+    val branch: String? = null,
+    @ColumnInfo(name = "holder_name") val holderName: String? = null,
+    @ColumnInfo(name = "cust_id") val custId: String? = null,
+    val amount: Double? = null,
+    /** Bank account the deposit is usually paid from. */
+    @ColumnInfo(name = "from_account_id") val fromAccountId: Long? = null,
+    @ColumnInfo(name = "period_months") val periodMonths: Int? = null,
+    @ColumnInfo(name = "period_days") val periodDays: Int? = null,
+    /** Annual interest rate in percent, e.g. 7.25 */
+    val rate: Double? = null,
+    @ColumnInfo(name = "compounding_months") val compoundingMonths: Int? = null,
+    val owner: String? = null,
+    val notes: String? = null,
+    @ColumnInfo(name = "display_order") val displayOrder: Int = 0,
+)
+
+/**
+ * Life policies are investments (premiums are INVEST rows and count in the summary); term, health and motor are
+ * protection: premiums are expenses that stay out of the totals. MOTOR is never stored: it is how the screens see a
+ * [Vehicle] (an instrument of kind VEHICLE), whose premiums, services and tests each carry their own dates (see
+ * [ValidityPeriod]).
+ */
+enum class InsuranceType(val title: String) {
+    LIFE("Life"), TERM("Term"), HEALTH("Health"), MOTOR("Motor");
+
+    val investment: Boolean get() = this == LIFE
+
+    /** Premiums fall due by the calendar (frequency, due day and month) rather than when the last cover ends. */
+    val scheduled: Boolean get() = this == LIFE || this == TERM
+}
+
+@Entity(
+    tableName = "insurance_policies",
+    foreignKeys = [ForeignKey(
+        entity = Instrument::class,
+        parentColumns = ["id"],
+        childColumns = ["instrument_id"],
+        onDelete = ForeignKey.CASCADE
+    )],
+)
+data class InsurancePolicy(
+    @PrimaryKey @ColumnInfo(name = "instrument_id") val instrumentId: Long,
+    @ColumnInfo(name = "insurance_type") val insuranceType: InsuranceType,
+    val provider: String? = null,
+    @ColumnInfo(name = "policy_name") val policyName: String? = null,
+    @ColumnInfo(name = "policy_number") val policyNumber: String? = null,
+    @ColumnInfo(name = "sum_assured") val sumAssured: Double? = null,
+    @ColumnInfo(name = "premium_amount") val premiumAmount: Double? = null,
+    /** Life and term: 1, 3, 6 or 12. */
+    @ColumnInfo(name = "premium_frequency_months") val premiumFrequencyMonths: Int? = null,
+    /** Day of the month a life or term premium falls due (clamped in short months). */
+    @ColumnInfo(name = "due_day") val dueDay: Int? = null,
+    /** The anchor month (1-12) of a quarterly, half-yearly or yearly premium; unused when monthly. */
+    @ColumnInfo(name = "due_month") val dueMonth: Int? = null,
+    @ColumnInfo(name = "start_date") val startDate: LocalDate? = null,
+    /** Life: maturity; term: the end of cover. */
+    @ColumnInfo(name = "maturity_date") val maturityDate: LocalDate? = null,
+)
+
+/** What a validity period covers. COVER is a health policy's cover; the rest belong to a vehicle. */
+enum class ValidityKind(val title: String) {
+    COVER("Cover"),
+    THIRD_PARTY("Third-party cover"),
+    OWN_DAMAGE("Own-damage cover"),
+    SERVICE("Service"),
+    EMISSION_TEST("Emission test");
+}
+
+/**
+ * How long something stays valid: a health policy's cover, a vehicle's third-party and own-damage insurance, the time
+ * to its next service, its emission certificate. Normally written with the entry that paid for it ([transactionId])
+ * and removed with it; a row without a transaction was set by hand on the policy sheet. The latest end per kind is
+ * the current one; alerts read it, and a health policy's insurer, policy number and sum insured are the current
+ * cover's, so each renewal's terms stay on the premium that bought them.
+ *
+ * Not a table of its own: the screens' one view of two tables, [HealthCover] (kind COVER) and [VehicleRecord] (the
+ * rest). [id] is the row's id in its own table, so it only tells rows of the same kind apart.
+ */
+data class ValidityPeriod(
+    val id: Long = 0,
+    val instrumentId: Long,
+    val kind: ValidityKind,
+    val startDate: LocalDate? = null,
+    val endDate: LocalDate,
+    val transactionId: Long? = null,
+    /** The insurer of a motor or health premium (it may change every year). */
+    val provider: String? = null,
+    /** The policy number of a motor or health premium. */
+    val reference: String? = null,
+    /** The sum insured a health premium bought (it may change at every renewal). */
+    val sumInsured: Double? = null,
+) {
+    fun toHealthCover() = HealthCover(
+        id = id,
+        instrumentId = instrumentId,
+        startDate = startDate,
+        endDate = endDate,
+        provider = provider,
+        reference = reference,
+        sumInsured = sumInsured,
+        transactionId = transactionId,
+    )
+
+    fun toVehicleRecord() = VehicleRecord(
+        id = id,
+        instrumentId = instrumentId,
+        kind = VehicleRecordKind.of(kind),
+        startDate = startDate,
+        endDate = endDate,
+        provider = provider,
+        reference = reference,
+        transactionId = transactionId,
+    )
+}
+
+@Entity(tableName = "fx_rates", indices = [Index(value = ["base", "quote", "date"], unique = true)])
+data class FxRate(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val date: LocalDate,
+    val base: String,
+    val quote: String,
+    /** 1 base = rate quote, e.g. base USD, quote INR, rate 84.2 */
+    val rate: Double,
+    val source: String,
+)

@@ -1,0 +1,560 @@
+package com.nagabhushansn95.financetracker.data.investments
+
+import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.dao.Settings
+import com.nagabhushansn95.financetracker.data.db.entity.Account
+import com.nagabhushansn95.financetracker.data.db.entity.AccountType
+import com.nagabhushansn95.financetracker.data.db.entity.FixedDeposit
+import com.nagabhushansn95.financetracker.data.db.entity.FxRate
+import com.nagabhushansn95.financetracker.data.db.entity.HoldingEvent
+import com.nagabhushansn95.financetracker.data.db.entity.Instrument
+import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
+import com.nagabhushansn95.financetracker.data.db.entity.InsurancePolicy
+import com.nagabhushansn95.financetracker.data.db.entity.InvestmentCategory
+import com.nagabhushansn95.financetracker.data.db.entity.RiskLevel
+import com.nagabhushansn95.financetracker.data.db.entity.Security
+import com.nagabhushansn95.financetracker.data.db.entity.SummaryGroup
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import java.time.LocalDate
+
+/** One instrument with its position, as the lists show it. [security] is set for stocks and funds. */
+data class HoldingRow(
+    val instrument: Instrument,
+    val position: Position,
+    val categoryName: String,
+    val unitPrice: Double?,
+    val priceDate: LocalDate?,
+    val currentValue: Double,
+    val xirr: Double?,
+    val security: Security? = null,
+) {
+    val isDeposit: Boolean get() = instrument.instrumentType == InstrumentType.FIXED_DEPOSIT
+    val heldProfit get() = currentValue - position.costHeld
+
+    /** Held profit over the cost of what is held, or null when nothing is held. */
+    val heldProfitPct: Double?
+        get() = if (position.units > Position.UNIT_EPSILON && position.costHeld > 0) heldProfit / position.costHeld else null
+
+    /** What the list rows show: the short name when there is one, else the instrument's name. */
+    val shownName: String get() = security?.shortName?.takeIf { it.isNotBlank() } ?: instrument.name
+}
+
+/**
+ * A line of the Investment Summary: a category (with children), a provident-fund account, or a synthetic group such as
+ * a risk level. [targetPct] is derived: goal amount × [goalPct] plus the rest of the current total × [wealthPct],
+ * as a share of the current total.
+ */
+data class SummaryLine(
+    val id: Long?,                  // category id; null for synthetic lines and PF accounts
+    val name: String,
+    val invested: Double,
+    val current: Double,
+    val realised: Double,
+    val income: Double,
+    val xirr: Double?,
+    val goalPct: Double? = null,
+    val wealthPct: Double? = null,
+    val targetPct: Double? = null,
+    val tolerancePct: Double? = null,
+    val riskLevel: String? = null,
+    val notes: String? = null,
+    val children: List<SummaryLine> = emptyList(),
+    val cashFlows: List<CashFlow> = emptyList(),
+    /** Set on provident-fund lines: the account behind the line. */
+    val accountId: Long? = null,
+) {
+    val held get() = current - invested
+    val total get() = held + realised
+    fun shareOf(total: Double) = if (total > 0) current / total else 0.0
+
+    /** Current share minus target; null when there is no target. */
+    fun drift(totalCurrent: Double): Double? = targetPct?.let { shareOf(totalCurrent) - it }
+    fun offTarget(totalCurrent: Double): Boolean {
+        val d = drift(totalCurrent) ?: return false
+        val tolerance = tolerancePct ?: return false
+        return kotlin.math.abs(d) > tolerance
+    }
+}
+
+data class InvestmentSummary(
+    val asOf: LocalDate,
+    /** Top-level categories with children, in display order; provident funds included; empty categories left out. */
+    val categories: List<SummaryLine>,
+    val riskLevels: List<SummaryLine>,
+    /** The user's own groups (Liquid, In Zerodha, ...), as set up under Manage › Summary groups. */
+    val groups: List<SummaryLine>,
+    val total: SummaryLine,
+    /** Stocks and funds (own, active or still holding units): the Holdings screen. */
+    val holdings: List<HoldingRow>,
+    /** Every instrument with a position, own and family, for the per-type screens. */
+    val rows: List<HoldingRow>,
+    /** Own instruments rolled up by type (deposits, policies, ...), type OTHER included although it is not in [total]. */
+    val byType: Map<InstrumentType, SummaryLine>,
+    val providentFunds: SummaryLine?,
+    val goalAmount: Double?,
+    val latestPriceDate: LocalDate?,
+) {
+    fun investedShare(line: SummaryLine) =
+        if (total.invested > 0) line.invested / total.invested else 0.0
+
+    fun currentShare(line: SummaryLine) = line.shareOf(total.current)
+}
+
+object InvestmentSummaryBuilder {
+
+    /** The summary, live: recomputed whenever instruments, categories, the ledger, prices, accounts or settings change. */
+    fun observe(
+        db: AppDatabase,
+        asOf: () -> LocalDate = { LocalDate.now() }
+    ): Flow<InvestmentSummary> {
+        val data = combine(
+            db.instrumentDao().observeAll(),
+            db.instrumentDao().observeCategories(),
+            db.transactionDao().observeAll(),
+            combine(
+                db.instrumentDao().observeSecurities(),
+                db.holdingEventDao().observeAll()
+            ) { s, e -> s to e }
+        ) { i, c, t, v -> Quad(i, c, t, v) }
+        val more = combine(
+            db.accountDao().observeAll(),
+            db.instrumentDao().observeRiskLevels(),
+            db.settingsDao().observe(Settings.GOAL_AMOUNT),
+            combine(
+                db.instrumentDao().observeFixedDeposits(),
+                db.instrumentDao().observeFxRates(),
+                db.instrumentDao().observeInsurancePolicies(),
+                db.summaryGroupDao().observeAll(),
+            ) { f, x, p, g -> Quad(f, x, p, g) },
+        ) { a, r, g, fx -> Quad(a, r, g, fx) }
+        return combine(
+            data,
+            more
+        ) { (instruments, categories, transactions, securitiesAndEvents), (accounts, riskLevels, goal, fdFxPolicies) ->
+            val (fixedDeposits, fxRates, policies, groups) = fdFxPolicies
+            build(
+                instruments,
+                categories,
+                transactions.filter { it.instrumentId != null },
+                securitiesAndEvents.first,
+                accounts,
+                transactions,
+                riskLevels,
+                goal?.toDoubleOrNull(),
+                asOf(),
+                fixedDeposits,
+                latestFx(fxRates),
+                policies,
+                groups,
+                securitiesAndEvents.second,
+            )
+        }.flowOn(Dispatchers.Default)
+    }
+
+    private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
+
+    /** Latest rate per base currency into INR, e.g. USD -> 84.2. */
+    fun latestFx(rates: List<FxRate>): Map<String, Double> =
+        rates.filter { it.quote == "INR" }.groupBy { it.base }
+            .mapValues { (_, r) -> r.maxWith(compareBy({ it.date }, { it.id })).rate }
+
+    /**
+     * Rolls the ledger up into the Investment Summary. Family-owned instruments and instruments of type OTHER (money
+     * parked elsewhere, loans: savings rather than investments) are excluded from the totals; the latter still appear
+     * in [InvestmentSummary.byType] for their own screen. Term, health and motor insurance (vehicles) is protection,
+     * not an investment: those instruments (and their premiums) are left out altogether. Provident funds come from
+     * the accounts: invested = contributions in minus transfers out, current = balance.
+     */
+    fun build(
+        allInstruments: List<Instrument>,
+        categories: List<InvestmentCategory>,
+        ledgerWithInstrument: List<TransactionEntity>,
+        securities: List<Security>,
+        accounts: List<Account>,
+        allTransactions: List<TransactionEntity>,
+        riskLevels: List<RiskLevel> = emptyList(),
+        goalAmount: Double? = null,
+        asOf: LocalDate = LocalDate.now(),
+        fixedDeposits: List<FixedDeposit> = emptyList(),
+        fxToInr: Map<String, Double> = emptyMap(),
+        insurancePolicies: List<InsurancePolicy> = emptyList(),
+        summaryGroups: List<SummaryGroup> = emptyList(),
+        holdingEvents: List<HoldingEvent> = emptyList(),
+    ): InvestmentSummary {
+        val protection =
+            insurancePolicies.filter { !it.insuranceType.investment }.map { it.instrumentId }
+                .toSet()
+        val instruments =
+            allInstruments.filter { it.id !in protection && it.instrumentType != InstrumentType.VEHICLE }
+        val fdTerms = fixedDeposits.associateBy { it.instrumentId }
+        val unitBasedIds =
+            instruments.filter { it.instrumentType == InstrumentType.STOCK || it.instrumentType == InstrumentType.MUTUAL_FUND }
+                .map { it.id }.toSet()
+        val positions =
+            Holdings.positions(ledgerWithInstrument, { it in unitBasedIds }, holdingEvents)
+        val securityById = securities.associateBy { it.instrumentId }
+        val byId = categories.associateBy { it.id }
+        val byName = categories.filter { it.parentId == null }.associateBy { it.name }
+        val riskName = riskLevels.associate { it.id to it.name }
+
+        val rows = instruments.mapNotNull { instrument ->
+            val position = positions[instrument.id] ?: return@mapNotNull null
+            val security = securityById[instrument.id]
+            val category = instrument.categoryId?.let { byId[it] }
+            val categoryName = category?.let { c ->
+                c.parentId?.let { byId[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
+            }
+                ?: InvestmentCategories.defaultCategoryName(instrument.instrumentType)
+            // Deposits with terms accrue by the bank formula unless a manual value is fresher than a week.
+            val fd = fdTerms[instrument.id]
+            val depositDate = position.firstDate
+            val formula =
+                if (fd != null && depositDate != null && position.costHeld > Position.UNIT_EPSILON)
+                    FdMath.estimate(fd, position.costHeld, depositDate, asOf) else null
+            // Prices and costs are in the security's currency; a foreign holding is brought to rupees at the latest rate.
+            val currency = security?.currency ?: "INR"
+            val fx = if (currency == "INR") 1.0 else fxToInr[currency] ?: 1.0
+            val current = when {
+                formula != null -> formula
+                else -> position.currentValue(security?.lastPrice, null) * fx
+            }
+            HoldingRow(
+                instrument = instrument,
+                position = position,
+                categoryName = categoryName,
+                unitPrice = security?.lastPrice,
+                priceDate = security?.lastPriceDate,
+                currentValue = current,
+                xirr = Holdings.xirr(position.cashFlows, current, asOf),
+                security = security,
+            )
+        }
+        val own = rows.filter { it.instrument.owner == Instrument.OWNER_SELF }
+        // Money parked elsewhere and loans (type OTHER) are savings, not investments: they have their own screen and
+        // count in the Savings tables, but stay out of the totals, the categories and the risk table.
+        val counted = own.filter { it.instrument.instrumentType != InstrumentType.OTHER }
+
+        // Which top-level category each holding belongs to, and which child (if any).
+        fun topOf(h: HoldingRow): InvestmentCategory? {
+            val c = h.instrument.categoryId?.let { byId[it] }
+                ?: return byName[InvestmentCategories.defaultCategoryName(h.instrument.instrumentType)]
+            return c.parentId?.let { byId[it] } ?: c
+        }
+
+        fun childOf(h: HoldingRow): InvestmentCategory? =
+            h.instrument.categoryId?.let { byId[it] }?.takeIf { it.parentId != null }
+
+        // A group's own risk level counts only when it has no sub-categories; otherwise the sub-category decides.
+        val hasChildren = categories.filter { it.parentId != null }.map { it.parentId }.toSet()
+        fun riskOf(h: HoldingRow): Long? =
+            childOf(h)?.riskLevelId ?: topOf(h)?.takeIf { it.id !in hasChildren }?.riskLevelId
+
+        fun lineFor(
+            id: Long?,
+            name: String,
+            rows: List<HoldingRow>,
+            cat: InvestmentCategory?,
+            children: List<SummaryLine> = emptyList()
+        ): SummaryLine {
+            val flows = rows.flatMap { it.position.cashFlows }
+            val current = rows.sumOf { it.currentValue }
+            return SummaryLine(
+                id = id,
+                name = name,
+                invested = rows.sumOf { it.position.costHeld },
+                current = current,
+                // A deposit's interest is realised whether it came inside the payout or as its own credit rows.
+                realised = rows.sumOf { it.position.realised + if (it.isDeposit) it.position.income else 0.0 },
+                income = rows.sumOf { if (it.isDeposit) 0.0 else it.position.income },
+                xirr = Holdings.xirr(flows, current, asOf),
+                goalPct = cat?.targetGoalPct,
+                wealthPct = cat?.targetWealthPct,
+                tolerancePct = cat?.tolerancePct,
+                riskLevel = cat?.riskLevelId?.let { riskName[it] },
+                notes = cat?.rebalanceNotes,
+                children = children,
+                cashFlows = flows,
+            )
+        }
+
+        fun group(
+            name: String,
+            lines: List<SummaryLine>,
+            cat: InvestmentCategory? = null,
+            id: Long? = null
+        ) = SummaryLine(
+            id = id,
+            name = name,
+            invested = lines.sumOf { it.invested },
+            current = lines.sumOf { it.current },
+            realised = lines.sumOf { it.realised },
+            income = lines.sumOf { it.income },
+            xirr = Holdings.xirr(lines.flatMap { it.cashFlows }, lines.sumOf { it.current }, asOf),
+            goalPct = cat?.targetGoalPct,
+            wealthPct = cat?.targetWealthPct,
+            tolerancePct = cat?.tolerancePct,
+            riskLevel = cat?.riskLevelId?.let { riskName[it] },
+            notes = cat?.rebalanceNotes,
+            children = lines,
+            cashFlows = lines.flatMap { it.cashFlows },
+        )
+
+        // Provident funds, from the accounts.
+        val pfAccounts =
+            accounts.filter { it.accountType == AccountType.PROVIDENT_FUND && !it.deleted }
+        val pfLines = pfAccounts.map { pf ->
+            val rows =
+                allTransactions.filter { it.toAccountId == pf.id || it.fromAccountId == pf.id }
+            val contributions =
+                rows.filter { it.toAccountId == pf.id && it.kind == TransactionKind.INCOME && it.contributor != "Interest" }
+                    .sumOf { it.amount } +
+                        rows.filter { it.toAccountId == pf.id && it.kind == TransactionKind.TRANSFER }
+                            .sumOf { it.arriving } -
+                        rows.filter { it.fromAccountId == pf.id && it.kind == TransactionKind.TRANSFER }
+                            .sumOf { it.amount }
+            val interest =
+                rows.filter { it.toAccountId == pf.id && it.kind == TransactionKind.INCOME && it.contributor == "Interest" }
+                    .sumOf { it.amount }
+            val flows = rows.mapNotNull { t ->
+                when {
+                    t.toAccountId == pf.id && (t.kind == TransactionKind.INCOME && t.contributor != "Interest" || t.kind == TransactionKind.TRANSFER) -> CashFlow(
+                        t.date,
+                        -t.arriving
+                    )
+
+                    t.fromAccountId == pf.id && t.kind == TransactionKind.TRANSFER -> CashFlow(
+                        t.date,
+                        t.amount
+                    )
+
+                    else -> null
+                }
+            }
+            SummaryLine(
+                id = null,
+                name = pf.name,
+                invested = contributions,
+                current = pf.balance,
+                realised = 0.0,
+                income = interest,
+                xirr = Holdings.xirr(flows, pf.balance, asOf),
+                cashFlows = flows,
+                accountId = pf.id
+            )
+        }
+        val pfCategory = byName[InvestmentCategories.PROVIDENT_FUNDS]
+        val pfLine = if (pfLines.isEmpty()) null else group(
+            InvestmentCategories.PROVIDENT_FUNDS,
+            pfLines,
+            pfCategory,
+            pfCategory?.id
+        )
+
+        val topLevel = categories.filter { it.parentId == null }
+        val categoryLines = ArrayList<SummaryLine>()
+        for (top in topLevel) {
+            if (top.id == pfCategory?.id) {
+                pfLine?.let { categoryLines += it }; continue
+            }
+            val rows = counted.filter { topOf(it)?.id == top.id }
+            val childLines = categories.filter { it.parentId == top.id }.map { child ->
+                lineFor(child.id, child.name, rows.filter { childOf(it)?.id == child.id }, child)
+            }
+                .filter { it.invested != 0.0 || it.current != 0.0 || it.realised != 0.0 || it.goalPct != null || it.wealthPct != null }
+            val uncategorised = rows.filter { childOf(it) == null }
+            val children = if (childLines.isNotEmpty() && uncategorised.isNotEmpty())
+                childLines + lineFor(null, "Unassigned", uncategorised, null) else childLines
+            // Targets entered on the children roll up to the parent (shares added, the tolerance the widest of
+            // theirs); a childless parent carries its own.
+            val line = lineFor(top.id, top.name, rows, top, children).let { l ->
+                val typed = childLines.filter { it.id != null }
+                if (typed.any { it.goalPct != null || it.wealthPct != null })
+                    l.copy(
+                        goalPct = typed.sumOf { it.goalPct ?: 0.0 },
+                        wealthPct = typed.sumOf { it.wealthPct ?: 0.0 },
+                        tolerancePct = typed.mapNotNull { it.tolerancePct }.maxOrNull()
+                            ?: l.tolerancePct,
+                    ) else l
+            }
+            if (line.invested != 0.0 || line.current != 0.0 || line.realised != 0.0) categoryLines += line
+        }
+        if (pfLine != null && pfCategory == null) categoryLines += pfLine
+        // Instruments whose category tree is missing entirely (no seed): one line per type.
+        val orphanRows = counted.filter { topOf(it) == null }
+        orphanRows.groupBy { it.instrument.instrumentType }.forEach { (type, rows) ->
+            categoryLines += lineFor(
+                null,
+                InvestmentCategories.defaultCategoryName(type),
+                rows,
+                null
+            )
+        }
+
+        val totalRaw = group("Total", categoryLines)
+        val totalCurrent = totalRaw.current
+        val goal = goalAmount?.coerceIn(0.0, totalCurrent.coerceAtLeast(0.0)) ?: 0.0
+        val wealth = totalCurrent - goal
+        fun withTargets(line: SummaryLine): SummaryLine {
+            val target =
+                if (line.goalPct == null && line.wealthPct == null || totalCurrent <= 0) null
+                else (goal * (line.goalPct ?: 0.0) + wealth * (line.wealthPct
+                    ?: 0.0)) / totalCurrent
+            return line.copy(targetPct = target, children = line.children.map(::withTargets))
+        }
+
+        val finalCategories = categoryLines.map(::withTargets)
+        val total =
+            totalRaw.copy(targetPct = if (totalCurrent > 0) 1.0 else null, children = emptyList())
+
+        // Targets for a line made of parts of several categories (a risk level, a group): each leaf category's goal
+        // and wealth shares count by the share of its value the line holds; the provident funds count whole. The
+        // line's tolerance is the widest among the leaves that contribute.
+        class Leaf(
+            val ids: Set<Long>,
+            val current: Double,
+            val goalPct: Double?,
+            val wealthPct: Double?,
+            val tolerancePct: Double?,
+            val pf: Boolean = false
+        )
+
+        val leaves = ArrayList<Leaf>()
+        for (top in topLevel) {
+            if (top.id == pfCategory?.id) continue
+            val kids = categories.filter { it.parentId == top.id }
+            if (kids.isEmpty()) {
+                val rows = counted.filter { topOf(it)?.id == top.id }
+                leaves += Leaf(
+                    rows.map { it.instrument.id }.toSet(),
+                    rows.sumOf { it.currentValue },
+                    top.targetGoalPct,
+                    top.targetWealthPct,
+                    top.tolerancePct,
+                )
+            } else kids.forEach { child ->
+                val rows = counted.filter { childOf(it)?.id == child.id }
+                leaves += Leaf(
+                    rows.map { it.instrument.id }.toSet(),
+                    rows.sumOf { it.currentValue },
+                    child.targetGoalPct,
+                    child.targetWealthPct,
+                    child.tolerancePct,
+                )
+            }
+        }
+        if (pfLine != null) leaves += Leaf(
+            emptySet(),
+            pfLine.current,
+            pfCategory?.targetGoalPct,
+            pfCategory?.targetWealthPct,
+            pfCategory?.tolerancePct,
+            pf = true
+        )
+        fun targetsOf(
+            rows: List<HoldingRow>,
+            includesPf: Boolean
+        ): Triple<Double?, Double?, Double?> {
+            val ids = rows.map { it.instrument.id }.toSet()
+            var goalSum = 0.0
+            var wealthSum = 0.0
+            var tolerance: Double? = null
+            var any = false
+            for (leaf in leaves) {
+                if (leaf.goalPct == null && leaf.wealthPct == null) continue
+                val share = when {
+                    leaf.pf -> if (includesPf) 1.0 else 0.0
+                    leaf.ids.isEmpty() -> 0.0
+                    leaf.current > 0 -> rows.filter { it.instrument.id in leaf.ids }
+                        .sumOf { it.currentValue } / leaf.current
+
+                    else -> leaf.ids.count { it in ids }.toDouble() / leaf.ids.size
+                }
+                if (share <= 0) continue
+                any = true
+                goalSum += share * (leaf.goalPct ?: 0.0)
+                wealthSum += share * (leaf.wealthPct ?: 0.0)
+                leaf.tolerancePct?.let { tolerance = maxOf(tolerance ?: 0.0, it) }
+            }
+            return if (any) Triple(goalSum, wealthSum, tolerance) else Triple(null, null, null)
+        }
+
+        fun composite(name: String, rows: List<HoldingRow>, pf: SummaryLine?): SummaryLine {
+            val parts = listOfNotNull(
+                lineFor(
+                    null,
+                    name,
+                    rows,
+                    null
+                ).takeIf { rows.isNotEmpty() || pf == null }, pf
+            )
+            val (goalPct, wealthPct, tolerancePct) = targetsOf(rows, pf != null)
+            return withTargets(
+                group(name, parts).copy(
+                    goalPct = goalPct,
+                    wealthPct = wealthPct,
+                    tolerancePct = tolerancePct,
+                )
+            ).copy(children = emptyList())
+        }
+
+        // Risk levels: by the finest category that has one; PF by its category.
+        val riskLines = ArrayList<SummaryLine>()
+        for (level in riskLevels) {
+            riskLines += composite(
+                level.name,
+                counted.filter { riskOf(it) == level.id },
+                pfLine?.takeIf { pfCategory?.riskLevelId == level.id })
+        }
+        val unrated = counted.filter { riskOf(it) == null }
+        val pfUnrated = pfLine?.takeIf { pfCategory?.riskLevelId == null }
+        if (unrated.isNotEmpty() || pfUnrated != null) riskLines += composite(
+            "No risk level set",
+            unrated,
+            pfUnrated
+        )
+
+        // The user's groups: any mix of kinds and categories; they overlap by design.
+        val groupLines =
+            summaryGroups.sortedWith(compareBy({ it.displayOrder }, { it.id })).map { g ->
+                composite(
+                    g.name,
+                    counted.filter { SummaryGroups.includes(g, it, byId) },
+                    pfLine?.takeIf { SummaryGroups.includesPf(g) })
+        }
+
+        val byType = InstrumentType.entries.associateWith { type ->
+            lineFor(
+                null,
+                InvestmentCategories.defaultCategoryName(type),
+                own.filter { it.instrument.instrumentType == type },
+                null
+            )
+        }
+
+        return InvestmentSummary(
+            asOf = asOf,
+            categories = finalCategories,
+            riskLevels = riskLines,
+            groups = groupLines,
+            total = total,
+            // The Holdings list is stocks and funds; deposits, policies and others have their own screens.
+            holdings = own.filter { it.instrument.id in unitBasedIds && (it.instrument.active || it.position.units != 0.0) }
+                .sortedWith(
+                    compareBy(
+                        { it.instrument.instrumentType },
+                        { it.categoryName },
+                        { it.instrument.name.lowercase() })
+                ),
+            rows = rows,
+            byType = byType,
+            providentFunds = pfLine?.let(::withTargets),
+            goalAmount = goalAmount,
+            latestPriceDate = securities.mapNotNull { it.lastPriceDate }.maxOrNull(),
+        )
+    }
+}

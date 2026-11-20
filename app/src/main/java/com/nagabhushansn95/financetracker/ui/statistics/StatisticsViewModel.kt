@@ -1,0 +1,154 @@
+package com.nagabhushansn95.financetracker.ui.statistics
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.nagabhushansn95.financetracker.data.db.AppDatabase
+import com.nagabhushansn95.financetracker.data.db.dao.PeriodTotals
+import com.nagabhushansn95.financetracker.data.db.entity.Account
+import com.nagabhushansn95.financetracker.data.db.entity.Category
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.investments.FixedDeposits
+import com.nagabhushansn95.financetracker.data.investments.Statistics
+import com.nagabhushansn95.financetracker.ui.common.LedgerFilter
+import com.nagabhushansn95.financetracker.ui.common.Period
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+enum class Grouping(val label: String, val periodLength: Int) {
+    MONTHS(
+        "By month",
+        7
+    ),
+    YEARS("By year", 4)
+}
+
+/** One line of the category breakdown: a parent with its total (children rolled up) and the children beneath. */
+data class CategoryLine(
+    val name: String,
+    val total: Double,
+    val count: Int,
+    val share: Double,
+    val children: List<CategoryLine> = emptyList()
+)
+
+data class StatisticsUiState(
+    val filter: LedgerFilter = LedgerFilter(period = Period.THIS_YEAR),
+    val grouping: Grouping = Grouping.MONTHS,
+    val rows: List<PeriodTotals> = emptyList(),
+    val total: PeriodTotals = PeriodTotals("Total", 0.0, 0.0, 0.0, 0.0),
+    val expenseByCategory: List<CategoryLine> = emptyList(),
+    val incomeByCategory: List<CategoryLine> = emptyList(),
+    val accounts: List<Account> = emptyList(),
+    val categories: List<Category> = emptyList(),
+    val loaded: Boolean = false,
+)
+
+class StatisticsViewModel(application: Application) : AndroidViewModel(application) {
+    private val db = AppDatabase.getInstance(application)
+    private val _state = MutableStateFlow(StatisticsUiState())
+    val state: StateFlow<StatisticsUiState> = _state
+
+    init {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(
+                accounts = db.accountDao().getVisible(),
+                categories = db.categoryDao().getVisible()
+            )
+            // Recompute whenever the ledger changes.
+            db.transactionDao().observeAll().collect { recompute() }
+        }
+    }
+
+    fun setFilter(filter: LedgerFilter) {
+        _state.value = _state.value.copy(filter = filter); viewModelScope.launch { recompute() }
+    }
+
+    fun setGrouping(grouping: Grouping) {
+        _state.value = _state.value.copy(grouping = grouping); viewModelScope.launch { recompute() }
+    }
+
+    private suspend fun recompute() {
+        val s = _state.value
+        val statistics = Statistics(db)
+        val earliest = statistics.earliestDate()
+        val (from, to) = s.filter.range(earliest = earliest)
+        val accountIds = s.filter.accountIds.toList()
+        val categoryIds = s.filter.categoryIds.toList()
+        val queried =
+            statistics.periodTotals(from, to, s.grouping.periodLength, accountIds, categoryIds)
+        // Interest a regular deposit paid out inside its payout counts as income on that day, as a sweep-in
+        // deposit's own interest credits already do through the query.
+        val interest = if (categoryIds.isNotEmpty()) emptyList() else FixedDeposits.depositInterest(
+            db.transactionDao().getAllWithInstrument(), db.instrumentDao().getAll()
+        ).filter { it.date in from..to && (accountIds.isEmpty() || it.toAccountId in accountIds) }
+        val interestByPeriod = interest.groupBy { it.date.toString().take(s.grouping.periodLength) }
+            .mapValues { (_, v) -> v.sumOf { it.amount } }
+        val rows = (queried.map { r ->
+            interestByPeriod[r.period]?.let { r.copy(income = r.income + it) } ?: r
+        } +
+                interestByPeriod.filterKeys { k -> queried.none { it.period == k } }
+                    .map { (k, v) -> PeriodTotals(k, 0.0, v, 0.0, 0.0) })
+            .sortedBy { it.period }
+        val total = PeriodTotals(
+            "Total",
+            rows.sumOf { it.expense },
+            rows.sumOf { it.income },
+            rows.sumOf { it.savings },
+            rows.sumOf { it.withdrawals })
+        val categories = db.categoryDao().getAll().associateBy { it.id }
+        suspend fun breakdown(kind: TransactionKind): List<CategoryLine> {
+            val totals = if (rows.isEmpty()) emptyList() else statistics.categoryTotals(
+                kind,
+                from,
+                to,
+                accountIds
+            )
+            val filtered =
+                if (categoryIds.isEmpty()) totals else totals.filter { it.categoryId in categoryIds }
+            val grand = filtered.sumOf { it.total }.takeIf { it > 0 } ?: 1.0
+            // Roll children up into their parent; uncategorised rows become their own line.
+            val byParent =
+                filtered.groupBy { ct -> ct.categoryId?.let { categories[it]?.parentId ?: it } }
+            return byParent.map { (parentId, members) ->
+                val parent = parentId?.let { categories[it] }
+                val sum = members.sumOf { it.total }
+                val children = members.filter { it.categoryId != parentId }.map { ct ->
+                    CategoryLine(ct.categoryId?.let { categories[it]?.name } ?: "Uncategorised",
+                        ct.total,
+                        ct.count,
+                        ct.total / grand)
+                }.sortedByDescending { it.total }
+                CategoryLine(
+                    parent?.name ?: "Uncategorised",
+                    sum,
+                    members.sumOf { it.count },
+                    sum / grand,
+                    children
+                )
+            }.sortedByDescending { it.total }
+        }
+        val depositInterest = interest.sumOf { it.amount }
+        var incomeByCategory = breakdown(TransactionKind.INCOME)
+        if (depositInterest > 0.005) {
+            val grand = incomeByCategory.sumOf { it.total } + depositInterest
+            fun reshare(line: CategoryLine): CategoryLine =
+                line.copy(share = line.total / grand, children = line.children.map { reshare(it) })
+            incomeByCategory = (incomeByCategory.map { reshare(it) } +
+                    CategoryLine(
+                        "Fixed deposit interest",
+                        depositInterest,
+                        interest.size,
+                        depositInterest / grand
+                    ))
+                .sortedByDescending { it.total }
+        }
+        _state.value = s.copy(
+            rows = rows, total = total,
+            expenseByCategory = breakdown(TransactionKind.EXPENSE),
+            incomeByCategory = incomeByCategory,
+            loaded = true,
+        )
+    }
+}

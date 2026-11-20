@@ -2,8 +2,8 @@
 
 # Define paths
 ADB_PATH="/Users/nagabhushan/Library/Android/sdk/platform-tools/adb"
-ANDROID_PATH="/sdcard/FinanceManager/TransferPhoneToMacbook/"
-LOCAL_PATH="$HOME/Downloads/FinanceManager/"
+ANDROID_PATH="/sdcard/FinanceTracker/TransferPhoneToMacbook/"
+LOCAL_PATH="$HOME/Downloads/FinanceTracker/"
 
 # Ensure ADB is connected
 "$ADB_PATH" devices | grep -w "device" > /dev/null

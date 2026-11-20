@@ -1,195 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	android:versionCode="144"
-	android:versionName="4.5.4">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+	<!-- Live prices (Yahoo Finance, AMFI) and the USD/INR rate. -->
+	<uses-permission android:name="android.permission.INTERNET" />
 
-	<!--<uses-permission android:name="android.permission.RECEIVE_SMS"/>-->
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<!--<uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>-->
+	<!-- Android 9 and below: writing backups to the shared Documents folder. Later versions use MediaStore. -->
+	<uses-permission
+		android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+		android:maxSdkVersion="28" />
 
 	<application
 		android:allowBackup="true"
-		android:icon="@drawable/app_icon"
+		android:icon="@mipmap/ic_launcher"
+		android:roundIcon="@mipmap/ic_launcher_round"
 		android:label="@string/app_name"
-		android:theme="@style/AppTheme">
+		android:networkSecurityConfig="@xml/network_security_config"
+		android:theme="@style/Theme.FinanceTracker">
 		<activity
-			android:name=".main.SplashActivity"
-			android:exported="true">
+			android:name=".ui.MainActivity"
+			android:exported="true"
+			android:windowSoftInputMode="adjustResize">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
 
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
 		</activity>
-		<activity android:name=".setup.StartupActivity"/>
-		<activity android:name=".setup.SetupActivity"/>
-		<activity android:name=".main.SummaryActivity">
-		</activity>
-		<activity
-			android:name=".main.TransactionsActivity"
-			android:label="@string/label_transactions"
-			android:parentActivityName=".main.SummaryActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".main.AddTransactionActivity"
-			android:label="@string/label_addTransaction"
-			android:parentActivityName=".main.SummaryActivity"
-			android:windowSoftInputMode="stateHidden">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".main.TemplatesActivity"
-			android:label="@string/label_templates"
-			android:parentActivityName=".main.TransactionsActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".main.TransactionsFilterActivity"
-			android:label="@string/label_filterTransactions"
-			android:parentActivityName=".main.TransactionsActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.TransactionsActivity"/>
-		</activity>
-		<activity
-			android:name=".edit.EditActivity"
-			android:label="@string/label_edit"
-			android:parentActivityName=".main.SummaryActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".edit.EditWalletsActivity"
-			android:label="@string/label_edit"
-			android:parentActivityName=".edit.EditActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".edit.EditActivity"/>
-		</activity>
-		<activity
-			android:name=".edit.EditBanksActivity"
-			android:label="@string/label_edit"
-			android:parentActivityName=".edit.EditActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".edit.EditActivity"/>
-		</activity>
-		<activity
-			android:name=".edit.EditExpTypesActivity"
-			android:label="@string/label_edit"
-			android:parentActivityName=".edit.EditActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value="com.chaturvedi.financemanager.edit.EditActivity"/>
-		</activity>
-		<activity
-			android:name=".main.StatisticsActivity"
-			android:label="@string/label_statistics"
-			android:parentActivityName=".main.SummaryActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".main.StatisticsFilterActivity"
-			android:label="@string/label_filterStatistics"
-			android:parentActivityName=".main.StatisticsActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.StatisticsActivity"/>
-		</activity>
-		<activity
-			android:name=".main.SettingsActivity"
-			android:label="@string/label_settings"
-			android:parentActivityName=".main.SummaryActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".help.HelpActivity"
-			android:label="@string/label_help"
-			android:parentActivityName=".main.SummaryActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".help.GuideActivity"
-			android:label="@string/label_help"
-			android:parentActivityName=".help.HelpActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".help.HelpActivity"/>
-		</activity>
-		<activity
-			android:name=".help.FAQSummaryActivity"
-			android:label="@string/label_help"
-			android:parentActivityName=".help.HelpActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".help.HelpActivity"/>
-		</activity>
-		<activity
-			android:name=".help.FAQAnswerActivity"
-			android:label="@string/label_help"
-			android:parentActivityName=".help.FAQAnswerActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".help.FAQSummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".help.AboutActivity"
-			android:label="@string/label_aboutDeveloper"
-			android:parentActivityName=".main.SummaryActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".extras.ExtrasActivity"
-			android:label="@string/label_extras"
-			android:parentActivityName=".main.SummaryActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".main.SummaryActivity"/>
-		</activity>
-		<activity
-			android:name=".extras.export.ExportActivity"
-			android:label="@string/label_export"
-			android:parentActivityName=".extras.ExtrasActivity"
-			android:windowSoftInputMode="stateHidden">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".extras.ExtrasActivity"/>
-		</activity>
-		<activity
-			android:name=".extras.zerodha.ZerodhaImportActivity"
-			android:label="@string/label_importZerodha"
-			android:parentActivityName=".extras.ExtrasActivity">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value=".extras.ExtrasActivity" />
-		</activity>
-
-		<!--<receiver-->
-			<!--android:name=".main.SmsReceiver"-->
-			<!--android:permission="android.permission.BROADCAST_SMS">-->
-			<!--<intent-filter android:priority="100">-->
-				<!--<action android:name="android.provider.Telephony.SMS_RECEIVED"/>-->
-			<!--</intent-filter>-->
-		<!--</receiver>-->
-
-		<service android:name=".extras.DailyBackupService"/>
 	</application>
 
 </manifest>
