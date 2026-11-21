@@ -3,6 +3,7 @@ package com.nagabhushansn95.financetracker.ui.common
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -292,6 +293,8 @@ fun AccountField(
     onPick: (Long?) -> Unit,
     modifier: Modifier = Modifier,
     none: String? = null,
+    /** Group the accounts under Wallets, Banks, Credit Cards … headers, as the transaction editor's picker does. */
+    grouped: Boolean = false,
 ) {
     var open by remember { mutableStateOf(false) }
     androidx.compose.material3.ExposedDropdownMenuBox(
@@ -319,7 +322,31 @@ fun AccountField(
             none?.let {
                 DropdownMenuItem(text = { Text(it) }, onClick = { onPick(null); open = false })
             }
-            accounts.forEach { a ->
+            if (grouped) {
+                com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel.SECTION_ORDER.forEach { type ->
+                    val ofType = accounts.filter { it.accountType == type }
+                    if (ofType.isNotEmpty()) {
+                        Text(
+                            com.nagabhushansn95.financetracker.ui.summary.SummaryViewModel.titleOf(
+                                type
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(
+                                start = 12.dp,
+                                end = 12.dp,
+                                top = 10.dp,
+                                bottom = 2.dp
+                            ),
+                        )
+                        ofType.forEach { a ->
+                            DropdownMenuItem(
+                                text = { Text(a.name) },
+                                onClick = { onPick(a.id); open = false })
+                        }
+                    }
+                }
+            } else accounts.forEach { a ->
                 DropdownMenuItem(text = { Text(a.name) }, onClick = { onPick(a.id); open = false })
             }
         }

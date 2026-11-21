@@ -132,18 +132,31 @@ class AppPreferences(context: Context) {
                 KEY_ALERT_BEYOND_YEAR,
                 com.nagabhushansn95.financetracker.data.investments.AlertThresholds.DEFAULT_BEYOND_YEAR
             ),
+            bills = prefs.getInt(
+                KEY_ALERT_BILLS,
+                com.nagabhushansn95.financetracker.data.investments.AlertThresholds.DEFAULT_BILLS
+            ),
         )
         set(value) = prefs.edit()
             .putInt(KEY_ALERT_MONTHLY, value.monthly)
             .putInt(KEY_ALERT_WITHIN_YEAR, value.withinYear)
             .putInt(KEY_ALERT_BEYOND_YEAR, value.beyondYear)
+            .putInt(KEY_ALERT_BILLS, value.bills)
             .apply()
+
+    /** How the Bills list was last sorted. */
+    var billsSort: String
+        get() = prefs.getString(KEY_BILLS_SORT, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_BILLS_SORT, value).apply()
+    var billsSortDescending: Boolean
+        get() = prefs.getBoolean(KEY_BILLS_SORT_DESC, false)
+        set(value) = prefs.edit().putBoolean(KEY_BILLS_SORT_DESC, value).apply()
 
     /** Emits the alert thresholds now and whenever they change. */
     val alertThresholdsFlow: Flow<com.nagabhushansn95.financetracker.data.investments.AlertThresholds> =
         callbackFlow {
             val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                if (key == KEY_ALERT_MONTHLY || key == KEY_ALERT_WITHIN_YEAR || key == KEY_ALERT_BEYOND_YEAR) trySend(
+                if (key == KEY_ALERT_MONTHLY || key == KEY_ALERT_WITHIN_YEAR || key == KEY_ALERT_BEYOND_YEAR || key == KEY_ALERT_BILLS) trySend(
                     alertThresholds
                 )
             }
@@ -273,6 +286,9 @@ class AppPreferences(context: Context) {
         private const val KEY_ALERT_MONTHLY = "alert_days_monthly"
         private const val KEY_ALERT_WITHIN_YEAR = "alert_days_within_year"
         private const val KEY_ALERT_BEYOND_YEAR = "alert_days_beyond_year"
+        private const val KEY_ALERT_BILLS = "alert_days_bills"
+        private const val KEY_BILLS_SORT = "bills_sort"
+        private const val KEY_BILLS_SORT_DESC = "bills_sort_desc"
         private const val KEY_PRICE_INTERVAL = "price_refresh_interval"
         const val PRICES_HOURLY = "HOURLY"
         const val PRICES_DAILY = "DAILY"
@@ -297,6 +313,7 @@ class AppPreferences(context: Context) {
             KEY_ALERT_MONTHLY,
             KEY_ALERT_WITHIN_YEAR,
             KEY_ALERT_BEYOND_YEAR,
+            KEY_ALERT_BILLS,
             KEY_THEME,
             KEY_AUTO_PRICES,
             KEY_PRICE_INTERVAL,

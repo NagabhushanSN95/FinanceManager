@@ -153,7 +153,7 @@ class TransactionRepository(private val db: AppDatabase) {
      * place and whether it is hidden, so that picking a template, changing its figures and saving with the box
      * ticked updates it rather than adding a twin.
      */
-    private suspend fun saveTemplate(t: TransactionEntity) {
+    internal suspend fun saveTemplate(t: TransactionEntity) {
         val dao = db.transactionDao()
         val fresh = t.toTemplate()
         val existing = dao.findTemplate(t.kind, t.particulars)

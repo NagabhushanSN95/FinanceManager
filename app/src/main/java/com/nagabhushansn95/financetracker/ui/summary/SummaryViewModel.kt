@@ -13,10 +13,12 @@ import com.nagabhushansn95.financetracker.data.investments.Insurance
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummaryBuilder
 import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 
 /** One collapsible block on the Home screen. */
@@ -86,11 +88,25 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
     val investments: StateFlow<InvestmentSummary?> = InvestmentSummaryBuilder.observe(db)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    /**
-     * Home's Alerts card: deposits past maturity, premiums falling due, cover, service and emission tests ending,
-     * within the run-up set in Settings.
-     */
-    val alerts: StateFlow<List<Alert>> = combine(
+    /** Every bill as the Bills screen sees it, for the alerts. */
+    private val bills: kotlinx.coroutines.flow.Flow<List<com.nagabhushansn95.financetracker.data.bills.BillView>> =
+        combine(
+            db.billDao().observeAll(),
+            db.billDao().observePayments(),
+            db.transactionDao().observeAll(),
+            db.accountDao().observeAll(),
+        ) { bills, payments, ledger, accounts ->
+            com.nagabhushansn95.financetracker.data.bills.Bills.build(
+                bills,
+                payments,
+                ledger.associateBy { it.id },
+                accounts.associateBy { it.id },
+                java.time.LocalDate.now(),
+                ledger,
+            )
+        }
+
+    private val investmentAlerts: kotlinx.coroutines.flow.Flow<List<Alert>> = combine(
         combine(
             db.instrumentDao().observeAll(),
             db.instrumentDao().observeFixedDeposits(),
@@ -117,7 +133,26 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
             today,
             thresholds
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }
+
+    /**
+     * Home's Alerts card: deposits past maturity, premiums falling due, cover, service and emission tests ending,
+     * and bills falling due, within the run-ups set in Settings.
+     */
+    val alerts: StateFlow<List<Alert>> = combine(
+        investmentAlerts,
+        bills,
+        prefs.alertThresholdsFlow,
+    ) { investments, billViews, thresholds ->
+        Alerts.sorted(
+            investments + Alerts.forBills(
+                billViews,
+                java.time.LocalDate.now(),
+                thresholds
+            )
+        )
+    }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun toggleSection(type: AccountType) {
         val now = !(collapsed.value[type] ?: false)

@@ -30,7 +30,7 @@ import com.nagabhushansn95.financetracker.BuildConfig
 import com.nagabhushansn95.financetracker.R
 
 private const val EMAIL = "nagabhushansn95@gmail.com"
-private const val REPO = "https://github.com/NagabhushanSN95/FinanceManager"
+private const val REPO = "https://github.com/NagabhushanSN95/FinanceTracker"
 
 @Composable
 fun AboutScreen() {

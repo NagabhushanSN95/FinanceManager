@@ -14,10 +14,12 @@ import com.nagabhushansn95.financetracker.ui.common.LedgerFilter
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.Period
 import com.nagabhushansn95.financetracker.ui.transaction.LedgerLookups
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -36,6 +38,8 @@ data class LedgerRow(
     val instrumentType: InstrumentType? = null,
     /** The provident-fund account this row credits or debits, if any. */
     val pfAccountId: Long? = null,
+    /** "Home Rent · October 2026" when the row pays a bill. */
+    val billLabel: String? = null,
 ) {
     /**
      * Every row on an instrument is edited from the instrument's own screen under Investments: deposits, policies
@@ -91,13 +95,25 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
             db.instrumentDao().observeAll(),
             com.nagabhushansn95.financetracker.data.investments.Validity.observeAll(db),
             db.instrumentDao().observeSecurities(),
-        ) { i, p, s -> Triple(i, p, s) },
+            combine(db.billDao().observeAll(), db.billDao().observePayments()) { bills, payments ->
+                val names = bills.associate { it.id to it.name }
+                payments.filter { it.transactionId != null }.associate {
+                    it.transactionId!! to "${names[it.billId] ?: "Bill"} · ${
+                        com.nagabhushansn95.financetracker.data.bills.Bills.periodLabel(
+                            it.periodStart,
+                            it.periodEnd
+                        )
+                    }"
+                }
+            },
+        ) { i, p, s, b -> Lookups(i, p, s, b) },
         filter,
-    ) { transactions, accounts, categories, (instruments, periods, securities), f ->
+    ) { transactions, accounts, categories, (instruments, periods, securities, billLabels), f ->
         // All rows (deleted accounts and categories included) so old transactions still get names.
         val lookups = LedgerLookups(accounts, categories, instruments, periods, securities)
         val range = f.range(earliest = transactions.lastOrNull()?.date)
-        val rows = transactions.filter { f.matches(it, range) }.map { it.toRow(lookups) }
+        val rows =
+            transactions.filter { f.matches(it, range) }.map { it.toRow(lookups, billLabels) }
         TransactionsUiState(
             days = rows.groupBy { it.date }.map { (date, list) -> LedgerDay(date, list) },
             shown = rows.size,
@@ -107,9 +123,18 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
             categories = categories.filter { !it.deleted },
             loaded = true,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TransactionsUiState())
+    }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TransactionsUiState())
 
-    private fun TransactionEntity.toRow(lookups: LedgerLookups) = LedgerRow(
+    private data class Lookups(
+        val instruments: List<com.nagabhushansn95.financetracker.data.db.entity.Instrument>,
+        val periods: List<com.nagabhushansn95.financetracker.data.db.entity.ValidityPeriod>,
+        val securities: List<com.nagabhushansn95.financetracker.data.db.entity.Security>,
+        val billLabels: Map<Long, String>,
+    )
+
+    private fun TransactionEntity.toRow(lookups: LedgerLookups, billLabels: Map<Long, String>) =
+        LedgerRow(
         id = id,
         date = date,
         kind = kind,
@@ -128,5 +153,6 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
         instrumentType = instrumentId?.let { lookups.instruments[it]?.instrumentType },
         pfAccountId = listOfNotNull(toAccountId, fromAccountId)
             .firstOrNull { lookups.accounts[it]?.accountType == com.nagabhushansn95.financetracker.data.db.entity.AccountType.PROVIDENT_FUND },
+            billLabel = billLabels[id],
     )
 }

@@ -41,6 +41,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Signed with the debug key for now, so the release variant installs from Android Studio for a
+            // smoothness comparison (no debuggable overhead). A real key comes with the first release.
+            signingConfig signingConfigs.debug
         }
     }
 

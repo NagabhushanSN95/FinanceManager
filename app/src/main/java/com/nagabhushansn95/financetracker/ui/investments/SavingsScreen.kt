@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.investments.Savings
 import com.nagabhushansn95.financetracker.data.investments.SavingsPeriod
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import kotlinx.coroutines.Dispatchers
@@ -185,9 +186,10 @@ fun SavingsScreen(onBack: () -> Unit, viewModel: SavingsViewModel = viewModel())
                 HorizontalDivider()
             }
             if (periods.isEmpty()) item {
-                Text(
-                    if (state.loaded) "No investments recorded yet." else "Loading…",
-                    modifier = Modifier.padding(16.dp)
+                LoadingOrMessage(
+                    state.loaded,
+                    "No investments recorded yet.",
+                    Modifier.fillMaxWidth()
                 )
             }
             items(periods, key = { it.key }) { p ->
