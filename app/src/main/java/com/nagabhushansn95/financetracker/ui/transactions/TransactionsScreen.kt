@@ -182,6 +182,14 @@ fun TransactionsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
+                row.billLabel?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
                 if (row.editedUnderInvestments) {
                     ListItem(
                         headlineContent = { Text("Open in Investments") },
@@ -230,7 +238,13 @@ fun TransactionsScreen(
         AlertDialog(
             onDismissRequest = { confirmDelete = null },
             title = { Text("Delete this transaction?") },
-            text = { Text("${row.particulars}\n${row.amountText}\nThe account balances are adjusted back.") },
+            text = {
+                Text(
+                    "${row.particulars}\n${row.amountText}\nThe account balances are adjusted back." +
+                            (row.billLabel?.let { "\n$it; that period reads as open again." }
+                                ?: "")
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = null

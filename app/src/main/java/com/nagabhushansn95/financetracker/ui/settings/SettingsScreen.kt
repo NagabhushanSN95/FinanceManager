@@ -168,7 +168,7 @@ fun SettingsScreen() {
                 Text("Alerts", style = MaterialTheme.typography.titleMedium)
                 Text(
                     "How many days before a premium falls due, or a cover, service or emission test ends, Home starts listing it. " +
-                            "Deposits are listed once past maturity. Set by how often the thing recurs.",
+                            "Deposits are listed once past maturity. Set by how often the thing recurs. Bills have their own run-up.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -199,6 +199,9 @@ fun SettingsScreen() {
                 daysField("Longer than a year: days before", thresholds.beyondYear) {
                     thresholds = thresholds.copy(beyondYear = it); prefs.alertThresholds =
                     thresholds
+                }
+                daysField("Bills: days before", thresholds.bills) {
+                    thresholds = thresholds.copy(bills = it); prefs.alertThresholds = thresholds
                 }
             }
         }

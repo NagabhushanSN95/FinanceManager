@@ -56,6 +56,7 @@ import com.nagabhushansn95.financetracker.data.investments.ProvidentFunds
 import com.nagabhushansn95.financetracker.data.repository.EditDataRepository
 import com.nagabhushansn95.financetracker.data.repository.TransactionRepository
 import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteEntryDialog
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
 import com.nagabhushansn95.financetracker.ui.common.StatCell
@@ -335,11 +336,12 @@ fun ProvidentFundAccountScreen(
             )
         }
         if (account == null) {
-            Text(
-                if (state.loaded) "Account not found." else "Loading…",
-                modifier = Modifier
+            LoadingOrMessage(
+                state.loaded,
+                "Account not found.",
+                Modifier
+                    .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
             )
             return@Scaffold
         }

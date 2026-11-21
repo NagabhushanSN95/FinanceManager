@@ -73,6 +73,7 @@ import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.DigitsField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.LabelRow
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NaturalOrder
 import com.nagabhushansn95.financetracker.ui.common.NumberField
@@ -427,10 +428,10 @@ fun FixedDepositsScreen(
                     }
                 }
                 if (shown.isEmpty()) item {
-                    Text(
-                        if (state.loaded) "No deposits here. Tap + to open one." else "Loading…",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    LoadingOrMessage(
+                        state.loaded,
+                        "No deposits here. Tap + to open one.",
+                        Modifier.fillMaxWidth()
                     )
                 }
                 items(

@@ -3,13 +3,19 @@ package com.nagabhushansn95.financetracker.ui.home
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -53,8 +59,11 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NamedNavArgument
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -65,6 +74,10 @@ import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.investments.InvestmentGroup
 import com.nagabhushansn95.financetracker.data.investments.InvestmentOrder
+import com.nagabhushansn95.financetracker.ui.bills.BillRoutes
+import com.nagabhushansn95.financetracker.ui.bills.BillScreen
+import com.nagabhushansn95.financetracker.ui.bills.BillsScreen
+import com.nagabhushansn95.financetracker.ui.bills.CreditScoreScreen
 import com.nagabhushansn95.financetracker.ui.common.InvestmentsLock
 import com.nagabhushansn95.financetracker.ui.common.LocalOpenDrawer
 import com.nagabhushansn95.financetracker.ui.edit.EditDataScreen
@@ -102,6 +115,7 @@ import kotlinx.coroutines.launch
 enum class Destination(val route: String, val title: String) {
     SUMMARY("home", "Home"),
     TRANSACTIONS("transactions", "Transactions"),
+    BILLS("bills", "Bills"),
     INVESTMENTS("investments", "Investments"),
     EDIT("manage", "Manage"),
     STATISTICS("statistics", "Statistics"),
@@ -117,7 +131,7 @@ private fun manageRoute(tab: Int) = "manage?tab=$tab"
 
 /** Non-drawer routes. */
 private const val ROUTE_EDITOR =
-    "transaction?id={id}&kind={kind}&account={account}"
+    "transaction?id={id}&kind={kind}&account={account}&bill={bill}&period={period}"
 
 /** Drawer entries under Investments, one per group, in the order of the categories under Manage. */
 private fun investmentScreens(categoryNames: List<String>): List<Pair<String, String>> =
@@ -148,6 +162,26 @@ class DrawerViewModel(application: android.app.Application) :
 
 /** How long the second back press has to follow the first one for the app to close. */
 private const val DOUBLE_BACK_MILLIS = 2_000L
+
+/**
+ * A destination drawn on an opaque background. The screens are laid over one another while they slide, and most
+ * of them paint nothing behind their lists, so without this the one underneath showed through at a third of the
+ * width.
+ */
+private fun NavGraphBuilder.page(
+    route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
+    content: @Composable (NavBackStackEntry) -> Unit,
+) {
+    composable(route, arguments) { entry ->
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) { content(entry) }
+    }
+}
+
 private const val SLIDE_MILLIS = 300
 
 /** The screen for an instrument's own ledger. */
@@ -168,8 +202,11 @@ private fun editorRoute(
     id: Long? = null,
     kind: TransactionKind? = null,
     accountId: Long? = null,
+    /** A bill payment to record, for the period starting on [period]. */
+    billId: Long? = null,
+    period: java.time.LocalDate? = null,
 ) =
-    "transaction?id=${id ?: -1}&kind=${kind?.name ?: ""}&account=${accountId ?: -1}"
+    "transaction?id=${id ?: -1}&kind=${kind?.name ?: ""}&account=${accountId ?: -1}&bill=${billId ?: -1}&period=${period ?: ""}"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -192,7 +229,10 @@ fun HomeScreen() {
     } ?: Destination.SUMMARY
     val route = backStackEntry?.destination?.route
     // Screens with their own top bar (editor, the investment sub-screens).
-    val inEditor = route == ROUTE_EDITOR || InvestmentRoutes.isInvestmentRoute(route)
+    val inEditor =
+        route == ROUTE_EDITOR || InvestmentRoutes.isInvestmentRoute(route) || BillRoutes.isSubRoute(
+            route
+        )
 
     fun goTo(destination: Destination) {
         navController.navigate(destination.route) {
@@ -328,6 +368,15 @@ fun HomeScreen() {
         },
     ) {
         Scaffold(
+            // A screen with its own top bar draws that bar under the status bar itself; the outer scaffold must not
+            // keep the status-bar strip for a bar it is not showing, or the strip shows the window background.
+            contentWindowInsets = if (inEditor) androidx.compose.foundation.layout.WindowInsets(
+                0,
+                0,
+                0,
+                0
+            )
+            else androidx.compose.material3.ScaffoldDefaults.contentWindowInsets,
             topBar = {
                 if (!inEditor) TopAppBar(
                     colors = appTopBarColors(),
@@ -348,8 +397,14 @@ fun HomeScreen() {
                 )
             },
             // Income, Expense and Transfer at the foot of Home and Transactions, as Finance Manager had them.
+            // It slides in and out with the screen change; appearing at once would shrink the content area in one
+            // jump while the screens are still sliding, which reads as the screen collapsing.
             bottomBar = {
-                if (!inEditor && (current == Destination.SUMMARY || current == Destination.TRANSACTIONS)) {
+                AnimatedVisibility(
+                    visible = !inEditor && (current == Destination.SUMMARY || current == Destination.TRANSACTIONS),
+                    enter = slideInVertically(tween(SLIDE_MILLIS)) { it },
+                    exit = slideOutVertically(tween(SLIDE_MILLIS)) { it },
+                ) {
                     AddTransactionBar(onAdd = { kind -> navController.navigate(editorRoute(kind = kind)) })
                 }
             },
@@ -361,22 +416,31 @@ fun HomeScreen() {
                 startDestination = Destination.SUMMARY.route,
                 modifier = Modifier.padding(padding),
                 // Screens slide in from the right and back out to it, so going forward and back feel different.
+                // The back gesture follows the same slide: left to its own Material default, it would shrink the
+                // screen to 70% instead, so the gesture and the back arrow looked like two different animations.
                 enterTransition = { slideInHorizontally(tween(SLIDE_MILLIS)) { it } },
                 exitTransition = { slideOutHorizontally(tween(SLIDE_MILLIS)) { -it / 3 } },
                 popEnterTransition = { slideInHorizontally(tween(SLIDE_MILLIS)) { -it / 3 } },
                 popExitTransition = { slideOutHorizontally(tween(SLIDE_MILLIS)) { it } },
+                predictivePopEnterTransition = { _ -> slideInHorizontally(tween(SLIDE_MILLIS)) { -it / 3 } },
+                predictivePopExitTransition = { _ -> slideOutHorizontally(tween(SLIDE_MILLIS)) { it } },
             ) {
-                composable(Destination.SUMMARY.route) {
+                page(Destination.SUMMARY.route) {
                     SummaryScreen(
                         onAccountLongPress = { navController.navigate(editorRoute(accountId = it)) },
                         onOpenPfAccount = { openInstrument(InvestmentRoutes.pfAccount(it)) },
                         onOpenInvestments = { openInvestments(it) },
                         onOpenAlert = { type, id -> openInstrument(instrumentRoute(type, id)) },
+                        onOpenBill = {
+                            navController.navigate(BillRoutes.bill(it)) {
+                                launchSingleTop = true
+                            }
+                        },
                         investmentsUnlocked = investmentsUnlocked,
                         onToggleInvestments = { toggleInvestments() },
                     )
                 }
-                composable(Destination.TRANSACTIONS.route) {
+                page(Destination.TRANSACTIONS.route) {
                     TransactionsScreen(
                         onEdit = { navController.navigate(editorRoute(id = it)) },
                         onOpenPfAccount = { openInstrument(InvestmentRoutes.pfAccount(it)) },
@@ -391,8 +455,42 @@ fun HomeScreen() {
                         snackbarHostState = snackbarHostState
                     )
                 }
-                composable(Destination.EXTRAS.route) { ExtrasScreen(snackbarHostState) }
-                composable(
+                page(Destination.BILLS.route) {
+                    BillsScreen(
+                        onOpenBill = {
+                            navController.navigate(BillRoutes.bill(it)) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onOpenCredit = {
+                            navController.navigate(BillRoutes.CREDIT) {
+                                launchSingleTop = true
+                            }
+                        },
+                        snackbarHostState = snackbarHostState,
+                    )
+                }
+                page(
+                    BillRoutes.BILL,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType })
+                ) { entry ->
+                    BillScreen(
+                        billId = entry.arguments!!.getLong("id"),
+                        onBack = { navController.popBackStack() },
+                        onRecordPayment = { billId, period ->
+                            navController.navigate(
+                                editorRoute(
+                                    billId = billId,
+                                    period = period
+                                )
+                            )
+                        },
+                        onEditTransaction = { navController.navigate(editorRoute(id = it)) },
+                    )
+                }
+                page(BillRoutes.CREDIT) { CreditScoreScreen(onBack = { navController.popBackStack() }) }
+                page(Destination.EXTRAS.route) { ExtrasScreen(snackbarHostState) }
+                page(
                     ROUTE_MANAGE,
                     arguments = listOf(navArgument("tab") {
                         type = NavType.IntType; defaultValue = 0
@@ -403,26 +501,26 @@ fun HomeScreen() {
                         initialTab = entry.arguments?.getInt("tab") ?: 0
                     )
                 }
-                composable(Destination.INVESTMENTS.route) {
+                page(Destination.INVESTMENTS.route) {
                     InvestmentsScreen(onNavigate = {
                         navController.navigate(
                             it
                         )
                     })
                 }
-                composable(InvestmentRoutes.STOCKS) {
+                page(InvestmentRoutes.STOCKS) {
                     HoldingsListScreen(
                         type = InstrumentType.STOCK,
                         onBack = { navController.popBackStack() },
                         onOpen = { navController.navigate(InvestmentRoutes.holding(it)) })
                 }
-                composable(InvestmentRoutes.FUNDS) {
+                page(InvestmentRoutes.FUNDS) {
                     HoldingsListScreen(
                         type = InstrumentType.MUTUAL_FUND,
                         onBack = { navController.popBackStack() },
                         onOpen = { navController.navigate(InvestmentRoutes.holding(it)) })
                 }
-                composable(
+                page(
                     InvestmentRoutes.HOLDING,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
                 ) { entry ->
@@ -431,12 +529,12 @@ fun HomeScreen() {
                         onBack = { navController.popBackStack() },
                     )
                 }
-                composable(InvestmentRoutes.PROVIDENT_FUNDS) {
+                page(InvestmentRoutes.PROVIDENT_FUNDS) {
                     ProvidentFundsScreen(
                         onBack = { navController.popBackStack() },
                         onOpenAccount = { navController.navigate(InvestmentRoutes.pfAccount(it)) })
                 }
-                composable(
+                page(
                     InvestmentRoutes.PF_ACCOUNT,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
                 ) { entry ->
@@ -445,12 +543,12 @@ fun HomeScreen() {
                         onBack = { navController.popBackStack() },
                     )
                 }
-                composable(InvestmentRoutes.FIXED_DEPOSITS) {
+                page(InvestmentRoutes.FIXED_DEPOSITS) {
                     FixedDepositsScreen(
                         onBack = { navController.popBackStack() },
                         onOpenDeposit = { navController.navigate(InvestmentRoutes.fixedDeposit(it)) })
                 }
-                composable(
+                page(
                     InvestmentRoutes.FIXED_DEPOSIT,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
                 ) { entry ->
@@ -461,12 +559,12 @@ fun HomeScreen() {
                         onEditTransaction = { navController.navigate(editorRoute(id = it)) },
                     )
                 }
-                composable(InvestmentRoutes.INSURANCE) {
+                page(InvestmentRoutes.INSURANCE) {
                     InsuranceScreen(
                         onBack = { navController.popBackStack() },
                         onOpenType = { navController.navigate(InvestmentRoutes.insuranceType(it)) })
                 }
-                composable(
+                page(
                     InvestmentRoutes.INSURANCE_TYPE,
                     arguments = listOf(navArgument("type") { type = NavType.StringType })
                 ) { entry ->
@@ -477,7 +575,7 @@ fun HomeScreen() {
                         onBack = { navController.popBackStack() },
                         onOpenPolicy = { navController.navigate(InvestmentRoutes.policy(it)) })
                 }
-                composable(
+                page(
                     InvestmentRoutes.POLICY,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
                 ) { entry ->
@@ -486,12 +584,12 @@ fun HomeScreen() {
                         onBack = { navController.popBackStack() },
                     )
                 }
-                composable(InvestmentRoutes.OTHERS) {
+                page(InvestmentRoutes.OTHERS) {
                     OthersScreen(
                         onBack = { navController.popBackStack() },
                         onOpen = { navController.navigate(InvestmentRoutes.other(it)) })
                 }
-                composable(
+                page(
                     InvestmentRoutes.OTHER,
                     arguments = listOf(navArgument("id") { type = NavType.LongType })
                 ) { entry ->
@@ -500,29 +598,37 @@ fun HomeScreen() {
                         onBack = { navController.popBackStack() },
                     )
                 }
-                composable(InvestmentRoutes.SAVINGS) { SavingsScreen(onBack = { navController.popBackStack() }) }
-                composable(InvestmentRoutes.TARGETS) { TargetsScreen(onBack = { navController.popBackStack() }) }
-                composable(Destination.STATISTICS.route) { StatisticsScreen() }
-                composable(Destination.SETTINGS.route) { SettingsScreen() }
-                composable(Destination.HELP.route) { HelpScreen() }
-                composable(Destination.ABOUT.route) { AboutScreen() }
-                composable(
+                page(InvestmentRoutes.SAVINGS) { SavingsScreen(onBack = { navController.popBackStack() }) }
+                page(InvestmentRoutes.TARGETS) { TargetsScreen(onBack = { navController.popBackStack() }) }
+                page(Destination.STATISTICS.route) { StatisticsScreen() }
+                page(Destination.SETTINGS.route) { SettingsScreen() }
+                page(Destination.HELP.route) { HelpScreen() }
+                page(Destination.ABOUT.route) { AboutScreen() }
+                page(
                     ROUTE_EDITOR,
                     arguments = listOf(
                         navArgument("id") { type = NavType.LongType; defaultValue = -1L },
                         navArgument("kind") { type = NavType.StringType; defaultValue = "" },
                         navArgument("account") { type = NavType.LongType; defaultValue = -1L },
+                        navArgument("bill") { type = NavType.LongType; defaultValue = -1L },
+                        navArgument("period") { type = NavType.StringType; defaultValue = "" },
                     ),
                 ) { entry ->
                     val id = entry.arguments?.getLong("id")?.takeIf { it > 0 }
                     val kind = entry.arguments?.getString("kind")?.takeIf { it.isNotEmpty() }
                         ?.let { TransactionKind.valueOf(it) }
                     val account = entry.arguments?.getLong("account")?.takeIf { it > 0 }
+                    val bill = entry.arguments?.getLong("bill")?.takeIf { it > 0 }
+                    val period = entry.arguments?.getString("period")?.takeIf { it.isNotEmpty() }
+                        ?.let { java.time.LocalDate.parse(it) }
                     TransactionEditorScreen(
                         id,
                         kind,
                         account,
-                        onDone = { navController.popBackStack() })
+                        onDone = { navController.popBackStack() },
+                        billId = bill,
+                        periodStart = period,
+                    )
                 }
             }
             }

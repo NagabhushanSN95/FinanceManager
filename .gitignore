@@ -11,3 +11,5 @@ app/src/main/jniLibs/**/*.so
 auxil/*
 .DS_Store
 **/.DS_Store
+.idea/deploymentTargetSelector.xml
+.idea/deploymentTargetDropDown.xml

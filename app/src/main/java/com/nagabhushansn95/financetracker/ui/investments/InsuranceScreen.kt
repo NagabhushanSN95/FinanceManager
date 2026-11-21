@@ -78,6 +78,7 @@ import com.nagabhushansn95.financetracker.ui.common.ChoiceDropdown
 import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteEntryDialog
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
@@ -355,12 +356,7 @@ fun InsuranceScreen(
                 .padding(padding),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            if (!state.loaded) item {
-                Text(
-                    "Loading…",
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
+            if (!state.loaded) item { LoadingOrMessage(false, "", Modifier.fillMaxWidth()) }
             items(InsuranceType.entries.chunked(2), key = { it.first().name }) { pair ->
                 Row(
                     modifier = Modifier
@@ -469,9 +465,10 @@ fun InsuranceTypeScreen(
             contentPadding = PaddingValues(bottom = 88.dp)
         ) {
             if (ofType.isEmpty()) item {
-                Text(
-                    if (state.loaded) "Nothing here yet. Tap + to add ${if (type == InsuranceType.MOTOR) "a vehicle" else "a policy"}." else "Loading…",
-                    modifier = Modifier.padding(16.dp)
+                LoadingOrMessage(
+                    state.loaded,
+                    "Nothing here yet. Tap + to add ${if (type == InsuranceType.MOTOR) "a vehicle" else "a policy"}.",
+                    Modifier.fillMaxWidth()
                 )
             }
             val groups = listOf(
@@ -611,11 +608,12 @@ fun InsurancePolicyScreen(
         },
     ) { padding ->
         if (v == null) {
-            Text(
-                if (state.loaded) "Policy not found." else "Loading…",
-                modifier = Modifier
+            LoadingOrMessage(
+                state.loaded,
+                "Policy not found.",
+                Modifier
+                    .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
             )
             return@Scaffold
         }

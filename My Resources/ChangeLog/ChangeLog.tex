@@ -299,8 +299,8 @@ linkcolor = black
     \section{v4.5.4 (144)}\label{sec:144}
     \begin{itemize}
         \item Fixed the scroll bar layout shows wallet and bank balances in SummaryActivity.
-        \item Zerodha Coin import: the trade date of SELL (redemption) orders is now parsed from the "Funds credited ... on DD MMM YYYY" remark.
-        \item Added "Back-up Database File" in Extras, which copies the raw SQLite database to the Backups folder. This is the hand-over format for migrating data to v5.0.0.
+        \item Zerodha Coin import: the trade date of SELL (redemption) orders is now parsed from the ``Funds credited ... on DD MMM YYYY'' remark.
+        \item Added ``Back-up Database File'' in Extras, which copies the raw SQLite database to the Backups folder. This is the hand-over format for migrating data to v5.0.0.
     \end{itemize}
 
 
@@ -332,6 +332,26 @@ linkcolor = black
         \item Settings: Light, Dark, System and Classic themes (Classic is the 4.5.x look), price refresh interval, alert run-up days, daily backup and Drive upload.
         Help and About screens.
         \item Database schema 11 with the 4.x importer; no migration path from earlier 5.0.0 pre-release files.
+    \end{itemize}
+
+
+    \section{v5.1.0 (146)}\label{sec:146}
+    Bills: standing commitments tracked as ledger rows linked to the period they settle.
+    \begin{itemize}
+        \item New Bills tab after Transactions. A bill is an expense, a transfer or an income (a salary) with a schedule: by the calendar (every N months, each payment for the current or the previous period) or by validity (the next falls due when the last payment runs out). Card bills follow the card's due day and show the statement amount.
+        \item Bill screen: what falls due next, schedule, last paid and paid-so-far, then the history. The ``+'' offers Record a payment (opens the editor filled in; the period can be changed), Skip a period (several at once, past ones too), Link transactions and Unlink transactions.
+        \item Linking: multi-select from the ledger, searched by the bill's particulars pattern; the period is read from the month anywhere in the particulars, else taken from the nearest due date; crowded periods show in red; Tick all / Untick all. Linking older rows moves the history start back. One row may pay several bills (rent and maintenance paid together).
+        \item Press and hold a history row to open the transaction, change the period (another month, or for validity bills the start and end dates), re-chain the later payments, unlink or delete. Every delete is confirmed.
+        \item Validity is a count in days, months or years (6 months, 1 year). A payment's dates default to queueing behind the running validity and can be set by hand.
+        \item Bill form: Expense / Transfer / Income, grouped account dropdowns, ``Insert \{period\}'' chip, next due date, each payment for the current or previous period, editable history start, end on a chosen date, and a per-bill alert mode: before due, once overdue, or never.
+        \item Bills list: sort by due date, name, amount, last paid, added or custom (drag to reorder); search field and a filter chip (Overdue, Due in 30 days, Expenses, Transfers, Incomes, Card bills, By validity, Ended); incomes in their own section.
+        \item The ledger names the bill a row pays (``Pays the bill Home Rent · October 2026''); the bill-payment editor carries the bill and period.
+        \item Credit scores by agency under Bills (CIBIL seeded), with a chart of the readings.
+        \item Home alerts for bills with their own run-up (Settings $>$ Alerts); income bills read ``expected'' and ``late''.
+        \item Smoothness: ledger-wide builds run off the main thread; the back gesture slides like the back arrow; screens are drawn on an opaque background; the add bar slides with the screen; a centred spinner replaces the Loading text.
+        \item Date pickers take typed dates as dd/MM/yyyy.
+        \item Database schema 16 (migrations from 11 kept for restores): bills, bill payments, credit agencies and scores; alert mode, display order, validity and its unit.
+        \item Release build type signed with the debug key for side-by-side comparisons; minify off.
     \end{itemize}
 
 \end{document}

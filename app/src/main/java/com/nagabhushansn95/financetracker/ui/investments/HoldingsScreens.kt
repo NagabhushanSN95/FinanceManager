@@ -102,6 +102,7 @@ import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteEntryDialog
 import com.nagabhushansn95.financetracker.ui.common.DatabaseFilePickers
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NaturalOrder
 import com.nagabhushansn95.financetracker.ui.common.NumberField
@@ -995,12 +996,9 @@ fun HoldingScreen(
         },
     ) { padding ->
         if (v == null) {
-            Text(
-                if (state.loaded) "Not found." else "Loading…",
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(16.dp)
-            )
+            LoadingOrMessage(state.loaded, "Not found.", Modifier
+                .fillMaxSize()
+                .padding(padding))
             return@Scaffold
         }
         val position = v.position

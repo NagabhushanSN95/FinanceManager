@@ -1,4 +1,4 @@
-# FinanceManager
+# Finance Tracker (formerly FinanceManager)
 
 An app to record your financial transactions.
 All expenses, incomes and other transactions can be recorded.

@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.InstrumentType
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.StatCell
 import java.time.format.DateTimeFormatter
@@ -80,10 +81,7 @@ fun InvestmentsScreen(onNavigate: (String) -> Unit, viewModel: InvestmentsViewMo
     val savings by viewModel.savings.collectAsStateWithLifecycle()
     val summary = state.summary
     if (summary == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) { Text(if (state.loaded) "Nothing invested yet." else "Loading…") }
+        LoadingOrMessage(state.loaded, "Nothing invested yet.", Modifier.fillMaxSize())
         return
     }
     var view by rememberSaveable { mutableStateOf(MetricView.VALUE) }

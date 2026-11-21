@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -24,6 +27,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +61,8 @@ fun SummaryScreen(
     onOpenInvestments: (String?) -> Unit = {},
     /** A tap on an alert opens the deposit, policy or vehicle it is about (only while the investments are unlocked). */
     onOpenAlert: (InstrumentType, Long) -> Unit = { _, _ -> },
+    /** A tap on a bill's alert opens the bill; bills are not behind the unlock. */
+    onOpenBill: (Long) -> Unit = {},
     investmentsUnlocked: Boolean = true,
     onToggleInvestments: () -> Unit = {},
     viewModel: SummaryViewModel = viewModel()
@@ -68,7 +77,14 @@ fun SummaryScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (alerts.isNotEmpty()) item { AlertsCard(alerts, investmentsUnlocked, onOpenAlert) }
+        if (alerts.isNotEmpty()) item {
+            AlertsCard(
+                alerts,
+                investmentsUnlocked,
+                onOpenAlert,
+                onOpenBill
+            )
+        }
         item { TotalsCard(state, onLongPress = onToggleInvestments) }
         items(state.sections, key = { it.type }) { section ->
             SectionCard(
@@ -102,7 +118,8 @@ fun SummaryScreen(
 private fun AlertsCard(
     alerts: List<Alert>,
     unlocked: Boolean,
-    onOpen: (InstrumentType, Long) -> Unit
+    onOpen: (InstrumentType, Long) -> Unit,
+    onOpenBill: (Long) -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -111,11 +128,43 @@ private fun AlertsCard(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
+            // Month beginnings bring many lines at once: the list scrolls within a fixed height and draws its own
+            // thumb, since the card sits inside Home's lazy column and would otherwise grow without bound.
+            val scroll = rememberScrollState()
+            val thumb = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            Column(
+                modifier = Modifier
+                    .heightIn(max = ALERTS_MAX_HEIGHT)
+                    .drawWithContent {
+                        drawContent()
+                        if (scroll.maxValue in 1 until Int.MAX_VALUE) {
+                            val viewport = size.height
+                            val content = viewport + scroll.maxValue
+                            val thumbHeight =
+                                (viewport * viewport / content).coerceAtLeast(24.dp.toPx())
+                            val top = (viewport - thumbHeight) * scroll.value / scroll.maxValue
+                            drawRoundRect(
+                                thumb,
+                                topLeft = Offset(size.width - 6.dp.toPx(), top),
+                                size = Size(3.dp.toPx(), thumbHeight),
+                                cornerRadius = CornerRadius(2.dp.toPx()),
+                            )
+                        }
+                    }
+                    .verticalScroll(scroll)
+            ) {
             alerts.forEach { a ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = unlocked) { onOpen(a.instrumentType, a.instrumentId) }
+                        .clickable(enabled = a.billId != null || unlocked) {
+                            val bill = a.billId
+                            if (bill != null) onOpenBill(bill)
+                            else if (a.instrumentType != null && a.instrumentId != null) onOpen(
+                                a.instrumentType,
+                                a.instrumentId
+                            )
+                        }
                         .padding(horizontal = 16.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -134,9 +183,13 @@ private fun AlertsCard(
                     )
                 }
             }
+            }
         }
     }
 }
+
+/** About four and a half alert rows; more than that scrolls. */
+private val ALERTS_MAX_HEIGHT = 220.dp
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

@@ -38,6 +38,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.investments.HoldingRow
 import com.nagabhushansn95.financetracker.data.investments.InvestmentSummary
 import com.nagabhushansn95.financetracker.data.investments.SummaryLine
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.StatCell
 import com.nagabhushansn95.financetracker.ui.edit.AccountSheet
@@ -68,10 +69,7 @@ private fun InvestmentScaffold(
             .fillMaxSize()
             .padding(padding)) {
             val summary = state.summary
-            if (summary == null) Text(
-                if (state.loaded) empty else "Loading…",
-                modifier = Modifier.padding(16.dp)
-            )
+            if (summary == null) LoadingOrMessage(state.loaded, empty, Modifier.fillMaxSize())
             else content(summary)
         }
     }

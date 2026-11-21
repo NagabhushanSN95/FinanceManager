@@ -70,6 +70,7 @@ import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteDialog
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.DigitsField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
+import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
 import com.nagabhushansn95.financetracker.ui.common.NumberField
 import com.nagabhushansn95.financetracker.ui.common.SHORT_DATE
@@ -139,11 +140,12 @@ fun FixedDepositDetailScreen(
         },
     ) { padding ->
         if (d == null) {
-            Text(
-                if (state.loaded) "Deposit not found." else "Loading…",
-                modifier = Modifier
+            LoadingOrMessage(
+                state.loaded,
+                "Deposit not found.",
+                Modifier
+                    .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
             )
             return@Scaffold
         }

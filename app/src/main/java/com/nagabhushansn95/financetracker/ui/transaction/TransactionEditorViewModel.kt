@@ -4,15 +4,21 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.nagabhushansn95.financetracker.data.bills.BillPeriod
+import com.nagabhushansn95.financetracker.data.bills.Bills
+import com.nagabhushansn95.financetracker.data.bills.Validity
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
+import com.nagabhushansn95.financetracker.data.db.entity.Bill
+import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.Template
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
+import com.nagabhushansn95.financetracker.data.repository.BillsRepository
 import com.nagabhushansn95.financetracker.data.repository.TransactionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +27,44 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.math.roundToLong
+
+/**
+ * The bill a row pays. Recording: the editor was opened from the bill for [period] (a calendar bill), or for a
+ * duration bill, whose period follows from the date and the bill's validity on save unless [period] was set by hand.
+ * Existing: the row being edited already pays the bill; shown, never changed here.
+ */
+data class BillTarget(
+    val bill: Bill,
+    val period: BillPeriod?,
+    /** DURATION: the day the current validity ends, so a payment made before it queues behind. */
+    val previousEnd: LocalDate? = null,
+    /** DURATION, recording: the validities to offer when the period is changed by hand. */
+    val validities: List<Validity> = emptyList(),
+    val existing: Boolean = false,
+    /** CALENDAR, recording: the periods the payment may be for (unsettled ones, then a few ahead). */
+    val choices: List<BillPeriod> = emptyList(),
+    /** What a card's statement asked for; it applies to [statementFor] only. */
+    val statementAmount: Double? = null,
+    val statementFor: LocalDate? = null,
+    /** The bill's expected amount, else the last payment's: what a period other than the statement's is likely to cost. */
+    val usualAmount: Double? = null,
+) {
+    val recording: Boolean get() = !existing
+    val duration: Boolean get() = bill.schedule == BillSchedule.DURATION
+    val label: String get() = period?.label ?: "—"
+
+    /** DURATION, recording: the period a payment on [date] covers when none was set by hand. */
+    fun periodFor(date: LocalDate): BillPeriod? =
+        period ?: if (duration) Bills.durationPeriod(
+            previousEnd,
+            date,
+            Bills.validityOf(bill)
+        ) else null
+
+    /** The statement amount for the statement's period, else the usual amount. */
+    fun amountFor(period: BillPeriod?): Double? =
+        if (period != null && period.start == statementFor && statementAmount != null) statementAmount else usualAmount
+}
 
 /** Everything the editor form shows. Amount fields are kept as text so the user can type freely. */
 data class EditorForm(
@@ -46,6 +90,7 @@ data class EditorForm(
     val hidden: Boolean = false,
     val includeInStatistics: Boolean = true,
     val createdTime: LocalDateTime? = null,
+    val bill: BillTarget? = null,
 ) {
     val isEdit get() = id != 0L
     val amountValue get() = amount.trim().toDoubleOrNull()
@@ -198,6 +243,7 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     private val db = AppDatabase.getInstance(application)
     private val prefs = AppPreferences(application)
     private val repository = TransactionRepository(db)
+    private val bills = BillsRepository(db)
 
     private val _form = MutableStateFlow(EditorForm())
     val form: StateFlow<EditorForm> = _form
@@ -217,6 +263,8 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         transactionId: Long?,
         kind: TransactionKind?,
         accountId: Long?,
+        billId: Long? = null,
+        periodStart: LocalDate? = null,
     ) {
         if (initialised) return
         initialised = true
@@ -247,6 +295,17 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                         )
                         return@launch
                     }
+                    // A row that pays a bill says so; the link itself is changed from the bill's screen.
+                    val payment = db.billDao().getPaymentOf(t.id)
+                    val paid = payment?.let { p ->
+                        db.billDao().getById(p.billId)?.let { b ->
+                            BillTarget(
+                                b,
+                                BillPeriod(p.periodStart, p.periodEnd, p.dueDate),
+                                existing = true
+                            )
+                        }
+                    }
                     _form.value = EditorForm(
                         id = t.id,
                         kind = t.kind,
@@ -265,7 +324,16 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                         hidden = t.hidden,
                         includeInStatistics = t.includeInStatistics,
                         createdTime = t.createdTime,
+                        bill = paid,
                     )
+                    opened = _form.value
+                    return@launch
+                }
+            }
+            if (billId != null) {
+                val bill = db.billDao().getById(billId)
+                if (bill != null) {
+                    _form.value = formForBill(bill, periodStart)
                     opened = _form.value
                     return@launch
                 }
@@ -282,10 +350,88 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         }
     }
 
+    /**
+     * The form filled in from a bill for the period starting on [periodStart] (or the first unsettled one): the
+     * bill's kind, accounts and category, the particulars for the period, and the expected amount (a card's
+     * statement when known). A duration bill asks for the validity instead of a period.
+     */
+    private suspend fun formForBill(bill: Bill, periodStart: LocalDate?): EditorForm {
+        val today = LocalDate.now()
+        val accounts = db.accountDao().getAll().associateBy { it.id }
+        val payments = db.billDao().getPayments(bill.id)
+        val card = bill.toAccountId?.let { accounts[it] }
+            ?.takeIf { it.accountType == AccountType.CREDIT_CARD && bill.kind == TransactionKind.TRANSFER }
+        val ledger = card?.let { db.transactionDao().getForAccount(it.id) } ?: emptyList()
+        val view = Bills.build(listOf(bill), payments, emptyMap(), accounts, today, ledger).single()
+        val open = Bills.unsettled(bill, payments, today, view.dueDay)
+        val period = if (bill.schedule == BillSchedule.DURATION) null
+        else open.firstOrNull { it.start == periodStart } ?: view.next ?: open.firstOrNull()
+        // The last payment's amount stands in for a varying bill with nothing expected.
+        val last =
+            payments.mapNotNull { p -> p.transactionId?.let { db.transactionDao().getById(it) } }
+                .maxWithOrNull(compareBy({ it.date }, { it.id }))
+        val target = BillTarget(
+            bill = bill,
+            period = period,
+            previousEnd = payments.maxOfOrNull { it.periodEnd },
+            validities = if (bill.schedule == BillSchedule.DURATION) Bills.validityChoices(
+                bill,
+                payments
+            ) else emptyList(),
+            choices = Bills.periodChoices(bill, payments, today, view.dueDay),
+            statementAmount = view.statementAmount,
+            statementFor = view.next?.start,
+            usualAmount = bill.amount ?: last?.amount,
+        )
+        val particulars = Bills.particularsFor(bill, period ?: target.periodFor(today)!!)
+        val amount = target.amountFor(period)
+        return EditorForm(
+            kind = bill.kind,
+            fromAccountId = (bill.fromAccountId
+                ?: last?.fromAccountId).takeIf { bill.kind != TransactionKind.INCOME },
+            toAccountId = (bill.toAccountId
+                ?: last?.toAccountId).takeIf { bill.kind != TransactionKind.EXPENSE },
+            categoryId = (bill.categoryId
+                ?: last?.categoryId).takeIf { bill.kind != TransactionKind.TRANSFER },
+            particulars = particulars,
+            amount = amount?.let { plain(it) } ?: "",
+            bill = target,
+        )
+    }
+
     fun setKind(kind: TransactionKind) =
         _form.update { it.withKind(kind, _data.value.categories.associateBy { c -> c.id }) }
 
-    fun setDate(date: LocalDate) = _form.update { it.copy(date = date) }
+    /** Bill payment: another period; the particulars and amount follow while they are still the bill's own. */
+    fun setBillPeriod(period: BillPeriod) = _form.update { f ->
+        val target = f.bill ?: return@update f
+        if (!target.recording || target.period == period) return@update f
+        val oldParticulars = target.periodFor(f.date)?.let { Bills.particularsFor(target.bill, it) }
+        val oldAmount = target.amountFor(target.period)?.let { plain(it) } ?: ""
+        f.copy(
+            bill = target.copy(period = period),
+            particulars = if (f.particulars == oldParticulars) Bills.particularsFor(
+                target.bill,
+                period
+            ) else f.particulars,
+            amount = if (f.amount == oldAmount) target.amountFor(period)?.let { plain(it) }
+                ?: "" else f.amount,
+        )
+    }
+
+    /** A duration payment's period follows the date until it is set by hand; the particulars follow it while still the bill's own. */
+    fun setDate(date: LocalDate) = _form.update { f ->
+        val target = f.bill
+        if (target == null || !target.recording || !target.duration || target.period != null) return@update f.copy(
+            date = date
+        )
+        val old = target.periodFor(f.date)?.let { Bills.particularsFor(target.bill, it) }
+        val new = target.periodFor(date)?.let { Bills.particularsFor(target.bill, it) }
+        f.copy(
+            date = date,
+            particulars = if (f.particulars == old && new != null) new else f.particulars
+        )
+    }
     fun setFrom(id: Long?) = _form.update { it.copy(fromAccountId = id) }
     fun setTo(id: Long?) = _form.update { it.copy(toAccountId = id) }
     fun setCategory(id: Long?) = _form.update { it.copy(categoryId = id) }
@@ -355,10 +501,16 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         )
         viewModelScope.launch {
             val result = runCatching {
+                val target = f.bill
                 if (f.isEdit) repository.update(
                     entity,
                     f.saveAsTemplate
-                ) else repository.add(entity, f.saveAsTemplate)
+                ) else if (target != null && target.recording) {
+                    // A duration payment's period follows from its date and the bill's validity unless set by hand.
+                    val period = target.periodFor(f.date)
+                        ?: throw IllegalStateException("This bill has nothing due")
+                    bills.recordPayment(target.bill, period, entity, f.saveAsTemplate)
+                } else repository.add(entity, f.saveAsTemplate)
             }
             result.onSuccess {
                 entity.fromAccountId?.let { prefs.pushRecentId(RECENT_FROM, it) }
