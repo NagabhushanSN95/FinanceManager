@@ -17,13 +17,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.DateRangePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -78,12 +78,15 @@ fun PeriodMenu(
     }
     if (showRange) {
         val (from, to) = filter.range()
-        val state = rememberDateRangePickerState(
-            initialSelectedStartDateMillis = from.atStartOfDay().toInstant(ZoneOffset.UTC)
-                .toEpochMilli(),
-            initialSelectedEndDateMillis = to.atStartOfDay().toInstant(ZoneOffset.UTC)
-                .toEpochMilli(),
-        )
+        val state = remember {
+            DateRangePickerState(
+                PICKER_LOCALE,
+                initialSelectedStartDateMillis = from.atStartOfDay().toInstant(ZoneOffset.UTC)
+                    .toEpochMilli(),
+                initialSelectedEndDateMillis = to.atStartOfDay().toInstant(ZoneOffset.UTC)
+                    .toEpochMilli(),
+            )
+        }
         DatePickerDialog(
             onDismissRequest = { showRange = false },
             confirmButton = {
@@ -105,7 +108,13 @@ fun PeriodMenu(
                 }) { Text("OK") }
             },
             dismissButton = { TextButton(onClick = { showRange = false }) { Text("Cancel") } },
-        ) { DateRangePicker(state = state, modifier = Modifier.height(480.dp)) }
+        ) {
+            DateRangePicker(
+                state = state,
+                dateFormatter = pickerFormatter(),
+                modifier = Modifier.height(480.dp)
+            )
+        }
     }
 }
 

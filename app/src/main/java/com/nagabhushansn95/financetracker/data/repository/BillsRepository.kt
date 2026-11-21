@@ -7,6 +7,7 @@ import com.nagabhushansn95.financetracker.data.bills.Bills
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Bill
 import com.nagabhushansn95.financetracker.data.db.entity.BillPayment
+import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
 import com.nagabhushansn95.financetracker.data.db.entity.CreditAgency
 import com.nagabhushansn95.financetracker.data.db.entity.CreditScore
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
@@ -24,7 +25,29 @@ class BillsRepository(private val db: AppDatabase) {
 
     suspend fun add(bill: Bill, now: LocalDateTime = LocalDateTime.now()): Long {
         validate(bill)
-        return dao.insert(bill.copy(name = bill.name.trim(), createdTime = now, modifiedTime = now))
+        val order = if (bill.displayOrder > 0) bill.displayOrder else dao.maxOrder() + 1
+        return dao.insert(
+            bill.copy(
+                name = bill.name.trim(),
+                displayOrder = order,
+                createdTime = now,
+                modifiedTime = now
+            )
+        )
+    }
+
+    /** The Custom sort: [ids] in the order they should list, first to last. */
+    suspend fun saveOrder(ids: List<Long>) {
+        db.useWriterConnection { transactor ->
+            transactor.immediateTransaction {
+                ids.forEachIndexed { i, id ->
+                    dao.setOrder(
+                        id,
+                        i + 1
+                    )
+                }
+            }
+        }
     }
 
     suspend fun update(bill: Bill, now: LocalDateTime = LocalDateTime.now()) {
@@ -126,11 +149,14 @@ class BillsRepository(private val db: AppDatabase) {
         db.useWriterConnection { transactor ->
             transactor.immediateTransaction {
                 var moved = bill
+                // One row may pay several bills (rent and maintenance paid together), but a bill only once.
+                val mine = dao.getPayments(bill.id).mapNotNull { it.transactionId }.toHashSet()
                 for ((period, transactionId) in links) {
                     requireNotNull(
                         db.transactionDao().getById(transactionId)
                     ) { "That transaction no longer exists" }
-                    require(dao.getPaymentOf(transactionId) == null) { "That transaction already pays a bill" }
+                    require(transactionId !in mine) { "That transaction already pays this bill" }
+                    mine += transactionId
                     dao.insertPayment(
                         BillPayment(
                             billId = bill.id,
@@ -145,6 +171,39 @@ class BillsRepository(private val db: AppDatabase) {
                 if (moved.firstDue != bill.firstDue) dao.update(moved.copy(modifiedTime = now))
             }
         }
+    }
+
+    /** The payment (or skip) now settles [period] instead: a row that was filed under the wrong month. */
+    suspend fun changePeriod(paymentId: Long, period: BillPeriod) {
+        val payment = dao.getPayment(paymentId)
+            ?: throw IllegalArgumentException("That payment no longer exists")
+        dao.updatePayment(
+            payment.copy(
+                periodStart = period.start,
+                periodEnd = period.end,
+                dueDate = period.due
+            )
+        )
+    }
+
+    /**
+     * Validity bill: chains every payment made after this one again, each from its own row's date with the bill's
+     * usual validity, queued behind the one before (see [Bills.rechained]). Returns how many moved.
+     */
+    suspend fun rechainAfter(paymentId: Long): Int {
+        val anchor = dao.getPayment(paymentId)
+            ?: throw IllegalArgumentException("That payment no longer exists")
+        val bill = dao.getById(anchor.billId)
+            ?: throw IllegalArgumentException("That bill no longer exists")
+        require(bill.schedule == BillSchedule.DURATION) { "Only a validity bill is chained" }
+        val rows = dao.getPayments(bill.id).mapNotNull { p ->
+            p.transactionId?.let { db.transactionDao().getById(it) }?.let { p to it.date }
+        }
+        val moved = Bills.rechained(bill, anchor, rows)
+        if (moved.isNotEmpty()) db.useWriterConnection { transactor ->
+            transactor.immediateTransaction { moved.forEach { dao.updatePayment(it) } }
+        }
+        return moved.size
     }
 
     /** Removes the link (or the skip); a ledger row behind it stays as an ordinary transaction. */
@@ -209,9 +268,9 @@ class BillsRepository(private val db: AppDatabase) {
 
     private fun validate(bill: Bill) {
         require(bill.name.isNotBlank()) { "A name is needed" }
-        require(bill.kind == TransactionKind.EXPENSE || bill.kind == TransactionKind.TRANSFER) { "A bill is paid as an expense or a transfer" }
+        require(bill.kind != TransactionKind.INVEST && bill.kind != TransactionKind.REDEEM) { "A bill is an expense, a transfer or an income" }
         require(bill.everyMonths >= 1) { "The months between due dates must be at least one" }
-        require(bill.validityDays == null || bill.validityDays > 0) { "The validity must be at least a day" }
+        require(bill.validity == null || bill.validity > 0) { "The validity must be at least one" }
         require(bill.amount == null || bill.amount >= 0) { "The amount cannot be negative" }
         require(bill.kind != TransactionKind.TRANSFER || bill.fromAccountId == null || bill.fromAccountId != bill.toAccountId) { "A transfer needs two different accounts" }
     }

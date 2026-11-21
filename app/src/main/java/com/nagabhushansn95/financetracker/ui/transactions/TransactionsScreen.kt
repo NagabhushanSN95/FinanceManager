@@ -184,7 +184,7 @@ fun TransactionsScreen(
                 )
                 row.billLabel?.let {
                     Text(
-                        "Pays the bill $it",
+                        it,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -241,7 +241,7 @@ fun TransactionsScreen(
             text = {
                 Text(
                     "${row.particulars}\n${row.amountText}\nThe account balances are adjusted back." +
-                            (row.billLabel?.let { "\nIt pays the bill $it; that period reads as unpaid again." }
+                            (row.billLabel?.let { "\n$it; that period reads as open again." }
                                 ?: "")
                 )
             },

@@ -61,13 +61,19 @@ data class Bill(
     @ColumnInfo(name = "first_due") val firstDue: LocalDate,
     /** CALENDAR: the payment covers the month(s) before the due month (rent paid in November for October). */
     @ColumnInfo(name = "covers_previous") val coversPrevious: Boolean = false,
-    /** DURATION: how long a payment usually holds, offered when the payment is recorded. */
-    @ColumnInfo(name = "validity_days") val validityDays: Int? = null,
-    /** Alert only once the due date has passed, instead of in the run-up to it: for bills that can wait. */
+    /** DURATION: how long a payment usually holds, in [validityUnit]s; the default when a payment is recorded. */
+    val validity: Int? = null,
     @ColumnInfo(
-        name = "alert_when_overdue",
+        name = "validity_unit",
+        defaultValue = "DAYS"
+    ) val validityUnit: ValidityUnit = ValidityUnit.DAYS,
+    /** When Home alerts about the bill: in the run-up to the due date, only once it has passed, or never. */
+    @ColumnInfo(
+        name = "alert_mode",
         defaultValue = "0"
-    ) val alertWhenOverdue: Boolean = false,
+    ) val alert: BillAlert = BillAlert.BEFORE_DUE,
+    /** The place in the list under the Custom sort; new bills go last. */
+    @ColumnInfo(name = "display_order", defaultValue = "0") val displayOrder: Int = 0,
     /** Set when the bill stopped (the maid left, the subscription was cancelled); the history stays. */
     @ColumnInfo(name = "ended_on") val endedOn: LocalDate? = null,
     val notes: String? = null,
@@ -75,6 +81,28 @@ data class Bill(
     @ColumnInfo(name = "modified_time") val modifiedTime: LocalDateTime,
 ) {
     val ended: Boolean get() = endedOn != null
+
+    /** Money coming in (a salary, rent received) rather than going out; listed in its own section. */
+    val income: Boolean get() = kind == TransactionKind.INCOME
+}
+
+/** The unit a validity is counted in: 28 days, 6 months, 1 year. Stored by name in `bills.validity_unit`. */
+enum class ValidityUnit { DAYS, MONTHS, YEARS }
+
+/** When Home alerts about a bill. Stored as [code] in `bills.alert_mode`. */
+enum class BillAlert(val code: Int) {
+    /** In the run-up set under Settings › Alerts › Bills, and while overdue. */
+    BEFORE_DUE(0),
+
+    /** Nothing until the due date has passed: a bill that can wait. */
+    WHEN_OVERDUE(1),
+
+    /** Never on Home; the bill screen still shows what is due. */
+    NEVER(2);
+
+    companion object {
+        fun of(code: Int): BillAlert = entries.firstOrNull { it.code == code } ?: BEFORE_DUE
+    }
 }
 
 /**

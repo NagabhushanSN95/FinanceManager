@@ -6,6 +6,7 @@ import com.nagabhushansn95.financetracker.data.db.entity.Bill
 import com.nagabhushansn95.financetracker.data.db.entity.BillPayment
 import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityUnit
 import com.nagabhushansn95.financetracker.data.investments.Alerts
 import java.time.LocalDate
 import java.time.YearMonth
@@ -19,6 +20,43 @@ import kotlin.math.abs
 data class BillPeriod(val start: LocalDate, val end: LocalDate, val due: LocalDate) {
     /** "October 2026" for one month, "Oct 2026 – Dec 2026" for a span of months, dates otherwise. */
     val label: String get() = Bills.periodLabel(start, end)
+}
+
+/** How long a validity payment holds: a count of days, months or years. */
+data class Validity(val count: Int, val unit: ValidityUnit) {
+    /** "28 days", "6 months", "1 year". */
+    val label: String
+        get() {
+            val word = when (unit) {
+                ValidityUnit.DAYS -> "day"
+                ValidityUnit.MONTHS -> "month"
+                ValidityUnit.YEARS -> "year"
+            }
+            return "$count $word" + if (count == 1) "" else "s"
+        }
+
+    /** The last day covered when the validity runs from [start]: 6 months from 13 March end on 12 September. */
+    fun endFrom(start: LocalDate): LocalDate = when (unit) {
+        ValidityUnit.DAYS -> start.plusDays(count.toLong())
+        ValidityUnit.MONTHS -> start.plusMonths(count.toLong())
+        ValidityUnit.YEARS -> start.plusYears(count.toLong())
+    }.minusDays(1)
+
+    companion object {
+        /** The validity a period of [start] to [end] amounts to: whole years or months when it is one, else days. */
+        fun between(start: LocalDate, end: LocalDate): Validity {
+            val next = end.plusDays(1)
+            val months = ChronoUnit.MONTHS.between(start, next)
+            if (months >= 1 && start.plusMonths(months) == next) {
+                return if (months % 12 == 0L) Validity((months / 12).toInt(), ValidityUnit.YEARS)
+                else Validity(months.toInt(), ValidityUnit.MONTHS)
+            }
+            return Validity(
+                ChronoUnit.DAYS.between(start, next).toInt().coerceAtLeast(1),
+                ValidityUnit.DAYS
+            )
+        }
+    }
 }
 
 /** A payment row with the ledger row behind it (none when the period was skipped). */
@@ -106,19 +144,64 @@ object Bills {
         )
     }
 
+    /** The bill's usual validity; a bill with none set holds [DEFAULT_VALIDITY_DAYS]. */
+    fun validityOf(bill: Bill): Validity =
+        if (bill.validity == null) Validity(DEFAULT_VALIDITY_DAYS, ValidityUnit.DAYS)
+        else Validity(bill.validity.coerceAtLeast(1), bill.validityUnit)
+
     /**
-     * What a duration payment made on [paidOn] covers: [days] from that day, or from the end of the current validity
-     * when it is paid before that runs out (a recharge queued behind the running pack). It was due the day after the
-     * previous validity ended, or on the day itself when there was none.
+     * The validities to offer for a payment: the bill's usual one first, then every other length already in its
+     * history, shortest first.
      */
-    fun durationPeriod(previousEnd: LocalDate?, paidOn: LocalDate, days: Int): BillPeriod {
+    fun validityChoices(bill: Bill, payments: List<BillPayment>): List<Validity> {
+        val usual = validityOf(bill)
+        val seen = payments.map { Validity.between(it.periodStart, it.periodEnd) }.distinct()
+            .filter { it != usual }
+            .sortedBy {
+                ChronoUnit.DAYS.between(
+                    LocalDate.of(2000, 1, 1),
+                    it.endFrom(LocalDate.of(2000, 1, 1))
+                )
+            }
+        return listOf(usual) + seen
+    }
+
+    /**
+     * What a duration payment made on [paidOn] covers: the [validity] from that day, or from the end of the current
+     * validity when it is paid before that runs out (a recharge queued behind the running pack). It was due the day
+     * after the previous validity ended, or on the day itself when there was none.
+     */
+    fun durationPeriod(previousEnd: LocalDate?, paidOn: LocalDate, validity: Validity): BillPeriod {
         val start =
             if (previousEnd != null && !paidOn.isAfter(previousEnd)) previousEnd.plusDays(1) else paidOn
-        return BillPeriod(
-            start,
-            start.plusDays(days.toLong() - 1),
-            previousEnd?.plusDays(1) ?: paidOn
-        )
+        return BillPeriod(start, validity.endFrom(start), previousEnd?.plusDays(1) ?: paidOn)
+    }
+
+    fun durationPeriod(previousEnd: LocalDate?, paidOn: LocalDate, days: Int): BillPeriod =
+        durationPeriod(previousEnd, paidOn, Validity(days, ValidityUnit.DAYS))
+
+    /**
+     * The payments after [anchor] chained again: each row's period follows from its own date and the bill's usual
+     * validity, queued behind the one before, starting from the anchor's end. [rows] pairs every payment of the bill
+     * that has a ledger row with that row's date; the later ones are those paid after the anchor's row (same day:
+     * the higher id). Skips are left alone.
+     */
+    fun rechained(
+        bill: Bill,
+        anchor: BillPayment,
+        rows: List<Pair<BillPayment, LocalDate>>
+    ): List<BillPayment> {
+        val anchorRow = rows.firstOrNull { it.first.id == anchor.id } ?: return emptyList()
+        val validity = validityOf(bill)
+        val later = rows.filter { (p, date) ->
+            date.isAfter(anchorRow.second) || date == anchorRow.second && p.id > anchor.id
+        }.sortedWith(compareBy({ it.second }, { it.first.id }))
+        var previousEnd = anchor.periodEnd
+        return later.map { (p, date) ->
+            val period = durationPeriod(previousEnd, date, validity)
+            previousEnd = period.end
+            p.copy(periodStart = period.start, periodEnd = period.end, dueDate = period.due)
+        }
     }
 
     /**
@@ -149,8 +232,7 @@ object Bills {
             else {
                 val last = payments.maxByOrNull { it.periodEnd }
                 val start = last?.periodEnd?.plusDays(1) ?: bill.firstDue
-                val days = (bill.validityDays ?: DEFAULT_VALIDITY_DAYS).coerceAtLeast(1)
-                listOf(BillPeriod(start, start.plusDays(days.toLong() - 1), start))
+                listOf(BillPeriod(start, validityOf(bill).endFrom(start), start))
             }
         }
     }
@@ -281,12 +363,12 @@ object Bills {
         return when (bill.schedule) {
             BillSchedule.CALENDAR -> ordered.map { it to periodOf(bill, it, dueDay)!! }
             BillSchedule.DURATION -> {
-                val days = (bill.validityDays ?: DEFAULT_VALIDITY_DAYS).coerceAtLeast(1)
+                val validity = validityOf(bill)
                 var previousEnd: LocalDate? = null
                 ordered.map { row ->
                     val running = (payments.map { it.periodEnd } + listOfNotNull(previousEnd))
-                        .filter { it.isBefore(row.date.plusDays(days.toLong())) }.maxOrNull()
-                    val p = durationPeriod(running, row.date, days)
+                        .filter { !it.isAfter(validity.endFrom(row.date)) }.maxOrNull()
+                    val p = durationPeriod(running, row.date, validity)
                     previousEnd = p.end
                     row to p
                 }
@@ -439,15 +521,17 @@ object Bills {
     fun status(view: BillView, today: LocalDate): String {
         val next = view.next ?: return "Ended"
         val days = ChronoUnit.DAYS.between(today, next.due)
-        val more = if (view.overdue > 1) " (${view.overdue} unpaid)" else ""
-        return Alerts.phrase(days)
+        val income = view.bill.income
+        val more =
+            if (view.overdue > 1) " (${view.overdue} ${if (income) "not received" else "unpaid"})" else ""
+        return (if (income) Alerts.phrase(days, "expected", "late") else Alerts.phrase(days))
             .replaceFirstChar { it.uppercase() } + " · for ${next.label}" + more
     }
 
     /** How often the bill recurs, in words: "Monthly on the 5th", "Every 3 months", "Yearly in April", "Every 90 days". */
     fun scheduleText(bill: Bill, dueDay: Int = bill.firstDue.dayOfMonth): String =
         when (bill.schedule) {
-            BillSchedule.DURATION -> "Every ${bill.validityDays ?: DEFAULT_VALIDITY_DAYS} days from the last payment"
+            BillSchedule.DURATION -> "Every ${validityOf(bill).label} from the last payment"
             BillSchedule.CALENDAR -> when (bill.everyMonths) {
                 1 -> "Monthly on the ${ordinal(dueDay)}"
                 12 -> "Yearly in ${

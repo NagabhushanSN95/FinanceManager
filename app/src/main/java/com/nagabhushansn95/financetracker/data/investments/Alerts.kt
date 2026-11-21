@@ -164,15 +164,28 @@ object Alerts {
     ): List<Alert> = bills.mapNotNull { v ->
         val next = v.next ?: return@mapNotNull null
         val days = ChronoUnit.DAYS.between(today, next.due)
-        // A bill that can wait says nothing until its due date has passed; the others get the run-up.
-        if (if (v.bill.alertWhenOverdue) days >= 0 else days > thresholds.bills) return@mapNotNull null
-        val more = if (v.overdue > 1) " (${v.overdue} unpaid)" else ""
+        // A bill that can wait says nothing until its due date has passed; one set to never stays off Home.
+        val quiet = when (v.bill.alert) {
+            com.nagabhushansn95.financetracker.data.db.entity.BillAlert.NEVER -> true
+            com.nagabhushansn95.financetracker.data.db.entity.BillAlert.WHEN_OVERDUE -> days >= 0
+            com.nagabhushansn95.financetracker.data.db.entity.BillAlert.BEFORE_DUE -> days > thresholds.bills
+        }
+        if (quiet) return@mapNotNull null
+        val income = v.bill.income
+        val more =
+            if (v.overdue > 1) " (${v.overdue} ${if (income) "not received" else "unpaid"})" else ""
         Alert(
             AlertKind.BILL_DUE,
             null,
             null,
             v.bill.name,
-            "Bill ${phrase(days)} · for ${next.label}$more",
+            (if (income) "Income ${
+                phrase(
+                    days,
+                    "expected",
+                    "late"
+                )
+            }" else "Bill ${phrase(days)}") + " · for ${next.label}$more",
             next.due,
             days,
             billId = v.bill.id,

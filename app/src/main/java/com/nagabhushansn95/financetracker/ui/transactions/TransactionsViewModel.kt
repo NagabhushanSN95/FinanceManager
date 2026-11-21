@@ -96,14 +96,21 @@ class TransactionsViewModel(application: Application) : AndroidViewModel(applica
             com.nagabhushansn95.financetracker.data.investments.Validity.observeAll(db),
             db.instrumentDao().observeSecurities(),
             combine(db.billDao().observeAll(), db.billDao().observePayments()) { bills, payments ->
-                val names = bills.associate { it.id to it.name }
-                payments.filter { it.transactionId != null }.associate {
-                    it.transactionId!! to "${names[it.billId] ?: "Bill"} · ${
-                        com.nagabhushansn95.financetracker.data.bills.Bills.periodLabel(
-                            it.periodStart,
-                            it.periodEnd
+                val byId = bills.associateBy { it.id }
+                payments.filter { it.transactionId != null }.groupBy { it.transactionId!! }
+                    .mapValues { (_, links) ->
+                        val parts = links.map { l ->
+                            "${byId[l.billId]?.name ?: ""} · ${
+                                com.nagabhushansn95.financetracker.data.bills.Bills.periodLabel(
+                                    l.periodStart,
+                                    l.periodEnd
+                                )
+                            }"
+                        }
+                        val income = links.all { byId[it.billId]?.income == true }
+                        (if (income) "Is the income " else if (links.size > 1) "Pays the bills " else "Pays the bill ") + parts.joinToString(
+                            " and "
                         )
-                    }"
                 }
             },
         ) { i, p, s, b -> Lookups(i, p, s, b) },

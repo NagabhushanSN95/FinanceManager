@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -58,9 +60,11 @@ import com.nagabhushansn95.financetracker.data.bills.BillView
 import com.nagabhushansn95.financetracker.data.bills.Bills
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Bill
+import com.nagabhushansn95.financetracker.data.db.entity.BillAlert
 import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.ui.common.ConfirmDeleteDialog
+import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
 import com.nagabhushansn95.financetracker.ui.common.LoadingOrMessage
 import com.nagabhushansn95.financetracker.ui.common.MoneyFormat
@@ -92,6 +96,7 @@ fun BillScreen(
     var editing by remember { mutableStateOf(false) }
     var menu by remember { mutableStateOf(false) }
     var confirmEnd by remember { mutableStateOf(false) }
+    var endOn by remember { mutableStateOf<LocalDate?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
     var skipping by remember { mutableStateOf(false) }
     var linking by remember { mutableStateOf(false) }
@@ -99,6 +104,7 @@ fun BillScreen(
     var actions by remember { mutableStateOf(false) }
     var rowMenu by remember { mutableStateOf<BillPaymentView?>(null) }
     var confirmDeletePayment by remember { mutableStateOf<BillPaymentView?>(null) }
+    var changingPeriod by remember { mutableStateOf<BillPaymentView?>(null) }
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); viewModel.messageShown() }
     }
@@ -182,9 +188,12 @@ fun BillScreen(
                         )
                         Row {
                             StatCell("Next due", next?.due?.format(SHORT_DATE) ?: "—")
-                            StatCell("Last paid", v.lastPaidOn?.format(SHORT_DATE) ?: "—")
                             StatCell(
-                                "Paid so far",
+                                if (v.bill.income) "Last received" else "Last paid",
+                                v.lastPaidOn?.format(SHORT_DATE) ?: "—"
+                            )
+                            StatCell(
+                                if (v.bill.income) "Received so far" else "Paid so far",
                                 v.payments.filter { !it.skipped }
                                     .distinctBy { it.payment.periodStart }.size.toString()
                             )
@@ -206,8 +215,12 @@ fun BillScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (v.bill.alertWhenOverdue) Text(
-                            "Alerted only once overdue",
+                        if (v.bill.alert != BillAlert.BEFORE_DUE) Text(
+                            when {
+                                v.bill.alert == BillAlert.NEVER -> "No alert on Home"
+                                v.bill.income -> "Alerted only once late"
+                                else -> "Alerted only once overdue"
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -236,7 +249,7 @@ fun BillScreen(
             }
             if (v.payments.isEmpty()) item {
                 Text(
-                    "No payments yet.",
+                    if (v.bill.income) "No receipts yet." else "No payments yet.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp),
@@ -260,7 +273,7 @@ fun BillScreen(
     if (actions && v != null) ModalBottomSheet(onDismissRequest = { actions = false }) {
         Column(modifier = Modifier.padding(bottom = 24.dp)) {
             if (next != null) ListItem(
-                headlineContent = { Text("Record a payment") },
+                headlineContent = { Text(if (v.bill.income) "Record the receipt" else "Record a payment") },
                 supportingContent = {
                     Text(
                         if (v.bill.schedule == BillSchedule.DURATION) "Opens the transaction editor filled in from the bill."
@@ -300,16 +313,24 @@ fun BillScreen(
     if (confirmEnd && v != null) AlertDialog(
         onDismissRequest = { confirmEnd = false },
         title = { Text("End ${v.bill.name}?") },
-        text = { Text("Nothing falls due after today. What was paid stays in the history, and the bill can be reopened.") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Nothing falls due after the date chosen; earlier periods stay as they are. What was paid stays in the history, and the bill can be reopened.")
+                DateField("Ended on", endOn ?: state.today, { endOn = it }, Modifier.fillMaxWidth())
+            }
+        },
         confirmButton = {
             TextButton(onClick = {
-                confirmEnd = false; viewModel.end(
-                v.bill.id,
-                state.today
-            )
+                confirmEnd = false
+                viewModel.end(v.bill.id, endOn ?: state.today)
+                endOn = null
             }) { Text("End") }
         },
-        dismissButton = { TextButton(onClick = { confirmEnd = false }) { Text("Cancel") } },
+        dismissButton = {
+            TextButton(onClick = {
+                confirmEnd = false; endOn = null
+            }) { Text("Cancel") }
+        },
     )
     if (confirmDelete && v != null) ConfirmDeleteDialog(
         title = "Delete ${v.bill.name}?",
@@ -344,6 +365,23 @@ fun BillScreen(
                         modifier = Modifier.clickable { rowMenu = null; onEditTransaction(t.id) },
                     )
                     ListItem(
+                        headlineContent = { Text("Change the period") },
+                        supportingContent = {
+                            Text(
+                                if (v?.bill?.schedule == BillSchedule.DURATION) "Set the dates this payment covers."
+                                else "File this payment under another month."
+                            )
+                        },
+                        modifier = Modifier.clickable { rowMenu = null; changingPeriod = p },
+                    )
+                    if (v?.bill?.schedule == BillSchedule.DURATION) ListItem(
+                        headlineContent = { Text("Re-chain the later payments") },
+                        supportingContent = { Text("Every payment made after this one runs again from its own date, each queued behind the one before.") },
+                        modifier = Modifier.clickable {
+                            rowMenu = null; viewModel.rechainAfter(p.payment.id)
+                        },
+                    )
+                    ListItem(
                         headlineContent = { Text("Unlink from this bill") },
                         supportingContent = { Text("The transaction stays in the ledger; the period reads as unpaid again.") },
                         modifier = Modifier.clickable {
@@ -370,6 +408,57 @@ fun BillScreen(
             }
         }
     }
+    changingPeriod?.let { p ->
+        if (v != null && v.bill.schedule == BillSchedule.DURATION) ValidityPeriodDialog(
+            title = "What does this payment cover?",
+            initial = p.period,
+            choices = Bills.validityChoices(v.bill, v.payments.map { it.payment }),
+            onDismiss = { changingPeriod = null },
+            onConfirm = { period ->
+                changingPeriod = null
+                viewModel.changePeriod(p.payment.id, period)
+            },
+        )
+        else if (v != null) {
+            val others = v.payments.filter { it.payment.id != p.payment.id }.map { it.payment }
+            val choices = Bills.periodChoices(v.bill, others, state.today, v.dueDay)
+            AlertDialog(
+                onDismissRequest = { changingPeriod = null },
+                title = { Text("Which period does it settle?") },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .heightIn(max = 360.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        choices.forEach { period ->
+                            val current = period.start == p.period.start
+                            Text(
+                                period.label + if (current) "  ✓" else "",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        changingPeriod = null; if (!current) viewModel.changePeriod(
+                                        p.payment.id,
+                                        period
+                                    )
+                                    }
+                                    .padding(vertical = 10.dp),
+                            )
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = {
+                        changingPeriod = null
+                    }) { Text("Cancel") }
+                },
+            )
+        }
+    }
     confirmDeletePayment?.let { p ->
         val t = p.transaction
         ConfirmDeleteDialog(
@@ -389,7 +478,11 @@ fun BillScreen(
 private fun paidHow(v: BillView, state: BillsState): String {
     val b = v.bill
     val parts = ArrayList<String>()
-    parts += if (b.kind == com.nagabhushansn95.financetracker.data.db.entity.TransactionKind.TRANSFER) "Transfer" else "Expense"
+    parts += when (b.kind) {
+        TransactionKind.TRANSFER -> "Transfer"
+        TransactionKind.INCOME -> "Income"
+        else -> "Expense"
+    }
     b.fromAccountId?.let { parts += "from ${state.accountName(it)}" }
     b.toAccountId?.let { parts += "into ${state.accountName(it)}" }
     state.categoryPath(b.categoryId)?.let { parts += "under $it" }
@@ -522,7 +615,7 @@ private fun UnlinkTransactionsSheet(
     var selected by remember { mutableStateOf(setOf<Long>()) }
     FormSheet(title = "Unlink transactions", onDismiss = onDismiss, scrollable = false) {
         Text(
-            "Ticked rows leave the history of ${view.bill.name} and their periods read as unpaid again. The transactions stay in the ledger.",
+            "Ticked rows leave the history of ${view.bill.name} and their periods read as ${if (view.bill.income) "not received" else "unpaid"} again. The transactions stay in the ledger.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -612,21 +705,23 @@ private fun LinkTransactionsSheet(
     var query by rememberSaveable { mutableStateOf(defaultLinkQuery(bill, card)) }
     val q = query.trim()
     val since = state.today.minusMonths(6)
-    val candidates = remember(state.ledger, state.linkedTransactionIds, q, bill) {
+    // Rows already in this bill's history are out; one that pays another bill may pay this one too (rent and
+    // maintenance paid together), and says so.
+    val linkedHere =
+        remember(view.payments) { view.payments.mapNotNull { it.payment.transactionId }.toSet() }
+    val candidates = remember(state.ledger, linkedHere, q, bill) {
         // A typed search reaches every expense and transfer row, whatever its account: older history may have been
         // written differently. An empty one shows the bill's own kind and account over the last six months.
         state.ledger.asSequence()
-            .filter { it.id !in state.linkedTransactionIds }
+            .filter { it.id !in linkedHere }
             .filter {
-                if (q.isEmpty()) it.kind == bill.kind && (bill.toAccountId == null || it.toAccountId == bill.toAccountId) && !it.date.isBefore(
+                if (q.isEmpty()) it.kind == bill.kind && (bill.toAccountId == null || it.toAccountId == bill.toAccountId) && (bill.toAccountId != null || !it.date.isBefore(
                     since
-                )
-                else (it.kind == TransactionKind.EXPENSE || it.kind == TransactionKind.TRANSFER) && it.particulars.contains(
-                    q,
-                    ignoreCase = true
-                )
+                ))
+                else (if (bill.income) it.kind == TransactionKind.INCOME else it.kind == TransactionKind.EXPENSE || it.kind == TransactionKind.TRANSFER) &&
+                        it.particulars.contains(q, ignoreCase = true)
             }
-            .take(200)
+            .take(400)
             .toList()
     }
     val matching = remember(candidates) {
@@ -650,9 +745,13 @@ private fun LinkTransactionsSheet(
 
     FormSheet(title = "Link transactions", onDismiss = onDismiss, scrollable = false) {
         Text(
-            "Rows that paid ${bill.name} but are not linked to it yet. Those written from its particulars pattern are ticked; " +
-                    "each is filed under the period its particulars name, else the one nearest its date. A search covers every expense " +
-                    "and transfer row; cleared, the list is the bill's own kind over the last six months.",
+            "Rows that ${if (bill.income) "brought in" else "paid"} ${bill.name} but are not linked to it yet. Those written from its particulars pattern are ticked; " +
+                    "each is filed under the period its particulars name, else the one nearest its date. A search covers every ${if (bill.income) "income" else "expense and transfer"} row; " +
+                    (if (bill.toAccountId != null) "cleared, the list is every transfer into ${
+                        state.accountName(
+                            bill.toAccountId
+                        )
+                    }." else "cleared, the list is the bill's own kind over the last six months."),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -714,7 +813,7 @@ private fun LinkTransactionsSheet(
                                 state.accountName(
                                     t.fromAccountId ?: t.toAccountId
                                 )
-                            }",
+                            }" + (if (t.id in state.linkedTransactionIds) " · also pays another bill" else ""),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

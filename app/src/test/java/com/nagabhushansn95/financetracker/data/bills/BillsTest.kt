@@ -3,8 +3,10 @@ package com.nagabhushansn95.financetracker.data.bills
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Bill
+import com.nagabhushansn95.financetracker.data.db.entity.BillAlert
 import com.nagabhushansn95.financetracker.data.db.entity.BillPayment
 import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityUnit
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.investments.Alerts
@@ -40,7 +42,7 @@ class BillsTest {
         everyMonths = everyMonths,
         firstDue = firstDue,
         coversPrevious = coversPrevious,
-        validityDays = validityDays,
+        validity = validityDays,
         endedOn = endedOn,
         createdTime = now,
         modifiedTime = now,
@@ -138,6 +140,145 @@ class BillsTest {
         val late = Bills.durationPeriod(first.end, LocalDate.of(2026, 12, 25), 28)
         assertEquals(LocalDate.of(2026, 12, 25), late.start)
         assertEquals(LocalDate.of(2026, 12, 21), late.due)
+    }
+
+    @Test
+    fun aValidityInMonthsEndsTheDayBeforeTheSameDate() {
+        val six = Validity(6, ValidityUnit.MONTHS)
+        assertEquals("6 months", six.label)
+        assertEquals(LocalDate.of(2024, 9, 12), six.endFrom(LocalDate.of(2024, 3, 13)))
+        assertEquals(
+            LocalDate.of(2027, 7, 8),
+            Validity(1, ValidityUnit.YEARS).endFrom(LocalDate.of(2026, 7, 9))
+        )
+        // 31 Aug plus six months lands on 28 Feb; the end is the day before.
+        assertEquals(LocalDate.of(2026, 2, 27), six.endFrom(LocalDate.of(2025, 8, 31)))
+        // Read back from the dates: whole months or years when it is one, else days.
+        assertEquals(six, Validity.between(LocalDate.of(2024, 3, 13), LocalDate.of(2024, 9, 12)))
+        assertEquals(
+            Validity(1, ValidityUnit.YEARS),
+            Validity.between(LocalDate.of(2026, 7, 9), LocalDate.of(2027, 7, 8))
+        )
+        assertEquals(
+            Validity(28, ValidityUnit.DAYS),
+            Validity.between(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 28))
+        )
+        assertEquals(
+            "1 day",
+            Validity.between(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 1)).label
+        )
+
+        val wifi = Bill(
+            id = 24,
+            name = "Airtel Wi-Fi",
+            schedule = BillSchedule.DURATION,
+            validity = 6,
+            validityUnit = ValidityUnit.MONTHS,
+            firstDue = LocalDate.of(2024, 3, 13),
+            createdTime = now,
+            modifiedTime = now,
+        )
+        assertEquals("Every 6 months from the last payment", Bills.scheduleText(wifi))
+        val first = Bills.durationPeriod(null, LocalDate.of(2024, 3, 13), Bills.validityOf(wifi))
+        assertEquals(LocalDate.of(2024, 9, 12), first.end)
+        assertEquals(
+            LocalDate.of(2024, 9, 13),
+            Bills.unsettled(wifi, listOf(paid(first)), today).single().start
+        )
+        assertEquals(
+            LocalDate.of(2025, 3, 12),
+            Bills.unsettled(wifi, listOf(paid(first)), today).single().end
+        )
+        // The usual validity first, then the other lengths in the history, shortest first.
+        val history = listOf(
+            paid(
+                BillPeriod(
+                    LocalDate.of(2024, 3, 13),
+                    LocalDate.of(2024, 6, 12),
+                    LocalDate.of(2024, 3, 13)
+                )
+            ),
+            paid(
+                BillPeriod(
+                    LocalDate.of(2024, 6, 30),
+                    LocalDate.of(2024, 12, 29),
+                    LocalDate.of(2024, 6, 13)
+                )
+            ),
+            paid(
+                BillPeriod(
+                    LocalDate.of(2026, 6, 8),
+                    LocalDate.of(2026, 6, 14),
+                    LocalDate.of(2026, 6, 8)
+                )
+            ),
+        )
+        assertEquals(
+            listOf("6 months", "7 days", "3 months"),
+            Bills.validityChoices(wifi, history).map { it.label })
+    }
+
+    @Test
+    fun laterPaymentsChainAgainFromTheOneCorrected() {
+        val wifi = Bill(
+            id = 24,
+            name = "Airtel Wi-Fi",
+            schedule = BillSchedule.DURATION,
+            validity = 6,
+            validityUnit = ValidityUnit.MONTHS,
+            firstDue = LocalDate.of(2024, 3, 13),
+            createdTime = now,
+            modifiedTime = now,
+        )
+
+        fun p(id: Long, start: LocalDate, end: LocalDate, tx: Long) =
+            BillPayment(
+                id = id,
+                billId = 24,
+                periodStart = start,
+                periodEnd = end,
+                dueDate = start,
+                transactionId = tx
+            )
+        // The first row was corrected by hand to the 3 months it covered; the rest still sit where 180 days put them.
+        val first = p(1, LocalDate.of(2024, 3, 13), LocalDate.of(2024, 6, 12), 101)
+        val rows = listOf(
+            first to LocalDate.of(2024, 3, 13),
+            p(2, LocalDate.of(2024, 9, 9), LocalDate.of(2025, 3, 7), 102) to LocalDate.of(
+                2024,
+                6,
+                30
+            ),
+            p(3, LocalDate.of(2025, 3, 8), LocalDate.of(2025, 9, 3), 103) to LocalDate.of(
+                2025,
+                1,
+                16
+            ),
+            p(4, LocalDate.of(2025, 7, 24), LocalDate.of(2026, 1, 19), 104) to LocalDate.of(
+                2025,
+                7,
+                24
+            ),
+        )
+        val moved = Bills.rechained(wifi, first, rows)
+        assertEquals(listOf(2L, 3L, 4L), moved.map { it.id })
+        // Paid after the first ran out: runs from its own date; due the day after the old one ended.
+        assertEquals(
+            LocalDate.of(2024, 6, 30) to LocalDate.of(2024, 12, 29),
+            moved[0].periodStart to moved[0].periodEnd
+        )
+        assertEquals(LocalDate.of(2024, 6, 13), moved[0].dueDate)
+        assertEquals(
+            LocalDate.of(2025, 1, 16) to LocalDate.of(2025, 7, 15),
+            moved[1].periodStart to moved[1].periodEnd
+        )
+        assertEquals(
+            LocalDate.of(2025, 7, 24) to LocalDate.of(2026, 1, 23),
+            moved[2].periodStart to moved[2].periodEnd
+        )
+        // Rows before the anchor, and the anchor itself, stay; an unknown anchor moves nothing.
+        assertTrue(Bills.rechained(wifi, rows[2].first, rows).map { it.id } == listOf(4L))
+        assertTrue(Bills.rechained(wifi, p(9, today, today, 999), rows).isEmpty())
     }
 
     @Test
@@ -434,8 +575,8 @@ class BillsTest {
             today
         )
         assertEquals(1, alerts(soon).size)
-        assertTrue(alerts(soon.copy(alertWhenOverdue = true)).isEmpty())
-        assertEquals(1, alerts(late.copy(alertWhenOverdue = true)).size)
+        assertTrue(alerts(soon.copy(alert = BillAlert.WHEN_OVERDUE)).isEmpty())
+        assertEquals(1, alerts(late.copy(alert = BillAlert.WHEN_OVERDUE)).size)
         assertTrue(
             alerts(
                 bill(
@@ -444,8 +585,23 @@ class BillsTest {
                         11,
                         21
                     )
-                ).copy(alertWhenOverdue = true)
+                ).copy(alert = BillAlert.WHEN_OVERDUE)
             ).isEmpty()
         ) // due today: not yet
+        assertTrue(alerts(late.copy(alert = BillAlert.NEVER)).isEmpty())
+        // An income reads differently.
+        val salary = late.copy(kind = TransactionKind.INCOME, name = "Salary")
+        assertTrue(alerts(salary).single().detail.startsWith("Income late by"))
+        assertTrue(
+            Bills.status(
+                Bills.build(
+                    listOf(salary),
+                    emptyList(),
+                    emptyMap(),
+                    emptyMap(),
+                    today
+                ).single(), today
+            ).startsWith("Late by")
+        )
     }
 }

@@ -32,10 +32,12 @@ import com.nagabhushansn95.financetracker.data.bills.Bills
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Bill
+import com.nagabhushansn95.financetracker.data.db.entity.BillAlert
 import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityUnit
 import com.nagabhushansn95.financetracker.ui.common.AccountField
 import com.nagabhushansn95.financetracker.ui.common.DateField
 import com.nagabhushansn95.financetracker.ui.common.FormSheet
@@ -79,13 +81,17 @@ fun BillSheet(
     var schedule by remember { mutableStateOf(existing?.schedule ?: BillSchedule.CALENDAR) }
     var everyMonths by remember { mutableStateOf(existing?.everyMonths?.toString() ?: "1") }
     var due by remember { mutableStateOf<LocalDate?>(shownDue) }
+
+    /** Editing: where the history starts (the first period's due date); moved by hand when a link went too far back. */
+    var start by remember { mutableStateOf<LocalDate?>(existing?.firstDue) }
     var previousPeriod by remember { mutableStateOf(existing?.coversPrevious ?: false) }
-    var validityDays by remember { mutableStateOf(existing?.validityDays?.toString() ?: "") }
+    var validity by remember { mutableStateOf(existing?.validity?.toString() ?: "") }
+    var validityUnit by remember { mutableStateOf(existing?.validityUnit ?: ValidityUnit.DAYS) }
     var notes by remember { mutableStateOf(existing?.notes ?: "") }
-    var alertWhenOverdue by remember { mutableStateOf(existing?.alertWhenOverdue ?: false) }
+    var alert by remember { mutableStateOf(existing?.alert ?: BillAlert.BEFORE_DUE) }
 
     val months = everyMonths.trim().toIntOrNull()
-    val days = validityDays.trim().toIntOrNull()
+    val validityCount = validity.trim().toIntOrNull()
     val amountValue = amount.trim().toDoubleOrNull()
     val card =
         if (kind == TransactionKind.TRANSFER) toId?.let { id -> accounts.firstOrNull { it.id == id } }
@@ -100,7 +106,7 @@ fun BillSheet(
         needsDate && due == null -> "Pick the next due date"
         amount.isNotBlank() && (amountValue == null || amountValue < 0) -> "Enter a valid amount"
         schedule == BillSchedule.CALENDAR && (months == null || months < 1) -> "Enter the months between due dates"
-        schedule == BillSchedule.DURATION && (days == null || days < 1) -> "Enter the validity in days"
+        schedule == BillSchedule.DURATION && (validityCount == null || validityCount < 1) -> "Enter the validity"
         kind == TransactionKind.TRANSFER && fromId != null && fromId == toId -> "Choose two different accounts"
         else -> null
     }
@@ -118,17 +124,18 @@ fun BillSheet(
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             listOf(
                 TransactionKind.EXPENSE to "Expense",
-                TransactionKind.TRANSFER to "Transfer"
+                TransactionKind.TRANSFER to "Transfer",
+                TransactionKind.INCOME to "Income",
             ).forEachIndexed { i, (k, label) ->
                 SegmentedButton(
                     selected = kind == k,
                     onClick = { kind = k },
-                    shape = SegmentedButtonDefaults.itemShape(i, 2),
+                    shape = SegmentedButtonDefaults.itemShape(i, 3),
                     label = { Text(label) },
                 )
             }
         }
-        AccountField(
+        if (kind != TransactionKind.INCOME) AccountField(
             "Paid from",
             accounts.filter { it.id != toId || kind != TransactionKind.TRANSFER },
             fromId,
@@ -156,6 +163,18 @@ fun BillSheet(
                 else "A card: set its statement and due days under Manage › Accounts and the bill follows them.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else if (kind == TransactionKind.INCOME) {
+            AccountField(
+                "Received into", accounts, toId, { toId = it },
+                Modifier.fillMaxWidth(), none = "Chosen each time", grouped = true,
+            )
+            CategoryField(
+                categories,
+                categoryId,
+                { categoryId = it },
+                Modifier.fillMaxWidth(),
+                scope = CategoryScope.INCOME
             )
         } else CategoryField(categories, categoryId, { categoryId = it }, Modifier.fillMaxWidth())
         NumberField(amount, "Expected amount (optional)", { amount = it }, Modifier.fillMaxWidth())
@@ -227,7 +246,10 @@ fun BillSheet(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text("Each payment is for", style = MaterialTheme.typography.labelLarge)
+                Text(
+                    if (kind == TransactionKind.INCOME) "Each receipt is for" else "Each payment is for",
+                    style = MaterialTheme.typography.labelLarge
+                )
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     listOf(
                         false to "The current period",
@@ -252,41 +274,69 @@ fun BillSheet(
                         Modifier.weight(1f)
                     )
                     OutlinedTextField(
-                        value = validityDays,
-                        onValueChange = { validityDays = it.filter { c -> c.isDigit() }.take(4) },
-                        label = { Text("Validity (days)") },
+                        value = validity,
+                        onValueChange = { validity = it.filter { c -> c.isDigit() }.take(4) },
+                        label = { Text("Validity") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
                     )
                 }
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    ValidityUnit.entries.forEachIndexed { i, u ->
+                        SegmentedButton(
+                            selected = validityUnit == u,
+                            onClick = { validityUnit = u },
+                            shape = SegmentedButtonDefaults.itemShape(i, ValidityUnit.entries.size),
+                            label = { Text(u.title()) },
+                        )
+                    }
+                }
                 Text(
-                    "Each payment holds this long (asked again when it is recorded, since packs differ); the next falls due when it runs out.",
+                    "Each payment usually holds this long; its dates can be changed when it is recorded or later. The next falls due when it runs out.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
         Text("Alert on Home", style = MaterialTheme.typography.labelLarge)
+        val income = kind == TransactionKind.INCOME
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             listOf(
-                false to "Before it is due",
-                true to "Only once overdue"
+                BillAlert.BEFORE_DUE to "Before",
+                BillAlert.WHEN_OVERDUE to (if (income) "Once late" else "Once overdue"),
+                BillAlert.NEVER to "Never",
             ).forEachIndexed { i, (v, label) ->
                 SegmentedButton(
-                    selected = alertWhenOverdue == v,
-                    onClick = { alertWhenOverdue = v },
-                    shape = SegmentedButtonDefaults.itemShape(i, 2),
+                    selected = alert == v,
+                    onClick = { alert = v },
+                    shape = SegmentedButtonDefaults.itemShape(i, 3),
                     label = { Text(label) },
                 )
             }
         }
         Text(
-            if (alertWhenOverdue) "Nothing is said until the due date has passed: for a bill that can wait a few days."
-            else "Alerted in the run-up set under Settings › Alerts › Bills, and while overdue.",
+            when (alert) {
+                BillAlert.BEFORE_DUE -> "Alerted in the run-up set under Settings › Alerts › Bills, and while ${if (income) "late" else "overdue"}."
+                BillAlert.WHEN_OVERDUE -> "Nothing is said until the ${if (income) "expected" else "due"} date has passed."
+                BillAlert.NEVER -> "Never on Home; the ${if (income) "income's" else "bill's"} own screen still shows what is due."
+            },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        if (existing != null) {
+            DateField(
+                "History starts (first due date)",
+                start,
+                { start = it },
+                Modifier.fillMaxWidth()
+            )
+            Text(
+                "Periods before this date are not owed. Linking a payment before it moves it back on its own; move it forward after unlinking one.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         OutlinedTextField(
             value = notes,
             onValueChange = { notes = it },
@@ -311,28 +361,31 @@ fun BillSheet(
                     id = existing?.id ?: 0,
                     name = name.trim(),
                     kind = kind,
-                    fromAccountId = fromId,
-                    toAccountId = toId.takeIf { kind == TransactionKind.TRANSFER },
-                    categoryId = categoryId.takeIf { kind == TransactionKind.EXPENSE },
+                    toAccountId = toId.takeIf { kind != TransactionKind.EXPENSE },
+                    fromAccountId = fromId.takeIf { kind != TransactionKind.INCOME },
+                    categoryId = categoryId.takeIf { kind != TransactionKind.TRANSFER },
                     amount = amountValue,
                     particulars = particulars.text.trim().ifBlank { null },
                     schedule = if (isCard) BillSchedule.CALENDAR else schedule,
                     everyMonths = if (isCard) 1 else if (schedule == BillSchedule.CALENDAR) months!! else 1,
                     firstDue = existing?.firstDue ?: today,
                     coversPrevious = isCard || (schedule == BillSchedule.CALENDAR && previousPeriod),
-                    validityDays = if (!isCard && schedule == BillSchedule.DURATION) days else null,
-                    alertWhenOverdue = alertWhenOverdue,
+                    validity = if (!isCard && schedule == BillSchedule.DURATION) validityCount else null,
+                    validityUnit = if (!isCard && schedule == BillSchedule.DURATION) validityUnit else ValidityUnit.DAYS,
+                    alert = alert,
                     endedOn = existing?.endedOn,
                     notes = notes.trim().ifBlank { null },
                     createdTime = existing?.createdTime ?: now,
                     modifiedTime = now,
                 )
+                // The history start as edited (or as it was), then any change of the next due date on top of it.
+                val base = existing?.let { start ?: it.firstDue }
                 val firstDue = when {
-                    isCard -> existing?.firstDue ?: Bills.comingDue(today, cardDue)
+                    isCard -> base ?: Bills.comingDue(today, cardDue)
                     existing == null -> due!!
-                    !needsDate || due == shownDue -> existing.firstDue
+                    !needsDate || due == shownDue -> base!!
                     draft.schedule == BillSchedule.DURATION -> due!!
-                    else -> Bills.firstDueFor(draft, shownDue, due!!)
+                    else -> Bills.firstDueFor(draft.copy(firstDue = base!!), shownDue, due!!)
                 }
                 onSave(draft.copy(firstDue = firstDue))
             },
@@ -351,9 +404,10 @@ fun CategoryField(
     selected: Long?,
     onPick: (Long?) -> Unit,
     modifier: Modifier = Modifier,
+    scope: CategoryScope = CategoryScope.EXPENSE,
 ) {
     val applicable =
-        categories.filter { it.appliesTo == CategoryScope.EXPENSE || it.appliesTo == CategoryScope.BOTH }
+        categories.filter { it.appliesTo == scope || it.appliesTo == CategoryScope.BOTH }
     val byId = applicable.associateBy { it.id }
     fun path(c: Category) = c.parentId?.let { byId[it]?.name }?.let { "$it › ${c.name}" } ?: c.name
     val rows = applicable.filter { it.parentId == null }

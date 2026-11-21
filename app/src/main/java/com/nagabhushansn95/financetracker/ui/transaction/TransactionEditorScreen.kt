@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,7 +40,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +56,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nagabhushansn95.financetracker.data.db.entity.CategoryScope
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
+import com.nagabhushansn95.financetracker.ui.bills.ValidityPeriodDialog
+import com.nagabhushansn95.financetracker.ui.common.PICKER_LOCALE
+import com.nagabhushansn95.financetracker.ui.common.pickerFormatter
 import com.nagabhushansn95.financetracker.ui.theme.appTopBarColors
 import java.time.Instant
 import java.time.ZoneOffset
@@ -135,7 +138,7 @@ fun TransactionEditorScreen(
         topBar = {
             TopAppBar(
                 colors = appTopBarColors(),
-                title = { Text(if (form.isEdit) "Edit transaction" else if (form.bill?.recording == true) "Record payment" else "Add transaction") },
+                title = { Text(if (form.isEdit) "Edit transaction" else if (form.bill?.recording == true) (if (form.bill?.bill?.income == true) "Record receipt" else "Record payment") else "Add transaction") },
                 navigationIcon = {
                     IconButton(onClick = close) {
                         Icon(
@@ -174,12 +177,24 @@ fun TransactionEditorScreen(
                     )
                     val canChoose = target.recording && !target.duration && target.choices.size > 1
                     var choosing by remember { mutableStateOf(false) }
+                    val shown =
+                        if (target.recording && target.duration) target.periodFor(form.date) else target.period
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "${target.bill.name} · for ${target.label}",
+                            "${target.bill.name} · ${if (target.duration) "covers" else "for"} ${shown?.label ?: "—"}",
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.weight(1f)
                         )
+                        if (target.recording && target.duration && shown != null) {
+                            TextButton(onClick = { choosing = true }) { Text("Change") }
+                            if (choosing) ValidityPeriodDialog(
+                                title = "What does this payment cover?",
+                                initial = shown,
+                                choices = target.validities,
+                                onDismiss = { choosing = false },
+                                onConfirm = { choosing = false; viewModel.setBillPeriod(it) },
+                            )
+                        }
                         if (canChoose) Box {
                             TextButton(onClick = { choosing = true }) { Text("Change period") }
                             DropdownMenu(
@@ -195,7 +210,8 @@ fun TransactionEditorScreen(
                         }
                     }
                     if (target.existing) Text(
-                        "This row pays the bill; unlink it from the bill's screen if it should not.",
+                        if (target.bill.income) "This row is the receipt for the income; unlink it from the income's screen if it should not be."
+                        else "This row pays the bill; unlink it from the bill's screen if it should not.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -243,20 +259,6 @@ fun TransactionEditorScreen(
                 onChange = viewModel::setParticulars,
                 onPickTemplate = viewModel::applyTemplate,
             )
-            form.bill?.takeIf { it.recording && it.duration }?.let { target ->
-                OutlinedTextField(
-                    value = target.validityDays,
-                    onValueChange = {
-                        viewModel.setBillValidity(it.filter { c -> c.isDigit() }.take(4))
-                    },
-                    label = { Text("Validity (days)") },
-                    supportingText = { Text("How long this payment holds; the next falls due when it runs out.") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
             // Rate, quantity and amount stay as typed; whatever is left empty is filled in on save, as Finance Manager
             // did (see EditorForm.resolvedMoney).
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -369,10 +371,12 @@ fun TransactionEditorScreen(
     }
 
     if (showDate) {
-        val state = rememberDatePickerState(
-            initialSelectedDateMillis = form.date.atStartOfDay().toInstant(ZoneOffset.UTC)
-                .toEpochMilli()
-        )
+        val state = remember {
+            DatePickerState(PICKER_LOCALE,
+                initialSelectedDateMillis = form.date.atStartOfDay().toInstant(ZoneOffset.UTC)
+                    .toEpochMilli()
+            )
+        }
         DatePickerDialog(
             onDismissRequest = { showDate = false },
             confirmButton = {
@@ -386,7 +390,7 @@ fun TransactionEditorScreen(
                 }) { Text("OK") }
             },
             dismissButton = { TextButton(onClick = { showDate = false }) { Text("Cancel") } },
-        ) { DatePicker(state = state) }
+        ) { DatePicker(state = state, dateFormatter = pickerFormatter()) }
     }
 
     if (confirmDiscard) {
@@ -415,7 +419,7 @@ fun TransactionEditorScreen(
                 Text(
                     "The account balances are adjusted back." +
                             (form.bill?.takeIf { it.existing }
-                                ?.let { "\nIt pays the bill ${it.bill.name} for ${it.label}; that period reads as unpaid again." }
+                                ?.let { "\nIt is linked to ${it.bill.name} for ${it.label}; that period reads as open again." }
                                 ?: "")
                 )
             },

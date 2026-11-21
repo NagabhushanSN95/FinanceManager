@@ -1,6 +1,7 @@
 package com.nagabhushansn95.financetracker.data.db
 
 import androidx.room.TypeConverter
+import com.nagabhushansn95.financetracker.data.db.entity.BillAlert
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -10,6 +11,12 @@ import java.time.format.DateTimeFormatter
  * Dates: `2026-11-03`. Timestamps: `2026-11-03T09:02:55.123`.
  */
 class Converters {
+    @TypeConverter
+    fun billAlertToInt(value: BillAlert?): Int? = value?.code
+
+    @TypeConverter
+    fun intToBillAlert(value: Int?): BillAlert? = value?.let { BillAlert.of(it) }
+
     @TypeConverter
     fun localDateToString(value: LocalDate?): String? =
         value?.format(DateTimeFormatter.ISO_LOCAL_DATE)

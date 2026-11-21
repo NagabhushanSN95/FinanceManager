@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,11 +71,29 @@ fun DateField(
 
 /** The Material date picker on its own; [onPick] gets the chosen date, [onDismiss] runs on Cancel or tapping outside. */
 @OptIn(ExperimentalMaterial3Api::class)
+        /** The date pickers' locale: typed dates read dd/MM/yyyy, as everywhere else in the app. */
+val PICKER_LOCALE: java.util.Locale = java.util.Locale("en", "IN")
+
+/** The pickers' headline: "21 Nov 2026", as dates read everywhere else in the app. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@androidx.compose.runtime.Composable
+fun pickerFormatter(): androidx.compose.material3.DatePickerFormatter =
+    androidx.compose.runtime.remember {
+        androidx.compose.material3.DatePickerDefaults.dateFormatter(
+            selectedDateSkeleton = "dMMMyyyy",
+            selectedDateDescriptionSkeleton = "dMMMMyyyy"
+        )
+    }
+
 @Composable
 fun PickDateDialog(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDate) -> Unit) {
-    val state = rememberDatePickerState(
-        initialSelectedDateMillis = initial.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
-    )
+    val state = remember {
+        DatePickerState(
+            PICKER_LOCALE,
+            initialSelectedDateMillis = initial.atStartOfDay().toInstant(ZoneOffset.UTC)
+                .toEpochMilli()
+        )
+    }
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -89,7 +107,7 @@ fun PickDateDialog(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDate
             }) { Text("OK") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    ) { DatePicker(state = state) }
+    ) { DatePicker(state = state, dateFormatter = pickerFormatter()) }
 }
 
 @Composable

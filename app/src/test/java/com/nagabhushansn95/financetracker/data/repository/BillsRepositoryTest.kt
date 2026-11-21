@@ -2,12 +2,15 @@ package com.nagabhushansn95.financetracker.data.repository
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.nagabhushansn95.financetracker.data.bills.BillPeriod
 import com.nagabhushansn95.financetracker.data.bills.Bills
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.TestDb
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Bill
+import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityUnit
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
@@ -159,6 +162,115 @@ class BillsRepositoryTest {
         val skip = repository.skip(bill.id, october)
         repository.deletePayment(skip, now)
         assertTrue(db.billDao().getPayments(bill.id).isEmpty())
+    }
+
+    @Test
+    fun oneRowMayPayTwoBillsAndAPaymentMayMoveToAnotherPeriod() = runTest {
+        val rent = rent()
+        val maintenanceId = repository.add(
+            Bill(
+                name = "Maintenance",
+                fromAccountId = bank,
+                categoryId = home,
+                amount = 1500.0,
+                firstDue = LocalDate.of(2026, 11, 10),
+                createdTime = now,
+                modifiedTime = now
+            ), now
+        )
+        val maintenance = db.billDao().getById(maintenanceId)!!
+        val row = TransactionRepository(db).add(row("Rent and maintenance", 13000.0), now = now)
+        repository.linkAll(rent, listOf(Bills.calendarPeriod(rent, 0) to row), now)
+        repository.linkAll(maintenance, listOf(Bills.calendarPeriod(maintenance, 0) to row), now)
+        assertEquals(1, db.billDao().getPayments(rent.id).size)
+        assertEquals(1, db.billDao().getPayments(maintenance.id).size)
+        try {
+            repository.linkAll(
+                rent,
+                listOf(Bills.calendarPeriod(rent, 1) to row),
+                now
+            ); fail("linked twice to one bill")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message!!.contains("this bill"))
+        }
+        // Filed under the wrong month: move it.
+        val payment = db.billDao().getPayments(rent.id).single()
+        repository.changePeriod(payment.id, Bills.calendarPeriod(rent, 1))
+        assertEquals(
+            Bills.calendarPeriod(rent, 1).start,
+            db.billDao().getPayment(payment.id)!!.periodStart
+        )
+    }
+
+    @Test
+    fun aValidityPaymentMovesByHandAndTheLaterOnesChainAgain() = runTest {
+        val id = repository.add(
+            Bill(
+                name = "Airtel Wi-Fi",
+                fromAccountId = bank,
+                categoryId = home,
+                schedule = BillSchedule.DURATION,
+                validity = 6,
+                validityUnit = ValidityUnit.MONTHS,
+                firstDue = LocalDate.of(2024, 3, 13),
+                createdTime = now,
+                modifiedTime = now,
+            ), now
+        )
+        val bill = db.billDao().getById(id)!!
+        val ledger = TransactionRepository(db)
+        val rows = listOf(
+            LocalDate.of(2024, 3, 13),
+            LocalDate.of(2024, 6, 30),
+            LocalDate.of(2025, 1, 16)
+        ).map {
+            db.transactionDao()
+                .getById(ledger.add(row("Airtel Home Internet", 3000.0, it), now = now))!!
+        }
+        repository.linkAll(
+            bill,
+            Bills.assignPeriods(bill, rows, emptyList()).map { it.second to it.first.id },
+            now
+        )
+        val chained = db.billDao().getPayments(id).sortedBy { it.periodStart }
+        // Linked with 6 months each: the second queues behind the first, the third behind the second.
+        assertEquals(
+            listOf(
+                LocalDate.of(2024, 3, 13),
+                LocalDate.of(2024, 9, 13),
+                LocalDate.of(2025, 3, 13)
+            ), chained.map { it.periodStart })
+        // The first really covered 3 months; the later ones then run from their own dates.
+        repository.changePeriod(
+            chained[0].id,
+            BillPeriod(
+                LocalDate.of(2024, 3, 13),
+                LocalDate.of(2024, 6, 12),
+                LocalDate.of(2024, 3, 13)
+            )
+        )
+        assertEquals(2, repository.rechainAfter(chained[0].id))
+        val after = db.billDao().getPayments(id).sortedBy { it.periodStart }
+        assertEquals(
+            listOf(
+                LocalDate.of(2024, 3, 13),
+                LocalDate.of(2024, 6, 30),
+                LocalDate.of(2025, 1, 16)
+            ), after.map { it.periodStart })
+        assertEquals(
+            listOf(
+                LocalDate.of(2024, 6, 12),
+                LocalDate.of(2024, 12, 29),
+                LocalDate.of(2025, 7, 15)
+            ), after.map { it.periodEnd })
+        assertEquals(0, repository.rechainAfter(after.last().id))
+        try {
+            repository.rechainAfter(
+                db.billDao().getPayments(rent().id).firstOrNull()?.id ?: -1
+            ); fail("re-chained a calendar bill")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message!!.contains("validity") || e.message!!.contains("no longer"))
+        }
     }
 
     @Test

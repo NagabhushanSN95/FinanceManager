@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.nagabhushansn95.financetracker.data.bills.BillPeriod
 import com.nagabhushansn95.financetracker.data.bills.Bills
+import com.nagabhushansn95.financetracker.data.bills.Validity
 import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
@@ -28,16 +29,17 @@ import java.time.LocalDateTime
 import kotlin.math.roundToLong
 
 /**
- * The bill a row pays. Recording: the editor was opened from the bill for [period] (a calendar bill) or with a
- * [validityDays] to type (a duration bill, whose period follows from the date and validity on save). Existing: the row
- * being edited already pays the bill; shown, never changed here.
+ * The bill a row pays. Recording: the editor was opened from the bill for [period] (a calendar bill), or for a
+ * duration bill, whose period follows from the date and the bill's validity on save unless [period] was set by hand.
+ * Existing: the row being edited already pays the bill; shown, never changed here.
  */
 data class BillTarget(
     val bill: Bill,
     val period: BillPeriod?,
-    val validityDays: String = "",
     /** DURATION: the day the current validity ends, so a payment made before it queues behind. */
     val previousEnd: LocalDate? = null,
+    /** DURATION, recording: the validities to offer when the period is changed by hand. */
+    val validities: List<Validity> = emptyList(),
     val existing: Boolean = false,
     /** CALENDAR, recording: the periods the payment may be for (unsettled ones, then a few ahead). */
     val choices: List<BillPeriod> = emptyList(),
@@ -49,8 +51,15 @@ data class BillTarget(
 ) {
     val recording: Boolean get() = !existing
     val duration: Boolean get() = bill.schedule == BillSchedule.DURATION
-    val label: String
-        get() = period?.label ?: validityDays.trim().toIntOrNull()?.let { "$it days" } ?: "—"
+    val label: String get() = period?.label ?: "—"
+
+    /** DURATION, recording: the period a payment on [date] covers when none was set by hand. */
+    fun periodFor(date: LocalDate): BillPeriod? =
+        period ?: if (duration) Bills.durationPeriod(
+            previousEnd,
+            date,
+            Bills.validityOf(bill)
+        ) else null
 
     /** The statement amount for the statement's period, else the usual amount. */
     fun amountFor(period: BillPeriod?): Double? =
@@ -204,8 +213,6 @@ data class EditorForm(
         kind == TransactionKind.TRANSFER && fromAccountId == toAccountId -> "Choose two different accounts"
         crossesCurrencies(accounts) && (toAmountValue == null || toAmountValue!! < 0) -> "Enter the amount arriving"
         fxRate.isNotBlank() && fxRateValue == null -> "Rate is not a number"
-        bill?.recording == true && bill.duration && (bill.validityDays.trim().toIntOrNull()
-            ?: 0) < 1 -> "Enter the validity in days"
         else -> null
     }
 }
@@ -359,7 +366,6 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         val open = Bills.unsettled(bill, payments, today, view.dueDay)
         val period = if (bill.schedule == BillSchedule.DURATION) null
         else open.firstOrNull { it.start == periodStart } ?: view.next ?: open.firstOrNull()
-        val validity = (bill.validityDays ?: Bills.DEFAULT_VALIDITY_DAYS).toString()
         // The last payment's amount stands in for a varying bill with nothing expected.
         val last =
             payments.mapNotNull { p -> p.transactionId?.let { db.transactionDao().getById(it) } }
@@ -367,24 +373,26 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         val target = BillTarget(
             bill = bill,
             period = period,
-            validityDays = if (bill.schedule == BillSchedule.DURATION) validity else "",
             previousEnd = payments.maxOfOrNull { it.periodEnd },
+            validities = if (bill.schedule == BillSchedule.DURATION) Bills.validityChoices(
+                bill,
+                payments
+            ) else emptyList(),
             choices = Bills.periodChoices(bill, payments, today, view.dueDay),
             statementAmount = view.statementAmount,
             statementFor = view.next?.start,
             usualAmount = bill.amount ?: last?.amount,
         )
-        val particulars = if (period != null) Bills.particularsFor(bill, period)
-        else (bill.particulars?.takeIf { it.isNotBlank() }
-            ?: "${bill.name} - ${Bills.PERIOD_TOKEN}")
-            .replace(Bills.PERIOD_TOKEN, "$validity Days")
+        val particulars = Bills.particularsFor(bill, period ?: target.periodFor(today)!!)
         val amount = target.amountFor(period)
         return EditorForm(
             kind = bill.kind,
-            fromAccountId = bill.fromAccountId ?: last?.fromAccountId,
-            toAccountId = bill.toAccountId.takeIf { bill.kind == TransactionKind.TRANSFER },
-            categoryId = bill.categoryId.takeIf { bill.kind == TransactionKind.EXPENSE }
-                ?: last?.categoryId,
+            fromAccountId = (bill.fromAccountId
+                ?: last?.fromAccountId).takeIf { bill.kind != TransactionKind.INCOME },
+            toAccountId = (bill.toAccountId
+                ?: last?.toAccountId).takeIf { bill.kind != TransactionKind.EXPENSE },
+            categoryId = (bill.categoryId
+                ?: last?.categoryId).takeIf { bill.kind != TransactionKind.TRANSFER },
             particulars = particulars,
             amount = amount?.let { plain(it) } ?: "",
             bill = target,
@@ -394,11 +402,11 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
     fun setKind(kind: TransactionKind) =
         _form.update { it.withKind(kind, _data.value.categories.associateBy { c -> c.id }) }
 
-    /** CALENDAR bill payment: another period; the particulars and amount follow while they are still the bill's own. */
+    /** Bill payment: another period; the particulars and amount follow while they are still the bill's own. */
     fun setBillPeriod(period: BillPeriod) = _form.update { f ->
         val target = f.bill ?: return@update f
-        if (!target.recording || target.duration || target.period == period) return@update f
-        val oldParticulars = target.period?.let { Bills.particularsFor(target.bill, it) }
+        if (!target.recording || target.period == period) return@update f
+        val oldParticulars = target.periodFor(f.date)?.let { Bills.particularsFor(target.bill, it) }
         val oldAmount = target.amountFor(target.period)?.let { plain(it) } ?: ""
         f.copy(
             bill = target.copy(period = period),
@@ -411,20 +419,19 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
         )
     }
 
-    /** DURATION bill payment: how long this one holds; the particulars follow while they still say the old length. */
-    fun setBillValidity(text: String) = _form.update { f ->
-        val target = f.bill ?: return@update f
-        val old = target.validityDays.trim().toIntOrNull()?.let { "$it Days" }
-        val new = text.trim().toIntOrNull()?.let { "$it Days" }
-        val particulars =
-            if (old != null && new != null && f.particulars.contains(old)) f.particulars.replace(
-                old,
-                new
-            ) else f.particulars
-        f.copy(bill = target.copy(validityDays = text), particulars = particulars)
+    /** A duration payment's period follows the date until it is set by hand; the particulars follow it while still the bill's own. */
+    fun setDate(date: LocalDate) = _form.update { f ->
+        val target = f.bill
+        if (target == null || !target.recording || !target.duration || target.period != null) return@update f.copy(
+            date = date
+        )
+        val old = target.periodFor(f.date)?.let { Bills.particularsFor(target.bill, it) }
+        val new = target.periodFor(date)?.let { Bills.particularsFor(target.bill, it) }
+        f.copy(
+            date = date,
+            particulars = if (f.particulars == old && new != null) new else f.particulars
+        )
     }
-
-    fun setDate(date: LocalDate) = _form.update { it.copy(date = date) }
     fun setFrom(id: Long?) = _form.update { it.copy(fromAccountId = id) }
     fun setTo(id: Long?) = _form.update { it.copy(toAccountId = id) }
     fun setCategory(id: Long?) = _form.update { it.copy(categoryId = id) }
@@ -499,12 +506,9 @@ class TransactionEditorViewModel(application: Application) : AndroidViewModel(ap
                     entity,
                     f.saveAsTemplate
                 ) else if (target != null && target.recording) {
-                    // The period a duration payment covers follows from the date and the validity typed.
-                    val period = if (target.duration) Bills.durationPeriod(
-                        target.previousEnd,
-                        f.date,
-                        target.validityDays.trim().toInt()
-                    ) else target.period ?: throw IllegalStateException("This bill has nothing due")
+                    // A duration payment's period follows from its date and the bill's validity unless set by hand.
+                    val period = target.periodFor(f.date)
+                        ?: throw IllegalStateException("This bill has nothing due")
                     bills.recordPayment(target.bill, period, entity, f.saveAsTemplate)
                 } else repository.add(entity, f.saveAsTemplate)
             }

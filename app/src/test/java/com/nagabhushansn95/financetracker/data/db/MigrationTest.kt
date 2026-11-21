@@ -1,5 +1,8 @@
 package com.nagabhushansn95.financetracker.data.db
 
+import com.nagabhushansn95.financetracker.data.db.entity.BillAlert
+import com.nagabhushansn95.financetracker.data.bills.Bills
+import com.nagabhushansn95.financetracker.data.db.entity.ValidityUnit
 import android.content.Context
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
@@ -73,13 +76,85 @@ class MigrationTest {
         try {
             val bill = db.billDao().getAll().single()
             assertEquals("Home Rent", bill.name)
-            assertTrue(!bill.alertWhenOverdue)
+            assertEquals(BillAlert.BEFORE_DUE, bill.alert)
         } finally {
             db.close()
         }
         BundledSQLiteDriver().open(file.path).using { c ->
             c.prepare("PRAGMA user_version")
                 .using { s -> s.step(); assertEquals(AppDatabase.SCHEMA_VERSION, s.getInt(0)) }
+        }
+    }
+
+    @Test
+    fun aSchema13FileOpensWithItsBillsInTheOrderTheyWereAdded() = runTest {
+        val file = context.getDatabasePath("migration-test-13.db")
+        file.parentFile?.mkdirs()
+        listOf("", "-wal", "-shm", "-journal").forEach { File(file.path + it).delete() }
+
+        createFromExportedSchema(file, 13)
+        BundledSQLiteDriver().open(file.path).using { c ->
+            listOf("Home Rent", "Netflix").forEach { name ->
+                c.execSQL(
+                    "INSERT INTO bills (name, kind, schedule, every_months, first_due, covers_previous, alert_when_overdue, created_time, modified_time) " +
+                            "VALUES ('$name', 'EXPENSE', 'CALENDAR', 1, '2026-12-10', 0, 0, '2026-11-21T10:00:00.000', '2026-11-21T10:00:00.000')"
+                )
+            }
+        }
+
+        val db = AppDatabase.create(context, "migration-test-13.db")
+        try {
+            val bills = db.billDao().getAll().sortedBy { it.id }
+            assertEquals(listOf(1, 2), bills.map { it.displayOrder })
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun aSchema14FileKeepsItsAlertChoiceUnderTheNewName() = runTest {
+        val file = context.getDatabasePath("migration-test-14.db")
+        file.parentFile?.mkdirs()
+        listOf("", "-wal", "-shm", "-journal").forEach { File(file.path + it).delete() }
+
+        createFromExportedSchema(file, 14)
+        BundledSQLiteDriver().open(file.path).using { c ->
+            c.execSQL(
+                "INSERT INTO bills (name, kind, schedule, every_months, first_due, covers_previous, alert_when_overdue, display_order, created_time, modified_time) " +
+                        "VALUES ('Netflix', 'EXPENSE', 'CALENDAR', 1, '2026-12-01', 0, 1, 1, '2026-11-21T10:00:00.000', '2026-11-21T10:00:00.000')"
+            )
+        }
+
+        val db = AppDatabase.create(context, "migration-test-14.db")
+        try {
+            assertEquals(BillAlert.WHEN_OVERDUE, db.billDao().getAll().single().alert)
+        } finally {
+            db.close()
+        }
+    }
+
+    @Test
+    fun aSchema15FileKeepsItsValidityCountedInDays() = runTest {
+        val file = context.getDatabasePath("migration-test-15.db")
+        file.parentFile?.mkdirs()
+        listOf("", "-wal", "-shm", "-journal").forEach { File(file.path + it).delete() }
+
+        createFromExportedSchema(file, 15)
+        BundledSQLiteDriver().open(file.path).using { c ->
+            c.execSQL(
+                "INSERT INTO bills (name, kind, schedule, every_months, first_due, covers_previous, validity_days, alert_mode, display_order, created_time, modified_time) " +
+                        "VALUES ('Airtel Wi-Fi', 'EXPENSE', 'DURATION', 1, '2024-03-13', 0, 180, 0, 1, '2026-11-21T10:00:00.000', '2026-11-21T10:00:00.000')"
+            )
+        }
+
+        val db = AppDatabase.create(context, "migration-test-15.db")
+        try {
+            val bill = db.billDao().getAll().single()
+            assertEquals(180, bill.validity)
+            assertEquals(ValidityUnit.DAYS, bill.validityUnit)
+            assertEquals("Every 180 days from the last payment", Bills.scheduleText(bill))
+        } finally {
+            db.close()
         }
     }
 

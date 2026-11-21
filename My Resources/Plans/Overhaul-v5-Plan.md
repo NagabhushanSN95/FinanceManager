@@ -725,3 +725,55 @@ marched a year into the future. Replaced:
   Bill → Bills looked
   right. "Loading…" texts replaced by a centred spinner (`LoadingOrMessage`) on every screen that
   waits for data.
+- Schema 14 (2026-11-21): `bills.display_order` (`Migrations.M13_14`, seeded with the id). Bills
+  list sorts gain
+  "Added" (by id) and "Custom" (by display order); under Custom a "Reorder" button in the chip row
+  switches the list
+  to drag handles (three lines in place of amount and date), with Cancel / Save. Drag is a
+  hand-rolled
+  `detectDragGestures` over `LazyListState.layoutInfo`, items keyed by bill id. New bills go last.
+- Schema 15 (2026-11-21): `bills.alert_when_overdue` renamed `alert_mode` (`Migrations.M14_15`), now
+  a three-way
+  `BillAlert` (BEFORE_DUE / WHEN_OVERDUE / NEVER, stored 0/1/2). Income bills: kind INCOME allowed (
+  "Received
+  into" + income category), listed under an "Income" section of the Bills screen with their own
+  wording (expected /
+  late / not received, "Record the receipt", "Is the income … · period" in the ledger). The link
+  sheet's typed
+  search lists income rows for an income. Statement and card logic stay transfer-only.
+- 2026-11-21, later: "End this bill" asks for the date (past dates allowed, so a card that stopped
+  last year ends
+  then); the edit sheet shows "History starts (first due date)" so a start moved back by a stray
+  link can be moved
+  forward again; an empty link search lists every transfer into a bill's fixed "into" account (the
+  search still
+  starts from the particulars pattern); date pickers use an en-IN locale (`PICKER_LOCALE`) so typed
+  dates read
+  dd/MM/yyyy and headlines read "21 Nov 2026" (`pickerFormatter`).
+- 2026-11-21, later: one ledger row may pay several bills (rent and maintenance paid together); a
+  bill still takes
+  a row once. The link sheet hides only rows already in this bill's history and marks ones that pay
+  another bill.
+  A history row's menu has "Change the period" (`BillsRepository.changePeriod`) to refile a payment
+  under another
+  month. The ledger label reads "Pays the bills A · P and B · P" when a row pays two.
+- 2026-11-21, later: validity bills (schema 16). A validity is a count in days, months or years
+  (`bills.validity`, `bills.validity_unit`; `Validity.endFrom` ends the day before the same date n
+  months on, so
+  6 months from 13 Mar ends 12 Sep). A payment's period is a start and an end date: the editor shows
+  "covers …"
+  with Change, and a history row's "Change the period" opens the same `ValidityPeriodDialog` (start,
+  validity
+  shortcuts from `Bills.validityChoices` = the usual one plus lengths in the history, end). The
+  default stays
+  queue-behind. "Re-chain the later payments" (`BillsRepository.rechainAfter`) recomputes every
+  later row from its
+  own date after one is corrected. No per-bill early-payment switch.
+- 2026-11-21, later: the Bills list has a search field (every typed word must appear in the name,
+  particulars,
+  notes, accounts, category, schedule text or status) and a single-choice filter chip (`BillFilter`:
+  All, Overdue,
+  Due in 30 days, Expenses, Transfers, Incomes, Card bills, By validity, Ended). "Show ended" became
+  the Ended
+  filter; ended bills also surface when a search matches them. Reorder always arranges every bill,
+  filter or not.

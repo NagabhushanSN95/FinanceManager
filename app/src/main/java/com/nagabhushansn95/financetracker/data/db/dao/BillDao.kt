@@ -20,6 +20,12 @@ interface BillDao {
     @Update
     suspend fun update(bill: Bill)
 
+    @Query("UPDATE bills SET display_order = :order WHERE id = :id")
+    suspend fun setOrder(id: Long, order: Int)
+
+    @Query("SELECT COALESCE(MAX(display_order), 0) FROM bills")
+    suspend fun maxOrder(): Int
+
     @Query("DELETE FROM bills WHERE id = :id")
     suspend fun delete(id: Long)
 

@@ -10,10 +10,12 @@ import com.nagabhushansn95.financetracker.data.db.AppDatabase
 import com.nagabhushansn95.financetracker.data.db.entity.Account
 import com.nagabhushansn95.financetracker.data.db.entity.AccountType
 import com.nagabhushansn95.financetracker.data.db.entity.Bill
+import com.nagabhushansn95.financetracker.data.db.entity.BillSchedule
 import com.nagabhushansn95.financetracker.data.db.entity.Category
 import com.nagabhushansn95.financetracker.data.db.entity.CreditAgency
 import com.nagabhushansn95.financetracker.data.db.entity.CreditScore
 import com.nagabhushansn95.financetracker.data.db.entity.TransactionEntity
+import com.nagabhushansn95.financetracker.data.db.entity.TransactionKind
 import com.nagabhushansn95.financetracker.data.prefs.AppPreferences
 import com.nagabhushansn95.financetracker.data.repository.BillsRepository
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +33,74 @@ enum class BillSort(val title: String, val naturallyDescending: Boolean) {
     DUE("Due date", false),
     NAME("Name", false),
     AMOUNT("Amount", true),
-    LAST_PAID("Last paid", true);
+    LAST_PAID("Last paid", true),
+
+    /** The order the bills were added in. */
+    ADDED("Added", false),
+
+    /** The order set by hand with Reorder. */
+    CUSTOM("Custom", false);
 
     companion object {
         fun of(name: String): BillSort = entries.firstOrNull { it.name == name } ?: DUE
     }
+}
+
+/** Which bills the list shows; one at a time, on top of the search. */
+enum class BillFilter(val title: String) {
+    ALL("All"),
+    OVERDUE("Overdue"),
+    DUE_SOON("Due in 30 days"),
+    EXPENSES("Expenses"),
+    TRANSFERS("Transfers"),
+    INCOMES("Incomes"),
+    CARDS("Card bills"),
+    VALIDITY("By validity"),
+    ENDED("Ended");
+
+    fun accepts(v: BillView, state: BillsState): Boolean {
+        val days = v.daysLeft(state.today)
+        return when (this) {
+            ALL -> true
+            OVERDUE -> !v.bill.ended && days != null && days < 0
+            DUE_SOON -> !v.bill.ended && days != null && days in 0..30
+            EXPENSES -> v.bill.kind == TransactionKind.EXPENSE
+            TRANSFERS -> v.bill.kind == TransactionKind.TRANSFER && !v.isCard(state)
+            INCOMES -> v.bill.income
+            CARDS -> v.isCard(state)
+            VALIDITY -> v.bill.schedule == BillSchedule.DURATION
+            ENDED -> v.bill.ended
+        }
+    }
+
+    companion object {
+        fun of(name: String): BillFilter = entries.firstOrNull { it.name == name } ?: ALL
+    }
+}
+
+/** A transfer into a credit card account: the card's bill. */
+fun BillView.isCard(state: BillsState): Boolean =
+    bill.kind == TransactionKind.TRANSFER && bill.toAccountId?.let { state.accounts[it]?.accountType } == AccountType.CREDIT_CARD
+
+/**
+ * Whether the bill answers to [query]: every word typed appears somewhere in its name, particulars, accounts,
+ * category, schedule or status. Blank matches everything.
+ */
+fun BillView.matches(query: String, state: BillsState): Boolean {
+    val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+    if (words.isEmpty()) return true
+    val haystack = listOfNotNull(
+        bill.name,
+        bill.particulars,
+        bill.notes,
+        bill.fromAccountId?.let { state.accountName(it) },
+        bill.toAccountId?.let { state.accountName(it) },
+        state.categoryPath(bill.categoryId),
+        Bills.scheduleText(bill, dueDay),
+        Bills.status(this, state.today),
+        bill.kind.name,
+    ).joinToString(" ").lowercase()
+    return words.all { it in haystack }
 }
 
 object BillRoutes {
@@ -154,6 +219,8 @@ class BillsViewModel(application: Application) : AndroidViewModel(application) {
                     { it.lastPaidOn ?: LocalDate.MIN },
                     { it.bill.name.lowercase() })
             )
+            BillSort.ADDED -> views.sortedBy { it.bill.id }
+            BillSort.CUSTOM -> views.sortedWith(compareBy({ it.bill.displayOrder }, { it.bill.id }))
         }
         return if (descending) sorted.asReversed() else sorted
     }
@@ -167,6 +234,9 @@ class BillsViewModel(application: Application) : AndroidViewModel(application) {
                 .onFailure { message.value = it.message ?: "Could not save the bill" }
         }
     }
+
+    fun saveOrder(ids: List<Long>) =
+        write("Could not save the order", "Order saved") { repository.saveOrder(ids) }
 
     fun end(id: Long, on: LocalDate) = write("Could not end the bill") { repository.end(id, on) }
     fun reopen(id: Long) = write("Could not reopen the bill") { repository.reopen(id) }
@@ -197,6 +267,23 @@ class BillsViewModel(application: Application) : AndroidViewModel(application) {
         ) {
             repository.linkAll(bill, links)
         }
+
+    fun changePeriod(paymentId: Long, period: BillPeriod) =
+        write("Could not change the period", "Moved to ${period.label}") {
+            repository.changePeriod(
+                paymentId,
+                period
+            )
+        }
+
+    fun rechainAfter(paymentId: Long) = viewModelScope.launch {
+        runCatching { repository.rechainAfter(paymentId) }
+            .onSuccess { n ->
+                message.value =
+                    if (n == 0) "Nothing paid after it to move" else "Moved $n later payment${if (n == 1) "" else "s"}"
+            }
+            .onFailure { message.value = "Could not re-chain: ${it.message ?: it}" }
+    }
 
     fun unlink(paymentId: Long) = write("Could not unlink it") { repository.unlink(paymentId) }
     fun unlinkAll(paymentIds: Collection<Long>) =

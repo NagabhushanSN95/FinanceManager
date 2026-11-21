@@ -44,5 +44,28 @@ object Migrations {
         }
     }
 
-    val ALL: Array<Migration> = arrayOf(M11_12, M12_13)
+    /** 5.1.0: bills keep a place for the Custom sort; the order they were added in to begin with. */
+    val M13_14: Migration = object : Migration(13, 14) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE `bills` ADD COLUMN `display_order` INTEGER NOT NULL DEFAULT 0")
+            connection.execSQL("UPDATE `bills` SET `display_order` = `id`")
+        }
+    }
+
+    /** 5.1.0: the alert flag became a three-way mode (before due / once overdue / never); same values, new name. */
+    val M14_15: Migration = object : Migration(14, 15) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE `bills` RENAME COLUMN `alert_when_overdue` TO `alert_mode`")
+        }
+    }
+
+    /** 5.1.0: a validity is a count in days, months or years (6 months, 1 year), not always days. */
+    val M15_16: Migration = object : Migration(15, 16) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL("ALTER TABLE `bills` RENAME COLUMN `validity_days` TO `validity`")
+            connection.execSQL("ALTER TABLE `bills` ADD COLUMN `validity_unit` TEXT NOT NULL DEFAULT 'DAYS'")
+        }
+    }
+
+    val ALL: Array<Migration> = arrayOf(M11_12, M12_13, M13_14, M14_15, M15_16)
 }

@@ -69,7 +69,7 @@ import java.io.File
         CreditAgency::class,
         CreditScore::class,
     ],
-    version = 13, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
+    version = 16, // keep in sync with SCHEMA_VERSION (KSP cannot read the constant here)
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -90,7 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
         const val DATABASE_NAME = "finance_tracker.db"
 
         /** Same value as the @Database version; restore refuses files from a newer schema. */
-        const val SCHEMA_VERSION = 13
+        const val SCHEMA_VERSION = 16
 
         @Volatile
         private var instance: AppDatabase? = null
